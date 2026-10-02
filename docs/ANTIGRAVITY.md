@@ -250,49 +250,110 @@ agy -p "..." --output-format stream-json --log-file agy.log
 Trong `stream-json`, từng tool call có `tool_info.parameters.CommandLine` — đó là
 cách biết chính xác lệnh nào bị chặn quyền.
 
-## 6. Multi-agent với Orca (tùy chọn)
+## 6. Multi-agent với Orca (tùy chọn) — đã chạy thật
 
 Cần khi bạn muốn **nhiều agent** làm các phần việc khác nhau cùng lúc: một agent
-bóc công thức, một agent bóc ví dụ, một agent soát lỗi bịa số. Recipe này
-**không cần biết thư viện của bạn là gì** — mỗi worker tự đọc manifest.
+bóc định nghĩa, một agent bóc ví dụ, một agent đọc quy chếp. Dưới đây là cách
+đã chạy thật trên máy này (Orca 1.4.218) để sinh ra `notes/` — ba worker, ba
+worktree, chạy song song, mỗi người một file.
+
+### 6.1 Điều kiện: repo phải là git repo
 
 ```powershell
-# 0. Đăng ký repo này với Orca (chưa phải git repo thì `git init` trước)
-orca open
-
-# 1. Ba worker, mỗi người MỘT file output, cùng đọc manifest + skill
-orca run create --prompt @'
-Đọc data/course-library.json và .agents/skills/edusgpt-local-tutor/SKILL.md.
-Tóm tắt thư viện thành data/brief-01-map.md: mỗi subject có bao nhiêu file, kind
-nào chiếm đa số, file nào là slide lý thuyết chính.
-CHỈ ghi data/brief-01-map.md. Không sửa file khác.
-'@
-
-orca run create --prompt @'
-Đọc data/course-library.json. Chọn nhóm có nhiều slide nhất, mở 3 file slide chính,
-bóc mọi công thức kèm số trang và ký hiệu vào data/brief-02-formulas.md.
-CHỈ ghi data/brief-02-formulas.md. Không sửa file khác.
-'@
-
-orca run create --prompt @'
-Đọc src/app/api/classroom/assistant/route.ts và docs/ANTIGRAVITY.md.
-Soát xem provider antigravity còn chỗ nào đòi API key không, và các prompt có còn
-giả định cứng về tên môn/tên file không. Ghi findings.md. KHÔNG sửa code.
-'@
+git init -b main
+git add -A
+git commit -m "ban dau"
+orca repo list --json     # repo phải xuất hiện, lấy id
 ```
+
+`.gitignore` **phải loại `ONLY_FOR_AI_TO_LEARN/`** — đó là slide PDF nặng và có
+giấy tờ hành chính của bạn, không nên nằm trong lịch sử git. Hệ quả: **trong
+worktree sẽ không có thư viện PDF**. Worker phải trỏ tuyệt đối về thư viện ở
+repo chính, hoặc bạn trích sẵn phần cần dùng (xem 6.3).
+
+### 6.2 Một worktree + một terminal cho mỗi worker
+
+```powershell
+$repo = "<repo-id>"
+
+orca worktree create --repo id:$repo --name notes-ktdc  --json
+orca worktree create --repo id:$repo --name notes-vtp2  --json
+orca worktree create --repo id:$repo --name notes-gdqp  --json
+
+orca terminal create --worktree "id:$repo::C:/.../notes-ktdc" `
+                      --shell cmd.exe --title GHI-CHU-KTDC `
+                      --command notes\run.cmd --json
+```
+
+Worktree sinh ra ở `C:/Users/<bạn>/orca/workspaces/<repo>/<tên>`.
+
+### 6.3 Brief để trong file, không nhét prompt dài vào lệnh
+
+Prompt dài có dấu tiếng Việt hay vỡ khi đi qua `cmd /c`. Cách ổn định là viết
+brief ra file rồi cho worker tự đọc:
+
+```
+notes/_brief.md          <- yêu cầu + cấu trúc file kết quả + luật chống bịa
+notes/_source/*.md       <- phần tài liệu đã trích sẵn
+notes/run.cmd            <- launcher
+```
+
+`notes/run.cmd` (chỉ ASCII, không dấu):
+
+```bat
+@echo off
+cd /d %~dp0..
+opencode run --auto --file notes/_brief.md "Lam theo notes/_brief.md va viet ra file duoc noi dung trong brief."
+echo DA_XONG_TERMINAL
+```
+
+Ba điều cần biết về `opencode run`:
+
+- **`--file` một mình không đủ** — phải có message, nếu không sẽ ra
+  `Error: You must provide a message`.
+- **`--auto`** = cho phép tự gọi tool không hỏi. Không có nó thì worker dừng ở
+  màn hình chờ duyệt.
+- **`.cmd` phải là ASCII thuần.** Lần đầu tôi viết message tiếng Việt có dấu
+  vào `.cmd`, cmd.exe mổ file theo OEM codepage và báo
+  `'encode' is not recognized as an internal or external command`. Sửa: để
+  message tiếng Anh, còn lệnh tiếng Việt thì đưa vào `_brief.md` (opencode đọc
+  file UTF-8 bình thường).
+
+### 6.4 Theo dõi và đính chính
+
+```powershell
+orca terminal read  --terminal <handle> --limit 20 --json
+orca terminal send  --terminal <handle> --text notes\fix.cmd --enter --json
+```
+
+`terminal read` trả `tail` là các dòng đã in; `status` là `running` hay đã xong.
+Cách chắc chắn worker xong là **file output đã có** — đừng chỉ nhìn terminal,
+vì agent in ra `Đã viết xong` rồi vẫn có thể hỏng lúc ghi.
+
+Đính chính thì gửi thêm một `.cmd` khác. Lần này tôi dùng nó để bắt hai worker
+viết lại ghi chú cho có dấu tiếng Việt, giữ nguyên số trang — đúng kiểu
+"worker làm xong, người đọc sửa chất lượng, không tự viết lại từ đầu".
+
+### 6.5 Gom kết quả về repo chính
+
+```powershell
+Copy-Item ..\..\orca\workspaces\<repo>\notes-*\notes\*.md .\notes\
+git add notes && git commit -m "notes: ghi chu on tap tu tai lieu that"
+```
+
+### 6.6 Bài học từ lần chạy thật
+
+| Điều | Kết quả |
+| --- | --- |
+| Worker trích slide bằng `extract-library-text.mjs` | Cần trích **trước** ở repo chính rồi copy vào worktree. Worker trong worktree không thấy `ONLY_FOR_AI_TO_LEARN/`, mà tự dò thư mục là mất thời gian vô ích. |
+| `332` và `333` (quy chếp GDQP) | **PDF scan, không có lớp chữ** → extractor trả rỗng. Muốn dạy từ hai file này thì phải OCR trước. |
+| Slide Kinh Tế Đại Cương | Font VNI/TCVN3, dấu vỡ kiểu `teá hoïc`. Worker giữ nguyên chữ nguồn rồi giải nghĩa ngay sau — đọc được. |
+| Slide Vi tích Phân | Mất ký hiệu `∫`, `∑`. Worker **không tự điền**, mà ghi rõ công thức nằm ở đâu và dấu hiệu mất chỗ nào. Đây là hành vi đúng. |
 
 Pattern quan trọng: **mỗi worker một file output riêng, không ai sửa file của
 worker khác**. Rồi nối kết quả lại: worker soát chỉ ra chỗ nào còn giả định cứng
 → một người sửa tuần tự. Các file wiring (`config.ts`, `llm.ts`) tuyệt đối không
 cho nhiều agent sửa cùng lúc — đó là cách nhanh nhất để hỏng.
-
-Sau đó, quy trình chuẩn của `orca-cli`:
-
-```
-orca worktree list                 # xem worker nào xong
-orca run reply <run-id> ...        # gửi câu hỏi/đính chính
-orca worktree release <run-id>     # thu dọn
-```
 
 Xem `skills/orca-cli` và `skills/orchestration` trong máy để lệnh cụ thể theo
 phiên bản Orca bạn đang dùng.
