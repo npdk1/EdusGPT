@@ -22,6 +22,19 @@ export interface GenerationProgress {
   /** Present once the server has assembled the final lesson. */
   lesson?: Lesson | null;
   error?: string | null;
+  /** Every SSE event of this run, in order — the run log below the script. */
+  log: RunLogEntry[];
+}
+
+export interface RunLogEntry {
+  /** Client clock when the event arrived, HH:MM:SS. */
+  at: string;
+  stage?: string;
+  message: string;
+  provider?: string;
+  model?: string;
+  elapsedMs?: number;
+  kind: "stage" | "scene" | "done" | "error";
 }
 
 export interface StreamEvent {
@@ -35,6 +48,9 @@ export interface StreamEvent {
   error?: string;
   /** True when the provider ran out of quota — waiting is the only fix. */
   quota?: boolean;
+  provider?: string;
+  model?: string;
+  elapsedMs?: number;
 }
 
 const EMPTY: GenerationProgress = {
@@ -43,6 +59,7 @@ const EMPTY: GenerationProgress = {
   outlineReady: false,
   steps: [],
   done: false,
+  log: [],
 };
 
 /**
@@ -69,8 +86,21 @@ export function useGenerationStream() {
   }, []);
 
   const applyEvent = useCallback((event: StreamEvent) => {
+    // One row per SSE event, stamped with the client clock. The log is the
+    // honest answer to "where is the model call": every row is one finished
+    // call (or one wait), with the model that answered and how long it took.
+    const entry: RunLogEntry = {
+      at: new Date().toLocaleTimeString("vi-VN", { hour12: false }),
+      stage: event.stage,
+      message: event.type === "error" ? (event.error ?? event.message) : event.message,
+      provider: event.provider,
+      model: event.model,
+      elapsedMs: event.elapsedMs,
+      kind: event.type,
+    };
     setProgress((current) => {
       const percent = Math.max(current.percent, event.progress ?? current.percent);
+      const log = [...current.log, entry];
 
       if (event.type === "error") {
         return {
@@ -78,6 +108,7 @@ export function useGenerationStream() {
           percent,
           message: event.message,
           error: event.error ?? event.message,
+          log,
         };
       }
 
@@ -91,6 +122,7 @@ export function useGenerationStream() {
           done: true,
           lesson: (event.lesson as Lesson) ?? null,
           error: null,
+          log,
         };
       }
 
@@ -103,6 +135,7 @@ export function useGenerationStream() {
           message: event.message,
           outlineReady: true,
           steps: event.outline.scenes,
+          log,
         };
       }
 
@@ -123,10 +156,10 @@ export function useGenerationStream() {
           steps[nextPending] = { ...steps[nextPending], state: "active" };
         }
         stepsRef.current = steps;
-        return { ...current, percent, message: event.message, outlineReady: true, steps };
+        return { ...current, percent, message: event.message, outlineReady: true, steps, log };
       }
 
-      return { ...current, percent, message: event.message };
+      return { ...current, percent, message: event.message, log };
     });
   }, []);
 
@@ -269,8 +302,84 @@ export function GenerationTimeline({ progress }: { progress: GenerationProgress 
   );
 }
 
-function Phase({
-  title,
+const STAGE_LABEL: Record<string, string> = {
+  outline: "Lên dàn ý",
+  "outline-done": "Dàn ý xong",
+  scene: "Viết cảnh",
+  "scene-retry": "Thử lại",
+  "scene-fallback": "Tạm thay",
+};
+
+function formatElapsed(ms: number): string {
+  if (!Number.isFinite(ms) || ms < 0) return "—";
+  const seconds = ms / 1000;
+  if (seconds < 60) return `${seconds.toFixed(1)}s`;
+  const minutes = Math.floor(seconds / 60);
+  return `${minutes}p${Math.round(seconds % 60)}s`;
+}
+
+/**
+ * One row per model call, rendered below the script. The providers answer a
+ * whole call at once and never stream tokens, so there is no live "thinking"
+ * to show — this table is the closest honest thing: which call ran, which
+ * model answered it, and how long it took, in order.
+ */
+export function RunLog({ log }: { log: RunLogEntry[] }) {
+  if (log.length === 0) return null;
+  return (
+    <div className="mt-4 rounded-xl border border-ink-700/70 bg-ink-950/50 p-3.5">
+      <p className="text-sm font-semibold text-mist-100">Nhật ký gọi model</p>
+      <p className="mt-0.5 text-[11px] leading-relaxed text-mist-500">
+        Mỗi dòng là một lần gọi model đã xong: model nào trả lời, mất bao lâu.
+        Nhà cung cấp không gửi từng chữ đang nghĩ nên không xem trực tiếp được
+        quá trình đó — bảng này cho biết cuộc gọi đang ở bước nào.
+      </p>
+      <div className="mt-2 overflow-x-auto">
+        <table className="w-full min-w-[520px] border-collapse text-xs">
+          <thead>
+            <tr className="text-left font-mono text-[11px] uppercase tracking-wide text-mist-500">
+              <th className="border-b border-ink-700 py-1.5 pr-3 font-medium">Giờ</th>
+              <th className="border-b border-ink-700 py-1.5 pr-3 font-medium">Bước</th>
+              <th className="border-b border-ink-700 py-1.5 pr-3 font-medium">Model</th>
+              <th className="border-b border-ink-700 py-1.5 pr-3 text-right font-medium">
+                Thời gian
+              </th>
+              <th className="border-b border-ink-700 py-1.5 font-medium">Chi tiết</th>
+            </tr>
+          </thead>
+          <tbody>
+            {log.map((entry, index) => (
+              <tr key={`${entry.at}-${index}`} className="align-top">
+                <td className="whitespace-nowrap py-1.5 pr-3 font-mono text-[11px] text-mist-500">
+                  {entry.at}
+                </td>
+                <td className="whitespace-nowrap py-1.5 pr-3 text-mist-200">
+                  {entry.kind === "done"
+                    ? "Hoàn tất"
+                    : entry.kind === "error"
+                      ? "Lỗi"
+                      : (entry.stage && STAGE_LABEL[entry.stage]) || "Đang chạy"}
+                </td>
+                <td
+                  className="max-w-[220px] break-all py-1.5 pr-3 font-mono text-[11px] text-brand-200"
+                  title={entry.model ?? entry.provider ?? ""}
+                >
+                  {entry.model ?? entry.provider ?? "—"}
+                </td>
+                <td className="whitespace-nowrap py-1.5 pr-3 text-right font-mono text-[11px] tabular-nums text-mist-300">
+                  {entry.elapsedMs == null ? "—" : formatElapsed(entry.elapsedMs)}
+                </td>
+                <td className="min-w-0 py-1.5 text-mist-300">{entry.message}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  );
+}
+
+function Phase({  title,
   state,
 }: {
   title: string;

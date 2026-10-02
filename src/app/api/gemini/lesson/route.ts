@@ -56,6 +56,14 @@ export interface StreamEvent {
   error?: string;
   /** True when the provider ran out of quota — waiting is the only fix. */
   quota?: boolean;
+  /**
+   * Which backend produced this step and how long the call took. `model` is the
+   * model that actually answered (a backup, when the request rotated), not the
+   * one that was asked for — that is what the run log shows per row.
+   */
+  provider?: string;
+  model?: string;
+  elapsedMs?: number;
 }
 
 const quizSchema: Record<string, unknown> = {
@@ -982,8 +990,11 @@ export async function POST(request: NextRequest) {
           stage: "outline",
           message: "Đang lên dàn ý bài học…",
           progress: 5,
+          provider: creds.provider,
+          model: modelOverride ?? creds.model,
         });
 
+        const outlineStart = Date.now();
         const outlineResult = await generateJson<Outline>(creds, {
           model: modelOverride,
           system: OUTLINE_SYSTEM,
@@ -1045,6 +1056,9 @@ export async function POST(request: NextRequest) {
           stage: "outline-done",
           message: `Dàn ý: ${planned.length} cảnh: "${outline.title ?? topic}"`,
           progress: 25,
+          provider: creds.provider,
+          model: outlineResult.model,
+          elapsedMs: Date.now() - outlineStart,
           // Hand the outline over now so the browser can show it within seconds.
           outline: {
             title: outline.title ?? topic,
@@ -1067,6 +1081,15 @@ export async function POST(request: NextRequest) {
         // Scenes that came back as the "đang được bổ sung" placeholder. Kept as a
         // count so the run can refuse to ship a deck that is mostly holes.
         let fallbackScenes = 0;
+        // Per-scene call facts for the run log: which model answered, how long
+        // the call took (retry included), and whether it needed a second try.
+        // Filled inside `writeScene`, read by the batch loop when it reports
+        // each finished scene — the one thing that answers "where is the model
+        // call at" without streaming tokens the providers never send.
+        const sceneStats = new Map<
+          number,
+          { model: string; elapsedMs: number; retried: boolean; fallback: boolean }
+        >();
         const perSceneSeconds = perScene(planned.length);
 
         /**
@@ -1077,6 +1100,10 @@ export async function POST(request: NextRequest) {
           const plannedScene = planned[index];
           const kind = plannedScene.kind ?? "concept";
           const sceneTitle = plannedScene.title ?? `Cảnh ${index + 1}`;
+          // Wall clock for this scene, retry included. The batch loop reads it
+          // back from `sceneStats` when it reports the finished scene.
+          const callStart = Date.now();
+          let retried = false;
           // The scene's own excerpt: the numbered exercise (or passage) this
           // scene teaches, lifted out of the shared skim so the working comes
           // from the book instead of memory. Empty when nothing matches, in
@@ -1214,11 +1241,14 @@ export async function POST(request: NextRequest) {
           // `generateJson`, so this only covers the call that never came back.
           const detail = await writeOnce(SCENE_TIMEOUT_MS)
             .catch(() => {
+              retried = true;
               send({
                 type: "stage",
                 stage: "scene-retry",
                 message: `Cảnh "${sceneTitle}" bị cắt giữa chừng, thử lại lần nữa.`,
                 progress: Math.round(25 + (index / planned.length) * 70),
+                provider: creds.provider,
+                elapsedMs: Date.now() - callStart,
               });
               return writeOnce(SCENE_RETRY_TIMEOUT_MS);
             })
@@ -1229,17 +1259,31 @@ export async function POST(request: NextRequest) {
               if (result && typeof result.model === "string" && result.model) {
                 generatedModel = result.model;
               }
+              sceneStats.set(index, {
+                model: generatedModel,
+                elapsedMs: Date.now() - callStart,
+                retried,
+                fallback: false,
+              });
               return result;
             })
             .catch(() => {
             // One bad scene must not sink the lesson: keep the outline's shape
             // and ship a minimal body so playback still works.
             fallbackScenes += 1;
+            sceneStats.set(index, {
+              model: "",
+              elapsedMs: Date.now() - callStart,
+              retried,
+              fallback: true,
+            });
             send({
               type: "stage",
               stage: "scene-fallback",
               message: `Cảnh "${sceneTitle}" ghi lỗi, tạm dùng nội dung tối giản.`,
               progress: Math.round(25 + (index / planned.length) * 70),
+              provider: creds.provider,
+              elapsedMs: Date.now() - callStart,
             });
             return {
               data: {
@@ -1298,6 +1342,7 @@ export async function POST(request: NextRequest) {
           );
           for (let offset = 0; offset < written.length; offset += 1) {
             scenes.push(written[offset]);
+            const stats = sceneStats.get(start + offset);
             send({
               type: "scene",
               stage: "scene",
@@ -1306,6 +1351,9 @@ export async function POST(request: NextRequest) {
               }`,
               progress: Math.round(25 + ((start + offset + 1) / planned.length) * 70),
               scene: written[offset],
+              provider: creds.provider,
+              model: stats?.fallback ? undefined : stats?.model,
+              elapsedMs: stats?.elapsedMs,
             });
           }
         }
@@ -1413,6 +1461,9 @@ export async function POST(request: NextRequest) {
           message: `${lesson.scenes.length} cảnh, ${lesson.duration}s.`,
           progress: 100,
           lesson,
+          provider: creds.provider,
+          model: generatedModel,
+          elapsedMs: Date.now() - outlineStart,
         });
       } catch (error) {
         const detail =

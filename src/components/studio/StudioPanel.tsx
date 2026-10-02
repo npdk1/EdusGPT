@@ -44,7 +44,7 @@ import {
   saveStoredLesson,
   setActiveLessonId,
 } from "@/lib/lesson/storage";
-import { useGenerationStream, GenerationTimeline } from "./GenerationTimeline";
+import { useGenerationStream, GenerationTimeline, RunLog } from "./GenerationTimeline";
 import { formatClock, slugify } from "@/lib/format";
 
 const PRESETS = [
@@ -532,6 +532,9 @@ export function StudioPanel() {
         {busy || stream.progress.steps.length > 0 || streamError ? (
           <GenerationTimeline progress={stream.progress} />
         ) : null}
+        {!lesson && stream.progress.log.length > 0 ? (
+          <RunLog log={stream.progress.log} />
+        ) : null}
 
         {error || streamError ? (
           <p className="flex items-start gap-2 rounded-xl border border-ember-500/50 bg-ember-500/10 px-3.5 py-2.5 text-sm text-mist-100">
@@ -648,6 +651,8 @@ export function StudioPanel() {
               Bỏ kết quả này
             </button>
           </div>
+
+          <RunLog log={stream.progress.log} />
         </section>
       ) : null}
 
