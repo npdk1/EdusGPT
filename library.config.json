@@ -1,0 +1,10 @@
+{
+  "_comment": [
+    "Machine-specific labels for the document library. Every key is optional.",
+    "Leave a key out and scripts/index-course-library.mjs infers it from",
+    "folder structure and filenames."
+  ],
+  "rootLabel": "(thư mục gốc)",
+  "sensitivePatterns": [],
+  "ignoreExtensions": []
+}

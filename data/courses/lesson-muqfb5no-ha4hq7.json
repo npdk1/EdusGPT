@@ -1,0 +1,253 @@
+{
+  "format": "eduai-studio/course@1",
+  "updatedAt": "2026-10-02T03:48:35.617Z",
+  "lesson": {
+    "id": "lesson-muqfb5no-ha4hq7",
+    "title": "Định nghĩa tích phân Riemann qua tổng phân hoạch",
+    "subject": "Vi tích Phân 2",
+    "grade": "Đại học",
+    "language": "vi",
+    "fps": 30,
+    "duration": 120,
+    "scenes": [
+      {
+        "id": "ai-1",
+        "kind": "cover",
+        "accent": "brand",
+        "title": "Diện tích hình cong tính từ các thanh chữ nhật",
+        "subtitle": "Chia nhỏ miền cong thành dải hẹp giúp tính chuẩn xác diện tích",
+        "bullets": [
+          "Đoạn [a, b] chia thành n khoảng nhỏ có bề rộng \\Delta x_i",
+          "Tổng diện tích n cột chữ nhật xấp xỉ phần diện tích cong"
+        ],
+        "formula": "S \\approx \\sum_{i=1}^n f(x_i^*) \\Delta x_i",
+        "visualNote": "Hình minh họa miền cong dưới đồ thị f(x) được phủ bởi n cột chữ nhật đứng",
+        "narration": "Để tính diện tích dưới một đường cong phức tạp, ta bắt đầu từ hình quen thuộc nhất là hình chữ nhật. Bằng cách chia đoạn đáy thành nhiều đoạn nhỏ, mỗi đoạn dựng lên một cột thẳng đứng chạm vào đồ thị. Tổng diện tích các cột này cho giá trị xấp xỉ rất sát với miền cong cần tìm.",
+        "pointer": [
+          {
+            "target": "title",
+            "label": "Giới thiệu ý tưởng tính diện tích hình cong qua hình chữ nhật"
+          },
+          {
+            "target": "bullet-0",
+            "label": "Chia nhỏ đoạn đáy thành các đoạn con để dựng cột"
+          },
+          {
+            "target": "formula",
+            "label": "Công thức xấp xỉ diện tích bằng tổng diện tích các cột"
+          }
+        ],
+        "start": 0,
+        "duration": 24
+      },
+      {
+        "id": "ai-2",
+        "kind": "concept",
+        "accent": "brand",
+        "title": "Phân hoạch chia đoạn thành nhiều đoạn con nhỏ",
+        "subtitle": "Đoạn a đến b được chia bởi các mốc và độ dài lớn nhất là độ mịn",
+        "bullets": [
+          "Các mốc x0 = a < x1 < ... < xn = b tạo thành n đoạn con",
+          "Độ mịn là max Delta xi, càng nhỏ thì phép chia càng nhuyễn"
+        ],
+        "formula": "\\max_{1 \\le i \\le n} \\Delta x_i",
+        "visualNote": "Trục số đoạn [a, b] chia thành n đoạn con bởi các mốc x0 đến xn, đoạn dài nhất được tô màu đánh dấu độ mịn",
+        "narration": "Từ ý tưởng xấp xỉ diện tích, chúng ta chia đoạn a b thành nhiều phần nhỏ. Các mốc từ x không đến x n tạo ra n đoạn con liên tiếp. Khoảng chia dài nhất được quy ước là độ mịn của phân hoạch. Khi giá trị này càng bé, phép chia càng nhuyễn và diện tích tính càng chính xác.",
+        "pointer": [
+          {
+            "target": "title",
+            "label": "Ý tưởng chia nhỏ đoạn"
+          },
+          {
+            "target": "bullet-0",
+            "label": "Các mốc chia và n đoạn con"
+          },
+          {
+            "target": "formula",
+            "label": "Định nghĩa độ mịn cực đại"
+          },
+          {
+            "target": "bullet-1",
+            "label": "Ý nghĩa của độ mịn nhuyễn"
+          }
+        ],
+        "start": 24,
+        "duration": 24
+      },
+      {
+        "id": "ai-3",
+        "kind": "formula",
+        "accent": "gold",
+        "title": "Tổng Riemann gom diện tích mọi cột chữ nhật",
+        "subtitle": "Giá trị hàm tại điểm mẫu nhân với độ rộng từng đoạn con",
+        "bullets": [
+          "Độ rộng đáy đoạn con: \\Delta x_i = x_i - x_{i-1}",
+          "Diện tích mỗi cột chữ nhật: f(x_i^*) \\Delta x_i"
+        ],
+        "formula": "S_n = \\sum_{i=1}^{n} f(x_i^*) \\Delta x_i",
+        "visualNote": "Mô hình n cột chữ nhật ghép sát nhau dưới đường cong f(x) trên đoạn [a, b]",
+        "narration": "Vừa chia đoạn thẳng xong, ta dựng các cột chữ nhật để xấp xỉ diện tích. Mỗi đoạn con có bề rộng đáy là hiệu hai điểm chia liên tiếp. Chiều cao cột lấy theo giá trị hàm tại điểm mẫu, nhân với đáy sẽ ra diện tích. Cộng dồn tất cả lại, bạn nhận được tổng tích phân mang tên Riemann.",
+        "pointer": [
+          {
+            "target": "title",
+            "label": "Dẫn dắt dựng cột chữ nhật xấp xỉ diện tích"
+          },
+          {
+            "target": "bullet-0",
+            "label": "Giải thích bề rộng đáy đoạn con"
+          },
+          {
+            "target": "bullet-1",
+            "label": "Giải thích chiều cao và diện tích từng cột"
+          },
+          {
+            "target": "formula",
+            "label": "Giới thiệu công thức tổng Riemann"
+          }
+        ],
+        "start": 48,
+        "duration": 24
+      },
+      {
+        "id": "ai-4",
+        "kind": "quiz",
+        "accent": "ember",
+        "title": "Điểm mẫu tùy ý không làm đổi giới hạn tích phân",
+        "subtitle": "Kiểm tra cách chọn điểm mẫu biên trái biên phải và trung điểm",
+        "bullets": [
+          "Tổng L n và R n dùng hai đầu mút, còn M n dùng trung điểm",
+          "Sai số giữa tổng Riemann và tích phân luôn bé hơn epsilon"
+        ],
+        "visualNote": "Khối câu hỏi trắc nghiệm tương tác kiểm tra tính chất hội tụ của tổng Riemann khi đổi điểm mẫu.",
+        "narration": "Vừa rồi chúng ta đã xét hai cách chọn điểm mẫu là biên trái và trung điểm. Khi lát cắt đủ mịn, sai số giữa các cách chọn này sẽ hoàn toàn triệt tiêu. Bạn hãy nhìn câu hỏi trên bảng và chọn xem giới hạn tích phân có thay đổi hay không.",
+        "pointer": [
+          {
+            "target": "subtitle",
+            "label": "Nhắc lại hai cách chọn điểm mẫu ở slide trước"
+          },
+          {
+            "target": "bullet-1",
+            "label": "Giải thích sai số triệt tiêu khi phân hoạch đủ mịn"
+          },
+          {
+            "target": "quiz",
+            "label": "Hướng dẫn học sinh làm câu hỏi trắc nghiệm"
+          }
+        ],
+        "quiz": {
+          "question": "Khi hàm f liên tục trên đoạn [a, b], nếu đổi cách chọn điểm mẫu từ biên trái sang trung điểm thì giới hạn của tổng Riemann khi độ mịn tiến về không sẽ thế nào?",
+          "options": [
+            {
+              "id": "A",
+              "text": "Không đổi, cả hai cách chọn đều hội tụ về cùng tích phân của f trên đoạn [a, b].",
+              "isCorrect": true,
+              "explanation": "Theo định nghĩa ở trang 154, điểm mẫu được chọn tùy ý trong mỗi đoạn con thì giới hạn tổng Riemann vẫn bằng tích phân xác định."
+            },
+            {
+              "id": "B",
+              "text": "Tăng lên, vì giá trị hàm tại trung điểm luôn lớn hơn giá trị tại biên trái.",
+              "isCorrect": false,
+              "explanation": "Giá trị hàm tại trung điểm phụ thuộc vào tính đơn điệu của hàm số, không phải lúc nào cũng lớn hơn."
+            },
+            {
+              "id": "C",
+              "text": "Không xác định được, do tổng trung điểm M n không phải là một tổng Riemann.",
+              "isCorrect": false,
+              "explanation": "Tổng trung điểm M n là một trường hợp của tổng Riemann khi điểm đại diện là trung điểm theo trang 153."
+            },
+            {
+              "id": "D",
+              "text": "Bị lệch đi một đại lượng bằng độ dài lớn nhất của các đoạn chia.",
+              "isCorrect": false,
+              "explanation": "Khi độ mịn tiến về không, độ dài lớn nhất của các đoạn con triệt tiêu nên sai số biến mất."
+            }
+          ]
+        },
+        "start": 72,
+        "duration": 24
+      },
+      {
+        "id": "ai-5",
+        "kind": "summary",
+        "accent": "brand",
+        "title": "Tích phân là giới hạn của tổng Riemann",
+        "subtitle": "Phân hoạch càng mịn thì tổng chữ nhật càng sát tích phân",
+        "bullets": [
+          "Tích phân là số thực mà tổng Riemann tiến gần tuỳ ý",
+          "Khoảng chia tiến về không thì sai số nhỏ hơn mức tuỳ ý"
+        ],
+        "formula": "\\int_a^b f(x)\\,dx = \\lim_{\\max \\Delta x_i \\to 0} \\sum_{i=1}^n f(x_i^*) \\Delta x_i",
+        "visualNote": "Sơ đồ diện tích dưới đường cong với các dải chữ nhật hẹp dần về không",
+        "narration": "Bản chất của tích phân Riemann là giới hạn của tổng diện tích các hình chữ nhật. Khi chia đoạn thành các phần nhỏ tuỳ ý, tổng Riemann sẽ hội tụ về một số thực duy nhất. Con số giới hạn đó đại diện cho diện tích chính xác dưới đường cong khi phân hoạch đủ mịn.",
+        "pointer": [
+          {
+            "target": "title",
+            "label": "Giới thiệu bản chất tích phân Riemann"
+          },
+          {
+            "target": "formula",
+            "label": "Giải thích giới hạn hội tụ trên công thức"
+          },
+          {
+            "target": "bullet-0",
+            "label": "Ý nghĩa của số thực giới hạn và độ mịn"
+          }
+        ],
+        "start": 96,
+        "duration": 24
+      }
+    ],
+    "chapters": [
+      {
+        "id": "ch-1",
+        "title": "Diện tích hình cong tính từ các thanh chữ nhật",
+        "start": 0,
+        "end": 24,
+        "sceneIds": [
+          "ai-1"
+        ]
+      },
+      {
+        "id": "ch-2",
+        "title": "Phân hoạch chia đoạn thành nhiều đoạn con nhỏ",
+        "start": 24,
+        "end": 48,
+        "sceneIds": [
+          "ai-2"
+        ]
+      },
+      {
+        "id": "ch-3",
+        "title": "Tổng Riemann gom diện tích mọi cột chữ nhật",
+        "start": 48,
+        "end": 72,
+        "sceneIds": [
+          "ai-3"
+        ]
+      },
+      {
+        "id": "ch-4",
+        "title": "Điểm mẫu tùy ý không làm đổi giới hạn tích phân",
+        "start": 72,
+        "end": 96,
+        "sceneIds": [
+          "ai-4"
+        ]
+      },
+      {
+        "id": "ch-5",
+        "title": "Tích phân là giới hạn của tổng Riemann",
+        "start": 96,
+        "end": 120,
+        "sceneIds": [
+          "ai-5"
+        ]
+      }
+    ],
+    "source": "gemini",
+    "theme": "paper",
+    "showPointer": true,
+    "model": "gemini-3.8-flash-high",
+    "createdAt": "2026-10-02T03:48:35.556Z"
+  }
+}

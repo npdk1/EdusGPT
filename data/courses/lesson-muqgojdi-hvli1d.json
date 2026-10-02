@@ -1,0 +1,952 @@
+{
+  "format": "eduai-studio/course@1",
+  "updatedAt": "2026-10-02T04:26:59.493Z",
+  "lesson": {
+    "id": "lesson-muqgojdi-hvli1d",
+    "title": "Định nghĩa tích phân Riemann từ một lớp đến tích phân bội",
+    "subject": "Vi tích Phân 2",
+    "grade": "Đại học",
+    "language": "vi",
+    "fps": 30,
+    "duration": 912,
+    "scenes": [
+      {
+        "id": "ai-1",
+        "kind": "cover",
+        "accent": "brand",
+        "title": "Phép chia nhỏ vô hạn giải bài toán diện tích cong",
+        "subtitle": "Từ ước lượng hình chữ nhật đến định nghĩa chặt chẽ của tích phân Riemann",
+        "bullets": [
+          "Cảnh \"Phép chia nhỏ vô hạn giải bài toán diện tích cong\" đang được bổ sung.",
+          "Học sinh hiểu được mục tiêu bài học là chuyển hóa việc tính diện tích hình cong thành giới hạn tổng các mảnh thẳng"
+        ],
+        "narration": "Phần \"Phép chia nhỏ vô hạn giải bài toán diện tích cong\" đang được bổ sung. Bạn bỏ qua cảnh này, xem cảnh tiếp theo.",
+        "start": 0,
+        "duration": 38
+      },
+      {
+        "id": "ai-2",
+        "kind": "concept",
+        "accent": "brand",
+        "title": "Phần một khám phá cách xấp xỉ diện tích phẳng",
+        "subtitle": "Hành trình khởi đầu từ những hình chữ nhật quen thuộc của hình học sơ cấp",
+        "bullets": [
+          "Chia nhỏ đoạn đáy thành n đoạn con để dựng cột chữ nhật",
+          "Tổng diện tích n hình chữ nhật xấp xỉ hình thang cong"
+        ],
+        "formula": "S_n = \\sum_{i=1}^n f(x_i^*) \\Delta x_i",
+        "visualNote": "Hình thang cong được chia thành n dải chữ nhật đứng sát nhau dưới đường cong hàm số",
+        "narration": "Sau khi nhìn bức tranh toàn cảnh, chúng ta bắt đầu phần một bằng bài toán tính diện tích của hình thang cong. Hình học sơ cấp chỉ tính được đa giác phẳng, nên ta chia đoạn đáy thành các đoạn con để dựng cột chữ nhật. Mỗi cột có đáy delta x và chiều cao theo giá trị hàm, ghép lại thành tổng diện tích xấp xỉ miền cong. Theo bạn, khi số cột tăng lên rất nhiều và bề rộng mỗi cột thu nhỏ về không, sai số sẽ ra sao?",
+        "pointer": [
+          {
+            "target": "title",
+            "label": "Dẫn nhập phần một về diện tích hình thang cong"
+          },
+          {
+            "target": "bullet-0",
+            "label": "Chia đáy thành các đoạn con dựng cột chữ nhật"
+          },
+          {
+            "target": "formula",
+            "label": "Tổng diện tích các hình chữ nhật xấp xỉ"
+          },
+          {
+            "target": "bullet-1",
+            "label": "Hỏi gợi mở về sai số khi số cột tiến ra vô hạn"
+          }
+        ],
+        "start": 38,
+        "duration": 38
+      },
+      {
+        "id": "ai-3",
+        "kind": "concept",
+        "accent": "brand",
+        "title": "Đường cong làm công thức diện tích sơ cấp bất lực",
+        "subtitle": "Tam giác và tứ giác có cạnh thẳng nên dễ đo nhưng parabol thì khác",
+        "bullets": [
+          "Đa giác cạnh thẳng luôn tính được nhờ chia nhỏ tam giác",
+          "Biên cong parabol y = x² không thể ghép từ đoạn thẳng"
+        ],
+        "visualNote": "So sánh đa giác cạnh thẳng chia thành các tam giác với miền cong dưới parabol y = x²",
+        "narration": "Các công thức diện tích sơ cấp mà chúng ta từng học hoàn toàn bất lực khi phải đối mặt với hình có đường cong. Với tam giác hay tứ giác, mọi cạnh đều thẳng tắp nên bạn dễ dàng tính toán diện tích bằng chiều cao và cạnh đáy. Ngay cả một đa giác phức tạp nhiều cạnh cũng chỉ cần kẻ thêm vài đường chéo là chia xong thành từng tam giác nhỏ để cộng lại. Thế nhưng khi xét miền dưới parabol y bằng x bình phương, biên cong liên tục khiến việc ghép các đoạn thẳng luôn để lại sai số.",
+        "pointer": [
+          {
+            "target": "title",
+            "label": "Giới thiệu sự bế tắc của công thức diện tích sơ cấp trước đường cong"
+          },
+          {
+            "target": "subtitle",
+            "label": "Nhắc lại tính chất cạnh thẳng của tam giác và tứ giác"
+          },
+          {
+            "target": "bullet-0",
+            "label": "Nguyên lý chia đa giác thành các tam giác nhỏ để đo diện tích"
+          },
+          {
+            "target": "bullet-1",
+            "label": "Biên cong của parabol khiến phép ghép cạnh thẳng bị sai số"
+          }
+        ],
+        "start": 76,
+        "duration": 38
+      },
+      {
+        "id": "ai-4",
+        "kind": "concept",
+        "accent": "gold",
+        "title": "Hình chữ nhật là công cụ đo lường đơn giản nhất",
+        "subtitle": "Diện tích đáy nhân chiều cao là công thức cơ bản luôn kiểm soát được",
+        "bullets": [
+          "Đáy là độ dài đoạn chia, chiều cao lấy tại điểm mẫu bất kỳ",
+          "Sai số biên cong thu hẹp khi tăng số lượng hình chữ nhật"
+        ],
+        "formula": "S_i = f(x_i^*) \\cdot \\Delta x_i",
+        "visualNote": "Mô hình các cột hình chữ nhật dựng đứng xấp xỉ phần diện tích dưới đường cong",
+        "narration": "Đứng trước một hình phẳng có biên cong phức tạp, cách tự nhiên của chúng ta là quy về hình học quen thuộc nhất. Hình chữ nhật có diện tích đáy nhân chiều cao, giúp bạn luôn tính được giá trị chuẩn xác mà không gặp trở ngại. Khi chia nhỏ đáy và lấy chiều cao tại điểm mẫu, từng cột chữ nhật con đều tính được một cách tường minh. Dù đỉnh cột tạo bậc thang so với đường cong, tăng số lượng mảnh chia sẽ làm phần sai số này dần biến mất.",
+        "pointer": [
+          {
+            "target": "title",
+            "label": "Lý do chọn hình chữ nhật"
+          },
+          {
+            "target": "formula",
+            "label": "Công thức cơ bản của hình chữ nhật"
+          },
+          {
+            "target": "bullet-0",
+            "label": "Dựng cột trên từng đoạn phân hoạch"
+          },
+          {
+            "target": "bullet-1",
+            "label": "Cơ chế thu hẹp sai số bậc thang"
+          }
+        ],
+        "start": 114,
+        "duration": 38
+      },
+      {
+        "id": "ai-5",
+        "kind": "concept",
+        "accent": "brand",
+        "title": "Phân hoạch cắt đoạn đáy thành nhiều đoạn nhỏ",
+        "subtitle": "Tập hợp các điểm chia từ a đến b tạo nên một phân hoạch có thứ tự",
+        "bullets": [
+          "Chia [a, b] thành n đoạn con liên tiếp [x_{i-1}, x_i]",
+          "Độ rộng mỗi đoạn xác định bởi \\Delta x_i = x_i - x_{i-1}"
+        ],
+        "formula": "a = x_0 < x_1 < \\dots < x_{n-1} < x_n = b",
+        "visualNote": "Trục số từ a đến b với các mốc toạ độ x_0 đến x_n biểu diễn n đoạn con",
+        "narration": "Vừa rồi ta thấy cần tính diện tích hình cong, giờ chúng ta bắt đầu bằng việc chia đoạn đáy từ a đến b thành nhiều phần nhỏ. Một phân hoạch là dãy điểm sắp thứ tự tăng dần, bắt đầu từ điểm x không bằng a cho tới x n bằng b. Các điểm mốc này chia đoạn ban đầu thành n đoạn con liên tiếp dạng từ x i trừ một đến x i. Mỗi đoạn có bề rộng đen ta x i bằng x i trừ x i trừ một, và các đoạn con có thể dài ngắn khác nhau.",
+        "pointer": [
+          {
+            "target": "title",
+            "label": "Dẫn nhập chia đoạn đáy"
+          },
+          {
+            "target": "formula",
+            "label": "Dãy điểm chia tăng dần"
+          },
+          {
+            "target": "bullet-0",
+            "label": "Tạo n đoạn con liên tiếp"
+          },
+          {
+            "target": "bullet-1",
+            "label": "Độ dài từng đoạn con"
+          }
+        ],
+        "start": 152,
+        "duration": 38
+      },
+      {
+        "id": "ai-6",
+        "kind": "formula",
+        "accent": "gold",
+        "title": "Độ dài đoạn con đo độ rộng từng cột chữ nhật",
+        "subtitle": "Hiệu số giữa hai mốc liên tiếp xác định đáy của mỗi cột diện tích",
+        "bullets": [
+          "Phân hoạch chia [a, b] thành n đoạn con [x_{i-1}, x_i]",
+          "Độ dài Delta x_i = x_i - x_{i-1} xác định bề rộng đáy cột"
+        ],
+        "formula": "\\Delta x_i = x_i - x_{i-1}",
+        "visualNote": "Trục tọa độ minh họa hai mốc x_{i-1} và x_i với mũi tên đo độ dài delta x_i làm đáy cột chữ nhật",
+        "narration": "Khi đã có các mốc phân hoạch trên đoạn a b, chúng ta cần biết mỗi phần nhỏ rộng bao nhiêu để tính diện tích. Độ dài của đoạn con thứ i, ký hiệu là delta x i, được tính bằng tọa độ mốc sau x i trừ đi mốc trước x i trừ một. Chẳng hạn nếu mốc trước bằng một và mốc sau bằng một phẩy năm thì đoạn con thứ i dài đúng không phẩy năm đơn vị. Khoảng cách này luôn là số dương và đóng vai trò chiều rộng cạnh đáy cho cột chữ nhật tương ứng trên đồ thị.",
+        "pointer": [
+          {
+            "target": "title",
+            "label": "Giới thiệu mục tiêu đo chiều rộng đoạn con"
+          },
+          {
+            "target": "formula",
+            "label": "Nêu công thức hiệu hai mốc liên tiếp"
+          },
+          {
+            "target": "bullet-0",
+            "label": "Minh hoạ số đo đoạn con bằng ví dụ số cụ thể"
+          },
+          {
+            "target": "bullet-1",
+            "label": "Ý nghĩa hình học làm chiều rộng đáy cột chữ nhật"
+          }
+        ],
+        "start": 190,
+        "duration": 38
+      },
+      {
+        "id": "ai-7",
+        "kind": "concept",
+        "accent": "brand",
+        "title": "Độ mịn là đoạn con có độ dài lớn nhất",
+        "subtitle": "Đoạn rộng nhất kiểm soát độ nhuyễn của toàn bộ phép chia trên miền",
+        "bullets": [
+          "Đoạn con [x_{i-1}, x_i] có độ dài \\Delta x_i = x_i - x_{i-1}",
+          "Độ mịn tiến về 0 ép mọi đoạn con đồng thời co về 0"
+        ],
+        "formula": "\\|\\mathcal{P}\\| = \\max_{1 \\le i \\le n} \\Delta x_i",
+        "visualNote": "Trục số [a, b] chia thành n đoạn con với độ dài khác nhau, làm nổi bật đoạn dài nhất Delta x_i đạt giá trị cực đại",
+        "narration": "Khi chia đoạn a b thành nhiều khoảng con, các khoảng này thường có độ dài khác nhau nên ta cần một thước đo chung. Độ mịn của phân hoạch được chọn là độ dài của đoạn con lớn nhất, tức giá trị cực đại trong các khoảng delta x i. Chỉ cần bạn bóp đoạn dài nhất này co nhỏ lại, mọi đoạn con còn lại đều bắt buộc phải nhỏ theo. Nhờ vậy, khi cho độ mịn tiến về không, chúng ta yên tâm rằng cả miền chia đều trở nên nhuyễn mịn đồng đều.",
+        "pointer": [
+          {
+            "target": "subtitle",
+            "label": "Nhu cầu kiểm soát kích thước các đoạn chia"
+          },
+          {
+            "target": "formula",
+            "label": "Công thức độ mịn bằng giá trị cực đại"
+          },
+          {
+            "target": "bullet-0",
+            "label": "Đoạn lớn nhất khống chế toàn bộ phân hoạch"
+          },
+          {
+            "target": "bullet-1",
+            "label": "Ý nghĩa của việc cho độ mịn tiến về 0"
+          }
+        ],
+        "start": 228,
+        "duration": 38
+      },
+      {
+        "id": "ai-8",
+        "kind": "diagram",
+        "accent": "gold",
+        "title": "Sơ đồ phân hoạch đều chia đoạn thành n phần bằng nhau",
+        "subtitle": "Mỗi bước nhảy có cùng chiều rộng giúp tính toán đại số đơn giản hơn",
+        "bullets": [
+          "Độ dài mỗi đoạn con cố định: \\Delta x = (b - a)/n",
+          "Tọa độ mốc chia thứ i: x_i = a + i \\Delta x"
+        ],
+        "formula": "\\Delta x = \\frac{b - a}{n}, \\quad x_i = a + i \\Delta x",
+        "visualNote": "Sơ đồ trục số biểu diễn đoạn [a, b] chia thành n đoạn con đều nhau bằng các mốc x_0 đến x_n với khoảng cách delta x",
+        "narration": "Khi chia đoạn lấy tích phân thành n phần bằng nhau, chúng ta có một phân hoạch đều để rút gọn tính toán đại số. Khoảng cách giữa hai điểm mốc kề nhau, ký hiệu là đenta x, luôn bằng b trừ a chia cho n. Vì các đoạn con có cùng chiều rộng, bạn dễ dàng đưa thừa số này ra ngoài dấu tổng thay vì phải nhân riêng từng số hạng. Từ điểm đầu a, tọa độ mốc thứ i được tính trực tiếp bằng a cộng với i lần bước nhảy đenta x.",
+        "pointer": [
+          {
+            "target": "title",
+            "label": "Giới thiệu khái niệm phân hoạch đều trên đoạn lấy tích phân"
+          },
+          {
+            "target": "formula",
+            "label": "Công thức xác định độ dài mỗi đoạn con đenta x"
+          },
+          {
+            "target": "bullet-0",
+            "label": "Độ dài các đoạn con đều bằng nhau"
+          },
+          {
+            "target": "bullet-1",
+            "label": "Tọa độ mốc chia thứ i theo bước nhảy"
+          }
+        ],
+        "start": 266,
+        "duration": 38
+      },
+      {
+        "id": "ai-9",
+        "kind": "concept",
+        "accent": "brand",
+        "title": "Điểm đại diện quyết định chiều cao của từng cột",
+        "subtitle": "Mỗi đoạn con chọn một điểm mẫu tùy ý để lấy giá trị hàm số",
+        "bullets": [
+          "Mỗi đoạn con có đáy delta x_i và chiều cao f(x_i*)",
+          "Điểm mẫu x_i* được chọn tùy ý trong đoạn con"
+        ],
+        "formula": "h_i = f(x_i^*), \\quad x_i^* \\in [x_{i-1}, x_i]",
+        "visualNote": "Đồ thị hàm số với đoạn con [x_{i-1}, x_i], điểm mẫu x_i* gióng lên đường cong xác định chiều cao cột chữ nhật",
+        "narration": "Vừa rồi ta đã chia nhỏ đoạn lấy tích phân, giờ chúng ta cần xác định chiều cao cho từng cột chữ nhật. Trên mỗi đoạn con, bạn chọn một điểm mẫu ích i sao tùy ý rồi tính giá trị hàm số tại đó. Độ cao này nhân với độ dài đáy đen-ta ích i sẽ cho ta diện tích của từng hình chữ nhật con. Liệu việc bạn chọn điểm mẫu ở mút trái hay ở giữa có làm thay đổi kết quả khi số đoạn con tăng lên vô hạn không?",
+        "pointer": [
+          {
+            "target": "title",
+            "label": "Dẫn dắt từ phân hoạch sang chiều cao cột"
+          },
+          {
+            "target": "formula",
+            "label": "Chọn điểm mẫu và tính giá trị hàm số"
+          },
+          {
+            "target": "bullet-0",
+            "label": "Diện tích cột bằng đáy nhân chiều cao"
+          },
+          {
+            "target": "bullet-1",
+            "label": "Tính tùy ý của việc chọn vị trí điểm mẫu"
+          }
+        ],
+        "start": 304,
+        "duration": 38
+      },
+      {
+        "id": "ai-10",
+        "kind": "formula",
+        "accent": "gold",
+        "title": "Tổng Riemann cộng diện tích tất cả cột chữ nhật",
+        "subtitle": "Phép nhân chiều cao với đáy rồi lấy tổng cho ta diện tích xấp xỉ",
+        "bullets": [
+          "Đáy là độ rộng \\Delta x_i, chiều cao là giá trị f(x_i^*)",
+          "Điểm mẫu x_i^* chọn tùy ý trên từng đoạn con [x_{i-1}; x_i]"
+        ],
+        "formula": "S_n = \\sum_{i=1}^n f(x_i^*) \\Delta x_i",
+        "visualNote": "Công thức tổng Riemann nổi bật ở trung tâm, làm rõ cấu trúc đáy nhân chiều cao",
+        "narration": "Vừa rồi ta đã chia đoạn thành nhiều phần nhỏ, giờ chúng ta dựng các cột chữ nhật để ước lượng diện tích dưới đường cong. Tổng Riemann cộng gộp diện tích của n hình chữ nhật, với mỗi số hạng là tích giữa chiều cao và độ rộng đáy. Độ rộng đáy là độ dài đoạn con, còn chiều cao là giá trị hàm số tại điểm mẫu bạn chọn. Dù bạn chọn điểm mẫu ở đầu mút hay trung điểm, khi các đoạn con co lại thật nhỏ, tổng này sẽ tiến gần diện tích thực.",
+        "pointer": [
+          {
+            "target": "title",
+            "label": "Ý tưởng dùng cột chữ nhật xấp xỉ diện tích"
+          },
+          {
+            "target": "formula",
+            "label": "Cấu trúc tổng Riemann Sn"
+          },
+          {
+            "target": "bullet-0",
+            "label": "Ý nghĩa đáy và chiều cao mỗi cột"
+          },
+          {
+            "target": "bullet-1",
+            "label": "Cách chọn điểm mẫu và sự hội tụ"
+          }
+        ],
+        "start": 342,
+        "duration": 38
+      },
+      {
+        "id": "ai-11",
+        "kind": "concept",
+        "accent": "brand",
+        "title": "Tổng Riemann trái lấy chiều cao tại đầu mút trái",
+        "subtitle": "Ký hiệu L_n cố định điểm mẫu tại hoành độ x_{i-1} của mỗi đoạn",
+        "bullets": [
+          "Điểm mẫu x_i^* được chọn cố định là biên trái x_{i-1}",
+          "Mỗi hình chữ nhật có đáy delta x_i và chiều cao f(x_{i-1})"
+        ],
+        "formula": "L_n = \\sum_{i=1}^{n} f(x_{i-1}) \\Delta x_i",
+        "visualNote": "Sơ đồ dựng n hình chữ nhật với đỉnh trên bên trái chạm đồ thị f(x) tại hoành độ x_{i-1}",
+        "narration": "Vừa rồi ta đã biết điểm mẫu được chọn tuỳ ý, giờ ta xét trường hợp lấy cố định tại đầu mút bên trái. Khi chọn điểm đại diện tại x i trừ một, chiều cao cột chữ nhật được quyết định bởi giá trị hàm số ở mép trái. Tổng L n là diện tích của n hình chữ nhật, có đáy delta x i và chiều cao bằng f tại x i trừ một. Khi hàm số đồng biến, các cột này luôn nằm dưới đường cong khiến tổng L n nhỏ hơn tích phân thật.",
+        "pointer": [
+          {
+            "target": "title",
+            "label": "Giới thiệu tổng Riemann trái"
+          },
+          {
+            "target": "bullet-0",
+            "label": "Chọn hoành độ x_{i-1} làm điểm mẫu"
+          },
+          {
+            "target": "formula",
+            "label": "Thiết lập công thức tổng L_n"
+          },
+          {
+            "target": "bullet-1",
+            "label": "Ý nghĩa hình học của tổng trái"
+          }
+        ],
+        "start": 380,
+        "duration": 38
+      },
+      {
+        "id": "ai-12",
+        "kind": "concept",
+        "accent": "brand",
+        "title": "Tổng Riemann phải lấy chiều cao tại đầu mút phải",
+        "subtitle": "Ký hiệu R_n cố định điểm mẫu tại hoành độ x_i của từng đoạn con",
+        "bullets": [
+          "Điểm mẫu x_i* lấy tại hoành độ mút phải x_i của mỗi đoạn",
+          "Nếu hàm đồng biến, Rn lớn hơn diện tích thực và lớn hơn Ln"
+        ],
+        "formula": "R_n = \\sum_{i=1}^n f(x_i) \\Delta x_i",
+        "visualNote": "Hình minh họa đồ thị hàm đồng biến với các hình chữ nhật lấy chiều cao tại mút phải nhô cao hơn đường cong",
+        "narration": "Vừa rồi ta đã biết tổng trái, bây giờ với tổng Riemann phải, chúng ta lấy chiều cao mỗi cột tại biên bên phải. Trên mỗi đoạn con, điểm mẫu được lấy ngay tại mút phải x i để xác định chiều cao tương ứng của từng hình chữ nhật. Từ đó ta có công thức R n bằng tổng các tích giữa giá trị hàm số với độ rộng của từng đoạn chia. Khi hàm đồng biến đi lên, các cột này nhô cao hơn đồ thị, khiến tổng phải luôn lớn hơn diện tích thực và lớn hơn tổng trái.",
+        "pointer": [
+          {
+            "target": "title",
+            "label": "Giới thiệu tổng Riemann phải"
+          },
+          {
+            "target": "bullet-0",
+            "label": "Chọn điểm mẫu tại mút phải"
+          },
+          {
+            "target": "formula",
+            "label": "Công thức tổng Riemann phải"
+          },
+          {
+            "target": "bullet-1",
+            "label": "So sánh tổng phải và tổng trái khi hàm đồng biến"
+          }
+        ],
+        "start": 418,
+        "duration": 38
+      },
+      {
+        "id": "ai-13",
+        "kind": "concept",
+        "accent": "brand",
+        "title": "Tổng trung điểm lấy chiều cao tại tâm đoạn con",
+        "subtitle": "Ký hiệu M_n bù trừ phần thừa và phần thiếu tốt hơn hai biên",
+        "bullets": [
+          "Điểm đại diện là trung điểm x̄_i = (x_{i-1} + x_i) / 2",
+          "Chiều cao tại tâm giúp phần thừa tự bù trừ cho phần thiếu"
+        ],
+        "formula": "M_n = \\sum_{i=1}^n f(\\bar{x}_i) \\Delta x_i, \\quad \\bar{x}_i = \\frac{x_{i-1} + x_i}{2}",
+        "visualNote": "Hình chữ nhật dựng từ trung điểm cắt ngang đường cong, phần diện tích thừa phía trên triệt tiêu phần thiếu phía dưới.",
+        "narration": "Ở bài trước, ta đã tính tổng Riemann bằng cách lấy chiều cao tại hai đầu mút của đoạn con. Sang tổng trung điểm, điểm đại diện được chọn đúng vào vị trí chính giữa bằng trung bình cộng của hai đầu mút. Khi đó, chúng ta thu được công thức tổng Riemann tương ứng bằng giá trị hàm số tại tâm đoạn nhân với độ dài đáy. Mép trên hình chữ nhật cắt ngang qua đồ thị, giúp phần diện tích thừa tự bù trừ cho phần thiếu nên sai số giảm nhanh hơn hai biên.",
+        "pointer": [
+          {
+            "target": "title",
+            "label": "Giới thiệu bối cảnh từ hai đầu mút sang trung điểm"
+          },
+          {
+            "target": "bullet-0",
+            "label": "Định nghĩa điểm mẫu tại trung điểm đoạn con"
+          },
+          {
+            "target": "formula",
+            "label": "Công thức tổng trung điểm M_n"
+          },
+          {
+            "target": "bullet-1",
+            "label": "Giải thích cơ chế bù trừ sai số"
+          }
+        ],
+        "start": 456,
+        "duration": 38
+      },
+      {
+        "id": "ai-14",
+        "kind": "diagram",
+        "accent": "gold",
+        "title": "Ba cách chọn điểm mẫu làm lệch cột xấp xỉ",
+        "subtitle": "Cột mút trái thụt vào còn mút phải nhô cao so với đường cong",
+        "bullets": [
+          "Mút trái và mút phải kẹp diện tích thực ở hai phía",
+          "Trung điểm cắt ngang đường cong giúp tự bù trừ sai số"
+        ],
+        "formula": "L_n = \\sum_{i=1}^n f(x_{i-1})\\Delta x_i, \\quad M_n = \\sum_{i=1}^n f(\\bar{x}_i)\\Delta x_i, \\quad R_n = \\sum_{i=1}^n f(x_i)\\Delta x_i",
+        "visualNote": "Đồ thị đường cong y = f(x) đồng biến trên [a, b] chia thành các hình chữ nhật: cột mút trái nằm dưới đường cong, cột mút phải nhô lên trên, cột trung điểm cắt ngang mép trên.",
+        "narration": "Vừa rồi ta đã lập tổng Riemann, bây giờ hãy nhìn lên sơ đồ để xem vị trí điểm mẫu làm lệch các cột ra sao. Khi đồ thị tăng dần, chọn mút trái khiến cột thấp hơn đường cong, còn mút phải làm đỉnh cột nhô cao thừa diện tích. Điểm chính giữa đem lại xấp xỉ tốt hơn hẳn vì đường cong cắt ngang mép cột, phần thiếu tự bù cho phần thừa. Khi chúng ta chia đoạn con càng mịn, khoảng cách sai lệch giữa ba cách chọn này sẽ biến mất và hội tụ về tích phân.",
+        "pointer": [
+          {
+            "target": "title",
+            "label": "Dẫn dắt từ tổng Riemann sang vị trí điểm mẫu"
+          },
+          {
+            "target": "bullet-0",
+            "label": "So sánh hình chữ nhật tại mút trái và mút phải"
+          },
+          {
+            "target": "bullet-1",
+            "label": "Cơ chế bù trừ sai lệch của trung điểm"
+          },
+          {
+            "target": "formula",
+            "label": "Giới hạn hội tụ khi độ mịn tiến về không"
+          }
+        ],
+        "start": 494,
+        "duration": 38
+      },
+      {
+        "id": "ai-15",
+        "kind": "example",
+        "accent": "ember",
+        "title": "Tính tay tổng Riemann cho hàm bậc nhất trên đoạn ngắn",
+        "subtitle": "Chia đoạn không đến hai thành bốn phần để cộng số liệu cụ thể",
+        "bullets": [
+          "Chia đều đoạn [0; 2] thành 4 đoạn con có độ dài 0.5",
+          "Chọn mút phải làm chiều cao bốn hình chữ nhật xấp xỉ"
+        ],
+        "steps": [
+          "Đoạn [0; 2] với n = 4 đoạn con bằng nhau, xét hàm f(x) = x",
+          "Độ dài mỗi đoạn con: Delta x = (2 - 0) / 4 = 0.5",
+          "Các điểm chia: x0 = 0, x1 = 0.5, x2 = 1.0, x3 = 1.5, x4 = 2.0",
+          "Chọn điểm đại diện biên phải: x1 = 0.5, x2 = 1.0, x3 = 1.5, x4 = 2.0",
+          "Tổng Riemann: R4 = (0.5 + 1.0 + 1.5 + 2.0) * 0.5 = 5.0 * 0.5 = 2.5"
+        ],
+        "formula": "R_4 = \\sum_{i=1}^{4} f(x_i) \\Delta x = 2.5",
+        "visualNote": "Bốn cột hình chữ nhật trên các đoạn [0; 0.5], [0.5; 1], [1; 1.5], [1.5; 2] với đỉnh tựa trên đường thẳng y = x tại các mút phải",
+        "narration": "Vừa rồi ta đã có công thức, giờ chúng ta xét hàm số trên đoạn từ không đến hai với bốn đoạn chia đều. Đầu tiên, bạn lấy độ dài hai trừ không rồi chia bốn, được bề rộng mỗi đoạn là không phẩy năm. Các điểm chia bắt đầu từ không, tăng dần từng bước không phẩy năm đến hai. Theo quy tắc biên phải, giá trị hàm tại các mốc đó chính là chiều cao từng hình chữ nhật. Bạn cộng bốn chiều cao lại rồi nhân với không phẩy năm, thu được kết quả là hai phẩy năm.",
+        "pointer": [
+          {
+            "target": "step-0",
+            "label": "Nêu giả thiết bài toán chia bốn đoạn"
+          },
+          {
+            "target": "step-1",
+            "label": "Tính độ rộng mỗi đoạn con"
+          },
+          {
+            "target": "step-2",
+            "label": "Xác định các mốc phân hoạch"
+          },
+          {
+            "target": "step-3",
+            "label": "Lấy giá trị hàm tại biên phải"
+          },
+          {
+            "target": "step-4",
+            "label": "Tính tổng diện tích ra đáp số hai phẩy năm"
+          }
+        ],
+        "start": 532,
+        "duration": 38
+      },
+      {
+        "id": "ai-16",
+        "kind": "concept",
+        "accent": "brand",
+        "title": "Độ mịn giảm dần thu hẹp khe hở sai số",
+        "subtitle": "Càng nhiều cột mỏng thì phần bậc thang càng áp sát vào đường cong thực",
+        "bullets": [
+          "Độ mịn max \\Delta x_i tiến về 0 khi số điểm chia tăng dần",
+          "Diện tích cột bậc thang tiến khít về hình thang cong"
+        ],
+        "formula": "\\lim_{\\max \\Delta x_i \\to 0} \\sum_{i=1}^n f(x_i^*) \\Delta x_i = \\int_a^b f(x) \\, dx",
+        "visualNote": "Đồ thị minh họa các cột chữ nhật với số điểm chia tăng dần, bề rộng cột thu hẹp và đường bậc thang tiệm cận sát đường cong f(x)",
+        "narration": "Ở bài trước, chúng ta đã dùng các hình chữ nhật để xấp xỉ diện tích hình thang cong nhưng vẫn còn khoảng chênh lệch. Nếu bạn tăng dần số điểm phân hoạch sao cho độ dài của đoạn con lớn nhất tiến dần về không, bề rộng mỗi cột sẽ tự thu hẹp lại. Khoảng sai số ở đỉnh các cột theo đó nhỏ dần, đưa diện tích phần bậc thang áp sát vào đường cong của đồ thị. Giới hạn của tổng diện tích các hình chữ nhật khi độ mịn này triệt tiêu sẽ cho ra giá trị tích phân xác định.",
+        "pointer": [
+          {
+            "target": "subtitle",
+            "label": "Nhắc lại liên hệ với mô hình bậc thang ở bài trước"
+          },
+          {
+            "target": "bullet-0",
+            "label": "Giải thích việc thu hẹp độ mịn khi tăng điểm chia"
+          },
+          {
+            "target": "bullet-1",
+            "label": "Chỉ ra sự tiệm cận của bậc thang vào đường cong"
+          },
+          {
+            "target": "formula",
+            "label": "Khẳng định giới hạn tổng Riemann là tích phân xác định"
+          }
+        ],
+        "start": 570,
+        "duration": 38
+      },
+      {
+        "id": "ai-17",
+        "kind": "concept",
+        "accent": "ember",
+        "title": "Sai lầm khi ngộ nhận số đoạn nhiều thì độ mịn luôn nhỏ",
+        "subtitle": "Một đoạn con vẫn giữ nguyên độ dài lớn sẽ phá vỡ giới hạn toàn cục",
+        "bullets": [
+          "Số điểm chia n ra vô cùng không đảm bảo độ mịn tiến về 0",
+          "Giữ cố định đoạn dài 0,5 thì độ mịn luôn không nhỏ hơn 0,5"
+        ],
+        "formula": "n \\to \\infty \\;\\not\\implies \\max_{1 \\le i \\le n} \\Delta x_i \\to 0",
+        "visualNote": "Sơ đồ phân hoạch đoạn [0, 1]: nửa đầu [0, 0.5] giữ nguyên vạch lớn, nửa sau [0.5, 1] chia dày đặc vô số vạch nhỏ để đối chiếu trực quan",
+        "narration": "Vừa rồi ta thấy khi độ mịn tiến về không thì số đoạn chia chắc chắn phải tăng lên vô hạn. Nhiều bạn ngộ nhận chiều ngược lại cũng đúng, tưởng rằng cứ chia n đoạn thật nhiều là độ mịn sẽ tự động nhỏ. Quan niệm đó sai lầm, bởi vì độ mịn được tính bằng độ dài của đoạn con lớn nhất trong toàn bộ phân hoạch. Ví dụ trên đoạn không một, nếu giữ nguyên nửa đầu dài không phẩy năm rồi băm nhỏ nửa sau, độ mịn vẫn là không phẩy năm.",
+        "pointer": [
+          {
+            "target": "title",
+            "label": "Liên hệ mối quan hệ giữa độ mịn và số đoạn chia"
+          },
+          {
+            "target": "formula",
+            "label": "Chỉ ra chiều suy luận ngược lại không tương đương"
+          },
+          {
+            "target": "bullet-0",
+            "label": "Nhấn mạnh định nghĩa độ mịn theo đoạn con lớn nhất"
+          },
+          {
+            "target": "bullet-1",
+            "label": "Phản chứng bằng ví dụ giữ cố định một đoạn con dài 0,5"
+          }
+        ],
+        "start": 608,
+        "duration": 38
+      },
+      {
+        "id": "ai-18",
+        "kind": "quiz",
+        "accent": "ember",
+        "title": "Kiểm tra kiến thức nền tảng về tổng Riemann một lớp",
+        "subtitle": "Ba câu hỏi nhanh xác nhận việc nắm vững phân hoạch và điểm mẫu",
+        "bullets": [
+          "Cảnh \"Kiểm tra kiến thức nền tảng về tổng Riemann một lớp\" đang được bổ sung.",
+          "Học sinh hiểu được và tự đánh giá mức độ tiếp thu các khái niệm phân hoạch, độ mịn và tổng Riemann"
+        ],
+        "narration": "Phần \"Kiểm tra kiến thức nền tảng về tổng Riemann một lớp\" đang được bổ sung. Bạn bỏ qua cảnh này, xem cảnh tiếp theo.",
+        "start": 646,
+        "duration": 38
+      },
+      {
+        "id": "ai-19",
+        "kind": "concept",
+        "accent": "brand",
+        "title": "Phần hai xây dựng định nghĩa giải tích chuẩn xác",
+        "subtitle": "Chuyển từ trực giác hình học sang ngôn ngữ giới hạn toán học chặt chẽ",
+        "bullets": [
+          "Khống chế sai số qua cặp số thực dương ε và δ",
+          "Tổng Riemann sai khác tích phân bé hơn mức ε tùy ý"
+        ],
+        "formula": "\\left| \\sum_{i=1}^n f(x_i^*) \\Delta x_i - \\int_a^b f(x) \\, dx \\right| < \\varepsilon",
+        "visualNote": "Sơ đồ chuyển đổi từ trực giác diện tích sang bất đẳng thức giới hạn epsilon và delta",
+        "narration": "Ở phần một, chúng ta đã thấy diện tích hình chữ nhật, còn bây giờ là lúc xây dựng định nghĩa giải tích chuẩn xác. Trực giác hình vẽ không áp dụng được khi hàm đổi dấu, vì vậy toán học khống chế sai số bằng các số thực epsilon và delta. Ý tưởng cốt lõi là khoảng cách giữa tổng Riemann và tích phân phải nhỏ hơn mức sai số epsilon tùy ý cho trước. Khi bạn chia phân hoạch đủ mịn với độ mịn nhỏ hơn delta, tổng Riemann sẽ hội tụ về đúng giá trị tích phân.",
+        "pointer": [
+          {
+            "target": "title",
+            "label": "Giới thiệu bước chuyển sang định nghĩa giải tích chuẩn xác"
+          },
+          {
+            "target": "bullet-0",
+            "label": "Lý do trực giác hình học chưa đủ và sự cần thiết của epsilon delta"
+          },
+          {
+            "target": "formula",
+            "label": "Giải thích bất đẳng thức sai số giữa tổng Riemann và tích phân"
+          },
+          {
+            "target": "bullet-1",
+            "label": "Điều kiện độ mịn phân hoạch nhỏ hơn delta để đạt mức sai số"
+          }
+        ],
+        "start": 684,
+        "duration": 38
+      },
+      {
+        "id": "ai-20",
+        "kind": "concept",
+        "accent": "brand",
+        "title": "Trực giác hình học cần bệ đỡ toán học chặt chẽ",
+        "subtitle": "Các hàm gián đoạn hoặc dao động mạnh đòi hỏi định nghĩa định lượng rõ ràng",
+        "bullets": [
+          "Trực giác hình học thất bại khi hàm số gián đoạn",
+          "Tổng Riemann định lượng diện tích qua giới hạn phân hoạch"
+        ],
+        "formula": "\\lim_{\\max \\Delta x_i \\to 0} \\sum_{i=1}^n f(x_i^*) \\Delta x_i = \\int_a^b f(x)\\,dx",
+        "visualNote": "Sơ đồ so sánh: hình vẽ trực quan bất lực trước hàm gián đoạn và cấu trúc giải tích qua giới hạn tổng Riemann",
+        "narration": "Trước đây, các bạn quen nhìn tích phân như diện tích hình thang cong dưới một đường cong êm. Thế nhưng cách hiểu trực quan đó bế tắc nếu hàm số gián đoạn liên tục hoặc dao động mạnh trên đoạn xét. Toán học bắt buộc phải rời bỏ hình vẽ để xây dựng định nghĩa giải tích chặt chẽ bằng tổng các hình chữ nhật con. Giới hạn của tổng này khi độ mịn phân hoạch tiến về không sẽ cho ta giá trị định lượng vững chắc.",
+        "pointer": [
+          {
+            "target": "title",
+            "label": "Nhắc lại trực giác hình học phổ thông"
+          },
+          {
+            "target": "bullet-0",
+            "label": "Nêu hạn chế của trực giác hình học khi gặp hàm phức tạp"
+          },
+          {
+            "target": "formula",
+            "label": "Giới thiệu công cụ giải tích thay thế hình vẽ"
+          },
+          {
+            "target": "bullet-1",
+            "label": "Khẳng định vai trò của giới hạn phân hoạch"
+          }
+        ],
+        "start": 722,
+        "duration": 38
+      },
+      {
+        "id": "ai-21",
+        "kind": "concept",
+        "accent": "brand",
+        "title": "Độ sai lệch epsilon được khống chế nhỏ tùy ý",
+        "subtitle": "Với bất kỳ dung sai nào đặt ra ta luôn tìm được phân hoạch đủ mịn",
+        "bullets": [
+          "Epsilon là mức sai số cho phép được ấn định tùy ý",
+          "Độ mịn phân hoạch bé hơn delta sẽ giữ sai số dưới epsilon"
+        ],
+        "formula": "\\left| \\sum_{i=1}^n f(x_i^*) \\Delta x_i - \\int_a^b f(x)\\,dx \\right| < \\epsilon",
+        "visualNote": "Dải sai số bán kính epsilon quanh giá trị tích phân, tổng Riemann nằm trọn vào dải này khi độ mịn nhỏ hơn delta",
+        "narration": "Sau khi đã làm quen với việc chia nhỏ đoạn, câu hỏi đặt ra là làm sao biết tổng các cột xấp xỉ đủ sát giá trị thật. Biểu thức hiển thị cho thấy khoảng cách giữa tổng Ri-man và tích phân thực sự bị chặn lại bởi số dương ép-si-lon. Bạn hãy hình dung ép-si-lon như dung sai cho phép do ta tự chọn trước, dù nhỏ đến một phần triệu đều được. Chỉ cần chia đoạn đủ mịn để độ dài mỗi đoạn con dưới mức đen-ta, kết quả xấp xỉ sẽ nằm gọn trong khoảng an toàn này.",
+        "pointer": [
+          {
+            "target": "title",
+            "label": "Dẫn nhập câu hỏi về độ chính xác của xấp xỉ"
+          },
+          {
+            "target": "formula",
+            "label": "Chỉ vào bất đẳng thức khống chế sai số"
+          },
+          {
+            "target": "bullet-0",
+            "label": "Giải thích ý nghĩa dung sai epsilon đặt trước"
+          },
+          {
+            "target": "bullet-1",
+            "label": "Giải thích điều kiện độ mịn delta tương ứng"
+          }
+        ],
+        "start": 760,
+        "duration": 38
+      },
+      {
+        "id": "ai-22",
+        "kind": "concept",
+        "accent": "brand",
+        "title": "Ngưỡng delta bảo đảm độ mịn đủ nhỏ cho phân hoạch",
+        "subtitle": "Chỉ cần độ dài đoạn con lớn nhất nhỏ hơn delta thì sai số được kiểm soát",
+        "bullets": [
+          "Độ mịn phân hoạch xác định bởi max Δx_i < δ",
+          "Sai số tổng Riemann so với tích phân nhỏ hơn ε"
+        ],
+        "formula": "\\max_{1 \\le i \\le n} \\Delta x_i < \\delta \\implies \\left| \\sum_{i=1}^n f(x_i^*) \\Delta x_i - \\int_a^b f(x)\\,dx \\right| < \\varepsilon",
+        "visualNote": "Bố cục tối giản: hiển thị công thức định nghĩa giới hạn Riemann ở trung tâm kèm hai gạch đầu dòng giải thích điều kiện độ mịn",
+        "narration": "Khi muốn tổng diện tích xấp xỉ tích phân với sai số dưới mức ép-xi-lon, chúng ta cần tìm một ngưỡng đen-ta phù hợp. Ngưỡng này đòi hỏi mọi đoạn con đều phải hẹp hơn đen-ta, tránh để những đoạn quá rộng làm sai lệch kết quả. Trên công thức, khi độ mịn nhỏ hơn đen-ta thì khoảng cách giữa tổng Riemann và tích phân luôn nhỏ hơn ép-xi-lon. Dù bạn chọn điểm mẫu ở vị trí nào trong từng đoạn, sai số ước lượng vẫn hoàn toàn nằm trong tầm kiểm soát.",
+        "pointer": [
+          {
+            "target": "title",
+            "label": "Giới thiệu vai trò của ngưỡng delta tương ứng với epsilon"
+          },
+          {
+            "target": "bullet-0",
+            "label": "Giải thích điều kiện chặn độ dài của mọi đoạn chia con"
+          },
+          {
+            "target": "formula",
+            "label": "Đối chiếu điều kiện độ mịn trên công thức tích phân Riemann"
+          },
+          {
+            "target": "bullet-1",
+            "label": "Khẳng định sai số được kiểm soát với điểm mẫu bất kỳ"
+          }
+        ],
+        "start": 798,
+        "duration": 38
+      },
+      {
+        "id": "ai-23",
+        "kind": "formula",
+        "accent": "gold",
+        "title": "Bất đẳng thức epsilon khống chế độ lệch của tổng",
+        "subtitle": "Trị tuyệt đối hiệu giữa tổng Riemann và tích phân luôn nhỏ hơn epsilon",
+        "bullets": [
+          "Độ mịn phân hoạch nhỏ hơn delta với mọi epsilon dương",
+          "Điểm mẫu x_i sao được chọn tùy ý trong từng đoạn chia"
+        ],
+        "formula": "\\left| \\sum_{i=1}^n f(x_i^*) \\Delta x_i - \\int_a^b f(x)\\,dx \\right| < \\epsilon",
+        "visualNote": "Bất đẳng thức epsilon đặt ở trung tâm làm nổi bật độ lệch giữa tổng Riemann và giá trị tích phân",
+        "narration": "Vừa rồi ta đã lập tổng Riemann, bây giờ hãy xem làm sao để tổng này áp sát giá trị tích phân. Khi bạn thu nhỏ độ mịn của phân hoạch xuống dưới delta, khoảng cách giữa tổng diện tích các cột và tích phân sẽ bị chặn bởi epsilon. Dù bạn chọn điểm mẫu ở bất kỳ vị trí nào trên từng đoạn con, sai số vẫn luôn nằm gọn trong phạm vi cho phép. Chúng ta muốn độ sai lệch nhỏ tới mức nào thì chỉ cần chia các đoạn con đủ mịn là sẽ đạt được.",
+        "pointer": [
+          {
+            "target": "title",
+            "label": "Dẫn dắt liên hệ giữa tổng Riemann và tích phân"
+          },
+          {
+            "target": "formula",
+            "label": "Khống chế độ lệch bằng epsilon khi độ mịn nhỏ hơn delta"
+          },
+          {
+            "target": "bullet-1",
+            "label": "Điểm mẫu được chọn tùy ý trong từng đoạn con"
+          },
+          {
+            "target": "bullet-0",
+            "label": "Chia nhỏ phân hoạch để đạt độ chính xác mong muốn"
+          }
+        ],
+        "start": 836,
+        "duration": 38
+      },
+      {
+        "id": "ai-24",
+        "kind": "formula",
+        "accent": "gold",
+        "title": "Định nghĩa hoàn chỉnh tính khả tích của hàm số",
+        "subtitle": "Sự tồn tại duy nhất của giới hạn không phụ thuộc vào cách chọn điểm mẫu",
+        "bullets": [
+          "Tổng Riemann hội tụ về số thực I khi độ mịn tiến về 0",
+          "Giới hạn I độc lập với mọi cách chọn điểm mẫu x_i*"
+        ],
+        "formula": "\\lim_{\\max \\Delta x_i \\to 0} \\sum_{i=1}^{n} f(x_i^*) \\Delta x_i = \\int_{a}^{b} f(x)\\,dx",
+        "visualNote": "Mệnh đề giới hạn nổi bật ở trung tâm, nhấn mạnh điều kiện độ mịn tiến về 0 độc lập với điểm mẫu",
+        "narration": "Vừa rồi ta đã chia nhỏ đoạn, giờ chúng ta đi đến định nghĩa chính xác về tính khả tích. Một hàm số khả tích trên đoạn a b nếu tổng Riemann tiến về một số thực duy nhất khi độ mịn phân hoạch tiến về không. Dù bạn lấy điểm mẫu ở bất kỳ vị trí nào trong từng đoạn con, kết quả giới hạn vẫn không thay đổi. Số thực duy nhất này chính là tích phân của hàm f trên đoạn a b, biểu diễn diện tích hình thang cong.",
+        "pointer": [
+          {
+            "target": "title",
+            "label": "Dẫn dắt vào định nghĩa khả tích"
+          },
+          {
+            "target": "formula",
+            "label": "Mệnh đề giới hạn tổng Riemann"
+          },
+          {
+            "target": "subtitle",
+            "label": "Tính độc lập với điểm mẫu"
+          },
+          {
+            "target": "bullet-0",
+            "label": "Sự hội tụ về giá trị tích phân"
+          }
+        ],
+        "start": 874,
+        "duration": 38
+      }
+    ],
+    "chapters": [
+      {
+        "id": "ch-1",
+        "title": "Phép chia nhỏ vô hạn giải bài toán diện tích cong",
+        "start": 0,
+        "end": 38,
+        "sceneIds": [
+          "ai-1"
+        ]
+      },
+      {
+        "id": "ch-2",
+        "title": "Phần một khám phá cách xấp xỉ diện tích phẳng",
+        "start": 38,
+        "end": 76,
+        "sceneIds": [
+          "ai-2"
+        ]
+      },
+      {
+        "id": "ch-3",
+        "title": "Đường cong làm công thức diện tích sơ cấp bất lực",
+        "start": 76,
+        "end": 114,
+        "sceneIds": [
+          "ai-3"
+        ]
+      },
+      {
+        "id": "ch-4",
+        "title": "Hình chữ nhật là công cụ đo lường đơn giản nhất",
+        "start": 114,
+        "end": 152,
+        "sceneIds": [
+          "ai-4"
+        ]
+      },
+      {
+        "id": "ch-5",
+        "title": "Phân hoạch cắt đoạn đáy thành nhiều đoạn nhỏ",
+        "start": 152,
+        "end": 190,
+        "sceneIds": [
+          "ai-5"
+        ]
+      },
+      {
+        "id": "ch-6",
+        "title": "Độ dài đoạn con đo độ rộng từng cột chữ nhật",
+        "start": 190,
+        "end": 228,
+        "sceneIds": [
+          "ai-6"
+        ]
+      },
+      {
+        "id": "ch-7",
+        "title": "Độ mịn là đoạn con có độ dài lớn nhất",
+        "start": 228,
+        "end": 266,
+        "sceneIds": [
+          "ai-7"
+        ]
+      },
+      {
+        "id": "ch-8",
+        "title": "Sơ đồ phân hoạch đều chia đoạn thành n phần bằng nhau",
+        "start": 266,
+        "end": 304,
+        "sceneIds": [
+          "ai-8"
+        ]
+      },
+      {
+        "id": "ch-9",
+        "title": "Điểm đại diện quyết định chiều cao của từng cột",
+        "start": 304,
+        "end": 342,
+        "sceneIds": [
+          "ai-9"
+        ]
+      },
+      {
+        "id": "ch-10",
+        "title": "Tổng Riemann cộng diện tích tất cả cột chữ nhật",
+        "start": 342,
+        "end": 380,
+        "sceneIds": [
+          "ai-10"
+        ]
+      },
+      {
+        "id": "ch-11",
+        "title": "Tổng Riemann trái lấy chiều cao tại đầu mút trái",
+        "start": 380,
+        "end": 418,
+        "sceneIds": [
+          "ai-11"
+        ]
+      },
+      {
+        "id": "ch-12",
+        "title": "Tổng Riemann phải lấy chiều cao tại đầu mút phải",
+        "start": 418,
+        "end": 456,
+        "sceneIds": [
+          "ai-12"
+        ]
+      },
+      {
+        "id": "ch-13",
+        "title": "Tổng trung điểm lấy chiều cao tại tâm đoạn con",
+        "start": 456,
+        "end": 494,
+        "sceneIds": [
+          "ai-13"
+        ]
+      },
+      {
+        "id": "ch-14",
+        "title": "Ba cách chọn điểm mẫu làm lệch cột xấp xỉ",
+        "start": 494,
+        "end": 532,
+        "sceneIds": [
+          "ai-14"
+        ]
+      },
+      {
+        "id": "ch-15",
+        "title": "Tính tay tổng Riemann cho hàm bậc nhất trên đoạn ngắn",
+        "start": 532,
+        "end": 570,
+        "sceneIds": [
+          "ai-15"
+        ]
+      },
+      {
+        "id": "ch-16",
+        "title": "Độ mịn giảm dần thu hẹp khe hở sai số",
+        "start": 570,
+        "end": 608,
+        "sceneIds": [
+          "ai-16"
+        ]
+      }
+    ],
+    "source": "gemini",
+    "theme": "paper",
+    "showPointer": true,
+    "model": "gemini-3.8-flash-high",
+    "createdAt": "2026-10-02T04:26:59.479Z"
+  }
+}

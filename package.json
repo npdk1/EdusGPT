@@ -1,0 +1,49 @@
+{
+    "name": "edusgpt",
+    "version": "0.1.0",
+    "private": true,
+    "license": "MIT",
+    "engines": {
+        "node": ">=22.19.0"
+    },
+    "scripts": {
+        "dev": "next dev -H 127.0.0.1 -p 3000",
+        "build": "next build",
+        "start": "next start -H 127.0.0.1 -p 3000",
+        "typecheck": "tsc --noEmit",
+        "check:palette": "node scripts/check-palette.mjs",
+        "check:icons": "node --experimental-strip-types --no-warnings scripts/check-icons.mjs",
+    "check:subtitle": "node --experimental-strip-types --no-warnings scripts/check-subtitle.mjs",
+        "check:length": "node --experimental-strip-types --no-warnings scripts/check-lesson-length.mjs",
+        "check:library": "node scripts/index-course-library.mjs --check",
+        "index:library": "node scripts/index-course-library.mjs",
+        "setup:library": "node scripts/setup-document-library.mjs",
+        "agy:permissions": "node scripts/antigravity-permissions.mjs",
+        "agy:extract": "node scripts/extract-library-text.mjs",
+        "verify": "npm run check:palette && npm run check:icons && npm run check:subtitle && npm run check:length && npm run typecheck",
+        "agy:doctor": "node scripts/antigravity-permissions.mjs --check"
+    },
+    "dependencies": {
+        "gsap": "^3.15.0",
+        "katex": "^0.16.47",
+        "lucide-react": "^0.562.0",
+        "mammoth": "^1.13.0",
+        "msedge-tts": "^2.0.8",
+        "next": "16.3.6",
+        "react": "19.3.0",
+        "react-dom": "19.3.0",
+        "three": "^0.186.1",
+        "unpdf": "^1.8.1",
+        "ws": "^8.22.0",
+        "xlsx": "^0.18.5"
+    },
+    "devDependencies": {
+        "@tailwindcss/postcss": "^4",
+        "@types/node": "^24",
+        "@types/react": "^19",
+        "@types/react-dom": "^19",
+        "@types/three": "^0.186.0",
+        "tailwindcss": "^4",
+        "typescript": "^5"
+    }
+}

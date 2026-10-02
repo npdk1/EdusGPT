@@ -1,0 +1,256 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>EdusGPT: huong dan su dung</title>
+<link rel="icon" type="image/png" href="public/logo.png" />
+<style>
+:root {
+  --paper: #ffffff;
+  --wash: #f7f9fa;
+  --line: #e3e9ec;
+  --ink: #0c1619;
+  --soft: #4a616a;
+  --faint: #5c757d;
+  --blue: #1a6fc0;
+  --blue-dark: #155c9e;
+  --blue-wash: #e8f2fb;
+}
+* { box-sizing: border-box; }
+body {
+  margin: 0;
+  background: var(--paper);
+  color: var(--ink);
+  font: 16px/1.7 -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+}
+.layout { display: flex; align-items: stretch; min-height: 100vh; }
+aside.side {
+  width: 272px;
+  flex-shrink: 0;
+  position: sticky;
+  top: 0;
+  height: 100vh;
+  overflow-y: auto;
+  background: var(--wash);
+  border-right: 1px solid var(--line);
+  padding: 20px 16px 32px;
+}
+.side .brand { display: flex; align-items: center; gap: 10px; padding: 0 8px 16px; border-bottom: 2px solid var(--blue); margin-bottom: 12px; }
+.side .brand img { width: 36px; height: 36px; border-radius: 8px; object-fit: cover; }
+.side .brand b { color: var(--blue-dark); font-size: 18px; }
+.side .brand span { display: block; font-size: 12px; color: var(--faint); font-weight: 400; }
+.side nav ul { list-style: none; margin: 0; padding: 0; }
+.side nav li { margin: 0; }
+.side nav a {
+  display: block;
+  padding: 7px 10px;
+  border-radius: 8px;
+  color: var(--soft);
+  font-size: 14.5px;
+}
+.side nav a:hover { background: var(--blue-wash); text-decoration: none; }
+.side nav a.active { background: var(--blue-wash); color: var(--blue-dark); font-weight: 700; }
+.content { flex: 1; min-width: 0; }
+.wrap { max-width: 860px; margin: 0 auto; padding: 40px 28px 80px; }
+@media (max-width: 820px) {
+  .layout { display: block; }
+  aside.side { width: auto; height: auto; position: static; border-right: none; border-bottom: 1px solid var(--line); padding: 12px 16px; }
+  .side nav ul { display: flex; flex-wrap: wrap; gap: 4px; }
+  .side nav a { padding: 5px 10px; }
+  .side .brand { border-bottom: none; margin-bottom: 8px; padding-bottom: 8px; }
+}
+a { color: var(--blue); text-decoration: none; }
+a:hover { text-decoration: underline; }
+h2 {
+  color: var(--blue-dark);
+  font-size: 22px;
+  margin: 40px 0 12px;
+  padding-bottom: 6px;
+  border-bottom: 1px solid var(--line);
+}
+p { margin: 10px 0; }
+ul, ol { padding-left: 24px; }
+li { margin: 4px 0; }
+code {
+  font-family: Consolas, "Courier New", monospace;
+  font-size: 0.88em;
+  background: var(--wash);
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  padding: 1px 6px;
+}
+pre {
+  background: var(--wash);
+  border: 1px solid var(--line);
+  border-left: 4px solid var(--blue);
+  border-radius: 8px;
+  padding: 14px 16px;
+  overflow-x: auto;
+}
+pre code { background: none; border: none; padding: 0; }
+table { border-collapse: collapse; width: 100%; margin: 14px 0; font-size: 15px; }
+th, td { border: 1px solid var(--line); padding: 8px 12px; text-align: left; vertical-align: top; }
+thead th { background: var(--blue); color: #fff; }
+tbody tr:nth-child(even) td { background: var(--wash); }
+footer { margin-top: 48px; padding-top: 16px; border-top: 1px solid var(--line); color: var(--faint); font-size: 14px; }
+</style>
+</head>
+<body>
+<div class="layout">
+<aside class="side">
+  <div class="brand">
+    <img src="public/logo.png" alt="Logo EdusGPT" />
+    <b>EdusGPT<span>Hướng dẫn sử dụng</span></b>
+  </div>
+  <nav aria-label="Muc luc">
+  <ul>
+    <li><a href="#gioi-thieu">Giới thiệu</a></li>
+    <li><a href="#chay">Chạy</a></li>
+    <li><a href="#cai-api-key">Cài API key</a></li>
+    <li><a href="#sinh-bai-giang">Sinh bài giảng</a></li>
+    <li><a href="#trinh-phat">Trình phát</a></li>
+    <li><a href="#thu-vien">Thư viện</a></li>
+    <li><a href="#giong-oc">Giọng đọc</a></li>
+    <li><a href="#don-dep">Dọn dẹp</a></li>
+    <li><a href="#kiem-tra-chat-luong">Kiểm tra chất lượng</a></li>
+    <li><a href="#cau-truc-thu-muc">Cấu trúc thư mục</a></li>
+    <li><a href="#gioi-han">Giới hạn</a></li>
+  </ul>
+  </nav>
+</aside>
+<div class="content">
+<div class="wrap">
+<main>
+<h1 id="gioi-thieu">EdusGPT</h1>
+<p>EdusGPT soạn bài giảng thành từng cảnh có slide, giọng đọc và phụ đề chạy theo từng chữ. Bạn mở bài trong trình phát, tua tới lui từng giây, rồi xuất ra một file HTML độc lập nếu cần. Mọi thứ chạy trên máy bạn qua <code>localhost:3000</code>.</p>
+<h2 id="chay">Chạy</h2>
+<p>Windows: nhấp đúp vào <code>run.bat</code>.</p>
+<p>macOS hoặc Linux: <code>./run.sh</code></p>
+<p>Hai script trên tự kiểm tra Node từ bản 22, chạy <code>npm install</code> khi thiếu <code>node_modules</code>, tạo <code>.env.local</code> từ <code>.env.example</code> khi chưa có, giải phóng cổng 3000 khi bị chiếm, mở trình duyệt rồi khởi động server. Bấm <code>Ctrl+C</code> trong cửa sổ console để dừng.</p>
+<p>Chạy tay:</p>
+<pre><code data-lang="bash">npm install
+npm run dev          # http://localhost:3000</code></pre>
+<p>Kiểm tra runtime khi server đang mở:</p>
+<pre><code data-lang="powershell">powershell -ExecutionPolicy Bypass -File scripts/smoke-test.ps1</code></pre>
+<h2 id="cai-api-key">Cài API key</h2>
+<p>Mở <code>/setup</code>. Trang này chia hai nhóm:</p>
+<ul>
+<li>Cloud: gọi API của hãng qua mạng, cần key. Hiện dùng được Google Gemini và OpenRouter.</li>
+<li>CLI: điều khiển chương trình cài sẵn trên máy, không cần key. Nhóm này mới ở mức danh sách dự kiến (Claude Code CLI, Gemini CLI, Codex CLI, Ollama), chưa gọi được ở bản hiện tại. Danh sách nằm trong <code>PLANNED_CLI_PROVIDERS</code> ở <code>src/lib/ai/config.ts</code>.</li>
+</ul>
+<p>Key lấy ở <code>aistudio.google.com/apikey</code> (Gemini) hoặc <code>openrouter.ai/keys</code> (OpenRouter). Dán key vào ô của đúng hãng, bấm kiểm tra rồi lưu. Server ghi key vào <code>.env.local</code> (biến <code>GEMINI_API_KEY</code> hoặc <code>OPENROUTER_API_KEY</code>) và từ đó giao diện chỉ hiện dạng đã che.</p>
+<p>Danh sách model nạp riêng theo từng hãng, nên model của hãng này không lẫn sang hãng kia. Các API cài key chỉ trả lời request từ localhost. Muốn mở qua mạng nội bộ thì tự đặt <code>ALLOW_REMOTE_KEY_ADMIN=true</code>.</p>
+<h2 id="sinh-bai-giang">Sinh bài giảng</h2>
+<p>Mở <code>/studio</code> và nhập chủ đề, môn, lớp, số cảnh, thời lượng, ghi chú. Có thể đính kèm tài liệu (<code>pdf</code>, <code>docx</code>, <code>xlsx</code>, <code>txt</code>, <code>md</code>, <code>csv</code>, <code>json</code>, tối đa 40 MB mỗi tệp) hoặc dán trực tiếp vào ô. Server rút chữ ra khỏi tệp, giữ mốc số trang, rồi đưa phần liên quan nhất vào prompt.</p>
+<p>Bài sinh ra theo hai bước, tiến độ hiện trực tiếp:</p>
+<ol>
+<li>Lên dàn ý: tiêu đề, loại và thời lượng từng cảnh, hiện ngay sau vài giây.</li>
+<li>Viết chi tiết: mỗi cảnh gọi riêng, xong cảnh nào hiện cảnh đó. Cảnh nào lỗi thì giữ khung dàn ý và điền nội dung tối giản, cả bài không sập theo.</li>
+</ol>
+<p>Mỗi cảnh có thể mang gạch đầu dòng, công thức, bảng số liệu, đồ thị hàm số, các bước giải đánh số B1, B2, câu hỏi trắc nghiệm, ảnh minh họa, hoặc mô phỏng không gian. Lời giảng viết đủ câu để đọc thành tiếng, không chứa ký hiệu công thức.</p>
+<p>Các tùy chọn khi sinh bài:</p>
+<ul>
+<li>Kiểu chữ: minimal, visual story, classroom, cinematic.</li>
+<li>Độ dài: ngắn, vừa, dài.</li>
+<li>Giọng đọc: 6 giọng tiếng Việt (Hoài My, Nam Minh và các biến thể chậm, cao, trầm).</li>
+<li>Ảnh minh họa: AI vẽ ảnh cho từng cảnh qua <code>pollinations.ai</code>, không cần key riêng.</li>
+<li>Con trỏ giảng: chấm sáng bám theo câu đang đọc, bật mặc định, đổi được màu.</li>
+</ul>
+<p>Bài xong lưu vào thư viện trên máy, bấm mở là sang trình phát.</p>
+<h2 id="trinh-phat">Trình phát</h2>
+<p>Mở <code>/lesson</code>. Ô chọn đầu trang liệt kê bài đang phát cùng các bài mẫu và bài đã lưu ở trình duyệt. Chip bên cạnh hiện môn và lớp của bài đang mở.</p>
+<table>
+<thead><tr><th>Phím</th><th>Việc</th></tr></thead>
+<tbody>
+<tr><td><code>Space</code>, <code>K</code></td><td>Phát hoặc tạm dừng</td></tr>
+<tr><td><code>←</code>, <code>→</code></td><td>Tua lui hoặc tới 5 giây</td></tr>
+<tr><td><code>J</code>, <code>L</code></td><td>Tua lui hoặc tới 10 giây</td></tr>
+<tr><td><code>Shift + ←/→</code></td><td>Tua chậm 1 giây</td></tr>
+<tr><td><code>,</code>, <code>.</code></td><td>Lùi hoặc tiến đúng 1 khung hình</td></tr>
+<tr><td><code>0</code> tới <code>9</code></td><td>Nhảy tới 0% đến 90% thời lượng</td></tr>
+<tr><td><code>Home</code>, <code>End</code></td><td>Về đầu hoặc tới cuối</td></tr>
+<tr><td><code>[</code>, <code>]</code>, <code>\</code></td><td>Đặt mốc A, đặt mốc B, bật hoặc tắt lặp đoạn</td></tr>
+<tr><td><code>−</code>, <code>+</code></td><td>Giảm hoặc tăng tốc độ phát</td></tr>
+<tr><td><code>F</code>, <code>?</code></td><td>Toàn màn hình, bảng phím tắt</td></tr>
+</tbody></table>
+<p>Slide không phải video mà là một timeline dựng lại ở từng mốc thời gian, nên kéo lui về giây thứ 3 vẫn ra đúng cảnh và đúng khung. Một đồng hồ chung giữ thanh timeline, mục lục và giọng đọc khớp nhau.</p>
+<p>Nút Xuất HTML gói bài thành một file duy nhất: mở bằng trình duyệt là xem được ngay, cần mạng lần đầu để tải thư viện hiệu ứng. Nút JSON tải kịch bản dạng phẳng để đưa sang công cụ render khác.</p>
+<p>Trợ giảng AI nằm cạnh mục lục, trả lời theo cảnh đang học và hiển thị được công thức. Bấm vào công thức hoặc đồ thị để phóng to.</p>
+<h2 id="thu-vien">Thư viện</h2>
+<p>Mở <code>/library</code>. Bài đã lưu nằm trong <code>data/courses/</code> trên máy bạn. Mỗi thẻ có nút mở và nút xóa riêng. Nút xóa hết nằm cạnh nút làm mới, bấm thì hỏi xác nhận vì không khôi phục được.</p>
+<h2 id="giong-oc">Giọng đọc</h2>
+<p>Giọng đọc do server tổng hợp, không cần key. File âm thanh lưu trong <code>data/tts-cache/</code> theo từng câu, lần sau phát lại cùng câu thì dùng file cũ nên không tốn thời gian tạo lại. Xóa thư mục này khi cần chỗ trống, giọng sẽ tự tạo lại ở lần phát tiếp theo.</p>
+<h2 id="don-dep">Dọn dẹp</h2>
+<p><code>clean_all.bat</code> trả project về trạng thái mới tải: hỏi xác nhận rồi xóa <code>node_modules/</code>, <code>.next/</code>, giọng đọc đã lưu và toàn bộ bài trong <code>data/courses/</code>. Giữ lại <code>.env.local</code>, key đã lưu, logo và tài liệu của bạn. Xong thì mở <code>run.bat</code> để cài lại từ đầu.</p>
+<h2 id="kiem-tra-chat-luong">Kiểm tra chất lượng</h2>
+<table>
+<thead><tr><th>Lệnh</th><th>Việc</th></tr></thead>
+<tbody>
+<tr><td><code>npm run typecheck</code></td><td><code>tsc --noEmit</code></td></tr>
+<tr><td><code>npm run check:palette</code></td><td>Chặn màu họ tím lọt vào <code>src/</code></td></tr>
+<tr><td><code>npm run check:icons</code></td><td>Tên icon trong slide phải có thật và được map</td></tr>
+<tr><td><code>npm run check:subtitle</code></td><td>Phụ đề tô đúng từ, sang câu đúng lúc</td></tr>
+<tr><td><code>npm run check:length</code></td><td>Ba preset độ dài có khả thi với tốc độ đọc thật</td></tr>
+<tr><td><code>npm run verify</code></td><td>Chạy cả bốn kiểm tra trên cộng typecheck</td></tr>
+<tr><td><code>npm run build</code>, <code>npm start</code></td><td>Build và chạy bản production</td></tr>
+<tr><td><code>powershell -File scripts/smoke-test.ps1</code></td><td>Test runtime, cần server đang chạy</td></tr>
+<tr><td><code>node scripts/verify-export.mjs exported.html</code></td><td>Kiểm tra file HTML xuất ra</td></tr>
+<tr><td><code>node scripts/generate-sample.mjs "Chủ đề"</code></td><td>Sinh bài từ dòng lệnh</td></tr>
+</tbody></table>
+<h2 id="cau-truc-thu-muc">Cấu trúc thư mục</h2>
+<pre><code data-lang="">scripts/           kiểm tra palette, icon, phụ đề, độ dài, smoke test, sinh mẫu
+src/app/           các trang: chủ, lesson, studio, library, setup
+src/app/api/       health, settings, models, sinh bài, trợ giảng, rút chữ,
+                   ảnh, giọng đọc, thư viện, xuất HTML và JSON
+src/components/
+  player/          trình phát, slide, timeline, mục lục, giọng đọc, quiz,
+                   mô phỏng, phụ đề, con trỏ, hộp thoại phím tắt
+  studio/          form sinh bài
+  library/         thẻ bài đã lưu
+  setup/           form cài key
+  site/            header, footer, huy hiệu key
+src/hooks/         đồng hồ phát chung cho cả bài
+src/lib/
+  ai/              định nghĩa provider, dispatcher, adapter từng hãng
+  lesson/          model bài và cảnh, kiểu trình bày, chủ đề màu, icon,
+                   bài mẫu, validate, xuất HTML, rút trích đoạn tài liệu
+  server/          rút chữ tài liệu, tìm ảnh, tổng hợp giọng, lưu bài
+prompt/skills/     quy tắc viết prompt: humanizer, markitdown, prompt-optimizer
+public/            logo, icon tab, logo các hãng AI
+run.bat, run.sh    khởi động một chạm
+clean_all.bat      dọn sạch để cài lại</code></pre>
+<h2 id="gioi-han">Giới hạn</h2>
+<ul>
+<li>Không có database. Bài đã sinh lưu thành file trong <code>data/courses/</code>, giọng đọc lưu trong <code>data/tts-cache/</code>. Muốn chép sang máy khác thì dùng nút tải JSON rồi nhập lại.</li>
+<li>Sinh bài cần key còn quota. Hãng hết quota thì server báo rõ thay vì trả bài rỗng.</li>
+<li>File HTML xuất ra cần mạng ở lần mở đầu tiên để tải thư viện hiệu ứng, nội dung vẫn hiện đầy đủ.</li>
+<li>Bước tua một khung hình bằng <code>1/fps</code>, mặc định là 1/30 giây, chỉnh qua trường <code>fps</code> của từng bài.</li>
+</ul>
+</main>
+<footer>Mo README.md de sua noi dung, roi chay lai script tao trang nay.</footer>
+</div>
+</div>
+</div>
+<script>
+(function () {
+  var links = Array.prototype.slice.call(document.querySelectorAll(".side nav a"));
+  var byId = {};
+  links.forEach(function (a) { byId[a.getAttribute("href").slice(1)] = a; });
+  if (!("IntersectionObserver" in window)) return;
+  var current = null;
+  var obs = new IntersectionObserver(function (entries) {
+    entries.forEach(function (en) {
+      if (en.isIntersecting) { current = en.target.id; }
+    });
+    links.forEach(function (a) { a.classList.remove("active"); });
+    if (current && byId[current]) { byId[current].classList.add("active"); }
+  }, { rootMargin: "-20% 0px -70% 0px" });
+  Object.keys(byId).forEach(function (id) {
+    var el = document.getElementById(id);
+    if (el) obs.observe(el);
+  });
+})();
+</script>
+</body>
+</html>

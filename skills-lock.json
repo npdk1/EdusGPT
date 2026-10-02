@@ -1,0 +1,17 @@
+{
+  "version": 1,
+  "skills": {
+    "prompt-optimizer": {
+      "source": "local",
+      "sourceType": "local",
+      "skillPath": ".agents/skills/prompt-optimizer/SKILL.md",
+      "computedHash": "local-authored"
+    },
+    "edusgpt-local-tutor": {
+      "source": "local",
+      "sourceType": "local",
+      "skillPath": ".agents/skills/edusgpt-local-tutor/SKILL.md",
+      "computedHash": "local-authored"
+    }
+  }
+}

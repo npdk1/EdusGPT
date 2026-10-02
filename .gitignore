@@ -1,0 +1,50 @@
+# dependencies
+node_modules
+.pnpm-store
+
+# next
+.next
+out
+build
+next-env.d.ts
+
+# Secrets never ship. `.env` is where /setup writes your API key, and
+# `.env.example` carries the documented defaults for a fresh clone — copy it
+# with `run.bat` (or by hand) and the app starts with zero setup.
+.env
+.env.local
+
+# Generated lesson library index + cached narration rebuild themselves.
+data/library-text/
+data/tts-cache/
+
+# misc
+.DS_Store
+*.log
+.vercel
+tsconfig.tsbuildinfo
+
+# scratch captures from the browser tooling (never source)
+.playwright-mcp
+
+# scratch files produced by the scripts in scripts/
+/*.txt
+/h.json
+/gen.log
+/gen.err
+/generated-lesson.json
+/exported.html
+/exported-player.js
+/*.png
+
+# Saved lessons ship with the tool (data/courses/).
+
+# Tài liệu gốc của người học. Giữ ngoài repo: đây là slide PDF của trường, nặng
+# hàng trăm MB, và phần GDQP là giấy tờ hành chính — không nên nằm trong lịch sử
+# git. Thư viện vẫn dùng được nhờ `data/course-library.json` (chỉ là manifest,
+# không chứa nội dung) và `npm run index:library` để dựng lại.
+/ONLY_FOR_AI_TO_LEARN/
+
+# Script tạo bài thử dùng một lần, không thuộc sản phẩm.
+/tmp-make-lesson.mjs
+/run-*.log

@@ -1,0 +1,25 @@
+{
+  "provider": "antigravity",
+  "model": "gemini-3.8-flash-high",
+  "baseUrl": "local://antigravity-cli",
+  "keyHints": {
+    "gemini": "",
+    "openrouter": ""
+  },
+  "keySources": {
+    "gemini": "none",
+    "openrouter": "none"
+  },
+  "baseUrls": {},
+  "models": {
+    "openrouter": "~deepseek/deepseek-v4-flash-latest",
+    "gemini": "gemini-flash-latest",
+    "antigravity": "gemini-3.8-flash-high"
+  },
+  "lastValidatedAt": "2026-10-01T16:14:57.363Z",
+  "lastValidationOk": true,
+  "lastValidationMessage": "Antigravity CLI sẵn sàng (1.2.14 · 7 model cấu hình, đăng nhập local đã có). Không cần API key.",
+  "updatedAt": "2026-10-01T16:14:57.380Z",
+  "keyHint": "",
+  "keySource": "none"
+}

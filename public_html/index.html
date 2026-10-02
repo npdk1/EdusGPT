@@ -1,0 +1,533 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>EdusGPT — bài giảng AI mà bạn tua được từng giây</title>
+<meta name="description" content="Soạn bài giảng bằng AI, xem trong trình phát tua hai chiều, lặp đoạn khó, giọng đọc tiếng Việt và xuất ra một file HTML. Chạy trên máy bạn." />
+<meta name="color-scheme" content="light" />
+<meta property="og:title" content="EdusGPT — bài giảng AI mà bạn tua được từng giây" />
+<meta property="og:description" content="Trình phát bài giảng có timeline tua hai chiều, giọng đọc tiếng Việt, trắc nghiệm trong slide và xuất ra một file HTML." />
+<meta property="og:type" content="website" />
+<link rel="icon" href="logo.png" />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=IBM+Plex+Sans:wght@400;500;600&family=JetBrains+Mono:wght@500;600&display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+
+<a class="sr-only" href="#noi-dung">Bỏ qua tới nội dung</a>
+
+<nav class="nav" id="nav" data-open="false" aria-label="Điều hướng chính">
+  <a class="nav__word" href="#top"><img src="logo.png" alt="" width="22" height="22" />EdusGPT</a>
+  <ul class="nav__links">
+    <li><a class="nav__link" href="#soan">Soạn bài</a></li>
+    <li><a class="nav__link" href="#xem">Xem &amp; tua</a></li>
+    <li><a class="nav__link" href="#hop">Trong lớp</a></li>
+    <li><a class="nav__link" href="#xuat">Xuất ra</a></li>
+    <li><a class="nav__link" href="#chay">Chạy thật</a></li>
+  </ul>
+  <button class="nav__kbd" type="button" id="cmdk-open" aria-label="Mở bảng chuyển nhanh">
+    Chuyển nhanh <span class="kbd">⌘K</span>
+  </button>
+  <button class="nav__toggle" type="button" id="nav-toggle" aria-expanded="false" aria-controls="nav">Mục</button>
+</nav>
+
+<main id="noi-dung">
+
+  <header class="hero" id="top">
+    <div class="wrap">
+    <p class="hero__corners" aria-hidden="true"><span>EDUSGPT · BẢN WEB TĨNH</span><span>TIMELINE 57S · LOCALHOST:3000</span></p>
+    <div class="hero__grid">
+      <div>
+        <p class="eyebrow hero__eyebrow">Chạy local · Không tài khoản</p>
+        <h1 class="display hero__title">Tua từng giây.<br /><em>Hiểu từng ý.</em></h1>
+        <p class="lede">
+          Dán chủ đề hoặc tài liệu, nhận bài giảng có timeline, giọng đọc tiếng Việt và phụ đề từng chữ.
+        </p>
+        <div class="link-row" style="margin-block-start: var(--space-lg)">
+          <a class="btn btn--primary" href="#thu-nghiem">Thử tua demo</a>
+          <a class="btn btn--ghost" href="https://github.com/npdk1/EdusGPT" target="_blank" rel="noopener">
+            <svg viewBox="0 0 16 16" fill="currentColor" aria-hidden="true" width="16" height="16"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82a7.6 7.6 0 0 1 2-.27c.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.01 8.01 0 0 0 16 8c0-4.42-3.58-8-8-8Z"/></svg>
+            Mã nguồn mở</a>
+        </div>
+        <p class="term" aria-label="Câu lệnh chạy"><span class="term__prompt">$</span><code>run.bat</code><span class="term__sep">—</span><span>localhost:3000</span></p>
+      </div>
+
+      <div>
+        <!-- The demo below runs the real sample lesson from the codebase. -->
+        <div class="scrub" id="thu-nghiem">
+          <div class="scrub__stage">
+            <p class="scrub__kicker" id="scrub-kicker">Cảnh 1 / 7</p>
+            <h2 class="scrub__title" id="scrub-title">Định luật II Newton</h2>
+            <p class="scrub__sub" id="scrub-sub">Vật lí 10 · Chương 2: Động lực học chất điểm</p>
+            <ul class="scrub__points" id="scrub-points"></ul>
+            <p class="scrub__caption" id="scrub-caption" aria-live="off"></p>
+          </div>
+
+          <div class="scrub__controls">
+            <button class="iconbtn" type="button" id="btn-back" aria-label="Lùi 5 giây">
+              <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M10.5 3 5.5 8l5 5"/></svg>
+            </button>
+            <button class="iconbtn" type="button" id="btn-play" aria-label="Phát" aria-pressed="false">
+              <svg viewBox="0 0 16 16" fill="currentColor" aria-hidden="true" id="icon-play"><path d="M5 3.2 12.4 8 5 12.8Z"/></svg>
+            </button>
+            <button class="iconbtn" type="button" id="btn-fwd" aria-label="Tới 5 giây">
+              <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M5.5 3l5 5-5 5"/></svg>
+            </button>
+            <button class="iconbtn" type="button" id="btn-a" aria-label="Đặt mốc A">A</button>
+            <button class="iconbtn" type="button" id="btn-b" aria-label="Đặt mốc B">B</button>
+            <button class="iconbtn" type="button" id="btn-loop" aria-label="Bật lặp đoạn A đến B" aria-pressed="false" data-on="false">
+              <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><path d="M3 8a5 5 0 0 1 5-5h5M13 8a5 5 0 0 1-5 5H3"/><path d="M11.5 1.5 13.5 3l-2 1.5M4.5 11.5 2.5 13l2 1.5"/></svg>
+            </button>
+            <span class="scrub__clock" id="scrub-clock">00:00.0 / 00:57.0</span>
+            <div class="track" style="flex-basis: 100%">
+              <div class="track__bed" id="track" role="slider" tabindex="0"
+                   aria-label="Thời gian bài giảng" aria-valuemin="0" aria-valuemax="57" aria-valuenow="0" aria-valuetext="0 giây">
+                <div class="track__played" id="track-played" style="width:0"></div>
+                <div class="track__loop" id="track-loop" hidden></div>
+                <div class="track__head" id="track-head" style="inset-inline-start:0"></div>
+              </div>
+              <p class="track__legend">
+                <span><i data-k="now"></i>đang học</span>
+                <span><i data-k="read"></i>đã xem</span>
+                <span><i data-k="loop"></i>đoạn lặp A→B</span>
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <p class="scrub__hint">
+          Kéo timeline · <span class="kbd">←</span><span class="kbd">→</span> tua 5s ·
+          <span class="kbd">Space</span> phát · <span class="kbd">A</span><span class="kbd">B</span> lặp đoạn.
+        </p>
+      </div>
+    </div>
+
+    <dl class="hero__meta">
+      <div><dt>57s</dt><dd>demo mở là chạy</dd></div>
+      <div><dt>7</dt><dd>cảnh: bìa → tổng kết</dd></div>
+      <div><dt>2</dt><dd>bài mẫu, không cần key</dd></div>
+      <div><dt>1</dt><dd>file HTML mang đi</dd></div>
+    </dl>
+    </div>
+  </header>
+
+  <div class="wrap">
+    <section class="stage" id="soan" aria-labelledby="soan-t">
+      <div class="stage__grid">
+        <p class="stage__num" aria-hidden="true">01</p>
+        <div>
+          <h2 class="section__title stage__title" id="soan-t">Soạn bài trong phút</h2>
+          <div class="stage__body">
+            <p>Mở <code>/studio</code>, dán chủ đề hoặc thả file vào. Máy lên dàn ý trước, viết từng cảnh sau — cảnh lỗi không kéo sập cả bài.</p>
+          </div>
+          <div class="stage__aside">
+            <table class="spec">
+              <caption>Đầu vào</caption>
+              <tbody>
+                <tr><th scope="row">Tài liệu</th><td><code>pdf</code> <code>docx</code> <code>xlsx</code> <code>txt</code> <code>md</code> <code>csv</code> <code>json</code> · <b>40 MB</b>/tệp</td></tr>
+                <tr><th scope="row">Tùy chọn</th><td>4 kiểu chữ · 3 độ dài · <b>6</b> giọng Việt · ảnh AI · con trỏ giảng</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="stage" id="xem" aria-labelledby="xem-t">
+      <div class="stage__grid">
+        <p class="stage__num" aria-hidden="true">02</p>
+        <div>
+          <h2 class="section__title stage__title" id="xem-t">Tua như video thật</h2>
+          <div class="stage__body">
+            <p>Mở <code>/lesson</code>. Slide là timeline dựng lại từng mốc giờ — kéo về giây thứ 3 vẫn đúng khung. Phụ đề tô đúng từ đang đọc.</p>
+          </div>
+          <div class="stage__aside">
+            <table class="spec">
+              <caption>Phím tắt</caption>
+              <tbody>
+                <tr><th scope="row"><span class="kbd">Space</span></th><td>Phát / dừng</td></tr>
+                <tr><th scope="row"><span class="kbd">←</span> <span class="kbd">→</span></th><td>Tua <b>5s</b> · <span class="kbd">J</span><span class="kbd">L</span> tua <b>10s</b></td></tr>
+                <tr><th scope="row"><span class="kbd">,</span> <span class="kbd">.</span></th><td>Từng khung hình (<b>1/30s</b>)</td></tr>
+                <tr><th scope="row"><span class="kbd">[</span> <span class="kbd">]</span></th><td>Đặt A–B, lặp đoạn khó</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="stage" id="hop" aria-labelledby="hop-t">
+      <div class="stage__grid">
+        <p class="stage__num" aria-hidden="true">03</p>
+        <div>
+          <h2 class="section__title stage__title" id="hop-t">Giữ nhịp cả lớp</h2>
+          <div class="stage__body">
+            <p>Công thức, bảng số liệu, đồ thị, quiz chấm điểm ngay, trợ giảng theo cảnh đang học, mô phỏng 3D xoay được.</p>
+          </div>
+          <div class="stage__aside">
+            <ul class="marks">
+              <li><b>Quiz trong slide</b> — chọn là biết đúng sai + giải thích.</li>
+              <li><b>Trợ giảng AI</b> — hỏi theo cảnh đang học.</li>
+              <li><b>Mô phỏng 3D</b> — xoay chuột, chỉnh tốc độ.</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="stage" id="xuat" aria-labelledby="xuat-t">
+      <div class="stage__grid">
+        <p class="stage__num" aria-hidden="true">04</p>
+        <div>
+          <h2 class="section__title stage__title" id="xuat-t">Một file, mở là xem</h2>
+          <div class="stage__body">
+            <p><b>Xuất HTML</b> gói cả bài thành một file. <b>JSON</b> để chép sang máy khác.</p>
+          </div>
+          <div class="stage__aside">
+            <table class="spec">
+              <caption>Xuất</caption>
+              <tbody>
+                <tr><th scope="row">HTML</th><td>một file độc lập; cần mạng ở <b>lần mở đầu tiên</b></td></tr>
+                <tr><th scope="row">JSON</th><td>kịch bản phẳng, nhập lại là chạy</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="stage" id="chay" aria-labelledby="chay-t">
+      <div class="stage__grid">
+        <p class="stage__num" aria-hidden="true">05</p>
+        <div>
+          <h2 class="section__title stage__title" id="chay-t">Chạy trên máy bạn</h2>
+          <div class="stage__body">
+            <p>Nhấp đúp <code>run.bat</code> (Win) hoặc <code>./run.sh</code> (Mac/Linux). Xong mở <code>/setup</code> dán key Gemini / OpenRouter.</p>
+          </div>
+          <div class="stage__aside">
+            <ul class="marks">
+              <li>Bài lưu ở <code>data/courses/</code> · giọng đọc ở <code>data/tts-cache/</code>.</li>
+              <li>Chạy tay: <code>npm run dev</code> — <code>localhost:3000</code>.</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </section>
+  </div>
+
+  <section class="limits" aria-labelledby="gioihan-t">
+    <div class="wrap">
+      <p class="eyebrow" style="color: var(--color-band-accent)">Giới hạn nói trước</p>
+      <h2 class="section__title" id="gioihan-t" style="margin-block: var(--space-md) var(--space-sm); font-size: var(--text-2xl)">Không database, không giấu quota</h2>
+      <p class="lede" style="color: var(--color-band-2nd)">Chưa làm được gì, đọc đây là đủ.</p>
+      <div class="limits__grid">
+        <ul class="limits__list">
+          <li><b>Không database.</b> Bài là file trong <code>data/courses/</code>.</li>
+          <li><b>Hết quota</b> thì báo rõ, không trả bài rỗng.</li>
+          <li><b>HTML xuất ra</b> cần mạng ở lần mở đầu tiên.</li>
+          <li><b>1 khung hình = 1/30s</b> mặc định.</li>
+        </ul>
+        <div class="limits__note">
+          <p><b>Dọn sạch:</b> <code>clean_all.bat</code> xóa bài + cache, giữ <code>.env.local</code>.</p>
+          <p>Check: <code>npm run verify</code>.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="close wrap" aria-labelledby="batdau-t">
+    <h2 class="section__title close__title" id="batdau-t">Cài key. Sinh bài. Tua.</h2>
+    <ol class="close__steps">
+      <li><b>1 — Cài key</b><code>/setup</code>: dán key, bấm kiểm tra, lưu.</li>
+      <li><b>2 — Sinh bài</b><code>/studio</code>: nhập chủ đề, mở là phát.</li>
+      <li><b>Mang theo</b>Xuất HTML một file · JSON chép máy khác.</li>
+    </ol>
+    <div class="link-row">
+      <a class="btn btn--primary" href="#thu-nghiem">Tua thử demo</a>
+      <a class="btn btn--ghost" href="#soan">Đọc lại từ chỗ sinh bài</a>
+      <a class="btn btn--ghost" href="https://github.com/npdk1/EdusGPT" target="_blank" rel="noopener">
+        <svg viewBox="0 0 16 16" fill="currentColor" aria-hidden="true" width="16" height="16"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82a7.6 7.6 0 0 1 2-.27c.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.01 8.01 0 0 0 16 8c0-4.42-3.58-8-8-8Z"/></svg>
+        Mã nguồn mở</a>
+    </div>
+  </section>
+
+</main>
+
+<footer class="foot">
+  <div class="wrap foot__line">
+    <span><span class="foot__mark">EdusGPT</span> · chạy trên máy bạn qua <code>localhost:3000</code> · <a href="https://github.com/npdk1/EdusGPT" target="_blank" rel="noopener">Mã nguồn mở</a></span>
+    <span><a href="#soan">Soạn bài</a> · <a href="#xem">Xem &amp; tua</a> · <a href="#chay">Chạy thật</a> · <a href="#top">Lên đầu trang</a></span>
+  </div>
+</footer>
+
+<div class="cmdk" id="cmdk" role="dialog" aria-modal="true" aria-label="Chuyển nhanh tới mục">
+  <div class="cmdk__box">
+    <input class="cmdk__input" id="cmdk-input" type="text" placeholder="Gõ để lọc mục: soạn, tua, lớp, xuất, chạy…" autocomplete="off" />
+    <div class="cmdk__list" id="cmdk-list" role="listbox" aria-label="Danh sách mục"></div>
+  </div>
+</div>
+
+<script>
+(function () {
+  "use strict";
+  var DUR = 57;
+  var LESSON = [
+    { title: "Định luật II Newton", sub: "Vật lí 10 · Chương 2: Động lực học chất điểm", start: 0, dur: 6,
+      bullets: ["Vì sao cùng một lực đẩy lại cho xe nhẹ gia tốc lớn hơn xe nặng?", "Mục tiêu: hiểu quan hệ F, m, a và vận dụng vào bài toán thật"],
+      narration: "Hôm nay chúng ta trả lời một câu hỏi học sinh nào cũng từng thắc mắc: cùng một lực đẩy, vì sao xe nhẹ lại lao đi nhanh hơn?" },
+    { title: "Lực gây ra gia tốc", sub: "Trực giác trước, công thức sau", start: 6, dur: 8,
+      bullets: ["Lực tạo ra sự thay đổi vận tốc, không tạo ra vận tốc", "Khối lượng là thước đo quán tính: càng nặng, càng ì", "Gia tốc luôn cùng hướng với hợp lực tác dụng"],
+      narration: "Lực không giữ cho vật chuyển động. Lực làm vận tốc thay đổi, và khối lượng chính là mức độ ì của vật." },
+    { title: "Phát biểu định luật", sub: "Dạng vector mới là dạng đúng về bản chất", start: 14, dur: 7,
+      bullets: ["Hợp lực F tỉ lệ thuận với gia tốc a", "Tỉ số F/a là hằng số của vật: khối lượng m", "F và a cùng phương, cùng chiều"],
+      narration: "Biểu thức cốt lõi: hợp lực bằng khối lượng nhân gia tốc. Vector lực và vector gia tốc cùng phương, cùng chiều." },
+    { title: "Mô phỏng 3D: con lắc chuyển động", sub: "Quan sát trực quan dao động và lực quán tính", start: 21, dur: 10,
+      bullets: ["Vật chịu lực phục hồi và trọng lực", "Kéo chuột để xoay nhiều góc nhìn 3D", "Chỉnh thanh trượt tốc độ dưới mô hình"],
+      narration: "Mời bạn quan sát mô hình ba chiều của con lắc. Kéo chuột để xoay góc nhìn, và tăng giảm tốc độ dao động." },
+    { title: "Ví dụ: xe đẩy hàng", sub: "m = 20 kg, F = 60 N, bỏ qua ma sát", start: 31, dur: 9,
+      bullets: ["a = F/m = 60/20 = 3 m/s²", "v sau 4 s: v = a·t = 12 m/s", "s = ½·a·t² = 24 m"],
+      narration: "Xe hai mươi ki-lô-gam, lực sáu mươi niu-tơn, gia tốc ba mét trên giây bình phương. Sau bốn giây xe đạt mười hai mét trên giây." },
+    { title: "Kiểm tra nhanh tương tác", sub: "Bấm chọn trực tiếp đáp án bên dưới", start: 40, dur: 10,
+      bullets: ["F không đổi, m tăng gấp đôi thì a sẽ?", "Đáp án đúng: giảm một nửa, vì a = F/m"],
+      narration: "Câu hỏi tương tác hiện trên màn hình. Bạn chọn một đáp án mình cho là đúng." },
+    { title: "Ghi nhớ", sub: "Ba điều cần mang theo", start: 50, dur: 7,
+      bullets: ["F = m·a là quan hệ vector", "Khối lượng = quán tính (kg); lực (N); gia tốc (m/s²)", "Luôn vẽ hình phân tích lực trước khi thay số"],
+      narration: "Ba điều cần nhớ: F bằng m nhân a theo vector, khối lượng là quán tính, và luôn vẽ hình trước khi thay số." }
+  ];
+
+  var t = 0, playing = false, raf = 0, lastTs = 0;
+  var aMark = null, bMark = null, loopOn = false, readUntil = 0;
+  var reduceMotion = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+  var kicker = document.getElementById("scrub-kicker");
+  var titleEl = document.getElementById("scrub-title");
+  var subEl = document.getElementById("scrub-sub");
+  var pointsEl = document.getElementById("scrub-points");
+  var captionEl = document.getElementById("scrub-caption");
+  var clockEl = document.getElementById("scrub-clock");
+  var track = document.getElementById("track");
+  var played = document.getElementById("track-played");
+  var loopBar = document.getElementById("track-loop");
+  var head = document.getElementById("track-head");
+  var btnPlay = document.getElementById("btn-play");
+  var iconPlay = document.getElementById("icon-play");
+  var PATH_PLAY = "M5 3.2 12.4 8 5 12.8Z";
+  var PATH_PAUSE = "M4.5 3h2.6v10H4.5zM8.9 3h2.6v10H8.9z";
+
+  var wordCache = LESSON.map(function (sc) { return sc.narration.split(/\s+/); });
+
+  function fmt(sec) {
+    var m = Math.floor(sec / 60), s = sec - m * 60;
+    return (m < 10 ? "0" + m : "" + m) + ":" + (s < 10 ? "0" + s.toFixed(1) : s.toFixed(1));
+  }
+  function clamp(v, lo, hi) { return Math.min(hi, Math.max(lo, v)); }
+  function sceneAt(time) {
+    for (var i = LESSON.length - 1; i >= 0; i--) {
+      if (time >= LESSON[i].start) return i;
+    }
+    return 0;
+  }
+
+  function render() {
+    var si = sceneAt(t);
+    var sc = LESSON[si];
+    kicker.textContent = "Cảnh " + (si + 1) + " / " + LESSON.length;
+    titleEl.textContent = sc.title;
+    subEl.textContent = sc.sub;
+
+    var frac = clamp((t - sc.start) / sc.dur, 0, 1);
+    var reveal = Math.ceil(frac * sc.bullets.length * 1.2);
+    var html = "";
+    for (var i = 0; i < sc.bullets.length; i++) {
+      var dim = i < reveal ? "false" : "true";
+      html += '<li data-dim="' + dim + '">' + sc.bullets[i].replace(/</g, "&lt;") + "</li>";
+    }
+    pointsEl.innerHTML = html;
+
+    var words = wordCache[si];
+    var said = Math.floor(frac * words.length);
+    var cap = "";
+    for (var w = 0; w < words.length; w++) {
+      var cls = w < said ? ' data-said="true"' : "";
+      if (w === said && playing) cls += ' data-now="true"';
+      cap += "<span" + cls + ">" + words[w].replace(/</g, "&lt;") + "</span> ";
+    }
+    captionEl.innerHTML = cap.trim();
+
+    var pct = (t / DUR) * 100;
+    played.style.width = pct + "%";
+    head.style.insetInlineStart = pct + "%";
+    clockEl.textContent = fmt(t) + " / " + fmt(DUR);
+    track.setAttribute("aria-valuenow", String(Math.round(t)));
+    track.setAttribute("aria-valuetext", Math.round(t) + " giây, " + sc.title);
+
+    readUntil = Math.max(readUntil, t);
+    if (aMark != null && bMark != null && bMark > aMark) {
+      loopBar.hidden = false;
+      loopBar.style.insetInlineStart = (aMark / DUR * 100) + "%";
+      loopBar.style.width = ((bMark - aMark) / DUR * 100) + "%";
+    } else {
+      loopBar.hidden = true;
+    }
+  }
+
+  function setPlaying(on) {
+    playing = on;
+    btnPlay.setAttribute("aria-pressed", on ? "true" : "false");
+    btnPlay.setAttribute("aria-label", on ? "Tạm dừng" : "Phát");
+    iconPlay.innerHTML = '<path d="' + (on ? PATH_PAUSE : PATH_PLAY) + '"/>';
+    if (on) {
+      if (t >= DUR - 0.01) t = 0;
+      lastTs = performance.now();
+      cancelAnimationFrame(raf);
+      raf = requestAnimationFrame(tick);
+    } else {
+      cancelAnimationFrame(raf);
+    }
+    render();
+  }
+  function tick(now) {
+    if (!playing) return;
+    var dt = (now - lastTs) / 1000;
+    lastTs = now;
+    if (!reduceMotion || true) t += dt;
+    if (loopOn && aMark != null && bMark != null && bMark > aMark && t >= bMark) t = aMark;
+    if (t >= DUR) { t = DUR; setPlaying(false); return; }
+    render();
+    raf = requestAnimationFrame(tick);
+  }
+  function seek(nt, fromUser) {
+    t = clamp(nt, 0, DUR);
+    if (fromUser && loopOn && aMark != null && bMark != null && (t < aMark || t > bMark)) {
+      // keep manual seeks free; loop only applies during playback
+    }
+    render();
+  }
+
+  btnPlay.addEventListener("click", function () { setPlaying(!playing); });
+  document.getElementById("btn-back").addEventListener("click", function () { seek(t - 5, true); });
+  document.getElementById("btn-fwd").addEventListener("click", function () { seek(t + 5, true); });
+  document.getElementById("btn-a").addEventListener("click", function () { aMark = Math.round(t * 10) / 10; render(); });
+  document.getElementById("btn-b").addEventListener("click", function () { bMark = Math.round(t * 10) / 10; render(); });
+  var btnLoop = document.getElementById("btn-loop");
+  btnLoop.addEventListener("click", function () {
+    loopOn = !loopOn;
+    btnLoop.setAttribute("aria-pressed", loopOn ? "true" : "false");
+    btnLoop.setAttribute("data-on", loopOn ? "true" : "false");
+    if (loopOn && (aMark == null || bMark == null || bMark <= aMark)) {
+      aMark = clamp(t, 0, DUR - 5); bMark = clamp(t + 5, 0, DUR);
+    }
+    render();
+  });
+
+  var dragging = false;
+  function xToTime(clientX) {
+    var r = track.getBoundingClientRect();
+    var ratio = (clientX - r.left) / r.width;
+    if (document.documentElement.dir === "rtl") ratio = 1 - ratio;
+    return clamp(ratio, 0, 1) * DUR;
+  }
+  track.addEventListener("pointerdown", function (e) {
+    dragging = true;
+    track.setPointerCapture(e.pointerId);
+    seek(xToTime(e.clientX), true);
+  });
+  track.addEventListener("pointermove", function (e) {
+    if (dragging) seek(xToTime(e.clientX), true);
+  });
+  track.addEventListener("pointerup", function () { dragging = false; });
+  track.addEventListener("keydown", function (e) {
+    if (e.key === "ArrowLeft") { e.preventDefault(); seek(t - 5, true); }
+    else if (e.key === "ArrowRight") { e.preventDefault(); seek(t + 5, true); }
+    else if (e.key === "Home") { e.preventDefault(); seek(0, true); }
+    else if (e.key === "End") { e.preventDefault(); seek(DUR, true); }
+    else if (e.key === " " || e.key === "Enter") { e.preventDefault(); setPlaying(!playing); }
+  });
+  document.addEventListener("keydown", function (e) {
+    var tag = (e.target && e.target.tagName) || "";
+    if (tag === "INPUT" || tag === "TEXTAREA" || cmdk.hasAttribute("open")) return;
+    if (e.key === " ") { e.preventDefault(); setPlaying(!playing); }
+    else if (e.key === "ArrowLeft") { seek(t - 5, true); }
+    else if (e.key === "ArrowRight") { seek(t + 5, true); }
+    else if (e.key === "a" || e.key === "A") { aMark = Math.round(t * 10) / 10; render(); }
+    else if (e.key === "b" || e.key === "B") { bMark = Math.round(t * 10) / 10; render(); }
+  });
+
+  // nav mobile
+  var nav = document.getElementById("nav");
+  var navToggle = document.getElementById("nav-toggle");
+  navToggle.addEventListener("click", function () {
+    var open = nav.getAttribute("data-open") === "true";
+    nav.setAttribute("data-open", open ? "false" : "true");
+    navToggle.setAttribute("aria-expanded", open ? "false" : "true");
+  });
+
+  // scrollspy
+  var links = Array.prototype.slice.call(document.querySelectorAll(".nav__link"));
+  var map = {};
+  links.forEach(function (l) { map[l.getAttribute("href")] = l; });
+  if ("IntersectionObserver" in window) {
+    var obs = new IntersectionObserver(function (entries) {
+      entries.forEach(function (en) {
+        if (en.isIntersecting) {
+          links.forEach(function (l) { l.removeAttribute("aria-current"); });
+          var l = map["#" + en.target.id];
+          if (l) l.setAttribute("aria-current", "true");
+        }
+      });
+    }, { rootMargin: "-40% 0px -55% 0px" });
+    ["soan", "xem", "hop", "xuat", "chay"].forEach(function (id) {
+      var el = document.getElementById(id);
+      if (el) obs.observe(el);
+    });
+  }
+
+  // command palette
+  var cmdk = document.getElementById("cmdk");
+  var cmdkInput = document.getElementById("cmdk-input");
+  var cmdkList = document.getElementById("cmdk-list");
+  var ITEMS = [
+    { t: "Thử tua một đoạn", s: "demo 57 giây", href: "#thu-nghiem" },
+    { t: "01 · Soạn bài", s: "/studio, tài liệu 40 MB", href: "#soan" },
+    { t: "02 · Xem và tua", s: "timeline, phím tắt", href: "#xem" },
+    { t: "03 · Trong lớp", s: "quiz, trợ giảng, 3D", href: "#hop" },
+    { t: "04 · Xuất ra", s: "một file HTML + JSON", href: "#xuat" },
+    { t: "05 · Chạy thật", s: "run.bat, localhost:3000", href: "#chay" }
+  ];
+  var sel = 0, filtered = ITEMS.slice();
+  function drawList() {
+    cmdkList.innerHTML = filtered.length ? filtered.map(function (it, i) {
+      return '<button type="button" role="option" class="cmdk__item" data-i="' + i + '" aria-selected="' + (i === sel ? "true" : "false") + '">' + it.t + " <small>" + it.s + "</small></button>";
+    }).join("") : '<p class="cmdk__empty">Không thấy mục nào. Thử gõ “tua”, “xuất”, “chạy”…</p>';
+    Array.prototype.forEach.call(cmdkList.querySelectorAll(".cmdk__item"), function (b) {
+      b.addEventListener("click", function () { go(filtered[Number(b.getAttribute("data-i"))]); });
+    });
+  }
+  function openCmdk() { cmdk.setAttribute("open", ""); cmdkInput.value = ""; filtered = ITEMS.slice(); sel = 0; drawList(); setTimeout(function () { cmdkInput.focus(); }, 0); }
+  function closeCmdk() { cmdk.removeAttribute("open"); }
+  function go(it) { if (!it) return; closeCmdk(); document.querySelector(it.href).scrollIntoView({ behavior: reduceMotion ? "auto" : "smooth" }); }
+  document.getElementById("cmdk-open").addEventListener("click", openCmdk);
+  document.addEventListener("keydown", function (e) {
+    if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === "k") { e.preventDefault(); cmdk.hasAttribute("open") ? closeCmdk() : openCmdk(); }
+    if (e.key === "Escape" && cmdk.hasAttribute("open")) closeCmdk();
+  });
+  cmdk.addEventListener("click", function (e) { if (e.target === cmdk) closeCmdk(); });
+  cmdkInput.addEventListener("input", function () {
+    var q = cmdkInput.value.trim().toLowerCase();
+    filtered = ITEMS.filter(function (it) { return (it.t + " " + it.s).toLowerCase().indexOf(q) !== -1; });
+    sel = 0; drawList();
+  });
+  cmdkInput.addEventListener("keydown", function (e) {
+    if (e.key === "ArrowDown") { e.preventDefault(); sel = Math.min(filtered.length - 1, sel + 1); drawList(); }
+    else if (e.key === "ArrowUp") { e.preventDefault(); sel = Math.max(0, sel - 1); drawList(); }
+    else if (e.key === "Enter") { go(filtered[sel]); }
+  });
+
+  render();
+})();
+</script>
+</body>
+</html>
