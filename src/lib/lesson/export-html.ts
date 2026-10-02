@@ -1,3 +1,6 @@
+import fs from "node:fs";
+import path from "node:path";
+import katex from "katex";
 import { SCENE_KIND_LABEL, type Lesson } from "./types";
 import { type AlignedSentence } from "@/lib/karaoke";
 import {
@@ -113,6 +116,48 @@ function escapeHtml(value: string): string {
 }
 
 /**
+ * KaTeX stylesheet inlined into the standalone file, read once from the
+ * installed package. The web player gets it through its CSS bundle; the export
+ * has no bundle, so it carries the text. Font files are referenced by relative
+ * URL and will not resolve next to a downloaded file — the layout still holds
+ * on fallback fonts, only the glyph shapes differ.
+ */
+let cachedKatexCss: string | null = null;
+function katexCss(): string {
+  if (cachedKatexCss !== null) return cachedKatexCss;
+  try {
+    cachedKatexCss = fs.readFileSync(
+      path.join(process.cwd(), "node_modules", "katex", "dist", "katex.min.css"),
+      "utf8",
+    );
+  } catch {
+    cachedKatexCss = "";
+  }
+  return cachedKatexCss;
+}
+
+/**
+ * Renders one scene's formula with the same KaTeX options the web player uses
+ * (`SceneFigure`). A formula KaTeX rejects falls back to escaped raw text —
+ * identical to the web behaviour, so the two never disagree about a scene.
+ */
+function formulaMarkup(formula: string): string {
+  let inner: string;
+  try {
+    inner = katex.renderToString(formula, {
+      displayMode: true,
+      throwOnError: true,
+      strict: false,
+      trust: false,
+      output: "htmlAndMathml",
+    });
+  } catch {
+    inner = escapeHtml(formula);
+  }
+  return `<p class="formula">${inner}</p>`;
+}
+
+/**
  * Renders one scene's narration as sentences that pop up one at a time, each
  * word carrying its speaking window. A sentence with no measured start rides
  * with the previous one so it is never stranded invisible; a scene with no
@@ -170,7 +215,7 @@ function sceneMarkup(
         scene.subtitle ? `<p class="sub">${escapeHtml(scene.subtitle)}</p>` : "",
         `</header>`,
         `<ul class="bullets">${bullets}</ul>`,
-        scene.formula ? `<p class="formula">${escapeHtml(scene.formula)}</p>` : "",
+        scene.formula ? formulaMarkup(scene.formula) : "",
         scene.narration
           ? narrationMarkup(scene.narration, karaoke[index] ?? [])
           : "",
@@ -492,7 +537,7 @@ export function buildStandaloneHtml({ lesson, audios, karaoke }: StandaloneHtmlO
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>${escapeHtml(lesson.title)} · EdusGPT</title>
-<style>${CSS}${theme}</style>
+<style>${CSS}${theme}${katexCss()}</style>
 </head>
 <body>
 <div class="wrap">

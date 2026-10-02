@@ -1,7 +1,9 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
+import katex from "katex";
+import "katex/dist/katex.min.css";
 import {
   TriangleAlert,
   CircleCheck,
@@ -57,6 +59,37 @@ const PRESETS = [
 ];
 
 /** Topic → Gemini → editable timeline. The generated lesson opens in /lesson. */
+function PreviewFormula({ formula }: { formula: string }) {
+  // Same render options as the player's SceneFormula; a rejected formula falls
+  // back to raw text so the preview never disagrees with the player.
+  const html = useMemo(() => {
+    try {
+      return katex.renderToString(formula, {
+        displayMode: true,
+        throwOnError: true,
+        strict: false,
+        trust: false,
+        output: "htmlAndMathml",
+      });
+    } catch {
+      return null;
+    }
+  }, [formula]);
+  if (html === null) {
+    return (
+      <p className="mt-2 w-fit rounded-lg border border-gold-500/40 bg-gold-500/10 px-3 py-1.5 font-mono text-sm text-gold-200">
+        {formula}
+      </p>
+    );
+  }
+  return (
+    <div
+      className="mt-2 w-fit max-w-full overflow-x-auto rounded-lg border border-gold-500/40 bg-gold-500/10 px-3 py-1.5 text-gold-200 [&_.katex]:!text-inherit"
+      dangerouslySetInnerHTML={{ __html: html }}
+    />
+  );
+}
+
 export function StudioPanel() {
   const [status, setStatus] = useState<PublicAiStatus | null>(null);
   const [topic, setTopic] = useState(PRESETS[0]);
@@ -618,11 +651,7 @@ export function StudioPanel() {
                     </li>
                   ))}
                 </ul>
-                {scene.formula ? (
-                  <p className="mt-2 w-fit rounded-lg border border-gold-500/40 bg-gold-500/10 px-3 py-1.5 font-mono text-sm text-gold-200">
-                    {scene.formula}
-                  </p>
-                ) : null}
+                {scene.formula ? <PreviewFormula formula={scene.formula} /> : null}
                 {scene.narration ? (
                   <p className="mt-2 border-l-2 border-brand-600/70 pl-3 text-xs italic text-mist-400">
                     {scene.narration}
