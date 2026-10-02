@@ -1,4 +1,9 @@
 import { SCENE_KIND_LABEL, type Lesson } from "./types";
+import {
+  isDarkTheme,
+  resolveSlideTheme,
+  type SlidePalette,
+} from "./themes";
 
 /**
  * Builds a standalone, self-contained HTML "player" for one lesson — one file,
@@ -53,6 +58,45 @@ input[type=range]::-moz-range-thumb{width:16px;height:16px;border-radius:999px;b
 .hint{color:var(--mist5);font-size:11px;margin-top:10px;font-family:ui-monospace,monospace}
 `;
 
+/**
+ * Recolours the generic dark player chrome with the lesson's own paper.
+ *
+ * The web player reads every colour through `var(--slide-*)`, so a deck on
+ * "Giấy kem" is light and a deck on "Mực tàu" is dark. The standalone file
+ * used to ignore that and always ship the dark look, which is why a download
+ * never resembled the web page. Redefining the same variables keeps the layout
+ * untouched while the whole page — stage, controls, buttons — follows the
+ * chosen preset.
+ */
+function themeCss(palette: SlidePalette, dark: boolean): string {
+  const p = palette;
+  const grid = `color-mix(in srgb, ${p.rule} 38%, transparent)`;
+  return (
+    `:root{color-scheme:${dark ? "dark" : "light"};` +
+    `--ink:${p.bg};--ink2:${p.bg};--ink3:${p.bgSunk};--line:${p.rule};` +
+    `--mist:${p.ink};--mist3:${p.inkSoft};--mist5:${p.inkFaint};` +
+    `--brand:${p.accent};--brand3:${p.accentSoft};--brand7:${p.accent}}` +
+    `body{background-image:none}` +
+    `.controls{background:color-mix(in srgb, ${p.bgSunk} 72%, transparent)}` +
+    `button{background:color-mix(in srgb, ${p.bgSunk} 90%, transparent)}` +
+    `button.primary{color:${dark ? "#04090b" : "#ffffff"}}` +
+    `.kind{background:color-mix(in srgb, ${p.bgSunk} 70%, transparent)}` +
+    `.stage .grid{background-image:linear-gradient(to right,${grid} 1px,transparent 1px),` +
+    `linear-gradient(to bottom,${grid} 1px,transparent 1px)}` +
+    `.idx{color:color-mix(in srgb, ${p.inkFaint} 70%, transparent)}` +
+    `.glow{background:linear-gradient(140deg,` +
+    `color-mix(in srgb, ${p.accent} 22%, transparent),transparent 62%)}` +
+    `.glow.gold{background:linear-gradient(140deg,` +
+    `color-mix(in srgb, #f6b93b 22%, transparent),transparent 62%)}` +
+    `.glow.ember{background:linear-gradient(140deg,` +
+    `color-mix(in srgb, #ff8a5b 20%, transparent),transparent 62%)}` +
+    `.narration{border-left-color:color-mix(in srgb, ${p.accent} 70%, transparent);` +
+    `background:color-mix(in srgb, ${p.bgSunk} 75%, transparent)}` +
+    `.formula{border-color:color-mix(in srgb, #f6b93b 40%, transparent);` +
+    `background:color-mix(in srgb, #f6b93b 10%, transparent)}`
+  );
+}
+
 function escapeHtml(value: string): string {
   return value
     .replace(/&/g, "&amp;")
@@ -61,15 +105,19 @@ function escapeHtml(value: string): string {
     .replace(/"/g, "&quot;");
 }
 
-function sceneMarkup(lesson: Lesson): string {
+function sceneMarkup(lesson: Lesson, audios: (string | null)[]): string {
   return lesson.scenes
     .map((scene, index) => {
       const glowClass = scene.accent === "brand" ? "glow" : `glow ${scene.accent}`;
       const bullets = scene.bullets
         .map((bullet) => `<li>${escapeHtml(bullet)}</li>`)
         .join("");
+      const audio = audios[index];
       return [
         `<article class="scene" data-scene="${index}">`,
+        audio
+          ? `<audio data-voice preload="auto" src="${audio}"></audio>`
+          : "",
         `<div class="card">`,
         `<div class="${glowClass}"></div>`,
         `<div class="idx">${String(index + 1).padStart(2, "0")}</div>`,
@@ -139,6 +187,51 @@ const PLAYER_JS = `
   var fps = data.fps || 30;
   range.max = String(total);
 
+  // --- teacher voice: one narration clip per scene, embedded as data URIs.
+  // There is no server here, so every clip rides inside the file. The timeline
+  // stays the master clock: on each paint while playing, a scene change swaps
+  // the clip and seeks it to the playhead offset. A clip shorter than its
+  // scene leaves silence; a longer one is cut at the scene boundary.
+  var voiceEls = [];
+  for (var vi = 0; vi < data.scenes.length; vi++) {
+    var vel = stage.querySelector('[data-scene="' + vi + '"] audio[data-voice]');
+    voiceEls.push(vel && vel.getAttribute('src') ? vel.getAttribute('src') : null);
+  }
+  var voice = document.getElementById('voice');
+  var voiceOn = true;
+  var voiceScene = -1;
+
+  function sceneIndexAt(t) {
+    var idx = 0;
+    for (var i = 0; i < data.scenes.length; i++) {
+      if (t >= data.scenes[i].start) idx = i;
+    }
+    return idx;
+  }
+
+  function syncVoice() {
+    if (!voiceOn) { try { voice.pause(); } catch (e) {} return; }
+    var idx = sceneIndexAt(current);
+    var src = voiceEls[idx];
+    if (!src) { try { voice.pause(); } catch (e) {} voiceScene = -2; return; }
+    if (voiceScene !== idx) {
+      voiceScene = idx;
+      try { voice.src = src; } catch (e) {}
+    }
+    if (playing) {
+      var off = Math.max(0, current - data.scenes[idx].start);
+      try {
+        if (voice.duration && off < voice.duration && Math.abs((voice.currentTime || 0) - off) > 0.4) {
+          voice.currentTime = off;
+        }
+      } catch (e) {}
+      var played = voice.play();
+      if (played && played.catch) played.catch(function () {});
+    } else {
+      try { voice.pause(); } catch (e) {}
+    }
+  }
+
   function fmt(value) {
     var s = Math.max(0, value || 0);
     var m = Math.floor(s / 60);
@@ -152,11 +245,16 @@ const PLAYER_JS = `
     tl.time(current);
     range.value = String(current);
     clock.textContent = fmt(current) + ' / ' + fmt(total);
+    if (playing) {
+      var idx = sceneIndexAt(current);
+      if (idx !== voiceScene) syncVoice();
+    }
   }
 
   function seek(value) {
     current = Math.max(0, Math.min(value, total));
     paint();
+    syncVoice();
   }
 
   function stop() {
@@ -164,6 +262,7 @@ const PLAYER_JS = `
     playBtn.textContent = 'Phat';
     if (raf) cancelAnimationFrame(raf);
     raf = null;
+    try { voice.pause(); } catch (e) {}
   }
 
   function start() {
@@ -172,6 +271,7 @@ const PLAYER_JS = `
     playBtn.textContent = 'Dung';
     last = performance.now();
     raf = requestAnimationFrame(tick);
+    syncVoice();
   }
 
   function tick(now) {
@@ -196,6 +296,11 @@ const PLAYER_JS = `
     rate = parseFloat(event.target.value);
   });
   range.addEventListener('input', function () { seek(parseFloat(range.value)); });
+  document.getElementById('voiceBtn').addEventListener('click', function () {
+    voiceOn = !voiceOn;
+    document.getElementById('voiceBtn').textContent = voiceOn ? 'Tiếng: bật' : 'Tiếng: tắt';
+    syncVoice();
+  });
 
   Array.prototype.forEach.call(document.querySelectorAll('[data-seek]'), function (button) {
     button.addEventListener('click', function () { seek(parseFloat(button.getAttribute('data-seek'))); });
@@ -245,9 +350,16 @@ const PLAYER_JS = `
 
 export interface StandaloneHtmlOptions {
   lesson: Lesson;
+  /**
+   * One `data:audio/mpeg;base64` URI per scene, `null` where a scene has no
+   * narration. The file stays server-free: every clip rides inside it.
+   */
+  audios: (string | null)[];
 }
 
-export function buildStandaloneHtml({ lesson }: StandaloneHtmlOptions): string {
+export function buildStandaloneHtml({ lesson, audios }: StandaloneHtmlOptions): string {
+  const preset = resolveSlideTheme(lesson.theme);
+  const theme = themeCss(preset.palette, isDarkTheme(lesson.theme));
   // `<` is escaped so the JSON blob can never close its own <script> tag.
   const payload = JSON.stringify(lesson).replace(/</g, "\\u003c");
   const speeds = [0.5, 0.75, 1, 1.25, 1.5, 2]
@@ -263,7 +375,7 @@ export function buildStandaloneHtml({ lesson }: StandaloneHtmlOptions): string {
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>${escapeHtml(lesson.title)} · EdusGPT</title>
-<style>${CSS}</style>
+<style>${CSS}${theme}</style>
 </head>
 <body>
 <div class="wrap">
@@ -271,15 +383,18 @@ export function buildStandaloneHtml({ lesson }: StandaloneHtmlOptions): string {
     <h1>${escapeHtml(lesson.title)}</h1>
     <span class="tag">${escapeHtml(lesson.subject)}${lesson.grade ? ` &middot; ${escapeHtml(lesson.grade)}` : ""}</span>
     <span class="tag mono">${lesson.duration.toFixed(1)}s &middot; ${lesson.scenes.length} cảnh</span>
+    <span class="tag">${escapeHtml(preset.label)}</span>
   </div>
-  <div class="stage" id="stage"><div class="grid"></div>${sceneMarkup(lesson)}</div>
+  <div class="stage" id="stage"><div class="grid"></div>${sceneMarkup(lesson, audios)}</div>
   <div class="controls">
+    <audio id="voice" preload="auto" style="display:none"></audio>
     <div class="row">
       <button class="primary" id="play">Phát</button>
       <button id="back">&minus;5s</button>
       <button id="prevFrame">&minus;1 khung</button>
       <button id="nextFrame">+1 khung</button>
       <button id="fwd">+5s</button>
+      <button id="voiceBtn">Tiếng: bật</button>
       <label class="mono" style="font-size:12px;color:#9fb9bd">tốc độ <select id="speed">${speeds}</select></label>
       <div class="ab" id="loop">A&rarr;B</div>
       <button id="setA">A 00:00.0</button>
