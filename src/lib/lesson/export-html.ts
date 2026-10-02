@@ -1,5 +1,5 @@
 import { SCENE_KIND_LABEL, type Lesson } from "./types";
-import { type KaraokeToken } from "@/lib/karaoke";
+import { type AlignedSentence } from "@/lib/karaoke";
 import {
   isDarkTheme,
   resolveSlideTheme,
@@ -41,7 +41,9 @@ ul.bullets li:before{content:"";width:6px;height:6px;margin-top:9px;border-radiu
 .formula{margin:0;width:fit-content;border:1px solid rgba(246,185,59,.4);background:rgba(246,185,59,.1);color:var(--gold3);border-radius:12px;padding:12px 16px;font-family:ui-monospace,monospace;font-size:clamp(16px,2.2vw,24px);font-weight:600}
 .narration{position:absolute;left:0;right:0;bottom:16px;width:min(860px,92%);margin:0 auto;text-align:center;padding:6px 0;font-size:17px;line-height:1.7;font-style:italic;color:var(--mist3);text-shadow:0 1px 8px rgba(0,0,0,.35);pointer-events:none}
 .narration .w{border-radius:4px;padding:0 1px;transition:background-color .15s,color .15s}
-.narration .w.lit{background:var(--brand);color:#04090b;font-style:normal}
+.narration .w.lit{background:var(--brand);font-style:normal}
+.narration .sent{opacity:0;transform:translateY(8px);transition:opacity .35s ease,transform .35s ease}
+.narration .sent.on{opacity:1;transform:none}
 .bar{position:absolute;left:0;bottom:0;height:3px;width:100%;transform:scaleX(0);transform-origin:left center;background:linear-gradient(90deg,var(--brand),var(--gold3))}
 .controls{margin-top:16px;border:1px solid var(--line);background:rgba(8,15,19,.75);border-radius:16px;padding:14px}
 .row{display:flex;flex-wrap:wrap;align-items:center;gap:8px}
@@ -87,6 +89,10 @@ function themeCss(palette: SlidePalette, dark: boolean): string {
     `.stage .grid{background-image:linear-gradient(to right,${grid} 1px,transparent 1px),` +
     `linear-gradient(to bottom,${grid} 1px,transparent 1px)}` +
     `.idx{color:color-mix(in srgb, ${p.inkFaint} 70%, transparent)}` +
+    // Lit word: dark ink on the (light) accent of dark papers, white ink on
+    // the (dark) accent of light papers. A fixed colour here is what made the
+    // spoken word unreadable on half the themes.
+    `.narration .w.lit{color:${dark ? "#04090b" : "#ffffff"}}` +
     `.glow{background:linear-gradient(140deg,` +
     `color-mix(in srgb, ${p.accent} 22%, transparent),transparent 62%)}` +
     `.glow.gold{background:linear-gradient(140deg,` +
@@ -107,34 +113,42 @@ function escapeHtml(value: string): string {
 }
 
 /**
- * Renders one scene's narration as word spans carrying their speaking windows.
- * Tokens without a window (no timings, or the alignment's coverage check
- * rejected them) render as plain text — a wrong highlight is worse than none,
- * the same rule the web player follows.
+ * Renders one scene's narration as sentences that pop up one at a time, each
+ * word carrying its speaking window. A sentence with no measured start rides
+ * with the previous one so it is never stranded invisible; a scene with no
+ * timings at all falls back to the plain paragraph.
  */
-function narrationMarkup(narration: string, tokens: KaraokeToken[]): string {
+function narrationMarkup(narration: string, sentences: AlignedSentence[]): string {
   // No timings (a scene whose voice failed to synthesise, or an alignment the
   // coverage check rejected): fall back to the plain paragraph. The spans must
-  // never change the visible text, so an empty token list renders no spans.
-  const inner =
-    tokens.length > 0
-      ? tokens
-          .map((token) => {
-            const text = escapeHtml(token.text);
-            if (token.start === null || token.end === null) {
-              return `<span class="w">${text}</span>`;
-            }
-            return `<span class="w" data-s="${token.start.toFixed(3)}" data-e="${token.end.toFixed(3)}">${text}</span>`;
-          })
-          .join("")
-      : escapeHtml(narration);
+  // never change the visible text, so an empty list renders no spans.
+  if (sentences.length === 0) {
+    return `<p class="narration">&ldquo;${escapeHtml(narration)}&rdquo;</p>`;
+  }
+  let lastStart = 0;
+  const inner = sentences
+    .map((sentence) => {
+      const start = sentence.start ?? lastStart;
+      lastStart = start;
+      const words = sentence.tokens
+        .map((token) => {
+          const text = escapeHtml(token.text);
+          if (token.start === null || token.end === null) {
+            return `<span class="w">${text}</span>`;
+          }
+          return `<span class="w" data-s="${token.start.toFixed(3)}" data-e="${token.end.toFixed(3)}">${text}</span>`;
+        })
+        .join("");
+      return `<span class="sent" data-start="${start.toFixed(3)}">${words}</span>`;
+    })
+    .join(" ");
   return `<p class="narration">&ldquo;${inner}&rdquo;</p>`;
 }
 
 function sceneMarkup(
   lesson: Lesson,
   audios: (string | null)[],
-  karaoke: KaraokeToken[][],
+  karaoke: AlignedSentence[][],
 ): string {
   return lesson.scenes
     .map((scene, index) => {
@@ -232,10 +246,12 @@ const PLAYER_JS = `
   var voiceScene = -1;
 
   // --- karaoke subtitle: each narration word carries its speaking window in
-  // data-s/data-e (seconds into the scene's own clip, aligned server-side).
-  // The voice element is the clock: every paint looks up the word spoken at
-  // the current offset and lights exactly that span. Words without a window
-  // never light up, and a scene with no timings keeps its plain paragraph.
+  // data-s/data-e (seconds into the scene's own clip, aligned server-side),
+  // grouped into one .sent span per caption sentence. The voice element is
+  // the clock: every paint looks up the word spoken at the current offset and
+  // lights exactly that span, and shows only the sentence being spoken so each
+  // line pops up in turn like a film subtitle. Words without a window never
+  // light up, and a scene with no timings keeps its plain paragraph.
   var karaokeTracks = [];
   for (var ki = 0; ki < data.scenes.length; ki++) {
     var kel = stage.querySelector('[data-scene="' + ki + '"] .narration');
@@ -246,7 +262,13 @@ const PLAYER_JS = `
       var s = parseFloat(spans[si].getAttribute('data-s'));
       if (isFinite(s)) { starts.push(s); order.push(si); }
     }
-    karaokeTracks.push({ spans: spans, starts: starts, order: order, lit: -1 });
+    var sentEls = kel ? kel.querySelectorAll('span.sent') : [];
+    var sentStarts = [];
+    for (var gi = 0; gi < sentEls.length; gi++) {
+      var gs = parseFloat(sentEls[gi].getAttribute('data-start'));
+      sentStarts.push(isFinite(gs) ? gs : 0);
+    }
+    karaokeTracks.push({ spans: spans, starts: starts, order: order, lit: -1, sents: sentEls, sentStarts: sentStarts, sentOn: -2 });
   }
 
   function paintKaraoke() {
@@ -254,6 +276,7 @@ const PLAYER_JS = `
     for (var i = 0; i < karaokeTracks.length; i++) {
       var track = karaokeTracks[i];
       var want = -1;
+      var wantSent = -1;
       if (i === idx && track.starts.length > 0) {
         var off = Math.max(0, current - data.scenes[idx].start);
         var low = 0, high = track.starts.length - 1;
@@ -263,6 +286,9 @@ const PLAYER_JS = `
           else { high = mid - 1; }
         }
         if (want >= 0) want = track.order[want];
+        for (var qi = 0; qi < track.sentStarts.length; qi++) {
+          if (track.sentStarts[qi] <= off) wantSent = qi;
+        }
       }
       if (want !== track.lit) {
         if (track.lit >= 0 && track.spans[track.lit]) {
@@ -272,6 +298,15 @@ const PLAYER_JS = `
           track.spans[want].className = 'w lit';
         }
         track.lit = want;
+      }
+      if (wantSent !== track.sentOn) {
+        if (track.sentOn >= 0 && track.sents[track.sentOn]) {
+          track.sents[track.sentOn].className = 'sent';
+        }
+        if (wantSent >= 0 && track.sents[wantSent]) {
+          track.sents[wantSent].className = 'sent on';
+        }
+        track.sentOn = wantSent;
       }
     }
   }
@@ -432,11 +467,11 @@ export interface StandaloneHtmlOptions {
    */
   audios: (string | null)[];
   /**
-   * One aligned token list per scene, from the same `alignNarration` the web
-   * player uses. Scenes with no timings pass an empty list and render their
-   * narration as plain text.
+   * One aligned sentence list per scene, from the same `alignSentences` the
+   * web caption uses. Scenes with no timings pass an empty list and render
+   * their narration as plain text.
    */
-  karaoke: KaraokeToken[][];
+  karaoke: AlignedSentence[][];
 }
 
 export function buildStandaloneHtml({ lesson, audios, karaoke }: StandaloneHtmlOptions): string {

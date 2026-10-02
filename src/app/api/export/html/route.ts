@@ -1,7 +1,7 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { buildStandaloneHtml } from "@/lib/lesson/export-html";
 import { coerceLesson } from "@/lib/lesson/validate";
-import { alignNarration, type KaraokeToken } from "@/lib/karaoke";
+import { alignSentences, type AlignedSentence } from "@/lib/karaoke";
 import { DEFAULT_VOICE, isViVoice, speak } from "@/lib/server/tts";
 import { slugify } from "@/lib/format";
 
@@ -40,10 +40,10 @@ export async function POST(request: NextRequest) {
   // server to speak. A scene that fails to synthesise stays silent instead of
   // failing the whole export.
   const audios: (string | null)[] = [];
-  // Word timings per scene, aligned to the narration on the server with the
-  // same `alignNarration` the web player uses. The standalone file has no
+  // Word timings per scene, cut into caption sentences with the same
+  // `alignSentences` the web caption uses. The standalone file has no
   // server to ask, so the highlight data rides inside it next to the audio.
-  const karaoke: KaraokeToken[][] = [];
+  const karaoke: AlignedSentence[][] = [];
   let audioBytes = 0;
   for (const scene of lesson.scenes) {
     if (!scene.narration) {
@@ -64,7 +64,7 @@ export async function POST(request: NextRequest) {
         );
       }
       audios.push(`data:audio/mpeg;base64,${Buffer.from(audio).toString("base64")}`);
-      karaoke.push(alignNarration(scene.narration, words));
+      karaoke.push(alignSentences(scene.narration, words));
     } catch {
       audios.push(null);
       karaoke.push([]);
