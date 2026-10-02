@@ -103,15 +103,43 @@ export const PROVIDERS: Record<ProviderId, ProviderSpec> = {
     signupUrl: "https://openrouter.ai/keys",
     keyEnvNames: ["OPENROUTER_API_KEY"],
     defaultBaseUrl: "https://openrouter.ai/api/v1",
-    // Free tier models keep working when Gemini's daily quota is spent.
-    defaultModel: "google/gemini-2.5-flash-lite",
+    // Every id here answered 200 with real JSON on an account that has never
+    // bought credits. That qualifier is the whole story for this provider:
+    // OpenRouter's paid ids all answer `402 Insufficient credits` for this key,
+    // so only the `:free` tier is reachable. Probing all 17 `:free` ids the
+    // account can see left 5 that answer.
+    //
+    // The list this replaces was built on a broken test: it accepted a model
+    // whenever `JSON.parse(content)` worked, and OpenRouter's own 402 body is
+    // valid JSON, so 66 dead ids looked healthy. A probe here has to check the
+    // HTTP status and a non-empty `choices[0].message.content` too.
+    //
+    // `nvidia/nemotron-3-ultra-550b-a55b:free` leads because it is also the one
+    // model that generated a complete lesson on NVIDIA's own endpoint. Two more
+    // ids are reachable but unverified (`qwen/qwen3.8-27b:free` and
+    // `poolside/laguna-xs-2.1:free` answered 429 while probing), so they are left
+    // out rather than shipped on the strength of a rate-limit error.
+    //
+    // What a real lesson attempt looks like on this tier, measured: of the five
+    // only some finish. The 550b `:free` alias comes back with empty content,
+    // `cohere/north-mini-code:free` gives up after the first scene, and three
+    // ids answer with English reasoning instead of JSON — which the fallback
+    // queue then rescues, so a lesson does get written but by an id nobody can
+    // name. Re-running them to find out which one exposed the second wall: the
+    // daily free-request cap, `Rate limit exceeded: free-models-per-day. Add 10
+    // credits to unlock 1000 free model requests per day`.
+    //
+    // So with a key that has never been topped up this provider answers a health
+    // check but cannot be relied on to finish a lesson. The ids stay because they
+    // are what `/setup` can still validate; the note under the key box says the
+    // same to the user.
+    defaultModel: "nvidia/nemotron-3-ultra-550b-a55b:free",
     modelChoices: [
-      "google/gemini-2.5-flash-lite",
-      "google/gemini-2.0-flash-exp:free",
-      "meta-llama/llama-3.3-70b-instruct",
-      "qwen/qwen-2.5-72b-instruct",
-      "mistralai/mistral-small",
-      "deepseek/deepseek-chat",
+      "nvidia/nemotron-3-ultra-550b-a55b:free",
+      "google/gemma-4-31b-it:free",
+      "google/gemma-4-26b-a4b-it:free",
+      "dots-studio/dots-3-note-preview:free",
+      "cohere/north-mini-code:free",
     ],
     keyHintPrefix: "sk-or",
     docs: "https://openrouter.ai/docs",
@@ -127,14 +155,17 @@ export const PROVIDERS: Record<ProviderId, ProviderSpec> = {
     // no-card tier is metered per model (200k tokens/day), which fails at a
     // completely different point than OpenRouter's request-count cap.
     defaultModel: "openai/gpt-oss-120b",
-    // Groq removed Llama from the free plan in 2026; these three are what the
-    // rate-limit table actually lists. `agy models` / /models stays the source
-    // of truth at runtime — this list is only the offline fallback.
-    modelChoices: [
-      "openai/gpt-oss-120b",
-      "qwen/qwen3.8-27b",
-      "openai/gpt-oss-20b",
-    ],
+    // Groq removed Llama from the free plan in 2026, which leaves one model here
+    // that both answers JSON mode and clears a real lesson:
+    //   - `openai/gpt-oss-120b` generated a full 5-slide lesson on its own.
+    //   - `qwen/qwen3.8-27b` answers a ping in 222ms but the free tier meters it
+    //     on *input* tokens at 7000/min, and one scene request already carries
+    //     ~5100 of them. It therefore 429s on every batch no matter how long the
+    //     client waits, and the run ends up served by `gpt-oss-120b` anyway.
+    //   - `openai/gpt-oss-20b` replies `Failed to validate JSON` with an empty
+    //     body, which would leave lesson generation with nothing to parse, and
+    //     the two `canopylabs/orpheus-*` models demand terms acceptance first.
+    modelChoices: ["openai/gpt-oss-120b"],
     keyHintPrefix: "gsk_",
     docs: "https://console.groq.com/docs/rate-limits",
   },
@@ -146,17 +177,33 @@ export const PROVIDERS: Record<ProviderId, ProviderSpec> = {
     keyEnvNames: ["NVIDIA_API_KEY"],
     defaultBaseUrl: "https://integrate.api.nvidia.com/v1",
     defaultModel: "nvidia/nemotron-3-ultra-550b-a55b",
-    // Both of these were called through the API with `response_format:
-    // json_object` and answered with parseable JSON, so they are listed because
-    // they work for lesson generation, not because a blog post recommended them.
-    // NVIDIA retired three of the five ids this list used to carry
-    // (`meta/llama-3.3-70b-instruct` and `openai/gpt-oss-120b` reached end of
-    // life on 2026-08-26 and 2026-09-03, `nvidia/llama-3.1-nemotron-70b-instruct`
-    // now 404s), which is why an old pin failed at setup with a timeout instead
-    // of a useful "model gone" message.
+    // Only entries that generated a full lesson *by themselves* earn a place
+    // here, verified by running one lesson per model and reading back the model
+    // the lesson records. That bar matters because the app keeps a fallback
+    // queue: a broken model still "produces" a lesson, so a run that only
+    // counts slides proves nothing. `nvidia/nemotron-3-ultra-550b-a55b` is the
+    // one id that clears it (6 slides, 128s).
+    //
+    // `nvidia/nemotron-3-super-120b-a12b` used to sit here and looked fine —
+    // until the per-model run showed the lesson had quietly been written by
+    // `ultra-550b` after a fallback. Alone it spends the whole budget on
+    // reasoning (`finish_reason: "length"`, `reasoning_tokens: 4096`) and comes
+    // back with empty content, and a wider budget only buys more reasoning, so
+    // it cannot be rescued the way a truncated outline can.
+    //
+    // `nvidia/nemotron-3-nano-omni-30b-a3b-reasoning` answers a short JSON ping
+    // in 1.9s but returns 503 "Worker local total request limit reached" on a
+    // real generation — another reminder that a ping is not a verdict. Three
+    // ids from earlier revisions are gone for good: `meta/llama-3.3-70b-instruct`
+    // and `openai/gpt-oss-120b` reached end of life on 2026-08-26 and
+    // 2026-09-03, and `nvidia/llama-3.1-nemotron-70b-instruct` now 404s — an old
+    // pin failed at setup with a timeout instead of a useful "model gone".
+    // Two separate runs of `poolside/laguna-xs-2.1` failed for reasons that were
+    // never the model's own: once with 503 "Worker local total request limit
+    // reached", once with a plain timeout after 240s. A single id that never
+    // once produced a scene is noise in a dropdown, not a fallback.
     modelChoices: [
       "nvidia/nemotron-3-ultra-550b-a55b",
-      "nvidia/nemotron-3-super-120b-a12b",
     ],
     keyHintPrefix: "nvapi-",
     docs: "https://build.nvidia.com/explore/discover",

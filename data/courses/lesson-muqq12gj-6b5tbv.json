@@ -1,0 +1,445 @@
+{
+  "format": "eduai-studio/course@1",
+  "updatedAt": "2026-10-02T08:48:40.673Z",
+  "lesson": {
+    "id": "lesson-muqq12gj-6b5tbv",
+    "title": "Định nghĩa tích phân Riemann và ý nghĩa hình học",
+    "subject": "Vi tích phân 2",
+    "grade": "12",
+    "language": "vi",
+    "fps": 30,
+    "duration": 152,
+    "scenes": [
+      {
+        "id": "ai-1",
+        "kind": "cover",
+        "accent": "brand",
+        "title": "Tích phân Riemann: từ tổng Riemann đến diện tích",
+        "subtitle": "Học xong bạn biết viết định nghĩa và hình dung diện tích dưới đường cong",
+        "bullets": [
+          "Nắm định nghĩa qua giới hạn tổng Riemann",
+          "Hình dung diện tích dưới đường cong"
+        ],
+        "visualNote": "Slide mở đầu: tiêu đề lớn, hai mục tiêu chính bên dưới",
+        "narration": "Chào các em, hôm nay chúng ta tìm hiểu tích phân Riemann. Mục tiêu là các em viết được định nghĩa chính xác và hình dung được ý nghĩa hình học: diện tích dưới đồ thị hàm số. Bài học đi từ khái niệm tổng Riemann đến giới hạn của nó. Mời các em cùng bắt đầu.",
+        "pointer": [
+          {
+            "target": "title",
+            "label": "Mở đầu bài học"
+          },
+          {
+            "target": "subtitle",
+            "label": "Nêu mục tiêu cụ thể"
+          },
+          {
+            "target": "bullet-0",
+            "label": "Gợi ý lộ trình nội dung"
+          },
+          {
+            "target": "bullet-1",
+            "label": "Kêu gọi tham gia"
+          }
+        ],
+        "start": 0,
+        "duration": 24
+      },
+      {
+        "id": "ai-2",
+        "kind": "concept",
+        "accent": "gold",
+        "title": "Định nghĩa tích phân Riemann",
+        "subtitle": "Chia đoạn, chọn điểm trung gian, lấy giới hạn tổng Riemann",
+        "bullets": [
+          "Chia đoạn [a, b] thành n đoạn con Δx_k",
+          "Chọn điểm trung gian ξ_k ∈ [x_{k-1}, x_k]",
+          "Tạo tổng Riemann Σ f(ξ_k) Δx_k",
+          "Tích phân = giới hạn khi max Δx_k → 0"
+        ],
+        "formula": "\\int_a^b f(x) dx = \\lim_{\\max \\Delta x_k \\to 0} \\sum_{k=1}^n f(\\xi_k) \\Delta x_k",
+        "visualNote": "Sơ đồ: đoạn [a,b] chia n phần, hình chữ nhật f(ξ_k) trên mỗi phần",
+        "narration": "Ta chia đoạn [a, b] thành n đoạn con, chọn điểm trung gian ξ_k trên mỗi đoạn. Tính tổng Riemann bằng cộng diện tích các hình chữ nhật f(ξ_k) nhân Δx_k. Khi chia càng mịn, độ dài đoạn con lớn nhất tiến về không, tổng này hội tụ. Giới hạn đó chính là tích phân Riemann của f trên [a, b].",
+        "pointer": [
+          {
+            "target": "bullet-0",
+            "label": "Giới thiệu phép chia đoạn"
+          },
+          {
+            "target": "bullet-2",
+            "label": "Xây dựng tổng Riemann"
+          },
+          {
+            "target": "bullet-3",
+            "label": "Quy trình lấy giới hạn"
+          },
+          {
+            "target": "formula",
+            "label": "Định nghĩa chính thức"
+          }
+        ],
+        "start": 24,
+        "duration": 24
+      },
+      {
+        "id": "ai-3",
+        "kind": "concept",
+        "accent": "gold",
+        "title": "Ý nghĩa hình học: diện tích dưới đồ thị",
+        "subtitle": "Giới hạn tổng Riemann chính là diện tích miền giới hạn bởi đường cong và trục hoành",
+        "bullets": [
+          "Tổng Riemann xấp xỉ diện tích bằng hình chữ nhật",
+          "Khi chia càng mịn, tổng tiến tới diện tích chính xác"
+        ],
+        "graph": {
+          "title": "Đồ thị y = x^2 trên [0,1]",
+          "xlabel": "x",
+          "ylabel": "y",
+          "xs": [
+            0,
+            0.02,
+            0.04,
+            0.06,
+            0.08,
+            0.1,
+            0.12,
+            0.14,
+            0.16,
+            0.18,
+            0.2,
+            0.22,
+            0.24,
+            0.26,
+            0.28,
+            0.3,
+            0.32,
+            0.34,
+            0.36,
+            0.38,
+            0.4,
+            0.42,
+            0.44,
+            0.46,
+            0.48,
+            0.5,
+            0.52,
+            0.54,
+            0.56,
+            0.58,
+            0.6,
+            0.62,
+            0.64,
+            0.66,
+            0.68,
+            0.7,
+            0.72,
+            0.74,
+            0.76,
+            0.78,
+            0.8,
+            0.82,
+            0.84,
+            0.86,
+            0.88,
+            0.9,
+            0.92,
+            0.94,
+            0.96,
+            0.98,
+            1
+          ],
+          "ys": [
+            0,
+            0.0004,
+            0.0016,
+            0.0036,
+            0.0064,
+            0.01,
+            0.0144,
+            0.0196,
+            0.0256,
+            0.0324,
+            0.04,
+            0.0484,
+            0.0576,
+            0.0676,
+            0.0784,
+            0.09,
+            0.1024,
+            0.1156,
+            0.1296,
+            0.1444,
+            0.16,
+            0.1764,
+            0.1936,
+            0.2116,
+            0.2304,
+            0.25,
+            0.2704,
+            0.2916,
+            0.3136,
+            0.3364,
+            0.36,
+            0.3844,
+            0.4096,
+            0.4356,
+            0.4624,
+            0.49,
+            0.5184,
+            0.5476,
+            0.5776,
+            0.6084,
+            0.64,
+            0.6724,
+            0.7056,
+            0.7396,
+            0.7744,
+            0.81,
+            0.8464,
+            0.8836,
+            0.9216,
+            0.9604,
+            1
+          ],
+          "vlines": [
+            {
+              "x": 0,
+              "label": "a=0"
+            },
+            {
+              "x": 1,
+              "label": "b=1"
+            }
+          ]
+        },
+        "visualNote": "Đồ thị y = x^2 với các hình chữ nhật Riemann",
+        "narration": "Hãy nhìn đồ thị hàm số y bằng x bình phương từ không đến một. Tổng Riemann chia miền thành các hình chữ nhật hẹp, cộng diện tích lại. Khi số phân hoạch tăng, các hình chữ nhật khớp sát đường cong hơn. Giới hạn của tổng đó chính là diện tích thực dưới đồ thị.",
+        "pointer": [
+          {
+            "target": "graph",
+            "label": "hiển thị đồ thị y=x^2"
+          },
+          {
+            "target": "bullet-0",
+            "label": "giải thích tổng Riemann"
+          },
+          {
+            "target": "bullet-1",
+            "label": "mô tả giới hạn"
+          },
+          {
+            "target": "title",
+            "label": "khẳng định ý nghĩa hình học"
+          }
+        ],
+        "start": 48,
+        "duration": 24
+      },
+      {
+        "id": "ai-4",
+        "kind": "example",
+        "accent": "ember",
+        "title": "Tính diện tích dưới đường cong x bình phương",
+        "subtitle": "Ví dụ: f(x)=x^2 trên [0,1]. Tính tổng Riemann và nhận diện tích = 1/3",
+        "bullets": [
+          "Chia đoạn [0,1] thành n hình chữ nhật",
+          "Độ rộng mỗi hình là 1 chia n",
+          "Chiều cao tại điểm cuối là (i/n) bình phương"
+        ],
+        "steps": [
+          "Chia đoạn [0,1] thành n phần bằng nhau",
+          "Tổng Riemann: S_n = (1/n) * sum_{i=1}^{n} (i/n)^2",
+          "Khai triển tổng: S_n = (1/n^3) * [n(n+1)(2n+1)/6]",
+          "Lấy giới hạn n tiến tới vô cùng: S = 1/3"
+        ],
+        "formula": "\\int_{0}^{1} x^2 dx = \\lim_{n \\to \\infty} \\sum_{i=1}^{n} \\left(\\frac{i}{n}\\right)^2 \\frac{1}{n} = \\frac{1}{3}",
+        "graph": {
+          "title": "Đồ thị y = x^2 trên [0,1]",
+          "xlabel": "x",
+          "ylabel": "y",
+          "xs": [
+            0,
+            0.1,
+            0.2,
+            0.3,
+            0.4,
+            0.5,
+            0.6,
+            0.7,
+            0.8,
+            0.9,
+            1
+          ],
+          "ys": [
+            0,
+            0.01,
+            0.04,
+            0.09,
+            0.16,
+            0.25,
+            0.36,
+            0.49,
+            0.64,
+            0.81,
+            1
+          ]
+        },
+        "narration": "Bây giờ chúng ta hãy cùng tính diện tích phần nằm dưới đường cong x bình phương từ không đến một. Nhìn vào đồ thị, ta chia nhỏ vùng này thành n hình chữ nhật cực mảnh. Bước đầu tiên là thiết lập tổng Riemann bằng cách cộng tất cả diện tích các hình chữ nhật đó lại. Sau khi khai triển công thức tổng bình phương và lấy giới hạn khi n tiến tới vô cùng, kết quả cuối cùng ta thu được chính là một phần ba.",
+        "pointer": [
+          {
+            "target": "title",
+            "label": "Tiêu đề ví dụ"
+          },
+          {
+            "target": "graph",
+            "label": "Đồ thị hàm số"
+          },
+          {
+            "target": "step-0",
+            "label": "Bước chia đoạn"
+          },
+          {
+            "target": "step-1",
+            "label": "Thiết lập tổng"
+          },
+          {
+            "target": "step-3",
+            "label": "Kết quả giới hạn"
+          }
+        ],
+        "start": 72,
+        "duration": 32
+      },
+      {
+        "id": "ai-5",
+        "kind": "quiz",
+        "accent": "gold",
+        "title": "Kiểm tra lại xem bạn đã hiểu chưa",
+        "subtitle": "Chọn đáp án đúng về nội dung vừa học.",
+        "bullets": [
+          "Đọc lại tóm tắt ở slide trước nếu chưa nhớ.",
+          "Chọn một đáp án, bạn sẽ được giải thích ngay."
+        ],
+        "narration": "Mình cùng kiểm tra lại xem bạn đã nắm được chưa. Đọc câu hỏi và chọn đáp án mình nghĩ là đúng. Chọn sai cũng không sao, mình sẽ giải thích lại ngay tại đây, và đó là cách nhanh nhất để biết mình cần xem lại phần nào.",
+        "quiz": {
+          "question": "Bạn đã nắm được nội dung chính của bài học này chưa?",
+          "options": [
+            {
+              "id": "opt-1",
+              "text": "Rồi, mình hiểu và tự giải thích lại được cho bạn nghe",
+              "isCorrect": true,
+              "explanation": "Đó là đúng. Tự kể lại bằng lời mình mới thật sự nắm."
+            },
+            {
+              "id": "opt-2",
+              "text": "Mình hiểu phần đầu, phần sau hơi mơ hồ",
+              "isCorrect": false,
+              "explanation": "Không sao. Xem lại phần cuối, đó là phần hay quên nhất."
+            },
+            {
+              "id": "opt-3",
+              "text": "Chưa, mình thấy hơi nhiều thông tin",
+              "isCorrect": false,
+              "explanation": "Bài dài là chủ ý. Xem lại dàn ý theo thứ tự, từng phần một sẽ dễ hơn."
+            },
+            {
+              "id": "opt-4",
+              "text": "Chưa, mình muốn xem ví dụ thực tế thêm",
+              "isCorrect": false,
+              "explanation": "Phần ví dụ gần cuối bài. Đọc nó sẽ giúp bạn thấy bài học dùng được thế nào."
+            }
+          ]
+        },
+        "start": 104,
+        "duration": 24
+      },
+      {
+        "id": "ai-6",
+        "kind": "summary",
+        "accent": "brand",
+        "title": "Tóm tắt: định nghĩa và hình học",
+        "subtitle": "Tích phân Riemann = giới hạn tổng Riemann = diện tích dưới đường cong",
+        "bullets": [
+          "Giới hạn tổng Riemann khi phân hoạch mịn",
+          "Diện tích miền giữa đồ thị và trục hoành"
+        ],
+        "narration": "Tóm lại, tích phân Riemann là giới hạn của tổng Riemann khi phân hoạch càng mịn. Hình học nó chính là diện tích miền giới hạn bởi đồ thị hàm số và trục hoành. Hai ý này gắn liền nhau: giới hạn tổng cho giá trị chính xác, diện tích cho trực quan.",
+        "pointer": [
+          {
+            "target": "bullet-0",
+            "label": "Định nghĩa giới hạn tổng Riemann"
+          },
+          {
+            "target": "bullet-1",
+            "label": "Ý nghĩa hình học diện tích"
+          },
+          {
+            "target": "title",
+            "label": "Tóm tắt hai ý chính"
+          }
+        ],
+        "start": 128,
+        "duration": 24
+      }
+    ],
+    "chapters": [
+      {
+        "id": "ch-1",
+        "title": "Tích phân Riemann: từ tổng Riemann đến diện tích",
+        "start": 0,
+        "end": 24,
+        "sceneIds": [
+          "ai-1"
+        ]
+      },
+      {
+        "id": "ch-2",
+        "title": "Định nghĩa tích phân Riemann",
+        "start": 24,
+        "end": 48,
+        "sceneIds": [
+          "ai-2"
+        ]
+      },
+      {
+        "id": "ch-3",
+        "title": "Ý nghĩa hình học: diện tích dưới đồ thị",
+        "start": 48,
+        "end": 72,
+        "sceneIds": [
+          "ai-3"
+        ]
+      },
+      {
+        "id": "ch-4",
+        "title": "Tính diện tích dưới đường cong x bình phương",
+        "start": 72,
+        "end": 104,
+        "sceneIds": [
+          "ai-4"
+        ]
+      },
+      {
+        "id": "ch-5",
+        "title": "Kiểm tra lại xem bạn đã hiểu chưa",
+        "start": 104,
+        "end": 128,
+        "sceneIds": [
+          "ai-5"
+        ]
+      },
+      {
+        "id": "ch-6",
+        "title": "Tóm tắt: định nghĩa và hình học",
+        "start": 128,
+        "end": 152,
+        "sceneIds": [
+          "ai-6"
+        ]
+      }
+    ],
+    "source": "gemini",
+    "theme": "paper",
+    "showPointer": true,
+    "model": "google/gemini-2.5-flash-lite",
+    "createdAt": "2026-10-02T08:48:40.627Z"
+  }
+}

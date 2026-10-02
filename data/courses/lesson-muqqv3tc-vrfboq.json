@@ -1,0 +1,361 @@
+{
+  "format": "eduai-studio/course@1",
+  "updatedAt": "2026-10-02T09:12:02.097Z",
+  "lesson": {
+    "id": "lesson-muqqv3tc-vrfboq",
+    "title": "Tích phân Riemann: Định nghĩa và ý nghĩa hình học",
+    "subject": "Vi tích phân 2",
+    "grade": "12",
+    "language": "vi",
+    "fps": 30,
+    "duration": 144,
+    "scenes": [
+      {
+        "id": "ai-1",
+        "kind": "cover",
+        "accent": "brand",
+        "title": "Tích phân Riemann: khái niệm cốt lõi",
+        "subtitle": "Học xong bạn biết định nghĩa và hình dung diện tích dưới đường cong",
+        "bullets": [
+          "Cảnh \"Tích phân Riemann: khái niệm cốt lõi\" đang được bổ sung.",
+          "Học sinh hiểu được mục tiêu bài học và những gì sẽ nắm được sau 2 phút"
+        ],
+        "narration": "Phần \"Tích phân Riemann: khái niệm cốt lõi\" đang được bổ sung. Bạn bỏ qua cảnh này, xem cảnh tiếp theo.",
+        "start": 0,
+        "duration": 24
+      },
+      {
+        "id": "ai-2",
+        "kind": "concept",
+        "accent": "gold",
+        "title": "Tích phân Riemann là giới hạn tổng Riemann",
+        "subtitle": "Phân hoạch đoạn, chọn điểm trung gian, tổng Riemann và lấy giới hạn",
+        "bullets": [
+          "Tổng Riemann S_n = Σ f(ξ_i)Δx_i",
+          "Giới hạn khi độ lớn phân hoạch → 0 tồn tại và không phụ thuộc cách chọn"
+        ],
+        "formula": "\\lim_{\\|P\\|\\to0}\\sum_{i=1}^{n} f(\\xi_i)\\,\\Delta x_i",
+        "narration": "Chúng ta chia đoạn [a,b] thành n phần nhỏ. Trên mỗi phần chọn điểm ξ_i và lập tổng Riemann S_n = Σ f(ξ_i)Δx_i. Khi độ lớn phân hoạch tiến về 0, nếu giới hạn tồn tại và không phụ thuộc cách chọn, ta gọi đó là tích phân Riemann.",
+        "pointer": [
+          {
+            "target": "title",
+            "label": "Mở đầu định nghĩa"
+          },
+          {
+            "target": "bullet-0",
+            "label": "Xây dựng tổng Riemann"
+          },
+          {
+            "target": "formula",
+            "label": "Giới hạn định nghĩa tích phân"
+          }
+        ],
+        "start": 24,
+        "duration": 24
+      },
+      {
+        "id": "ai-3",
+        "kind": "diagram",
+        "accent": "ember",
+        "title": "Ý nghĩa hình học: diện tích dưới đồ thị",
+        "subtitle": "Tổng Riemann xấp xỉ diện tích; giới hạn cho diện tích chính xác",
+        "bullets": [
+          "Tổng Riemann = Σ f(x_i*) Δx_i",
+          "Giới hạn khi n→∞ cho diện tích chính xác"
+        ],
+        "graph": {
+          "title": "Đồ thị y = x^2 trên [0,1]",
+          "xlabel": "x",
+          "ylabel": "y",
+          "xs": [
+            0,
+            0.02,
+            0.04,
+            0.06,
+            0.08,
+            0.1,
+            0.12,
+            0.14,
+            0.16,
+            0.18,
+            0.2,
+            0.22,
+            0.24,
+            0.26,
+            0.28,
+            0.3,
+            0.32,
+            0.34,
+            0.36,
+            0.38,
+            0.4,
+            0.42,
+            0.44,
+            0.46,
+            0.48,
+            0.5,
+            0.52,
+            0.54,
+            0.56,
+            0.58,
+            0.6,
+            0.62,
+            0.64,
+            0.66,
+            0.68,
+            0.7,
+            0.72,
+            0.74,
+            0.76,
+            0.78,
+            0.8,
+            0.82,
+            0.84,
+            0.86,
+            0.88,
+            0.9,
+            0.92,
+            0.94,
+            0.96,
+            0.98,
+            1
+          ],
+          "ys": [
+            0,
+            0.0004,
+            0.0016,
+            0.0036,
+            0.0064,
+            0.01,
+            0.0144,
+            0.0196,
+            0.0256,
+            0.0324,
+            0.04,
+            0.0484,
+            0.0576,
+            0.0676,
+            0.0784,
+            0.09,
+            0.1024,
+            0.1156,
+            0.1296,
+            0.1444,
+            0.16,
+            0.1764,
+            0.1936,
+            0.2116,
+            0.2304,
+            0.25,
+            0.2704,
+            0.2916,
+            0.3136,
+            0.3364,
+            0.36,
+            0.3844,
+            0.4096,
+            0.4356,
+            0.4624,
+            0.49,
+            0.5184,
+            0.5476,
+            0.5776,
+            0.6084,
+            0.64,
+            0.6724,
+            0.7056,
+            0.7396,
+            0.7744,
+            0.81,
+            0.8464,
+            0.8836,
+            0.9216,
+            0.9604,
+            1
+          ]
+        },
+        "visualNote": "Đường cong y = x^2 và các hình chữ nhật Riemann dưới đường cong",
+        "narration": "Khi chia nhỏ khoảng, mỗi hình chữ nhật có chiều cao bằng giá trị hàm tại điểm mẫu. Tổng diện tích các hình chữ nhật chính là tổng Riemann. Khi số phân hoạch tiến tới vô hạn, chiều rộng các hình chữ nhật tiến về không và tổng đó hội tụ thành diện tích chính xác dưới đồ thị.",
+        "pointer": [
+          {
+            "target": "bullet-0",
+            "label": "Mô tả hình chữ nhật Riemann"
+          },
+          {
+            "target": "bullet-1",
+            "label": "Định nghĩa tổng Riemann"
+          },
+          {
+            "target": "title",
+            "label": "Kết luận về giới hạn diện tích"
+          }
+        ],
+        "start": 48,
+        "duration": 24
+      },
+      {
+        "id": "ai-4",
+        "kind": "example",
+        "accent": "gold",
+        "title": "Ví dụ: f(x)=x² trên [0,1]",
+        "subtitle": "Tính tổng Riemann với n phân hoạch đều và lấy giới hạn",
+        "bullets": [
+          "Δx = 1/n, điểm đại diện x_i = i/n",
+          "Tổng Riemann S_n = (1/n³) Σ i²"
+        ],
+        "steps": [
+          "Chia [0,1] thành n khoảng đều, Δx = 1/n.",
+          "Lấy điểm phải x_i = i/n (i = 1..n).",
+          "Viết tổng Riemann S_n = Σ f(x_i)Δx = Σ (i/n)²·(1/n) = (1/n³) Σ i².",
+          "Áp dụng Σ i² = n(n+1)(2n+1)/6.",
+          "Rút gọn S_n = (n+1)(2n+1)/(6n²).",
+          "Giới hạn n→∞ cho S_n → 1/3."
+        ],
+        "formula": "\\sum_{i=1}^n i^2 = \\frac{n(n+1)(2n+1)}{6}",
+        "narration": "Đầu tiên chia đoạn [0,1] thành n khoảng bằng nhau, mỗi khoảng dài Δx = 1 trên n. Chọn điểm phải x_i = i trên n làm đại diện. Tổng Riemann là S_n = Σ (i/n)^2 · (1/n) = (1/n^3) Σ i^2. Dùng công thức Σ i^2 = n(n+1)(2n+1)/6 ta có S_n = (n+1)(2n+1)/(6n^2). Khi n tiến tới vô cùng, S_n tiến tới 1/3.",
+        "pointer": [
+          {
+            "target": "step-0",
+            "label": "chia khoảng"
+          },
+          {
+            "target": "step-1",
+            "label": "điểm phải"
+          },
+          {
+            "target": "step-2",
+            "label": "tổng Riemann"
+          },
+          {
+            "target": "step-3",
+            "label": "công thức tổng bình phương"
+          },
+          {
+            "target": "step-5",
+            "label": "giới hạn"
+          }
+        ],
+        "start": 72,
+        "duration": 24
+      },
+      {
+        "id": "ai-5",
+        "kind": "quiz",
+        "accent": "gold",
+        "title": "Kiểm tra lại xem bạn đã hiểu chưa",
+        "subtitle": "Chọn đáp án đúng về nội dung vừa học.",
+        "bullets": [
+          "Đọc lại tóm tắt ở slide trước nếu chưa nhớ.",
+          "Chọn một đáp án, bạn sẽ được giải thích ngay."
+        ],
+        "narration": "Mình cùng kiểm tra lại xem bạn đã nắm được chưa. Đọc câu hỏi và chọn đáp án mình nghĩ là đúng. Chọn sai cũng không sao, mình sẽ giải thích lại ngay tại đây, và đó là cách nhanh nhất để biết mình cần xem lại phần nào.",
+        "quiz": {
+          "question": "Bạn đã nắm được nội dung chính của bài học này chưa?",
+          "options": [
+            {
+              "id": "opt-1",
+              "text": "Rồi, mình hiểu và tự giải thích lại được cho bạn nghe",
+              "isCorrect": true,
+              "explanation": "Đó là đúng. Tự kể lại bằng lời mình mới thật sự nắm."
+            },
+            {
+              "id": "opt-2",
+              "text": "Mình hiểu phần đầu, phần sau hơi mơ hồ",
+              "isCorrect": false,
+              "explanation": "Không sao. Xem lại phần cuối, đó là phần hay quên nhất."
+            },
+            {
+              "id": "opt-3",
+              "text": "Chưa, mình thấy hơi nhiều thông tin",
+              "isCorrect": false,
+              "explanation": "Bài dài là chủ ý. Xem lại dàn ý theo thứ tự, từng phần một sẽ dễ hơn."
+            },
+            {
+              "id": "opt-4",
+              "text": "Chưa, mình muốn xem ví dụ thực tế thêm",
+              "isCorrect": false,
+              "explanation": "Phần ví dụ gần cuối bài. Đọc nó sẽ giúp bạn thấy bài học dùng được thế nào."
+            }
+          ]
+        },
+        "start": 96,
+        "duration": 24
+      },
+      {
+        "id": "ai-6",
+        "kind": "summary",
+        "accent": "brand",
+        "title": "Tóm tắt: định nghĩa và hình học",
+        "subtitle": "Tích phân Riemann = giới hạn tổng Riemann = diện tích dưới đường cong",
+        "bullets": [
+          "Cảnh \"Tóm tắt: định nghĩa và hình học\" đang được bổ sung.",
+          "Học sinh nhớ lại hai ý chính và sẵn sàng cho bài tiếp theo"
+        ],
+        "narration": "Phần \"Tóm tắt: định nghĩa và hình học\" đang được bổ sung. Bạn bỏ qua cảnh này, xem cảnh tiếp theo.",
+        "start": 120,
+        "duration": 24
+      }
+    ],
+    "chapters": [
+      {
+        "id": "ch-1",
+        "title": "Tích phân Riemann: khái niệm cốt lõi",
+        "start": 0,
+        "end": 24,
+        "sceneIds": [
+          "ai-1"
+        ]
+      },
+      {
+        "id": "ch-2",
+        "title": "Tích phân Riemann là giới hạn tổng Riemann",
+        "start": 24,
+        "end": 48,
+        "sceneIds": [
+          "ai-2"
+        ]
+      },
+      {
+        "id": "ch-3",
+        "title": "Ý nghĩa hình học: diện tích dưới đồ thị",
+        "start": 48,
+        "end": 72,
+        "sceneIds": [
+          "ai-3"
+        ]
+      },
+      {
+        "id": "ch-4",
+        "title": "Ví dụ: f(x)=x² trên [0,1]",
+        "start": 72,
+        "end": 96,
+        "sceneIds": [
+          "ai-4"
+        ]
+      },
+      {
+        "id": "ch-5",
+        "title": "Kiểm tra lại xem bạn đã hiểu chưa",
+        "start": 96,
+        "end": 120,
+        "sceneIds": [
+          "ai-5"
+        ]
+      },
+      {
+        "id": "ch-6",
+        "title": "Tóm tắt: định nghĩa và hình học",
+        "start": 120,
+        "end": 144,
+        "sceneIds": [
+          "ai-6"
+        ]
+      }
+    ],
+    "source": "gemini",
+    "theme": "paper",
+    "showPointer": true,
+    "model": "nvidia/nemotron-3-ultra-550b-a55b",
+    "createdAt": "2026-10-02T09:12:02.064Z"
+  }
+}

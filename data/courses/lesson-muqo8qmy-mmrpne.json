@@ -1,0 +1,261 @@
+{
+  "format": "eduai-studio/course@1",
+  "updatedAt": "2026-10-02T07:58:39.336Z",
+  "lesson": {
+    "id": "lesson-muqo8qmy-mmrpne",
+    "title": "Định nghĩa tích phân Riemann",
+    "subject": "Vô hiệu Phân 2",
+    "grade": "Học sinh THPT",
+    "language": "vi",
+    "fps": 30,
+    "duration": 144,
+    "scenes": [
+      {
+        "id": "ai-1",
+        "kind": "cover",
+        "accent": "gold",
+        "title": "Định nghĩa tích phân Riemann",
+        "subtitle": "Cái nhìn tổng quan về tích phân Riemann trong toán học",
+        "bullets": [
+          "Định nghĩa sử dụng tổng hợp vô số đoạn thẳng",
+          "Áp dụng cho diện tích, thể tích, và thống kê"
+        ],
+        "narration": "Chúng ta xem tích phân Riemann như tổng hợp vô số đoạn thẳng rất nhỏ Khi Δx tiến tới 0 tổng lại trở thành tích phân đường thẳng Ví dụ tính diện tích under curve y = x^2 từ 0 đến 1 Bạn hãy nhớ tích phân là tổng các giá trị f(x) nhân với Δx",
+        "pointer": [
+          {
+            "target": "bullet-0",
+            "label": "định nghĩa"
+          },
+          {
+            "target": "step-0",
+            "label": "quá trình hội tụ"
+          },
+          {
+            "target": "bullet-1",
+            "label": "ví dụ diện tích"
+          },
+          {
+            "target": "subtitle",
+            "label": "nhắc nhở"
+          }
+        ],
+        "start": 0,
+        "duration": 24
+      },
+      {
+        "id": "ai-2",
+        "kind": "concept",
+        "accent": "gold",
+        "title": "Khái niệm Riemann và bản đồ vùng",
+        "subtitle": "Định nghĩa chính thức và ý nghĩa của Riemann",
+        "bullets": [
+          "Riemann chia miền R ⊂ ℝ² thành các ô vuông con số nhỏ",
+          "Tổng vô hướng các diện tích ô vuông khi Δ → 0 tổng hội tụ là tích phân",
+          "Độ dài miền phải đủ lớn để có nhiều ô vuông tổng hợp ý nghĩa"
+        ],
+        "steps": [
+          "Riemann chia miền R thành các ô vuông con số nhỏ, mỗi ô có kích thước Δx·Δy",
+          "Khi Δx·Δy → 0, tổng các ô vuông hội tụ và tính ra tích phân Riemann"
+        ],
+        "formula": "∫_R f(x) dA = lim_{||Δ||→0} Σ f(x_i) ΔA_i",
+        "narration": "Riemann xác định tích phân của hàm f trên miền R bằng tổng vô hướng các ô vuông con số nhỏ. Khi Δx·Δy → 0, tổng các ô này hội tụ thành tích phân chính thức. Ý nghĩa hình học của tích phân là tổng diện tích các ô vuông, phản ánh diện tích thực tế.",
+        "pointer": [
+          {
+            "target": "title",
+            "label": "Riemann"
+          },
+          {
+            "target": "step-0",
+            "label": "kích thước ô vuông"
+          },
+          {
+            "target": "bullet-1",
+            "label": "tổng diện tích"
+          }
+        ],
+        "quiz": {
+          "question": "Câu hỏi kiểm tra kiến thức:",
+          "options": []
+        },
+        "simulation3d": {
+          "type": "physics-pendulum"
+        },
+        "start": 24,
+        "duration": 24
+      },
+      {
+        "id": "ai-3",
+        "kind": "diagram",
+        "accent": "gold",
+        "title": "Hình học của tích phân Riemann",
+        "subtitle": "Hình dạng vùng Riemann và cách tính diện tích",
+        "bullets": [
+          "Cảnh \"Hình học của tích phân Riemann\" đang được bổ sung.",
+          "Học sinh hiểu được hình dạng vùng Riemann và cách tính diện tích"
+        ],
+        "narration": "Phần \"Hình học của tích phân Riemann\" đang được bổ sung. Bạn bỏ qua cảnh này, xem cảnh tiếp theo.",
+        "start": 48,
+        "duration": 24
+      },
+      {
+        "id": "ai-4",
+        "kind": "example",
+        "accent": "gold",
+        "title": "Ví dụ tính tích phân Riemann đơn giản",
+        "subtitle": "Ví dụ minh họa tính tích phân Riemann cho đoạn thẳng",
+        "bullets": [
+          "Chia [0,1] thành 3 đoạn bằng nhau, mỗi đoạn rộng 1/3.",
+          "Với f(x)=x, chiều cao hình vuông tại điểm x_i là x_i.",
+          "Cộng các diện tích, khi n → ∞, tích phân = 1/2."
+        ],
+        "steps": [
+          "Ghi giả định: tính ∫₀¹ x dx.",
+          "Chia [0,1] thành 3 phần, Δx = 1/3.",
+          "Tính sum = Σ f(x_i)Δx = (0 + 1/3 + 2/3)·1/3 = 1/2.",
+          "Kết luận: ∫₀¹ x dx = 1/2."
+        ],
+        "formula": "∫_0^1 x dx = 1/2",
+        "visualNote": "Sơ đồ Riemann sum: các hình vuông trên trục x, chiều cao bằng f(x).",
+        "narration": "Chúng ta lấy đoạn thẳng từ 0 đến 1, chia thành 3 phần bằng nhau, mỗi phần rộng 1/3. Với hàm f(x)=x, chiều cao của mỗi hình vuông là f(xi). Khi chúng ta cộng các diện tích và làm số phần tiến tới vô hạn, tích phân sẽ bằng 1/2. Bạn có hiểu cách tính bằng Riemann?",
+        "pointer": [
+          {
+            "target": "bullet-0",
+            "label": "đoạn thẳng và chia"
+          },
+          {
+            "target": "bullet-1",
+            "label": "hàm và chiều cao"
+          },
+          {
+            "target": "bullet-2",
+            "label": "cộng diện tích"
+          },
+          {
+            "target": "title",
+            "label": "đề bài"
+          }
+        ],
+        "start": 72,
+        "duration": 24
+      },
+      {
+        "id": "ai-5",
+        "kind": "quiz",
+        "accent": "gold",
+        "title": "Kiểm tra lại xem bạn đã hiểu chưa",
+        "subtitle": "Chọn đáp án đúng về nội dung vừa học.",
+        "bullets": [
+          "Đọc lại tóm tắt ở slide trước nếu chưa nhớ.",
+          "Chọn một đáp án, bạn sẽ được giải thích ngay."
+        ],
+        "narration": "Mình cùng kiểm tra lại xem bạn đã nắm được chưa. Đọc câu hỏi và chọn đáp án mình nghĩ là đúng. Chọn sai cũng không sao, mình sẽ giải thích lại ngay tại đây, và đó là cách nhanh nhất để biết mình cần xem lại phần nào.",
+        "quiz": {
+          "question": "Bạn đã nắm được nội dung chính của bài học này chưa?",
+          "options": [
+            {
+              "id": "opt-1",
+              "text": "Rồi, mình hiểu và tự giải thích lại được cho bạn nghe",
+              "isCorrect": true,
+              "explanation": "Đó là đúng. Tự kể lại bằng lời mình mới thật sự nắm."
+            },
+            {
+              "id": "opt-2",
+              "text": "Mình hiểu phần đầu, phần sau hơi mơ hồ",
+              "isCorrect": false,
+              "explanation": "Không sao. Xem lại phần cuối, đó là phần hay quên nhất."
+            },
+            {
+              "id": "opt-3",
+              "text": "Chưa, mình thấy hơi nhiều thông tin",
+              "isCorrect": false,
+              "explanation": "Bài dài là chủ ý. Xem lại dàn ý theo thứ tự, từng phần một sẽ dễ hơn."
+            },
+            {
+              "id": "opt-4",
+              "text": "Chưa, mình muốn xem ví dụ thực tế thêm",
+              "isCorrect": false,
+              "explanation": "Phần ví dụ gần cuối bài. Đọc nó sẽ giúp bạn thấy bài học dùng được thế nào."
+            }
+          ]
+        },
+        "start": 96,
+        "duration": 24
+      },
+      {
+        "id": "ai-6",
+        "kind": "summary",
+        "accent": "gold",
+        "title": "Tóm tắt và kiến thức cần nhớ",
+        "subtitle": "Rõ ràng về khái niệm và cách áp dụng",
+        "bullets": [
+          "Cảnh \"Tóm tắt và kiến thức cần nhớ\" đang được bổ sung.",
+          "Học sinh nhớ rõ khái niệm và cách dùng Riemann trong các bài toán"
+        ],
+        "narration": "Phần \"Tóm tắt và kiến thức cần nhớ\" đang được bổ sung. Bạn bỏ qua cảnh này, xem cảnh tiếp theo.",
+        "start": 120,
+        "duration": 24
+      }
+    ],
+    "chapters": [
+      {
+        "id": "ch-1",
+        "title": "Định nghĩa tích phân Riemann",
+        "start": 0,
+        "end": 24,
+        "sceneIds": [
+          "ai-1"
+        ]
+      },
+      {
+        "id": "ch-2",
+        "title": "Khái niệm Riemann và bản đồ vùng",
+        "start": 24,
+        "end": 48,
+        "sceneIds": [
+          "ai-2"
+        ]
+      },
+      {
+        "id": "ch-3",
+        "title": "Hình học của tích phân Riemann",
+        "start": 48,
+        "end": 72,
+        "sceneIds": [
+          "ai-3"
+        ]
+      },
+      {
+        "id": "ch-4",
+        "title": "Ví dụ tính tích phân Riemann đơn giản",
+        "start": 72,
+        "end": 96,
+        "sceneIds": [
+          "ai-4"
+        ]
+      },
+      {
+        "id": "ch-5",
+        "title": "Kiểm tra lại xem bạn đã hiểu chưa",
+        "start": 96,
+        "end": 120,
+        "sceneIds": [
+          "ai-5"
+        ]
+      },
+      {
+        "id": "ch-6",
+        "title": "Tóm tắt và kiến thức cần nhớ",
+        "start": 120,
+        "end": 144,
+        "sceneIds": [
+          "ai-6"
+        ]
+      }
+    ],
+    "source": "gemini",
+    "theme": "paper",
+    "showPointer": true,
+    "model": "nvidia/nemotron-3-ultra-550b-a55b",
+    "createdAt": "2026-10-02T07:58:39.322Z"
+  }
+}

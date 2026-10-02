@@ -1,0 +1,184 @@
+{
+  "format": "eduai-studio/course@1",
+  "updatedAt": "2026-10-02T08:53:12.589Z",
+  "lesson": {
+    "id": "lesson-muqq6wai-wk9rmo",
+    "title": "Tích phân Riemann và ý nghĩa hình học",
+    "subject": "Vi tích Phân 2",
+    "grade": "Cấp THPT (Lớp 12)",
+    "language": "vi",
+    "fps": 30,
+    "duration": 200,
+    "scenes": [
+      {
+        "id": "ai-1",
+        "kind": "cover",
+        "accent": "gold",
+        "title": "Tích phân Riemann và diện tích dưới đồ thị",
+        "subtitle": "Khám phá cách tính diện tích bằng giới hạn tổng Riemann",
+        "bullets": [
+          "Chúng ta dùng các hình chữ nhật nhỏ lồng vào đường cong để xấp xỉ diện tích.",
+          "Lấy giới hạn khi số hình chữ nhật tăng lên vô hạn để có diện tích chính xác."
+        ],
+        "visualNote": "Slide cover tối giản với tiêu đề lớn và hình ảnh minh họa đường cong được chia thành các dải hình chữ nhật.",
+        "narration": "Chào các em, chúng ta cùng tìm hiểu tích phân Riemann. Các em có thắc mắc làm sao tính chính xác diện tích dưới một đường cong không? Chúng ta sẽ giải đáp bằng cách chia nhỏ thành vô số hình chữ nhật rồi lấy giới hạn tổng. Hãy cùng khởi động bài học thú vị này.",
+        "pointer": [
+          {
+            "target": "title",
+            "label": "Giới thiệu chủ đề tích phân Riemann"
+          },
+          {
+            "target": "subtitle",
+            "label": "Đặt câu hỏi về tính diện tích dưới đồ thị"
+          },
+          {
+            "target": "bullet-0",
+            "label": "Mô tả phương pháp xấp xỉ bằng hình chữ nhật"
+          },
+          {
+            "target": "bullet-1",
+            "label": "Làm rõ khái niệm lấy giới hạn tổng"
+          }
+        ],
+        "start": 0,
+        "duration": 40
+      },
+      {
+        "id": "ai-2",
+        "kind": "concept",
+        "accent": "gold",
+        "title": "Định nghĩa tích phân Riemann",
+        "subtitle": "Giới hạn của tổng các hình chữ nhật nhỏ khi khoảng chia đi đến 0",
+        "bullets": [
+          "Cảnh \"Định nghĩa tích phân Riemann\" đang được bổ sung.",
+          "Học sinh hiểu được tích phân Riemann là giới hạn của tổng Riemann khi khoảng chia đi đến 0."
+        ],
+        "narration": "Phần \"Định nghĩa tích phân Riemann\" đang được bổ sung. Bạn bỏ qua cảnh này, xem cảnh tiếp theo.",
+        "start": 40,
+        "duration": 40
+      },
+      {
+        "id": "ai-3",
+        "kind": "concept",
+        "accent": "brand",
+        "title": "Cảnh 3",
+        "bullets": [
+          "Cảnh \"Cảnh 3\" đang được bổ sung."
+        ],
+        "narration": "Phần \"Cảnh 3\" đang được bổ sung. Bạn bỏ qua cảnh này, xem cảnh tiếp theo.",
+        "start": 80,
+        "duration": 40
+      },
+      {
+        "id": "ai-4",
+        "kind": "quiz",
+        "accent": "gold",
+        "title": "Kiểm tra lại xem bạn đã hiểu chưa",
+        "subtitle": "Chọn đáp án đúng về nội dung vừa học.",
+        "bullets": [
+          "Đọc lại tóm tắt ở slide trước nếu chưa nhớ.",
+          "Chọn một đáp án, bạn sẽ được giải thích ngay."
+        ],
+        "narration": "Mình cùng kiểm tra lại xem bạn đã nắm được chưa. Đọc câu hỏi và chọn đáp án mình nghĩ là đúng. Chọn sai cũng không sao, mình sẽ giải thích lại ngay tại đây, và đó là cách nhanh nhất để biết mình cần xem lại phần nào.",
+        "quiz": {
+          "question": "Bạn đã nắm được nội dung chính của bài học này chưa?",
+          "options": [
+            {
+              "id": "opt-1",
+              "text": "Rồi, mình hiểu và tự giải thích lại được cho bạn nghe",
+              "isCorrect": true,
+              "explanation": "Đó là đúng. Tự kể lại bằng lời mình mới thật sự nắm."
+            },
+            {
+              "id": "opt-2",
+              "text": "Mình hiểu phần đầu, phần sau hơi mơ hồ",
+              "isCorrect": false,
+              "explanation": "Không sao. Xem lại phần cuối, đó là phần hay quên nhất."
+            },
+            {
+              "id": "opt-3",
+              "text": "Chưa, mình thấy hơi nhiều thông tin",
+              "isCorrect": false,
+              "explanation": "Bài dài là chủ ý. Xem lại dàn ý theo thứ tự, từng phần một sẽ dễ hơn."
+            },
+            {
+              "id": "opt-4",
+              "text": "Chưa, mình muốn xem ví dụ thực tế thêm",
+              "isCorrect": false,
+              "explanation": "Phần ví dụ gần cuối bài. Đọc nó sẽ giúp bạn thấy bài học dùng được thế nào."
+            }
+          ]
+        },
+        "start": 120,
+        "duration": 40
+      },
+      {
+        "id": "ai-5",
+        "kind": "summary",
+        "accent": "brand",
+        "title": "Tóm tắt và bước tiếp theo",
+        "subtitle": "Điều cần nhớ và điều nên học tiếp.",
+        "bullets": [
+          "Ghi lại 3 ý chính bạn nhớ được nhất từ bài hôm nay.",
+          "Làm lại phần bài tập vừa rồi không cần nhìn tài liệu.",
+          "Học tiếp phần kế tiếp để mở rộng bài này."
+        ],
+        "narration": "Vậy là chúng ta đã đi hết bài hôm nay. Điều quan trọng nhất bạn cần mang về là ba ý vừa nêu trên slide này. Mình khuyên bạn thử làm lại phần bài tập mà không nhìn tài liệu, vì đó là cách nhanh nhất để biết phần nào còn hổng. Ở bài tiếp theo chúng ta sẽ đi sâu vào phần còn lại, xem lại phần này trước khi sang bài mới.",
+        "start": 160,
+        "duration": 40
+      }
+    ],
+    "chapters": [
+      {
+        "id": "ch-1",
+        "title": "Tích phân Riemann và diện tích dưới đồ thị",
+        "start": 0,
+        "end": 40,
+        "sceneIds": [
+          "ai-1"
+        ]
+      },
+      {
+        "id": "ch-2",
+        "title": "Định nghĩa tích phân Riemann",
+        "start": 40,
+        "end": 80,
+        "sceneIds": [
+          "ai-2"
+        ]
+      },
+      {
+        "id": "ch-3",
+        "title": "Cảnh 3",
+        "start": 80,
+        "end": 120,
+        "sceneIds": [
+          "ai-3"
+        ]
+      },
+      {
+        "id": "ch-4",
+        "title": "Kiểm tra lại xem bạn đã hiểu chưa",
+        "start": 120,
+        "end": 160,
+        "sceneIds": [
+          "ai-4"
+        ]
+      },
+      {
+        "id": "ch-5",
+        "title": "Tóm tắt và bước tiếp theo",
+        "start": 160,
+        "end": 200,
+        "sceneIds": [
+          "ai-5"
+        ]
+      }
+    ],
+    "source": "gemini",
+    "theme": "paper",
+    "showPointer": true,
+    "model": "google/gemini-2.5-flash-lite",
+    "createdAt": "2026-10-02T08:53:12.570Z"
+  }
+}

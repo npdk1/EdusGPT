@@ -278,12 +278,49 @@ function isThrottleOnly(message: string): boolean {
   return !/per day|per_day|daily|\bday\b/i.test(message);
 }
 
-function noteThrottle(message: string, headers?: Headers): void {
-  const wait = retryAfterMs(message, headers);
+/**
+ * A shared free tier answering 503 is a queue at the vendor, not a broken
+ * model.
+ *
+ * Measured on NVIDIA's free tier: during a busy stretch every model it serves
+ * returned `503 Service temporarily overloaded` or `ResourceExhausted: Worker
+ * local total request limit reached (49/32)` for 40 minutes straight, and the
+ * same id answered a full lesson minutes either side of that window. Rotating
+ * on a 503 therefore walks the whole fallback queue in about half a minute and
+ * then reports every entry as broken when not one of them is — the failure
+ * mode this branch exists to prevent.
+ */
+function isCapacityWait(message: string): boolean {
+  return /temporarily overloaded|service unavailable|resource ?exhausted|worker local total request limit|all servers/i.test(
+    message,
+  );
+}
+
+/**
+ * How long to sit out a 503 before trying the same call again.
+ *
+ * Grows because the first retry of a saturated pool is usually still
+ * saturated: NVIDIA's overload window lasted tens of minutes, and a handful of
+ * quick retries would spend the request budget there and never reach a healthy
+ * moment.
+ */
+const CAPACITY_WAIT_START_MS = 30_000;
+const CAPACITY_WAIT_MAX_MS = 180_000;
+let capacityStreak = 0;
+
+function noteThrottle(message: string, headers?: Headers, floorMs = 0): void {
+  const wait = Math.max(retryAfterMs(message, headers), floorMs);
   throttle.cooldownUntil = Math.max(throttle.cooldownUntil, Date.now() + wait);
   throttle.spacingMs = THROTTLE_SPACING_START_MS;
   throttle.nextSlotAt = Math.max(throttle.nextSlotAt, throttle.cooldownUntil);
   void debugLog(`THROTTLE wait=${wait}ms spacing=${throttle.spacingMs}ms`);
+}
+
+/** Remembers that the pool is full, so the next wait starts further out. */
+function noteCapacity(message: string, headers?: Headers): void {
+  capacityStreak += 1;
+  const floor = Math.min(CAPACITY_WAIT_START_MS * capacityStreak, CAPACITY_WAIT_MAX_MS);
+  noteThrottle(message, headers, floor);
 }
 
 /** Called before every request: waits out the cooldown, then takes a slot. */
@@ -299,6 +336,8 @@ async function respectThrottle(): Promise<void> {
 /** A call got through: halve the spacing and let the cooldown lapse. */
 function noteSuccess(): void {
   if (throttle.cooldownUntil <= Date.now()) throttle.cooldownUntil = 0;
+  // The pool answered, so the next overload starts from the short wait again.
+  capacityStreak = 0;
   throttle.spacingMs = Math.max(
     THROTTLE_SPACING_MIN_MS,
     Math.round(throttle.spacingMs / 2),
@@ -499,9 +538,11 @@ export async function validateChatKey(creds: ProviderCredentials): Promise<{
   for (const candidate of candidates.slice(0, 4)) {
     let attempt = await ping(creds, candidate);
     // A per-minute refusal here is contention with another request, not a bad
-    // key or a dead model: wait the vendor's own cooldown and ask again.
-    if (!attempt.ok && isThrottleOnly(attempt.message)) {
-      noteThrottle(attempt.message);
+    // key or a dead model: wait the vendor's own cooldown and ask again. Same
+    // for an overloaded pool, which reports 503 rather than 429.
+    if (!attempt.ok && (isThrottleOnly(attempt.message) || isCapacityWait(attempt.message))) {
+      if (isCapacityWait(attempt.message)) noteCapacity(attempt.message);
+      else noteThrottle(attempt.message);
       await respectThrottle();
       attempt = await ping(creds, candidate);
     }
@@ -730,6 +771,23 @@ export async function generateChatJson<T>(
       }
       // Waiting is scheduling, not a failed try: a throttle must not spend one of
       // the six real attempts, or a scene would give up while merely queued.
+      attempt -= 1;
+      continue;
+    }
+
+    // A full worker pool is not a dead model either, so it waits on the same id
+    // instead of rotating. Kept out of the branch above because the wait has to
+    // grow: the first retry lands inside the same overloaded window.
+    if (response.status === 503 && isCapacityWait(message)) {
+      throttleStreak += 1;
+      noteCapacity(message, response.headers);
+      if (throttleStreak > THROTTLE_ATTEMPTS) {
+        throw new GeminiError(
+          `${vendorLabel(creds)} đang quá tải (${message}). ` +
+            "Hàng đợi của nhà cung cấp đầy, thử lại sau vài phút.",
+          503,
+        );
+      }
       attempt -= 1;
       continue;
     }

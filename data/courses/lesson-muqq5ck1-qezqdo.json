@@ -1,0 +1,290 @@
+{
+  "format": "eduai-studio/course@1",
+  "updatedAt": "2026-10-02T08:52:00.346Z",
+  "lesson": {
+    "id": "lesson-muqq5ck1-qezqdo",
+    "title": "Định nghĩa tích phân Riemann và ý nghĩa hình học",
+    "subject": "Vi tích Phân 2",
+    "grade": "12",
+    "language": "vi",
+    "fps": 30,
+    "duration": 144,
+    "scenes": [
+      {
+        "id": "ai-1",
+        "kind": "cover",
+        "accent": "brand",
+        "title": "Tích phân Riemann: từ tổng rời rạc đến diện tích",
+        "subtitle": "Học xong bạn biết định nghĩa và ý nghĩa hình học",
+        "bullets": [
+          "Xấp xỉ diện tích bằng tổng Riemann",
+          "Giới hạn khi phân hoạch mịn dần",
+          "Định nghĩa chặt chẽ tích phân xác định"
+        ],
+        "visualNote": "Tiêu đề lớn, nền tối giản, icon tích phân mờ",
+        "narration": "Chào các em, hôm nay chúng ta tìm hiểu tích phân Riemann. Khái niệm này bắt đầu từ việc xấp xỉ diện tích dưới đồ thị bằng hình chữ nhật. Khi chia mảnh càng nhỏ, tổng diện tích tiến đến một giới hạn. Giới hạn đó chính là tích phân xác định. Ta sẽ làm rõ định nghĩa và ý nghĩa hình học.",
+        "pointer": [
+          {
+            "target": "title",
+            "label": "Mở đầu bài học"
+          },
+          {
+            "target": "bullet-0",
+            "label": "Ý tưởng xấp xỉ diện tích"
+          },
+          {
+            "target": "bullet-1",
+            "label": "Quy trình lấy giới hạn"
+          },
+          {
+            "target": "bullet-2",
+            "label": "Kết quả là tích phân xác định"
+          },
+          {
+            "target": "subtitle",
+            "label": "Mục tiêu bài học"
+          }
+        ],
+        "start": 0,
+        "duration": 24
+      },
+      {
+        "id": "ai-2",
+        "kind": "concept",
+        "accent": "gold",
+        "title": "Định nghĩa phân hoạch và tổng Riemann",
+        "subtitle": "Chia đoạn, chọn điểm đại diện, cộng diện tích hình chữ nhật",
+        "bullets": [
+          "Phân hoạch P: a = x₀ < x₁ < … < xₙ = b",
+          "Điểm mẫu ξᵢ ∈ [xᵢ₋₁, xᵢ]",
+          "Tổng Riemann: Σ_{i=1}^{n} f(ξᵢ) Δxᵢ"
+        ],
+        "formula": "S(P,\\xi) = \\sum_{i=1}^{n} f(\\xi_i) \\Delta x_i",
+        "visualNote": "Sơ đồ: đoạn [a,b] chia thành các hình chữ nhật có chiều cao f(ξᵢ)",
+        "narration": "Ta chia đoạn [a,b] thành n phần nhỏ, mỗi phần độ dài Δxᵢ. Trên mỗi phần con chọn một điểm đại diện ξᵢ. Diện tích hình chữ nhật bên trên phần đó là f(ξᵢ) Δxᵢ. Cộng tất cả ta được tổng Riemann Sₙ để xấp xỉ diện tích dưới đồ thị.",
+        "pointer": [
+          {
+            "target": "title",
+            "label": "Mở đầu khái niệm phân hoạch"
+          },
+          {
+            "target": "bullet-1",
+            "label": "Chọn điểm mẫu trên từng phần con"
+          },
+          {
+            "target": "bullet-2",
+            "label": "Diện tích hình chữ nhật ứng với phần con"
+          },
+          {
+            "target": "formula",
+            "label": "Tổng Riemann biểu diễn bằng công thức"
+          }
+        ],
+        "start": 24,
+        "duration": 24
+      },
+      {
+        "id": "ai-3",
+        "kind": "formula",
+        "accent": "gold",
+        "title": "Công thức giới hạn của tổng Riemann",
+        "subtitle": "Khi độ phân hoạch tiến về 0, tổng tiến tới tích phân xác định",
+        "bullets": [
+          "Δx_i = x_i - x_{i-1} là độ dài phân đoạn con",
+          "ξ_i ∈ [x_{i-1}, x_i] là điểm trung gian"
+        ],
+        "formula": "\\int_{a}^{b} f(x)\\,dx = \\lim_{\\|P\\|\\to 0} \\sum_{i=1}^{n} f(\\xi_i)\\Delta x_i",
+        "narration": "Đây là công thức chính xác: tích phân từ a đến b của f(x) dx bằng giới hạn của tổng Riemann khi phạm vi phân hoạch tiến về không. Mỗi phân đoạn con có độ dài Δx_i, chọn điểm ξ_i trong đoạn đó, nhân giá trị hàm rồi cộng lại. Khi phân hoạch càng mịn, tổng Riemann hội tụ đến giá trị tích phân.",
+        "pointer": [
+          {
+            "target": "formula",
+            "label": "đọc công thức chính"
+          },
+          {
+            "target": "bullet-0",
+            "label": "giải thích Δx_i"
+          },
+          {
+            "target": "title",
+            "label": "tóm tắt ý chính"
+          }
+        ],
+        "start": 48,
+        "duration": 24
+      },
+      {
+        "id": "ai-4",
+        "kind": "example",
+        "accent": "ember",
+        "title": "Ví dụ: diện tích dưới y = x^2 trên [0,1]",
+        "subtitle": "Tính giới hạn tổng Riemann cho hàm đơn giản",
+        "bullets": [
+          "Chia đều [0,1], lấy điểm phải x_i = i/n",
+          "Giới hạn tổng Riemann = 1/3"
+        ],
+        "steps": [
+          "Chia [0,1] thành n khoảng bằng nhau, chọn điểm phải x_i = i/n.",
+          "Viết tổng Riemann S_n = Σ_{i=1}^n (i/n)^2 · 1/n.",
+          "Áp dụng Σ i^2 = n(n+1)(2n+1)/6 để có S_n = (n+1)(2n+1)/(6n^2).",
+          "Lấy giới hạn n→∞, S_n → 1/3."
+        ],
+        "formula": "\\int_0^1 x^2 dx = \\frac{1}{3}",
+        "visualNote": "Đồ thị y = x^2 trên [0,1] với diện tích dưới đường cong",
+        "narration": "Chúng ta chia đoạn [0,1] thành n khoảng bằng nhau, lấy điểm phải làm mẫu. Tổng Riemann thành Σ (i/n)^2 · 1/n. Rút gọn dùng công thức tổng bình phương, ta được (n+1)(2n+1)/(6n^2). Khi n tiến ra vô cùng, giới hạn bằng 1/3 để tìm diện tích dưới đường cong.",
+        "pointer": [
+          {
+            "target": "step-0",
+            "label": "Chia khoảng và chọn mẫu"
+          },
+          {
+            "target": "step-1",
+            "label": "Viết tổng Riemann"
+          },
+          {
+            "target": "step-2",
+            "label": "Rút gọn bằng công thức tổng bình phương"
+          },
+          {
+            "target": "step-3",
+            "label": "Giới hạn n→∞ cho kết quả 1/3"
+          }
+        ],
+        "start": 72,
+        "duration": 24
+      },
+      {
+        "id": "ai-5",
+        "kind": "quiz",
+        "accent": "gold",
+        "title": "Kiểm tra lại xem bạn đã hiểu chưa",
+        "subtitle": "Chọn đáp án đúng về nội dung vừa học.",
+        "bullets": [
+          "Đọc lại tóm tắt ở slide trước nếu chưa nhớ.",
+          "Chọn một đáp án, bạn sẽ được giải thích ngay."
+        ],
+        "narration": "Mình cùng kiểm tra lại xem bạn đã nắm được chưa. Đọc câu hỏi và chọn đáp án mình nghĩ là đúng. Chọn sai cũng không sao, mình sẽ giải thích lại ngay tại đây, và đó là cách nhanh nhất để biết mình cần xem lại phần nào.",
+        "quiz": {
+          "question": "Bạn đã nắm được nội dung chính của bài học này chưa?",
+          "options": [
+            {
+              "id": "opt-1",
+              "text": "Rồi, mình hiểu và tự giải thích lại được cho bạn nghe",
+              "isCorrect": true,
+              "explanation": "Đó là đúng. Tự kể lại bằng lời mình mới thật sự nắm."
+            },
+            {
+              "id": "opt-2",
+              "text": "Mình hiểu phần đầu, phần sau hơi mơ hồ",
+              "isCorrect": false,
+              "explanation": "Không sao. Xem lại phần cuối, đó là phần hay quên nhất."
+            },
+            {
+              "id": "opt-3",
+              "text": "Chưa, mình thấy hơi nhiều thông tin",
+              "isCorrect": false,
+              "explanation": "Bài dài là chủ ý. Xem lại dàn ý theo thứ tự, từng phần một sẽ dễ hơn."
+            },
+            {
+              "id": "opt-4",
+              "text": "Chưa, mình muốn xem ví dụ thực tế thêm",
+              "isCorrect": false,
+              "explanation": "Phần ví dụ gần cuối bài. Đọc nó sẽ giúp bạn thấy bài học dùng được thế nào."
+            }
+          ]
+        },
+        "start": 96,
+        "duration": 24
+      },
+      {
+        "id": "ai-6",
+        "kind": "summary",
+        "accent": "brand",
+        "title": "Tóm tắt: tích phân là giới hạn tổng Riemann",
+        "subtitle": "Định nghĩa, ký hiệu, ý nghĩa diện tích",
+        "bullets": [
+          "Phân hoạch đoạn [a,b] thành n phần nhỏ",
+          "Tổng Riemann Σ f(ξ_i)Δx_i",
+          "Giới hạn khi n→∞ cho ∫_a^b f(x)dx"
+        ],
+        "narration": "Chúng ta đã thấy tích phân Riemann là giới hạn của các tổng Riemann khi phân hoạch càng mịn. Ba bước cốt lõi là chọn phân hoạch, lập tổng Riemann, rồi lấy giới hạn. Ký hiệu ∫_a^b f(x)dx chính là diện tích dưới đường cong khi hàm không đổi dấu.",
+        "pointer": [
+          {
+            "target": "title",
+            "label": "Mở đầu tóm tắt định nghĩa"
+          },
+          {
+            "target": "bullet-0",
+            "label": "Ba bước cốt lõi"
+          },
+          {
+            "target": "bullet-2",
+            "label": "Ký hiệu và ý nghĩa diện tích"
+          }
+        ],
+        "start": 120,
+        "duration": 24
+      }
+    ],
+    "chapters": [
+      {
+        "id": "ch-1",
+        "title": "Tích phân Riemann: từ tổng rời rạc đến diện tích",
+        "start": 0,
+        "end": 24,
+        "sceneIds": [
+          "ai-1"
+        ]
+      },
+      {
+        "id": "ch-2",
+        "title": "Định nghĩa phân hoạch và tổng Riemann",
+        "start": 24,
+        "end": 48,
+        "sceneIds": [
+          "ai-2"
+        ]
+      },
+      {
+        "id": "ch-3",
+        "title": "Công thức giới hạn của tổng Riemann",
+        "start": 48,
+        "end": 72,
+        "sceneIds": [
+          "ai-3"
+        ]
+      },
+      {
+        "id": "ch-4",
+        "title": "Ví dụ: diện tích dưới y = x^2 trên [0,1]",
+        "start": 72,
+        "end": 96,
+        "sceneIds": [
+          "ai-4"
+        ]
+      },
+      {
+        "id": "ch-5",
+        "title": "Kiểm tra lại xem bạn đã hiểu chưa",
+        "start": 96,
+        "end": 120,
+        "sceneIds": [
+          "ai-5"
+        ]
+      },
+      {
+        "id": "ch-6",
+        "title": "Tóm tắt: tích phân là giới hạn tổng Riemann",
+        "start": 120,
+        "end": 144,
+        "sceneIds": [
+          "ai-6"
+        ]
+      }
+    ],
+    "source": "gemini",
+    "theme": "paper",
+    "showPointer": true,
+    "model": "google/gemini-2.5-flash-lite",
+    "createdAt": "2026-10-02T08:52:00.337Z"
+  }
+}

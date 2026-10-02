@@ -1,0 +1,237 @@
+{
+  "format": "eduai-studio/course@1",
+  "updatedAt": "2026-10-02T08:40:54.332Z",
+  "lesson": {
+    "id": "lesson-muqpr2mt-n075ia",
+    "title": "Tích phân Riemann và hình học",
+    "subject": "Vi tích Phân 2",
+    "grade": "12",
+    "language": "vi",
+    "fps": 30,
+    "duration": 120,
+    "scenes": [
+      {
+        "id": "ai-1",
+        "kind": "cover",
+        "accent": "brand",
+        "title": "Khám phá diện tích dưới đường cong",
+        "subtitle": "Học sinh sẽ hiểu cách tính diện tích bằng tích phân Riemann",
+        "bullets": [
+          "Mục tiêu: hiểu tích phân Riemann đo diện tích"
+        ],
+        "narration": "Trong buổi học này, các em sẽ nắm bắt được khái niệm tích phân Riemann và cách nó đo diện tích dưới một đường cong. Ví dụ, chúng ta sẽ tính diện tích hình chữ nhật dưới đồ thị y = x trên đoạn [0,1]. Các em hãy suy nghĩ: tại sao phép cộng vô hạn lại cho kết quả chính xác?",
+        "pointer": [
+          {
+            "target": "title",
+            "label": "Giới thiệu mục tiêu"
+          },
+          {
+            "target": "bullet-0",
+            "label": "Đưa ví dụ cụ thể"
+          },
+          {
+            "target": "subtitle",
+            "label": "Khơi gợi câu hỏi"
+          }
+        ],
+        "start": 0,
+        "duration": 24
+      },
+      {
+        "id": "ai-2",
+        "kind": "concept",
+        "accent": "gold",
+        "title": "Tích phân Riemann là giới hạn tổng Riemann",
+        "subtitle": "Khi độ dài các phần tử phân đoạn tiến tới 0, tổng Riemann hội tụ",
+        "bullets": [
+          "S_n = Σ f(x_i^*)·Δx_i, Δx_i = (b-a)/n",
+          "∫_a^b f(x)dx = lim_{n→∞} S_n nếu tồn tại"
+        ],
+        "formula": "\\int_{a}^{b} f(x)\\,dx = \\lim_{n\\to\\infty} \\sum_{i=1}^{n} f(x_i^*)\\Delta x_i",
+        "narration": "Học sinh có thắc mắc gì ở đây? Đó là làm sao định nghĩa tích phân qua các tổng Riemann. Ta chia đoạn [a,b] thành n phần, tính S_n = Σ f(x_i^*)Δx_i, rồi lấy giới hạn khi n → ∞; nếu giới hạn tồn tại, đó là giá trị tích phân.",
+        "pointer": [
+          {
+            "target": "title",
+            "label": "question"
+          },
+          {
+            "target": "bullet-0",
+            "label": "definition"
+          },
+          {
+            "target": "formula",
+            "label": "limit"
+          }
+        ],
+        "start": 24,
+        "duration": 24
+      },
+      {
+        "id": "ai-3",
+        "kind": "concept",
+        "accent": "gold",
+        "title": "Diện tích dưới đường cong qua tích phân Riemann",
+        "subtitle": "Diện tích dưới đường y=f(x) trên [a,b] được tính bằng giới hạn tổng hình chữ nhật",
+        "bullets": [
+          "Giới hạn tổng diện tích các hình chữ nhật khi Δx→0",
+          "Cho phép tính diện tích chính xác dưới đồ thị trên [a,b]",
+          "Ví dụ f(x)=x² trên [0,1] cho tích phân =1/3"
+        ],
+        "narration": "Các bạn nhớ rằng tích phân Riemann được định nghĩa là giới hạn của tổng diện tích các hình chữ nhật nhỏ dưới đồ thị y = f(x). Khi độ rộng Δx tiến tới 0, tổng này hội tụ thành diện tích chính xác dưới đường trong khoảng [a,b]. Ví dụ, với f(x)=x² trên [0,1], tích phân bằng 1/3.",
+        "pointer": [
+          {
+            "target": "bullet-0",
+            "label": "định nghĩa"
+          },
+          {
+            "target": "bullet-1",
+            "label": "giới hạn"
+          },
+          {
+            "target": "bullet-2",
+            "label": "ví dụ"
+          }
+        ],
+        "start": 48,
+        "duration": 24
+      },
+      {
+        "id": "ai-4",
+        "kind": "quiz",
+        "accent": "ember",
+        "title": "Kiểm tra nhanh: Tính diện tích cơ bản",
+        "subtitle": "Áp dụng định nghĩa để tính diện tích của f(x)=2x trên [0,2]",
+        "bullets": [
+          "Phân chia đoạn [0,2] thành n hình chữ nhật nhỏ",
+          "Giới hạn tổng diện tích khi n→∞ cho kết quả 4"
+        ],
+        "narration": "Bây giờ chúng ta sẽ tính diện tích dưới đường cong f(x)=2x trên đoạn [0,2] bằng cách chia thành các hình chữ nhật nhỏ. Hãy chọn đáp án đúng cho kết quả tích phân Riemann giới hạn khi độ chia tăng vô hạn. Đáp số là 4.",
+        "pointer": [
+          {
+            "target": "bullet-0",
+            "label": "Giải thích cách chia"
+          },
+          {
+            "target": "quiz",
+            "label": "Hỏi đáp án"
+          },
+          {
+            "target": "quiz",
+            "label": "Cung cấp đáp án"
+          }
+        ],
+        "quiz": {
+          "question": "Diện tích dưới đồ thị f(x)=2x trên đoạn [0,2] là bao nhiêu?",
+          "options": [
+            {
+              "id": "A",
+              "text": "2",
+              "isCorrect": false,
+              "explanation": "Kết quả sai, diện tích nhỏ hơn thực tế."
+            },
+            {
+              "id": "B",
+              "text": "4",
+              "isCorrect": true,
+              "explanation": "Đúng, ∫₀²2x dx = [x²]₀² = 4."
+            },
+            {
+              "id": "C",
+              "text": "6",
+              "isCorrect": false,
+              "explanation": "Quá lớn, tính nhầm tích phân."
+            },
+            {
+              "id": "D",
+              "text": "8",
+              "isCorrect": false,
+              "explanation": "Quá lớn, không đúng."
+            }
+          ]
+        },
+        "start": 72,
+        "duration": 24
+      },
+      {
+        "id": "ai-5",
+        "kind": "summary",
+        "accent": "brand",
+        "title": "Tóm tắt tích phân Riemann",
+        "subtitle": "Những điểm chính và bước tiếp theo trong học tập",
+        "bullets": [
+          "Giới hạn tổng Riemann cho diện tích chính xác",
+          "Chia miền thành hình chữ nhật nhỏ, độ rộng tiến tới 0"
+        ],
+        "narration": "Hôm nay chúng ta đã gặp định nghĩa tích phân Riemann: giới hạn tổng Riemann khi độ dài các đoạn phân hoạch tiến tới 0, cho diện tích dưới đồ thị. Nhớ rằng việc chia miền thành nhiều hình chữ nhật và lấy giới hạn cho phép tính diện tích chính xác. Bây giờ hãy chuẩn bị cho bài tích phân hàm số thực tế.",
+        "pointer": [
+          {
+            "target": "title",
+            "label": "bắt đầu"
+          },
+          {
+            "target": "bullet-0",
+            "label": "giới hạn tổng"
+          },
+          {
+            "target": "bullet-1",
+            "label": "chia miền"
+          }
+        ],
+        "start": 96,
+        "duration": 24
+      }
+    ],
+    "chapters": [
+      {
+        "id": "ch-1",
+        "title": "Khám phá diện tích dưới đường cong",
+        "start": 0,
+        "end": 24,
+        "sceneIds": [
+          "ai-1"
+        ]
+      },
+      {
+        "id": "ch-2",
+        "title": "Tích phân Riemann là giới hạn tổng Riemann",
+        "start": 24,
+        "end": 48,
+        "sceneIds": [
+          "ai-2"
+        ]
+      },
+      {
+        "id": "ch-3",
+        "title": "Diện tích dưới đường cong qua tích phân Riemann",
+        "start": 48,
+        "end": 72,
+        "sceneIds": [
+          "ai-3"
+        ]
+      },
+      {
+        "id": "ch-4",
+        "title": "Kiểm tra nhanh: Tính diện tích cơ bản",
+        "start": 72,
+        "end": 96,
+        "sceneIds": [
+          "ai-4"
+        ]
+      },
+      {
+        "id": "ch-5",
+        "title": "Tóm tắt tích phân Riemann",
+        "start": 96,
+        "end": 120,
+        "sceneIds": [
+          "ai-5"
+        ]
+      }
+    ],
+    "source": "gemini",
+    "theme": "paper",
+    "showPointer": true,
+    "model": "openai/gpt-oss-120b",
+    "createdAt": "2026-10-02T08:40:54.293Z"
+  }
+}

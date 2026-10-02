@@ -1,0 +1,250 @@
+{
+  "format": "eduai-studio/course@1",
+  "updatedAt": "2026-10-02T09:22:47.785Z",
+  "lesson": {
+    "id": "lesson-muqr8y0t-uzf4he",
+    "title": "Tích phân Riemann và hình học",
+    "subject": "Vi tích Phân 2",
+    "grade": "10-12",
+    "language": "vi",
+    "fps": 30,
+    "duration": 125,
+    "scenes": [
+      {
+        "id": "ai-1",
+        "kind": "cover",
+        "accent": "brand",
+        "title": "Tích phân Riemann là gì?",
+        "subtitle": "Khám phá ý nghĩa và cách tính trong 2 phút",
+        "bullets": [
+          "Định nghĩa: giới hạn tổng Riemann khi độ rộng → 0",
+          "Ý nghĩa: tính diện tích, thể tích, tổng giá trị hàm"
+        ],
+        "narration": "Các em có nhớ khi chúng ta nói về diện tích dưới đường cong không? Tích phân Riemann chính là cách chia đoạn thành những hình chữ nhật nhỏ, tính tổng diện tích và lấy giới hạn khi độ rộng giảm tới 0, nhờ đó xác định diện tích chính xác.",
+        "pointer": [
+          {
+            "target": "bullet-0",
+            "label": "Nhắc lại kiến thức trước"
+          },
+          {
+            "target": "bullet-1",
+            "label": "Giới thiệu định nghĩa"
+          },
+          {
+            "target": "title",
+            "label": "Kết luận khái niệm"
+          }
+        ],
+        "start": 0,
+        "duration": 24
+      },
+      {
+        "id": "ai-2",
+        "kind": "concept",
+        "accent": "gold",
+        "title": "Tích phân Riemann là giới hạn tổng diện",
+        "subtitle": "Giới hạn tổng Riemann khi độ rộng phân đoạn tiến tới 0",
+        "bullets": [
+          "∫_a^b f(x)dx = lim_{‖P‖→0} Σ f(ξ_i)Δx_i",
+          "Δx_i = x_i – x_{i‑1} là độ rộng đoạn i, ξ_i ∈ [x_{i‑1},x_i]"
+        ],
+        "formula": "\\int_{a}^{b} f(x)\\,dx = \\lim_{\\|P\\|\\to 0}\\sum_{i=1}^{n} f(\\xi_i)\\Delta x_i",
+        "narration": "Học sinh thắc mắc gì ở đây? Đó là cách chúng ta định nghĩa tích phân Riemann. Ta chia đoạn [a,b] thành nhiều phần nhỏ, chọn một điểm ξ_i trong mỗi phần, tính f(ξ_i)·Δx_i và cộng lại. Khi độ rộng các phần giảm tới 0, tổng này hội tụ tới giá trị tích phân.",
+        "pointer": [
+          {
+            "target": "title",
+            "label": "question"
+          },
+          {
+            "target": "subtitle",
+            "label": "definition intro"
+          },
+          {
+            "target": "bullet-0",
+            "label": "definition formula"
+          },
+          {
+            "target": "formula",
+            "label": "limit expression"
+          }
+        ],
+        "start": 24,
+        "duration": 24
+      },
+      {
+        "id": "ai-3",
+        "kind": "concept",
+        "accent": "ember",
+        "title": "Diện tích dưới đường cong qua giới hạn",
+        "subtitle": "Diện tích dưới đường cong qua giới hạn các hình chữ nhật",
+        "bullets": [
+          "Giới hạn tổng các hình chữ nhật cho kết quả tích phân",
+          "Ví dụ: ∫₀¹ x^2 dx = 1/3"
+        ],
+        "narration": "Ta xét hàm y = x^2 trên [0,1]. Khi chia đoạn thành n hình chữ nhật, tổng diện tích các hình chữ nhật tiến tới giới hạn khi n lớn, cho tích phân ∫₀¹ x^2 dx = 1/3. Nếu tăng số hình chữ nhật, sai số giữa tổng và giá trị thực giảm dần, minh họa quá trình hội tụ. Như vậy tích phân biểu diễn diện tích thực tế dưới đường cong. Các em có nhớ ví dụ này không?",
+        "pointer": [
+          {
+            "target": "title",
+            "label": "Bắt đầu"
+          },
+          {
+            "target": "bullet-0",
+            "label": "Giới hạn tổng"
+          },
+          {
+            "target": "bullet-1",
+            "label": "Ví dụ cụ thể"
+          },
+          {
+            "target": "subtitle",
+            "label": "Kết nối ý nghĩa"
+          },
+          {
+            "target": "subtitle",
+            "label": "Câu hỏi cuối"
+          }
+        ],
+        "start": 48,
+        "duration": 29
+      },
+      {
+        "id": "ai-4",
+        "kind": "quiz",
+        "accent": "brand",
+        "title": "Kiểm tra nhanh",
+        "subtitle": "Xác định đúng hay sai về định nghĩa và ý nghĩa",
+        "bullets": [
+          "Giới hạn tổng Riemann → diện tích dưới đường cong khi Δx→0",
+          "Ví dụ f(x)=x^2 trên [0,2] cho ∫=8/3, xác nhận bằng tính toán"
+        ],
+        "narration": "Nhớ rằng tích phân Riemann là giới hạn tổng Riemann khi độ dài các đoạn chia tiệm cận 0, biểu diễn diện tích dưới đồ thị. Câu hỏi: Đối với f(x)=x^2 trên [0,2], tích phân Riemann cho giá trị 8/3, câu trả lời là đúng hay sai? Nếu bạn chọn đúng, chứng tỏ bạn hiểu cách tính và ý nghĩa hình học của tích phân.",
+        "pointer": [
+          {
+            "target": "bullet-0",
+            "label": "định nghĩa"
+          },
+          {
+            "target": "quiz",
+            "label": "câu hỏi"
+          },
+          {
+            "target": "quiz",
+            "label": "đánh giá đáp án"
+          }
+        ],
+        "quiz": {
+          "question": "Đối với hàm f(x)=x^2 trên đoạn [0,2], tích phân Riemann cho giá trị 8/3, câu trả lời là đúng hay sai?",
+          "options": [
+            {
+              "id": "A",
+              "text": "Đúng",
+              "isCorrect": true,
+              "explanation": "Tích phân ∫₀² x²dx = [x³/3]₀² = 8/3, đúng."
+            },
+            {
+              "id": "B",
+              "text": "Sai",
+              "isCorrect": false,
+              "explanation": "Giá trị tính được là 8/3, không sai."
+            },
+            {
+              "id": "C",
+              "text": "Không xác định",
+              "isCorrect": false,
+              "explanation": "Hàm liên tục, tích phân xác định."
+            },
+            {
+              "id": "D",
+              "text": "Không áp dụng",
+              "isCorrect": false,
+              "explanation": "Tích phân Riemann áp dụng cho hàm này."
+            }
+          ]
+        },
+        "start": 77,
+        "duration": 24
+      },
+      {
+        "id": "ai-5",
+        "kind": "summary",
+        "accent": "gold",
+        "title": "Tóm tắt tích phân Riemann",
+        "subtitle": "Những điểm mấu chốt cần ghi nhớ",
+        "bullets": [
+          "Định nghĩa: giới hạn tổng Riemann khi độ rộng →0",
+          "Diện tích dưới đồ thị = giới hạn tổng diện tích các hình chữ nhật",
+          "Áp dụng để tính diện tích các miền phức tạp"
+        ],
+        "narration": "Hôm nay chúng ta đã gặp định nghĩa tích phân Riemann qua giới hạn tổng Riemann, hiểu cách tính diện tích dưới đường cong bằng cách chia thành hình chữ nhật thu hẹp, và nhận ra ý nghĩa hình học là tổng diện tích các hình chữ nhật hội tụ tới diện tích thực. Nhớ các bước này để chuẩn bị bài tiếp.",
+        "pointer": [
+          {
+            "target": "title",
+            "label": "Giới thiệu tổng quan"
+          },
+          {
+            "target": "bullet-0",
+            "label": "Định nghĩa chi tiết"
+          },
+          {
+            "target": "bullet-1",
+            "label": "Ý nghĩa hình học"
+          }
+        ],
+        "start": 101,
+        "duration": 24
+      }
+    ],
+    "chapters": [
+      {
+        "id": "ch-1",
+        "title": "Tích phân Riemann là gì?",
+        "start": 0,
+        "end": 24,
+        "sceneIds": [
+          "ai-1"
+        ]
+      },
+      {
+        "id": "ch-2",
+        "title": "Tích phân Riemann là giới hạn tổng diện",
+        "start": 24,
+        "end": 48,
+        "sceneIds": [
+          "ai-2"
+        ]
+      },
+      {
+        "id": "ch-3",
+        "title": "Diện tích dưới đường cong qua giới hạn",
+        "start": 48,
+        "end": 77,
+        "sceneIds": [
+          "ai-3"
+        ]
+      },
+      {
+        "id": "ch-4",
+        "title": "Kiểm tra nhanh",
+        "start": 77,
+        "end": 101,
+        "sceneIds": [
+          "ai-4"
+        ]
+      },
+      {
+        "id": "ch-5",
+        "title": "Tóm tắt tích phân Riemann",
+        "start": 101,
+        "end": 125,
+        "sceneIds": [
+          "ai-5"
+        ]
+      }
+    ],
+    "source": "gemini",
+    "theme": "paper",
+    "showPointer": true,
+    "model": "openai/gpt-oss-120b",
+    "createdAt": "2026-10-02T09:22:47.741Z"
+  }
+}

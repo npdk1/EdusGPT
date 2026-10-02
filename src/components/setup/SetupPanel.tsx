@@ -59,9 +59,9 @@ const PROVIDER_NOTES: Record<ProviderId, string> = {
   gemini:
     "Gói free tính theo project trong AI Studio, hạn mức công bố theo model và thay đổi theo thời gian — xem trang rate limits của Google.",
   openrouter:
-    "Nhóm model đuôi :free dùng không tốn tiền, giới hạn theo số request mỗi phút và mỗi ngày; danh sách model free có thể bị đổi.",
+    "Chỉ nhóm model đuôi :free chạy được với key chưa nạp tiền — mọi model trả phí đều báo hết credit. Nhóm :free giới hạn theo số request mỗi phút và mỗi ngày, và danh sách model free có thể bị đổi bất kỳ lúc nào. Lưu ý: các model :free hiện có đều chưa sinh nổi một bài hoàn chỉnh, nên nạp credits là cách duy nhất để dùng nhà cung cấp này tạo bài. Gói :free còn bị giới hạn số request free mỗi ngày cho cả tài khoản.",
   groq:
-    "Gói free không cần thẻ, tính theo token mỗi ngày cho từng model, nên hết hạn mức sẽ tự reset vào 0 giờ theo giờ UTC.",
+    "Gói free không cần thẻ, tính theo token mỗi ngày cho từng model, nên hết hạn mức sẽ tự reset vào 0 giờ theo giờ UTC. Trần thấp hơn con số trên: một bài chỉ khoảng 8.000 token/phút, nên bài dài sẽ phải chờ xen kẽ.",
   nvidia:
     "Endpoint miễn phí để thử nghiệm, giới hạn theo số request mỗi phút và có thể yêu cầu khoá API cho endpoint mới.",
   antigravity:

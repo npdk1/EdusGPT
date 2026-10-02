@@ -1,0 +1,312 @@
+{
+  "format": "eduai-studio/course@1",
+  "updatedAt": "2026-10-02T08:10:20.454Z",
+  "lesson": {
+    "id": "lesson-muqonrmi-mz19t5",
+    "title": "Định nghĩa tích phân Riemann và ý nghĩa hình học",
+    "subject": "Vi tích phân 2",
+    "grade": "Lớp 12",
+    "language": "vi",
+    "fps": 30,
+    "duration": 144,
+    "scenes": [
+      {
+        "id": "ai-1",
+        "kind": "cover",
+        "accent": "brand",
+        "title": "Tích phân Riemann là gì?",
+        "subtitle": "Khái niệm cơ bản trong vi tích phân 2",
+        "bullets": [
+          "Tích phân Riemann của f trên [a,b] là giới hạn của tổng Riemann khi độ dài phân hoạch tiến tới 0.",
+          "Nếu f(x) ≥ 0, giá trị tích phân bằng diện tích vùng nằm giữa đồ thị y = f(x) và trục Ox, từ a đến b."
+        ],
+        "narration": "Chúng ta xác định tích phân Riemann như giới hạn của tổng Riemann khi độ dài đoạn lớn nhất trong phân hoạch tiến tới 0, nếu giới hạn này tồn tại. Khi f(x) không âm trên [a,b], giá trị này bằng diện tích vùng dưới đồ thị y = f(x) và trên trục Ox; ví dụ f(x)=2 trên [0,3] cho tích phân 2×3=6.",
+        "pointer": [
+          {
+            "target": "title",
+            "label": "Giới thiệu định nghĩa"
+          },
+          {
+            "target": "bullet-0",
+            "label": "Ý nghĩa hình học"
+          }
+        ],
+        "start": 0,
+        "duration": 24
+      },
+      {
+        "id": "ai-2",
+        "kind": "concept",
+        "accent": "brand",
+        "title": "Định nghĩa chính xác của tích phân Riemann",
+        "subtitle": "Giới hạn của tổng Riemann khi khoảng phân hoạch tiến tới zero",
+        "bullets": [
+          "Phân hoạch P: tập hợp các điểm a = x0 < x1 < … < xn = b, norma P = max Δx_i.",
+          "Tổng Riemann: S(P,f) = Σ_{i=1}^n f(ξ_i) Δx_i, với ξ_i ∈ [x_{i-1}, x_i].",
+          "Tích phân Riemann tồn tại nếu giới hạn của S(P,f) khi norma P → 0 tồn tại và không phụ thuộc vào lựa chọn điểm mẫu."
+        ],
+        "formula": "\\int_a^b f(x)\\,dx = \\lim_{\\|P\\|\\to 0} \\sum_{i=1}^n f(\\xi_i)\\Delta x_i",
+        "narration": "Chúng ta chia khoảng [a, b] thành n sub‑khoảng, độ dài max là norma P. Trên mỗi sub‑khoảng chọn điểm mẫu ξ_i và tính tổng Riemann S = Σ f(ξ_i)Δx_i. Khi norma P → 0, nếu tổng này hội tụ đến một giá trị độc lập với lựa chọn điểm mẫu, ta gọi giá trị đó là tích phân Riemann và ký hiệu ∫_a^b f(x)dx.",
+        "pointer": [
+          {
+            "target": "title",
+            "label": "mở bài"
+          },
+          {
+            "target": "formula",
+            "label": "tổng Riemann"
+          },
+          {
+            "target": "bullet-2",
+            "label": "định nghĩa tích phân"
+          }
+        ],
+        "start": 24,
+        "duration": 24
+      },
+      {
+        "id": "ai-3",
+        "kind": "formula",
+        "accent": "brand",
+        "title": "Công thức tổng Riemann",
+        "subtitle": "S = Σ f(x_i*) Δx_i với x_i* trong đoạn con i",
+        "bullets": [
+          "f(x_i*) là giá trị hàm tại điểm chọn trong đoạn con i.",
+          "Δx_i là độ dài của đoạn con i (thường bằng (b‑a)/n khi chia đều)."
+        ],
+        "formula": "S = \\sum_{i=1}^{n} f(x_i^*) \\, \\Delta x_i",
+        "narration": "Chúng ta xem xét hàm f trên khoảng [a,b], chia khoảng thành n đoạn con có độ dài Δx_i, và chọn điểm bất kỳ x_i* trong mỗi đoạn. Tổng Riemann S bằng tổng của f(x_i*) nhân Δx_i qua tất cả các đoạn. Khi n tiến tới vô hạn, S tiến tới giá trị của tích phân định Riemann của f trên [a,b].",
+        "pointer": [
+          {
+            "target": "title",
+            "label": "Giới thiệu chủ đề slide"
+          },
+          {
+            "target": "formula",
+            "label": "Giải thích ký hiệu trong công thức"
+          },
+          {
+            "target": "bullet-0",
+            "label": "Liên hệ với ý nghĩa hình học của mỗi thành phần"
+          }
+        ],
+        "start": 48,
+        "duration": 24
+      },
+      {
+        "id": "ai-4",
+        "kind": "example",
+        "accent": "brand",
+        "title": "Ý nghĩa hình học: diện tích dưới đường cong",
+        "subtitle": "Ví dụ hàm f(x)=x^2 trên khoảng [0,2]",
+        "bullets": [
+          "Khi n=4, tổng dưới = 1.75",
+          "Khi n=8, tổng dưới = 1.875"
+        ],
+        "steps": [
+          "Chia khoảng [0,2] thành n đoạn bằng nhau, độ rộng Δx = 2/n.",
+          "Tính tổng dưới S_n = Σ_{i=0}^{n-1} f(x_i)·Δx với x_i = i·Δx.",
+          "Khi n→∞, giới hạn S_n = ∫_0^2 x^2 dx = 8/3."
+        ],
+        "formula": "∫_0^2 x^2 dx = 8/3",
+        "graph": {
+          "title": "Đồ thị y = x^2 và diện tích dưới đường cong trên [0,2]",
+          "xlabel": "x",
+          "ylabel": "y",
+          "xs": [
+            0,
+            0.25,
+            0.5,
+            0.75,
+            1,
+            1.25,
+            1.5,
+            1.75,
+            2
+          ],
+          "ys": [
+            0,
+            0.0625,
+            0.25,
+            0.5625,
+            1,
+            1.5625,
+            2.25,
+            3.0625,
+            4
+          ],
+          "vlines": [
+            {
+              "x": 0,
+              "label": "a=0"
+            },
+            {
+              "x": 2,
+              "label": "b=2"
+            }
+          ],
+          "hlines": [
+            {
+              "y": 0,
+              "label": "y=0"
+            }
+          ]
+        },
+        "narration": "Chúng ta lấy hàm f(x)=x^2 trên [0,2] và chia khoảng thành n đoạn bằng nhau. Khi n tăng, tổng Riemann của các hình chữ nhật dưới đường cong tiến gần đến diện tích dưới parabol. Khi n=4, tổng dưới là 1.75; khi n=8, tổng dưới là 1.875; khi n→∞, giới hạn là 8/3≈2.667. Vậy diện tích dưới đường cong là giới hạn của tổng Riemann.",
+        "pointer": [
+          {
+            "target": "title",
+            "label": "Giới thiệu ví dụ"
+          },
+          {
+            "target": "subtitle",
+            "label": "Đề bài hàm f(x)=x^2"
+          },
+          {
+            "target": "bullet-0",
+            "label": "Tổng dưới n=4"
+          },
+          {
+            "target": "bullet-1",
+            "label": "Tổng dưới n=8"
+          }
+        ],
+        "start": 72,
+        "duration": 24
+      },
+      {
+        "id": "ai-5",
+        "kind": "quiz",
+        "accent": "gold",
+        "title": "Kiểm tra lại xem bạn đã hiểu chưa",
+        "subtitle": "Chọn đáp án đúng về nội dung vừa học.",
+        "bullets": [
+          "Đọc lại tóm tắt ở slide trước nếu chưa nhớ.",
+          "Chọn một đáp án, bạn sẽ được giải thích ngay."
+        ],
+        "narration": "Mình cùng kiểm tra lại xem bạn đã nắm được chưa. Đọc câu hỏi và chọn đáp án mình nghĩ là đúng. Chọn sai cũng không sao, mình sẽ giải thích lại ngay tại đây, và đó là cách nhanh nhất để biết mình cần xem lại phần nào.",
+        "quiz": {
+          "question": "Bạn đã nắm được nội dung chính của bài học này chưa?",
+          "options": [
+            {
+              "id": "opt-1",
+              "text": "Rồi, mình hiểu và tự giải thích lại được cho bạn nghe",
+              "isCorrect": true,
+              "explanation": "Đó là đúng. Tự kể lại bằng lời mình mới thật sự nắm."
+            },
+            {
+              "id": "opt-2",
+              "text": "Mình hiểu phần đầu, phần sau hơi mơ hồ",
+              "isCorrect": false,
+              "explanation": "Không sao. Xem lại phần cuối, đó là phần hay quên nhất."
+            },
+            {
+              "id": "opt-3",
+              "text": "Chưa, mình thấy hơi nhiều thông tin",
+              "isCorrect": false,
+              "explanation": "Bài dài là chủ ý. Xem lại dàn ý theo thứ tự, từng phần một sẽ dễ hơn."
+            },
+            {
+              "id": "opt-4",
+              "text": "Chưa, mình muốn xem ví dụ thực tế thêm",
+              "isCorrect": false,
+              "explanation": "Phần ví dụ gần cuối bài. Đọc nó sẽ giúp bạn thấy bài học dùng được thế nào."
+            }
+          ]
+        },
+        "start": 96,
+        "duration": 24
+      },
+      {
+        "id": "ai-6",
+        "kind": "summary",
+        "accent": "brand",
+        "title": "Tóm tắt: tích phân Riemann và diện tích",
+        "subtitle": "Kết nối định nghĩa, công thức và hình học",
+        "bullets": [
+          "Tích phân Riemann = giới hạn của tổng Riemann khi norm phân hoạch → 0.",
+          "Diện tích dưới đường cong f(x) trên [a,b] bằng ∫_a^b f(x)dx.",
+          "Công thức Newton-Leibniz cho phép tính tích phân qua nguyên hàm: ∫_a^b f(x)dx = F(b)-F(a)."
+        ],
+        "narration": "Chúng ta đã định nghĩa tích phân Riemann là giới hạn của tổng Riemann khi bước phân hoạch tiến tới 0. Nói cách khác, diện tích dưới đường cong f(x) trên [a,b] là giới hạn của các tổng Riemann. Để tính diện tích ta tìm một nguyên hàm F của f và áp dụng công thức Newton-Leibniz: ∫_a^b f(x)dx = F(b)-F(a).",
+        "pointer": [
+          {
+            "target": "bullet-0",
+            "label": "định nghĩa tích phân Riemann"
+          },
+          {
+            "target": "bullet-1",
+            "label": "ý nghĩa hình học diện tích"
+          },
+          {
+            "target": "bullet-2",
+            "label": "công thức Newton-Leibniz"
+          }
+        ],
+        "start": 120,
+        "duration": 24
+      }
+    ],
+    "chapters": [
+      {
+        "id": "ch-1",
+        "title": "Tích phân Riemann là gì?",
+        "start": 0,
+        "end": 24,
+        "sceneIds": [
+          "ai-1"
+        ]
+      },
+      {
+        "id": "ch-2",
+        "title": "Định nghĩa chính xác của tích phân Riemann",
+        "start": 24,
+        "end": 48,
+        "sceneIds": [
+          "ai-2"
+        ]
+      },
+      {
+        "id": "ch-3",
+        "title": "Công thức tổng Riemann",
+        "start": 48,
+        "end": 72,
+        "sceneIds": [
+          "ai-3"
+        ]
+      },
+      {
+        "id": "ch-4",
+        "title": "Ý nghĩa hình học: diện tích dưới đường cong",
+        "start": 72,
+        "end": 96,
+        "sceneIds": [
+          "ai-4"
+        ]
+      },
+      {
+        "id": "ch-5",
+        "title": "Kiểm tra lại xem bạn đã hiểu chưa",
+        "start": 96,
+        "end": 120,
+        "sceneIds": [
+          "ai-5"
+        ]
+      },
+      {
+        "id": "ch-6",
+        "title": "Tóm tắt: tích phân Riemann và diện tích",
+        "start": 120,
+        "end": 144,
+        "sceneIds": [
+          "ai-6"
+        ]
+      }
+    ],
+    "source": "gemini",
+    "theme": "paper",
+    "showPointer": true,
+    "model": "nvidia/nemotron-3-ultra-550b-a55b",
+    "createdAt": "2026-10-02T08:10:20.442Z"
+  }
+}

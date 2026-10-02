@@ -1,0 +1,293 @@
+{
+  "format": "eduai-studio/course@1",
+  "updatedAt": "2026-10-02T08:44:04.909Z",
+  "lesson": {
+    "id": "lesson-muqpv5p2-whowco",
+    "title": "Tích phân Riemann và ý nghĩa hình học",
+    "subject": "Vi tích Phân 2",
+    "grade": "Đại học",
+    "language": "vi",
+    "fps": 30,
+    "duration": 149,
+    "scenes": [
+      {
+        "id": "ai-1",
+        "kind": "cover",
+        "accent": "brand",
+        "title": "Diện tích dưới đường cong là một giới hạn",
+        "subtitle": "Từ các hình chữ nhật nhỏ đến một con số chính xác",
+        "bullets": [
+          "Chia đoạn [a,b] thành n phần bằng nhau",
+          "Tổng diện tích các chữ nhật tiến đến S"
+        ],
+        "narration": "Chúng ta muốn tính diện tích dưới đường cong của hàm y bằng x bình phương trên đoạn từ 0 đến 1. Vì đường cong cong, ta không dùng hình chữ nhật trực tiếp được. Thay vào đó, ta cắt nhỏ đoạn thành nhiều hình chữ nhật hẹp. Khi số lượng hình chữ nhật n tăng lên vô cùng, tổng diện tích của chúng sẽ hội tụ về một con số duy nhất, đó chính là tích phân.",
+        "pointer": [
+          {
+            "target": "title",
+            "label": "Khẳng định chính về bản chất của diện tích"
+          },
+          {
+            "target": "bullet-0",
+            "label": "Mô tả bước chia đoạn đầu tiên"
+          },
+          {
+            "target": "bullet-1",
+            "label": "Giải thích quá trình hội tụ của tổng diện tích"
+          }
+        ],
+        "start": 0,
+        "duration": 28
+      },
+      {
+        "id": "ai-2",
+        "kind": "concept",
+        "accent": "brand",
+        "title": "Tích phân Riemann là giới hạn tổng diện tích",
+        "subtitle": "Định nghĩa qua các tổng Riemann và bước chia nhỏ dần",
+        "bullets": [
+          "Kích thước Δx giảm dần về 0",
+          "Tổng Riemann hội tụ đến diện tích xác định"
+        ],
+        "formula": "\\int_{a}^{b} f(x) \\, dx = \\lim_{n \\to \\infty} \\sum_{i=1}^{n} f(x_i^*) \\, \\Delta x",
+        "graph": {
+          "title": "Đồ thị y = f(x) và các hình chữ nhật",
+          "xlabel": "x",
+          "ylabel": "y",
+          "xs": [
+            0,
+            0.5,
+            1,
+            1.5,
+            2,
+            2.5,
+            3,
+            3.5,
+            4
+          ],
+          "ys": [
+            0,
+            1,
+            2,
+            3,
+            4,
+            5,
+            6,
+            7,
+            8
+          ]
+        },
+        "narration": "Chúng ta chia đoạn [a;b] thành n hình chữ nhật nhỏ. Khi n tăng lên vô cùng, tổng diện tích các hình đó tiến đến một giá trị duy nhất. Giá trị đó chính là tích phân xác định của hàm số.",
+        "pointer": [
+          {
+            "target": "title",
+            "label": "Mở đầu về khái niệm tích phân"
+          },
+          {
+            "target": "bullet-0",
+            "label": "Giải thích quá trình chia nhỏ"
+          },
+          {
+            "target": "formula",
+            "label": "Trình bày công thức tổng quát"
+          }
+        ],
+        "start": 28,
+        "duration": 24
+      },
+      {
+        "id": "ai-3",
+        "kind": "formula",
+        "accent": "brand",
+        "title": "Tổng Riemann gộp lại thành tích phân",
+        "subtitle": "S = Σ f(ξ_i)Δx_i khi n tiến tới vô cùng",
+        "bullets": [
+          "ξ_i là điểm chọn bất kỳ trong đoạn chia thứ i",
+          "Δx_i là độ dài đoạn chia, thường bằng (b-a)/n"
+        ],
+        "formula": "\\lim_{n \\to \\infty} \\sum_{i=1}^{n} f(\\xi_i) \\Delta x_i = \\int_{a}^{b} f(x) \\, dx",
+        "narration": "Các em nhìn vào công thức này. Tổng Riemann S là tổng của các diện tích chữ nhật nhỏ, với ξ_i là điểm chọn trong mỗi đoạn chia. Khi số đoạn chia n tăng lên vô cùng, giới hạn của tổng này chính là giá trị của tích phân xác định. Bạn hãy liên hệ xem, mỗi hạng tử f(ξ_i)Δx_i đại diện cho diện tích một mảnh nhỏ.",
+        "pointer": [
+          {
+            "target": "title",
+            "label": "Giới thiệu ý chính về sự chuyển đổi từ tổng sang tích phân"
+          },
+          {
+            "target": "formula",
+            "label": "Chỉ vào công thức tổng quát của giới hạn tổng Riemann"
+          },
+          {
+            "target": "bullet-0",
+            "label": "Giải thích ý nghĩa của điểm chọn ξ_i trong đoạn chia"
+          },
+          {
+            "target": "bullet-1",
+            "label": "Nhấn mạnh độ dài đoạn chia Δx_i quyết định sự hội tụ"
+          }
+        ],
+        "start": 52,
+        "duration": 25
+      },
+      {
+        "id": "ai-4",
+        "kind": "diagram",
+        "accent": "brand",
+        "title": "Diện tích hình phẳng là giá trị của tích phân",
+        "subtitle": "Ý nghĩa hình học của ∫_a^b f(x)dx khi f(x) ≥ 0",
+        "bullets": [
+          "Tích phân tính diện tích hình giới hạn bởi đồ thị, trục Ox và hai đường thẳng x=a, x=b",
+          "Ví dụ: ∫_0^π sin(x)dx = 2 (đơn vị diện tích)"
+        ],
+        "formula": "\\int_a^b f(x)dx = \\lim_{n \\to \\infty} \\sum_{i=1}^n f(\\xi_i)\\Delta x_i",
+        "narration": "Khi hàm f(x) luôn không âm trên đoạn a đến b, tích phân Riemann chính là diện tích của hình phẳng nằm dưới đồ thị. Với sin(x) từ 0 đến pi, ta được diện tích bằng 2. Bạn hãy hình dung các hình chữ nhật nhỏ dần và sát vào đường cong, tổng diện tích của chúng hội tụ về giá trị chính xác đó.",
+        "pointer": [
+          {
+            "target": "title",
+            "label": "Khẳng định chính về ý nghĩa hình học"
+          },
+          {
+            "target": "bullet-1",
+            "label": "Ví dụ cụ thể với hàm sin"
+          },
+          {
+            "target": "formula",
+            "label": "Quá trình lấy giới hạn của tổng Riemann"
+          }
+        ],
+        "start": 77,
+        "duration": 24
+      },
+      {
+        "id": "ai-5",
+        "kind": "quiz",
+        "accent": "gold",
+        "title": "Kiểm tra lại xem bạn đã hiểu chưa",
+        "subtitle": "Chọn đáp án đúng về nội dung vừa học.",
+        "bullets": [
+          "Đọc lại tóm tắt ở slide trước nếu chưa nhớ.",
+          "Chọn một đáp án, bạn sẽ được giải thích ngay."
+        ],
+        "narration": "Mình cùng kiểm tra lại xem bạn đã nắm được chưa. Đọc câu hỏi và chọn đáp án mình nghĩ là đúng. Chọn sai cũng không sao, mình sẽ giải thích lại ngay tại đây, và đó là cách nhanh nhất để biết mình cần xem lại phần nào.",
+        "quiz": {
+          "question": "Bạn đã nắm được nội dung chính của bài học này chưa?",
+          "options": [
+            {
+              "id": "opt-1",
+              "text": "Rồi, mình hiểu và tự giải thích lại được cho bạn nghe",
+              "isCorrect": true,
+              "explanation": "Đó là đúng. Tự kể lại bằng lời mình mới thật sự nắm."
+            },
+            {
+              "id": "opt-2",
+              "text": "Mình hiểu phần đầu, phần sau hơi mơ hồ",
+              "isCorrect": false,
+              "explanation": "Không sao. Xem lại phần cuối, đó là phần hay quên nhất."
+            },
+            {
+              "id": "opt-3",
+              "text": "Chưa, mình thấy hơi nhiều thông tin",
+              "isCorrect": false,
+              "explanation": "Bài dài là chủ ý. Xem lại dàn ý theo thứ tự, từng phần một sẽ dễ hơn."
+            },
+            {
+              "id": "opt-4",
+              "text": "Chưa, mình muốn xem ví dụ thực tế thêm",
+              "isCorrect": false,
+              "explanation": "Phần ví dụ gần cuối bài. Đọc nó sẽ giúp bạn thấy bài học dùng được thế nào."
+            }
+          ]
+        },
+        "start": 101,
+        "duration": 24
+      },
+      {
+        "id": "ai-6",
+        "kind": "summary",
+        "accent": "brand",
+        "title": "Tích phân Riemann biến xấp xỉ thành chính xác",
+        "subtitle": "Tóm tắt định nghĩa và ý nghĩa hình học cốt lõi",
+        "bullets": [
+          "Giới hạn của tổng Riemann khi h tiến vô cùng nhỏ.",
+          "Diện tích miền kín dưới đồ thị hàm số liên tục."
+        ],
+        "narration": "Bạn vừa thấy các hình chữ nhật dồn lại thành diện tích thật. Đó chính là bản chất của tích phân. Nó biến phép cộng các mẩu nhỏ thành giá trị chính xác.",
+        "pointer": [
+          {
+            "target": "title",
+            "label": "Xác nhận ý chính của bài"
+          },
+          {
+            "target": "bullet-0",
+            "label": "Nhắc lại định nghĩa giới hạn"
+          },
+          {
+            "target": "bullet-1",
+            "label": "Nhắc lại ý nghĩa hình học"
+          }
+        ],
+        "start": 125,
+        "duration": 24
+      }
+    ],
+    "chapters": [
+      {
+        "id": "ch-1",
+        "title": "Diện tích dưới đường cong là một giới hạn",
+        "start": 0,
+        "end": 28,
+        "sceneIds": [
+          "ai-1"
+        ]
+      },
+      {
+        "id": "ch-2",
+        "title": "Tích phân Riemann là giới hạn tổng diện tích",
+        "start": 28,
+        "end": 52,
+        "sceneIds": [
+          "ai-2"
+        ]
+      },
+      {
+        "id": "ch-3",
+        "title": "Tổng Riemann gộp lại thành tích phân",
+        "start": 52,
+        "end": 77,
+        "sceneIds": [
+          "ai-3"
+        ]
+      },
+      {
+        "id": "ch-4",
+        "title": "Diện tích hình phẳng là giá trị của tích phân",
+        "start": 77,
+        "end": 101,
+        "sceneIds": [
+          "ai-4"
+        ]
+      },
+      {
+        "id": "ch-5",
+        "title": "Kiểm tra lại xem bạn đã hiểu chưa",
+        "start": 101,
+        "end": 125,
+        "sceneIds": [
+          "ai-5"
+        ]
+      },
+      {
+        "id": "ch-6",
+        "title": "Tích phân Riemann biến xấp xỉ thành chính xác",
+        "start": 125,
+        "end": 149,
+        "sceneIds": [
+          "ai-6"
+        ]
+      }
+    ],
+    "source": "gemini",
+    "theme": "paper",
+    "showPointer": true,
+    "model": "openai/gpt-oss-120b",
+    "createdAt": "2026-10-02T08:44:04.886Z"
+  }
+}

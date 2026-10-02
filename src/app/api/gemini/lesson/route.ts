@@ -803,6 +803,15 @@ export async function POST(request: NextRequest) {
      * independently without producing a deck that fights itself.
      */
     style?: string;
+    /**
+     * Model override for this one generation, on the active provider.
+     *
+     * The teacher picks a model in /setup and it stays the default; this is the
+     * narrow escape hatch for comparing two models side by side, which is also
+     * what the model audit uses to try every id in a list without making the
+     * teacher switch provider by hand each time. Left out, nothing changes.
+     */
+    model?: string;
   } = {};
   try {
     body = await request.json();
@@ -850,6 +859,10 @@ export async function POST(request: NextRequest) {
   // long outline back down to headings, and it made "45-60 minutes" unreachable
   // by construction rather than because the model could not hold it.
   const length = resolveLessonLength(body.lessonLength);
+  // Empty string must not become an override: `generateChatJson` treats a blank
+  // model as "use the provider default", but the CLI adapter would try to run
+  // `agy --model ""`.
+  const modelOverride = body.model?.trim() || undefined;
   const sceneCount = Math.min(
     length.scenes[1],
     Math.max(length.scenes[0], Math.round(body.sceneCount ?? length.scenes[1])),
@@ -971,6 +984,7 @@ export async function POST(request: NextRequest) {
         });
 
         const outlineResult = await generateJson<Outline>(creds, {
+          model: modelOverride,
           system: OUTLINE_SYSTEM,
           prompt: `${context}\nSố cảnh: ${sceneCount}. Tổng thời lượng: ${totalSeconds}s.${length.rules}\nĐây là bài DÀNH, đã tách nhỏ từng phần để học sinh tự học được.\n\nBẮT BUỘC liệt kê ĐÚNG ${sceneCount} mục trong "scenes", đánh số từ 1 đến ${sceneCount}. Hãy đếm lại trước khi trả lời — thiếu mục nào cũng tính là sai, và câu trả lời sẽ bị làm lại.\n\nCách lấy đủ ${sceneCount} mục khi chủ đề nghe như chỉ có vài ý:\n- Tách MỖI ý lớn thành nhiều mục nhỏ hơn (định nghĩa một mục, ý nghĩa một mục, ví dụ một mục).\n- Mỗi ví dụ trong bài là một mục riêng, đừng gộp ba ví dụ vào một mục.\n- Thêm các mục "vì sao cần", "cạm bẫy thường gặp", "khi nào không dùng được", "bài tập tự làm", "tóm tắt".\n- ĐỪNG tách nhỏ đến mức vô nghĩa: một dãy phép tính cùng loại (cả bảng nhân) thì gộp\n  thành MỘT mục, vì tách từng dòng ra sẽ thành 9 slide giống hệt nhau.\n- KHÔNG được lặp lại cùng một ý để lấp số. Mỗi mục phải dạy một điều khác đi.\n\nChỉ trả về tiêu đề và mục tiêu từng cảnh, chưa viết nội dung chi tiết.`,
           schema: OUTLINE_SCHEMA,
@@ -1045,6 +1059,10 @@ export async function POST(request: NextRequest) {
 
         // ---------- stage 2: one call per scene, streamed as it lands ----------
         const scenes: Array<Record<string, unknown>> = [];
+        // Starts as the model that was asked for; overwritten by the first scene
+        // that comes back, so a lesson finished by a backup model is labelled
+        // with the backup rather than with a model that never wrote it.
+        let generatedModel = creds.model;
         // Scenes that came back as the "đang được bổ sung" placeholder. Kept as a
         // count so the run can refuse to ship a deck that is mostly holes.
         let fallbackScenes = 0;
@@ -1070,6 +1088,7 @@ export async function POST(request: NextRequest) {
               : "";
 
           const sceneRequest = {
+            model: modelOverride,
             system: sceneSystem(useImages) + style.rules + iconRules(iconNames),
             prompt: `${context}\n\nBài: "${outline.title ?? topic}"\nCảnh ${
               index + 1
@@ -1201,6 +1220,15 @@ export async function POST(request: NextRequest) {
                 progress: Math.round(25 + (index / planned.length) * 70),
               });
               return writeOnce(SCENE_RETRY_TIMEOUT_MS);
+            })
+            .then((result) => {
+              // Remember which model actually produced this scene: when a call
+              // rotates to a backup, `creds.model` still names the one that was
+              // asked for, and a lesson then claims a model that never wrote it.
+              if (result && typeof result.model === "string" && result.model) {
+                generatedModel = result.model;
+              }
+              return result;
             })
             .catch(() => {
             // One bad scene must not sink the lesson: keep the outline's shape
@@ -1352,7 +1380,7 @@ export async function POST(request: NextRequest) {
           scenes: scenes.map((scene, index) => ({ ...scene, id: `ai-${index + 1}` })),
           chapters: [],
           source: "gemini",
-          model: creds.model,
+          model: generatedModel,
           createdAt: new Date().toISOString(),
         });
 
