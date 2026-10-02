@@ -1,4 +1,5 @@
 import type { ProviderCredentials } from "./config";
+import { PROVIDERS } from "./config";
 import {
   GeminiError,
   findDegenerateText,
@@ -8,21 +9,30 @@ import {
 } from "./gemini";
 
 /**
- * OpenRouter adapter — same surface as the Gemini client so routes never
- * branch on vendor.
+ * Adapter for every vendor that speaks the OpenAI chat-completions dialect.
  *
- * OpenRouter speaks the OpenAI chat-completions dialect:
+ * One implementation covers OpenRouter, Groq, NVIDIA and Mistral because the
+ * wire format is identical:
  *   - auth      : `Authorization: Bearer <key>` (NOT x-goog-api-key)
- *   - models    : GET /models, ids look like "google/gemini-2.5-flash-lite"
+ *   - models    : GET /models, ids like "openai/gpt-oss-120b"
+ *   - chat      : POST /chat/completions
  *   - structured output uses `json_object` plus the schema written into the
- *     prompt; `json_schema` strict mode is rejected by several OpenRouter
+ *     prompt; `json_schema` strict mode is rejected by several of these
  *     models, and our schema carries Gemini-only keys (`propertyOrdering`).
  *
- * Worth having: OpenRouter's free tier keeps working after Google's
- * 20-requests/day cap is spent.
+ * Only the base URL and the vendor label differ, and both come from the
+ * provider map — so a new OpenAI-compatible vendor is a config entry, not a
+ * new adapter.
+ *
+ * Why these three on top of OpenRouter: each is OpenAI-compatible, each still
+ * has a no-card free tier, and each fails differently (per-model daily token
+ * caps on Groq, per-hour Neurons on Cloudflare, project credits on Mistral), so
+ * having more than one means one vendor's quota never blocks the whole app.
+ * Mind the caps: a 95-slide lesson is ~96 calls and well past Groq's 200k
+ * tokens/day, so free cloud is realistically for short lessons and chat.
  */
 
-export interface OpenRouterModelInfo {
+export interface ChatModelInfo {
   id: string;
   displayName: string;
   description?: string;
@@ -31,13 +41,18 @@ export interface OpenRouterModelInfo {
   methods: string[];
 }
 
-interface RawOpenRouterModel {
+interface RawChatModel {
   id?: string;
   name?: string;
   description?: string;
   context_length?: number;
   top_provider?: { max_completion_tokens?: number };
   architecture?: { input_modalities?: string[] };
+}
+
+/** Vendor name for user-facing messages; never a hardcoded brand name. */
+function vendorLabel(creds: ProviderCredentials): string {
+  return PROVIDERS[creds.provider]?.label ?? "nhà cung cấp";
 }
 
 function endpoint(creds: ProviderCredentials, suffix: string): string {
@@ -48,7 +63,7 @@ function endpoint(creds: ProviderCredentials, suffix: string): string {
 function requireKey(creds: ProviderCredentials): string {
   if (!creds.apiKey) {
     throw new GeminiError(
-      "Chưa có OpenRouter API key. Mở /setup, chọn OpenRouter rồi dán key.",
+      `Chưa có API key cho ${vendorLabel(creds)}. Mở /setup, chọn ${vendorLabel(creds)} rồi dán key.`,
       428,
     );
   }
@@ -70,9 +85,9 @@ async function readError(response: Response): Promise<string> {
   return text.slice(0, 400) || `HTTP ${response.status}`;
 }
 
-export async function listOpenRouterModels(
+export async function listChatModels(
   creds: ProviderCredentials,
-): Promise<OpenRouterModelInfo[]> {
+): Promise<ChatModelInfo[]> {
   const key = requireKey(creds);
   const response = await fetch(endpoint(creds, "models"), {
     headers: { Authorization: `Bearer ${key}` },
@@ -82,7 +97,7 @@ export async function listOpenRouterModels(
   if (!response.ok) {
     throw new GeminiError(await readError(response), response.status);
   }
-  const payload = (await response.json()) as { data?: RawOpenRouterModel[] };
+  const payload = (await response.json()) as { data?: RawChatModel[] };
 
   return (payload.data ?? [])
     .map((model) => {
@@ -92,10 +107,9 @@ export async function listOpenRouterModels(
        *
        * This used to require text to be the *only* modality
        * (`inputs.every((item) => item === "text")`), which silently discarded
-       * every multimodal model — and on OpenRouter that is most of the
-       * catalogue, because the good chat models accept images too. The list
-       * came back near-empty and looked like a broken fetch. Accepting text
-       * *among* the inputs is the rule that was actually meant.
+       * every multimodal model — and on these catalogues that is most of the
+       * interesting selection, because the good chat models accept images too.
+       * Accepting text *among* the inputs is the rule that was actually meant.
        */
       const inputs = model.architecture?.input_modalities ?? ["text"];
       return {
@@ -111,23 +125,25 @@ export async function listOpenRouterModels(
     .sort((a, b) => a.id.localeCompare(b.id));
 }
 
-/** Ids that exist on OpenRouter but cannot write structured lessons. */
+/**
+ * Ids that exist on an OpenAI-compatible vendor but cannot write structured
+ * lessons: embedding, speech, moderation, safety-classifier and vision-only
+ * endpoints all answer `/chat/completions` with 200 and then produce nothing
+ * usable.
+ */
 const MODEL_NOISE =
-  /(embedding|whisper|tts|audio|image|vision|rerank|guard|clip|stable-diffusion)/i;
+  /(embedding|embed|whisper|tts|audio|speech|ocr|voxtral|bark|moderation|rerank|guard|clip|stable-diffusion|bge)/i;
 
 /** Ranks the live list: free and general-purpose chat models first. */
-export function recommendOpenRouterModels(
-  models: OpenRouterModelInfo[],
-  limit = 3,
-): string[] {
+export function rankChatModels(models: ChatModelInfo[], limit = 3): string[] {
   const score = (id: string): number => {
     if (MODEL_NOISE.test(id)) return Number.NEGATIVE_INFINITY;
     let value = 0;
     if (id.endsWith(":free")) value += 40; // free tier first
     if (/flash/i.test(id)) value += 30;
     if (/gemini/i.test(id)) value += 20;
-    if (/lite|mini|nano|haiku/i.test(id)) value += 10;
-    if (/sonnet|claude|gpt-4o-mini/i.test(id)) value += 5;
+    if (/lite|mini|nano|haiku|small/i.test(id)) value += 10;
+    if (/sonnet|claude|gpt-4o-mini|gpt-oss/i.test(id)) value += 5;
     if (/preview|experimental|\bexp\b/i.test(id)) value -= 20;
     return value;
   };
@@ -147,7 +163,7 @@ function schemaAsPrompt(schema?: Record<string, unknown>): string {
 
 function buildBody(
   model: string,
-  options: OpenRouterGenerateOptions,
+  options: ChatGenerateOptions,
 ): Record<string, unknown> {
   return {
     model,
@@ -171,7 +187,8 @@ function chat(
     headers: {
       "content-type": "application/json",
       Authorization: `Bearer ${requireKey(creds)}`,
-      // OpenRouter reads these for attribution on its dashboard.
+      // OpenRouter reads these for attribution on its dashboard. The other
+      // vendors ignore unknown headers, so they ride along harmlessly.
       "HTTP-Referer": "http://localhost:3000",
       "X-Title": "EdusGPT",
     },
@@ -181,7 +198,7 @@ function chat(
   });
 }
 
-export interface OpenRouterGenerateOptions {
+export interface ChatGenerateOptions {
   system?: string;
   prompt: string;
   schema?: Record<string, unknown>;
@@ -214,12 +231,13 @@ async function ping(
   } catch (error) {
     return {
       ok: false,
-      message: error instanceof Error ? error.message : "Không gọi được OpenRouter.",
+      message:
+        error instanceof Error ? error.message : `Không gọi được ${vendorLabel(creds)}.`,
     };
   }
 }
 
-export async function validateOpenRouterKey(creds: ProviderCredentials): Promise<{
+export async function validateChatKey(creds: ProviderCredentials): Promise<{
   ok: boolean;
   message: string;
   model?: string;
@@ -228,16 +246,16 @@ export async function validateOpenRouterKey(creds: ProviderCredentials): Promise
 }> {
   const startedAt = Date.now();
 
-  let models: OpenRouterModelInfo[];
+  let models: ChatModelInfo[];
   try {
-    models = await listOpenRouterModels(creds);
+    models = await listChatModels(creds);
   } catch (error) {
     return {
       ok: false,
       message:
         error instanceof GeminiError || error instanceof Error
           ? error.message
-          : "Không gọi được OpenRouter.",
+          : `Không gọi được ${vendorLabel(creds)}.`,
     };
   }
 
@@ -250,7 +268,7 @@ export async function validateOpenRouterKey(creds: ProviderCredentials): Promise
     if (id && !candidates.includes(id)) candidates.push(id);
   };
   push(creds.model);
-  for (const id of recommendOpenRouterModels(models, 4)) push(id);
+  for (const id of rankChatModels(models, 4)) push(id);
 
   let lastMessage = "";
   for (const candidate of candidates.slice(0, 4)) {
@@ -275,9 +293,9 @@ export async function validateOpenRouterKey(creds: ProviderCredentials): Promise
   return { ok: false, message: lastMessage, models: models.length };
 }
 
-export async function generateOpenRouterJson<T>(
+export async function generateChatJson<T>(
   creds: ProviderCredentials,
-  options: OpenRouterGenerateOptions,
+  options: ChatGenerateOptions,
 ): Promise<{ data: T; model: string; text: string; usage?: unknown }> {
   const queue: string[] = [];
   const push = (id?: string) => {
@@ -285,7 +303,7 @@ export async function generateOpenRouterJson<T>(
   };
   push(options.model?.trim() || creds.model);
   try {
-    for (const id of recommendOpenRouterModels(await listOpenRouterModels(creds), 3)) {
+    for (const id of rankChatModels(await listChatModels(creds), 3)) {
       push(id);
     }
   } catch {
@@ -318,7 +336,7 @@ export async function generateOpenRouterJson<T>(
       );
     } catch (error) {
       lastError = new GeminiError(
-        error instanceof Error ? error.message : "Không gọi được OpenRouter.",
+        error instanceof Error ? error.message : `Không gọi được ${vendorLabel(creds)}.`,
         502,
       );
       transientStreak += 1;
@@ -405,7 +423,9 @@ export async function generateOpenRouterJson<T>(
 
   throw (
     lastError ??
-    new GeminiError("Hết thời gian chờ OpenRouter. Bấm lại sau ít phút.", 504)
+    new GeminiError(
+      `Hết thời gian chờ ${vendorLabel(creds)}. Bấm lại sau ít phút.`,
+      504,
+    )
   );
 }
-

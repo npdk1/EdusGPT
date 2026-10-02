@@ -15,10 +15,21 @@ import {
   validateAntigravity,
 } from "./antigravity";
 import {
-  generateOpenRouterJson,
-  listOpenRouterModels,
-  validateOpenRouterKey,
-} from "./openrouter";
+  generateChatJson,
+  listChatModels,
+  validateChatKey,
+} from "./openai-compatible";
+
+/**
+ * Providers that speak the OpenAI chat-completions dialect, served by one
+ * adapter. They differ only in base URL and label, both from the provider map.
+ */
+const OPENAI_COMPATIBLE: readonly ProviderId[] = [
+  "openrouter",
+  "groq",
+  "nvidia",
+  "mistral",
+];
 
 /**
  * Provider-agnostic front door.
@@ -57,9 +68,10 @@ export type GenerateOptions = {
   validate?: (data: unknown) => string | null;
 };
 
-const isOpenRouter = (creds: ProviderCredentials) => creds.provider === "openrouter";
 const isAntigravity = (creds: ProviderCredentials) =>
   creds.provider === "antigravity";
+const isOpenAICompatible = (creds: ProviderCredentials) =>
+  OPENAI_COMPATIBLE.includes(creds.provider);
 
 /**
  * Whether a listed model can actually write a lesson.
@@ -76,8 +88,8 @@ function canWriteLessons(provider: ProviderId, id: string): boolean {
   // The local agent resolves "auto" itself and only ever emits the requested
   // JSON, so every curated Antigravity entry is lesson-capable.
   if (provider === "antigravity") return true;
-  // Gemini's own ids must be a gemini text model; OpenRouter nests vendor
-  // paths, so only the noise check applies to it.
+  // Gemini's own ids must be a gemini text model; every other vendor nests or
+  // prefixes ids differently, so only the noise check applies.
   if (provider === "gemini") return isTextModel(id);
   return !isNoiseModel(id);
 }
@@ -85,8 +97,8 @@ function canWriteLessons(provider: ProviderId, id: string): boolean {
 export async function listModels(creds: ProviderCredentials): Promise<ModelInfo[]> {
   const models = isAntigravity(creds)
     ? listAntigravityModels(creds)
-    : isOpenRouter(creds)
-      ? await listOpenRouterModels(creds)
+    : isOpenAICompatible(creds)
+      ? await listChatModels(creds)
       : await listGeminiModels(creds);
   return models.filter((model) => canWriteLessons(creds.provider, model.id));
 }
@@ -103,8 +115,8 @@ export async function validateKey(creds: ProviderCredentials): Promise<Validatio
       latencyMs: Date.now() - started,
     };
   }
-  return isOpenRouter(creds)
-    ? validateOpenRouterKey(creds)
+  return isOpenAICompatible(creds)
+    ? validateChatKey(creds)
     : validateGeminiKey(creds);
 }
 
@@ -121,8 +133,8 @@ export async function generateJson<T>(
     });
     return { data, model: creds.model, text: JSON.stringify(data) };
   }
-  return isOpenRouter(creds)
-    ? generateOpenRouterJson<T>(creds, options)
+  return isOpenAICompatible(creds)
+    ? generateChatJson<T>(creds, options)
     : generateGeminiJson<T>(creds, options);
 }
 

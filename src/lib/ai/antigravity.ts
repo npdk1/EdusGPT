@@ -10,7 +10,7 @@ import {
   isQuotaExhausted,
   repairJson,
 } from "./gemini";
-import type { OpenRouterModelInfo } from "./openrouter";
+import type { ChatModelInfo } from "./openai-compatible";
 
 const execFileAsync = promisify(execFile);
 
@@ -161,7 +161,7 @@ export async function describeAntigravity(): Promise<{
  * request handler and the list is stable between CLI upgrades. Run
  * `agy models` yourself if a new model shows up that isn't here.
  */
-export function listAntigravityModels(creds: ProviderCredentials): OpenRouterModelInfo[] {
+export function listAntigravityModels(creds: ProviderCredentials): ChatModelInfo[] {
   void creds;
   return ANTIGRAVITY_MODELS;
 }
@@ -178,7 +178,7 @@ export function normaliseAntigravityModel(model: string | undefined): string {
   return ANTIGRAVITY_MODELS.some((entry) => entry.id === id) ? id : "auto";
 }
 
-const ANTIGRAVITY_MODELS: OpenRouterModelInfo[] = [
+const ANTIGRAVITY_MODELS: ChatModelInfo[] = [
     {
       id: "auto",
       displayName: "Antigravity auto (agent tự chọn model)",

@@ -11,8 +11,15 @@ import path from "node:path";
  * Providers share one shape so the routes never branch on vendor:
  *   gemini      — x-goog-api-key against generativelanguage.googleapis.com
  *   openrouter  — Bearer token against the OpenAI-compatible /chat/completions
+ *   groq        — same dialect, free tier, separate daily quota
+ *   nvidia      — same dialect, free prototyping endpoints
+ *   mistral     — same dialect, free-mode project credits
  *   antigravity — local `agy` agent binary (Antigravity CLI), no key, the agent
  *                 itself reads files and teaches from the course library
+ *
+ * The four Bearer-token entries differ only in base URL and vendor label, so
+ * one adapter (`./openai-compatible`) serves all of them. Adding another
+ * OpenAI-compatible vendor is therefore a config entry, not new code.
  */
 
 /**
@@ -32,7 +39,14 @@ const LEGACY_ENV_FILE = path.join(process.cwd(), ".env.local");
 export const DATA_DIR = path.join(process.cwd(), "data");
 export const SETTINGS_FILE = path.join(DATA_DIR, "ai-settings.json");
 
-export const PROVIDER_IDS = ["gemini", "openrouter", "antigravity"] as const;
+export const PROVIDER_IDS = [
+  "gemini",
+  "openrouter",
+  "groq",
+  "nvidia",
+  "mistral",
+  "antigravity",
+] as const;
 export type ProviderId = (typeof PROVIDER_IDS)[number];
 
 /**
@@ -104,6 +118,63 @@ export const PROVIDERS: Record<ProviderId, ProviderSpec> = {
     keyHintPrefix: "sk-or",
     docs: "https://openrouter.ai/docs",
   },
+  groq: {
+    id: "groq",
+    kind: "cloud",
+    label: "Groq",
+    signupUrl: "https://console.groq.com/keys",
+    keyEnvNames: ["GROQ_API_KEY"],
+    defaultBaseUrl: "https://api.groq.com/openai/v1",
+    // Fastest free inference available, and the only reason to add it: its
+    // no-card tier is metered per model (200k tokens/day), which fails at a
+    // completely different point than OpenRouter's request-count cap.
+    defaultModel: "openai/gpt-oss-120b",
+    // Groq removed Llama from the free plan in 2026; these three are what the
+    // rate-limit table actually lists. `agy models` / /models stays the source
+    // of truth at runtime — this list is only the offline fallback.
+    modelChoices: [
+      "openai/gpt-oss-120b",
+      "qwen/qwen3.8-27b",
+      "openai/gpt-oss-20b",
+    ],
+    keyHintPrefix: "gsk_",
+    docs: "https://console.groq.com/docs/rate-limits",
+  },
+  nvidia: {
+    id: "nvidia",
+    kind: "cloud",
+    label: "NVIDIA API",
+    signupUrl: "https://build.nvidia.com",
+    keyEnvNames: ["NVIDIA_API_KEY"],
+    defaultBaseUrl: "https://integrate.api.nvidia.com/v1",
+    defaultModel: "meta/llama-3.3-70b-instruct",
+    modelChoices: [
+      "meta/llama-3.3-70b-instruct",
+      "openai/gpt-oss-120b",
+      "nvidia/llama-3.1-nemotron-70b-instruct",
+      "qwen/qwen3-coder-480b-a35b-instruct",
+      "deepseek-ai/deepseek-r1",
+    ],
+    keyHintPrefix: "nvapi-",
+    docs: "https://build.nvidia.com/explore/discover",
+  },
+  mistral: {
+    id: "mistral",
+    kind: "cloud",
+    label: "Mistral",
+    signupUrl: "https://console.mistral.ai/api-keys",
+    keyEnvNames: ["MISTRAL_API_KEY"],
+    defaultBaseUrl: "https://api.mistral.ai/v1",
+    defaultModel: "mistral-small-latest",
+    modelChoices: [
+      "mistral-small-latest",
+      "magistral-medium-latest",
+      "ministral-8b-latest",
+      "codestral-latest",
+      "open-mistral-nemo",
+    ],
+    docs: "https://docs.mistral.ai/deployment/laplateforme/tier/",
+  },
   antigravity: {
     id: "antigravity",
     kind: "cli",
@@ -154,6 +225,9 @@ export const PLANNED_CLI_PROVIDERS = [
 const ALLOWED_BASE_HOSTS: Record<ProviderId, readonly string[]> = {
   gemini: ["generativelanguage.googleapis.com"],
   openrouter: ["openrouter.ai"],
+  groq: ["api.groq.com"],
+  nvidia: ["integrate.api.nvidia.com"],
+  mistral: ["api.mistral.ai"],
   antigravity: [],
 };
 

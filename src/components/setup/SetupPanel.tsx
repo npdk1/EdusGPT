@@ -42,6 +42,9 @@ type LiveModels = Partial<Record<ProviderId, LiveModel[]>>;
 const PROVIDER_MARKS: Record<ProviderId, { src: string; alt: string }> = {
   gemini: { src: "/providers/gemini.svg", alt: "Logo Gemini" },
   openrouter: { src: "/providers/openrouter.svg", alt: "Logo OpenRouter" },
+  groq: { src: "/providers/groq.svg", alt: "Mark Groq" },
+  nvidia: { src: "/providers/nvidia.svg", alt: "Mark NVIDIA API" },
+  mistral: { src: "/providers/mistral.svg", alt: "Mark Mistral" },
   antigravity: { src: "/providers/antigravity.svg", alt: "Logo Antigravity CLI" },
 };
 
