@@ -9,14 +9,12 @@ import path from "node:path";
  * `data/ai-settings.json` so the browser can show state without the secret.
  *
  * Providers share one shape so the routes never branch on vendor:
- *   gemini      — x-goog-api-key against generativelanguage.googleapis.com
- *   openrouter  — Bearer token against the OpenAI-compatible /chat/completions
  *   groq        — same dialect, free tier, separate daily quota
  *   nvidia      — same dialect, free prototyping endpoints
  *   antigravity — local `agy` agent binary (Antigravity CLI), no key, the agent
  *                 itself reads files and teaches from the course library
  *
- * The three Bearer-token entries differ only in base URL and vendor label, so
+ * The two Bearer-token entries differ only in base URL and vendor label, so
  * one adapter (`./openai-compatible`) serves all of them. Adding another
  * OpenAI-compatible vendor is therefore a config entry, not new code.
  */
@@ -38,13 +36,7 @@ const LEGACY_ENV_FILE = path.join(process.cwd(), ".env.local");
 export const DATA_DIR = path.join(process.cwd(), "data");
 export const SETTINGS_FILE = path.join(DATA_DIR, "ai-settings.json");
 
-export const PROVIDER_IDS = [
-  "gemini",
-  "openrouter",
-  "groq",
-  "nvidia",
-  "antigravity",
-] as const;
+export const PROVIDER_IDS = ["groq", "nvidia", "antigravity"] as const;
 export type ProviderId = (typeof PROVIDER_IDS)[number];
 
 /**
@@ -73,77 +65,6 @@ export interface ProviderSpec {
 }
 
 export const PROVIDERS: Record<ProviderId, ProviderSpec> = {
-  gemini: {
-    id: "gemini",
-    kind: "cloud",
-    label: "Google Gemini",
-    signupUrl: "https://aistudio.google.com/apikey",
-    keyEnvNames: ["GEMINI_API_KEY", "GOOGLE_API_KEY"],
-    defaultBaseUrl: "https://generativelanguage.googleapis.com/v1beta",
-    // An alias Google keeps current, so the default never rots the way a pinned
-    // id does (`gemini-2.5-flash` became unavailable to new projects).
-    defaultModel: "gemini-flash-latest",
-    modelChoices: [
-      "gemini-flash-latest",
-      "gemini-flash-lite-latest",
-      "gemini-3.8-flash",
-      "gemini-3.7-flash",
-      "gemini-3.5-flash",
-      "gemini-3.1-flash-lite",
-      "gemini-pro-latest",
-      "gemini-2.5-flash",
-    ],
-    keyHintPrefix: "AIza",
-    docs: "https://ai.google.dev/gemini-api/docs/rate-limits",
-  },
-  openrouter: {
-    id: "openrouter",
-    kind: "cloud",
-    label: "OpenRouter",
-    signupUrl: "https://openrouter.ai/keys",
-    keyEnvNames: ["OPENROUTER_API_KEY"],
-    defaultBaseUrl: "https://openrouter.ai/api/v1",
-    // Every id here answered 200 with real JSON on an account that has never
-    // bought credits. That qualifier is the whole story for this provider:
-    // OpenRouter's paid ids all answer `402 Insufficient credits` for this key,
-    // so only the `:free` tier is reachable. Probing all 17 `:free` ids the
-    // account can see left 5 that answer.
-    //
-    // The list this replaces was built on a broken test: it accepted a model
-    // whenever `JSON.parse(content)` worked, and OpenRouter's own 402 body is
-    // valid JSON, so 66 dead ids looked healthy. A probe here has to check the
-    // HTTP status and a non-empty `choices[0].message.content` too.
-    //
-    // `nvidia/nemotron-3-ultra-550b-a55b:free` leads because it is also the one
-    // model that generated a complete lesson on NVIDIA's own endpoint. Two more
-    // ids are reachable but unverified (`qwen/qwen3.8-27b:free` and
-    // `poolside/laguna-xs-2.1:free` answered 429 while probing), so they are left
-    // out rather than shipped on the strength of a rate-limit error.
-    //
-    // What a real lesson attempt looks like on this tier, measured: of the five
-    // only some finish. The 550b `:free` alias comes back with empty content,
-    // `cohere/north-mini-code:free` gives up after the first scene, and three
-    // ids answer with English reasoning instead of JSON — which the fallback
-    // queue then rescues, so a lesson does get written but by an id nobody can
-    // name. Re-running them to find out which one exposed the second wall: the
-    // daily free-request cap, `Rate limit exceeded: free-models-per-day. Add 10
-    // credits to unlock 1000 free model requests per day`.
-    //
-    // So with a key that has never been topped up this provider answers a health
-    // check but cannot be relied on to finish a lesson. The ids stay because they
-    // are what `/setup` can still validate; the note under the key box says the
-    // same to the user.
-    defaultModel: "nvidia/nemotron-3-ultra-550b-a55b:free",
-    modelChoices: [
-      "nvidia/nemotron-3-ultra-550b-a55b:free",
-      "google/gemma-4-31b-it:free",
-      "google/gemma-4-26b-a4b-it:free",
-      "dots-studio/dots-3-note-preview:free",
-      "cohere/north-mini-code:free",
-    ],
-    keyHintPrefix: "sk-or",
-    docs: "https://openrouter.ai/docs",
-  },
   groq: {
     id: "groq",
     kind: "cloud",
@@ -153,7 +74,7 @@ export const PROVIDERS: Record<ProviderId, ProviderSpec> = {
     defaultBaseUrl: "https://api.groq.com/openai/v1",
     // Fastest free inference available, and the only reason to add it: its
     // no-card tier is metered per model (200k tokens/day), which fails at a
-    // completely different point than OpenRouter's request-count cap.
+    // completely different point than NVIDIA's per-minute request cap.
     defaultModel: "openai/gpt-oss-120b",
     // Groq removed Llama from the free plan in 2026, which leaves one model here
     // that both answers JSON mode and clears a real lesson:
@@ -256,8 +177,6 @@ export const PLANNED_CLI_PROVIDERS = [
  * silent, which is exactly what makes it dangerous.
  */
 const ALLOWED_BASE_HOSTS: Record<ProviderId, readonly string[]> = {
-  gemini: ["generativelanguage.googleapis.com"],
-  openrouter: ["openrouter.ai"],
   groq: ["api.groq.com"],
   nvidia: ["integrate.api.nvidia.com"],
   antigravity: [],
@@ -308,10 +227,6 @@ export function validateBaseUrl(provider: ProviderId, raw: string): string {
   return url.toString().replace(/\/+$/, "");
 }
 
-export const DEFAULT_BASE_URL = PROVIDERS.gemini.defaultBaseUrl;
-export const DEFAULT_MODEL = PROVIDERS.gemini.defaultModel;
-export const MODEL_CHOICES = PROVIDERS.gemini.modelChoices;
-
 /**
  * Where a key came from: the real process env (shell/deployment), the `.env`
  * file the app writes, or nowhere. `"env.local"` is still accepted when read
@@ -351,13 +266,10 @@ export interface ProviderCredentials {
   source: KeySource;
 }
 
-/** Kept as an alias so existing call sites keep compiling. */
-export type GeminiCredentials = ProviderCredentials;
-
 const FALLBACK_SETTINGS: AiSettings = {
-  provider: "gemini",
-  model: PROVIDERS.gemini.defaultModel,
-  baseUrl: PROVIDERS.gemini.defaultBaseUrl,
+  provider: "nvidia",
+  model: PROVIDERS.nvidia.defaultModel,
+  baseUrl: PROVIDERS.nvidia.defaultBaseUrl,
   keyHints: {},
   keySources: {},
   baseUrls: {},
@@ -447,7 +359,7 @@ export async function readSettings(): Promise<AiSettings> {
     const legacyHint = (parsed as { keyHint?: string }).keyHint ?? null;
     const provider = PROVIDER_IDS.includes(parsed.provider as ProviderId)
       ? (parsed.provider as ProviderId)
-      : "gemini";
+      : "nvidia";
     // `keySource: "env.local"` was written before the file was renamed to
     // `.env`; normalise it so the UI never has to know the old name.
     const normaliseSources = (
@@ -553,7 +465,7 @@ export async function resolveProvider(
   const provider: ProviderId = PROVIDER_IDS.includes(declared as ProviderId)
     ? (declared as ProviderId)
     : settings.provider;
-  const spec = PROVIDERS[provider] ?? PROVIDERS.gemini;
+  const spec = PROVIDERS[provider] ?? PROVIDERS.nvidia;
 
   let apiKey: string | null = null;
   let source: KeySource = "none";
@@ -604,11 +516,6 @@ export async function resolveProvider(
     spec.defaultModel;
 
   return { provider, apiKey, baseUrl, model, source };
-}
-
-/** Kept so existing call sites keep working; resolves the active provider. */
-export async function resolveGemini(): Promise<GeminiCredentials> {
-  return resolveProvider();
 }
 
 /** Public (browser-safe) status — never includes the key itself. */
@@ -696,8 +603,8 @@ export async function saveApiKey(
   apiKey: string,
   options?: { provider?: ProviderId; model?: string; baseUrl?: string },
 ): Promise<AiSettings> {
-  const provider = options?.provider ?? "gemini";
-  const spec = PROVIDERS[provider] ?? PROVIDERS.gemini;
+  const provider = options?.provider ?? "nvidia";
+  const spec = PROVIDERS[provider] ?? PROVIDERS.nvidia;
   const trimmed = apiKey.trim();
   const envPrefix = spec.keyEnvNames[0].replace(/_API_KEY$/, "");
   const model = options?.model?.trim() || spec.defaultModel;
@@ -735,14 +642,6 @@ export async function saveApiKey(
   });
 }
 
-/** Legacy alias so existing routes keep working. */
-export async function saveGeminiKey(
-  apiKey: string,
-  options?: { model?: string; baseUrl?: string },
-): Promise<AiSettings> {
-  return saveApiKey(apiKey, { ...options, provider: "gemini" });
-}
-
 /**
  * Activates a CLI provider: no key exists, so this only persists the provider
  * choice + model and clears any stale base URL. Callers must validate the
@@ -752,7 +651,7 @@ export async function saveCliProvider(
   provider: ProviderId,
   options?: { model?: string },
 ): Promise<AiSettings> {
-  const spec = PROVIDERS[provider] ?? PROVIDERS.gemini;
+  const spec = PROVIDERS[provider] ?? PROVIDERS.nvidia;
   if (spec.kind !== "cli") {
     throw new Error(`saveCliProvider chỉ dùng cho provider CLI, nhận: ${provider}.`);
   }
@@ -780,7 +679,7 @@ export async function saveCliProvider(
 export async function forgetApiKey(
   provider: ProviderId,
 ): Promise<AiSettings> {
-  const spec = PROVIDERS[provider] ?? PROVIDERS.gemini;
+  const spec = PROVIDERS[provider] ?? PROVIDERS.nvidia;
   const envPrefix = spec.keyEnvNames[0].replace(/_API_KEY$/, "");
 
   const envUpdates: Record<string, undefined> = {
@@ -805,10 +704,6 @@ export async function forgetApiKey(
     lastValidationOk: null,
     lastValidationMessage: `Đã xoá key ${spec.label} khỏi .env`,
   });
-}
-
-export async function forgetGeminiKey(): Promise<AiSettings> {
-  return forgetApiKey("gemini");
 }
 
 export async function recordValidation(

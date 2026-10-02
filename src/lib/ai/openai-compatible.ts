@@ -1,12 +1,12 @@
 import type { ProviderCredentials } from "./config";
 import { PROVIDERS } from "./config";
 import {
-  GeminiError,
+  AiError,
   findDegenerateText,
   isModelUnavailable,
   isQuotaExhausted,
   repairJson,
-} from "./gemini";
+} from "./shared";
 
 /**
  * Adapter for every vendor that speaks the OpenAI chat-completions dialect.
@@ -62,7 +62,7 @@ function endpoint(creds: ProviderCredentials, suffix: string): string {
 
 function requireKey(creds: ProviderCredentials): string {
   if (!creds.apiKey) {
-    throw new GeminiError(
+    throw new AiError(
       `Chưa có API key cho ${vendorLabel(creds)}. Mở /setup, chọn ${vendorLabel(creds)} rồi dán key.`,
       428,
     );
@@ -116,7 +116,7 @@ export async function listChatModels(
     signal: AbortSignal.timeout(CATALOG_TIMEOUT_MS),
   });
   if (!response.ok) {
-    throw new GeminiError(await readError(response), response.status);
+    throw new AiError(await readError(response), response.status);
   }
   const payload = (await response.json()) as { data?: RawChatModel[] };
 
@@ -517,7 +517,7 @@ export async function validateChatKey(creds: ProviderCredentials): Promise<{
     return {
       ok: false,
       message:
-        error instanceof GeminiError || error instanceof Error
+        error instanceof AiError || error instanceof Error
           ? error.message
           : `Không gọi được ${vendorLabel(creds)}.`,
     };
@@ -615,7 +615,7 @@ export async function generateChatJson<T>(
   let queueIndex = 0;
   let transientStreak = 0;
   let throttleStreak = 0;
-  let lastError: GeminiError | null = null;
+  let lastError: AiError | null = null;
 
   const backoff = (streak: number) =>
     new Promise((resolve) =>
@@ -652,7 +652,7 @@ export async function generateChatJson<T>(
         ),
       );
     } catch (error) {
-      lastError = new GeminiError(
+      lastError = new AiError(
         error instanceof Error ? error.message : `Không gọi được ${vendorLabel(creds)}.`,
         502,
       );
@@ -690,7 +690,7 @@ export async function generateChatJson<T>(
           attempt -= 1;
           continue;
         }
-        throw new GeminiError(`Model "${model}" trả về nội dung rỗng.`);
+        throw new AiError(`Model "${model}" trả về nội dung rỗng.`);
       }
 
       const parsed = extractJson<T>(text);
@@ -698,7 +698,7 @@ export async function generateChatJson<T>(
         await debugLog(
           `BAD-JSON ${vendorLabel(creds)} model=${model} finish=${finish ?? "?"} len=${text.length} head=${text.slice(0, 160)}`,
         );
-        lastError = new GeminiError(
+        lastError = new AiError(
           `Model "${model}" trả về JSON không hợp lệ. Thử lại hoặc đổi model.`,
         );
         // Cut off mid-object: the answer is right, the budget was too small.
@@ -720,7 +720,7 @@ export async function generateChatJson<T>(
       // A small model can loop forever and still emit parseable JSON.
       const degenerate = findDegenerateText(parsed);
       if (degenerate) {
-        lastError = new GeminiError(
+        lastError = new AiError(
           `Model "${model}" lặp lại vô hạn (${degenerate}). Đang đổi model…`,
         );
         if (queueIndex + 1 < queue.length) {
@@ -732,7 +732,7 @@ export async function generateChatJson<T>(
 
       const rejection = options.validate?.(parsed) ?? null;
       if (rejection) {
-        lastError = new GeminiError(`Model "${model}": ${rejection}`);
+        lastError = new AiError(`Model "${model}": ${rejection}`);
         if (queueIndex + 1 < queue.length) {
           queueIndex += 1;
           continue;
@@ -744,7 +744,7 @@ export async function generateChatJson<T>(
     }
 
     const message = await readError(response);
-    lastError = new GeminiError(message, response.status);
+    lastError = new AiError(message, response.status);
     await debugLog(
       `HTTP ${response.status} ${vendorLabel(creds)} model=${model}: ${message}`,
     );
@@ -763,7 +763,7 @@ export async function generateChatJson<T>(
       throttleStreak += 1;
       noteThrottle(message, response.headers);
       if (throttleStreak > THROTTLE_ATTEMPTS) {
-        throw new GeminiError(
+        throw new AiError(
           `${vendorLabel(creds)} vẫn đang giới hạn tốc độ (${message}). ` +
             "Bài này cần nhiều lượt gọi liên tiếp — thử lại sau ít phút.",
           429,
@@ -782,7 +782,7 @@ export async function generateChatJson<T>(
       throttleStreak += 1;
       noteCapacity(message, response.headers);
       if (throttleStreak > THROTTLE_ATTEMPTS) {
-        throw new GeminiError(
+        throw new AiError(
           `${vendorLabel(creds)} đang quá tải (${message}). ` +
             "Hàng đợi của nhà cung cấp đầy, thử lại sau vài phút.",
           503,
@@ -798,7 +798,7 @@ export async function generateChatJson<T>(
         queueIndex += 1;
         continue;
       }
-      throw new GeminiError(
+      throw new AiError(
         `${message}. Đã thử hết model dự trữ. Thử lại sau hoặc đổi model trong /setup.`,
         response.status,
       );
@@ -820,7 +820,7 @@ export async function generateChatJson<T>(
 
   throw (
     lastError ??
-    new GeminiError(
+    new AiError(
       `Hết thời gian chờ ${vendorLabel(creds)}. Bấm lại sau ít phút.`,
       504,
     )

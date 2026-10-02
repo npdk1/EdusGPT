@@ -48,3 +48,6 @@ tsconfig.tsbuildinfo
 # Script tạo bài thử dùng một lần, không thuộc sản phẩm.
 /tmp-make-lesson.mjs
 /run-*.log
+
+# Thu muc cong cua editor; khong phai san pham.
+.serena/

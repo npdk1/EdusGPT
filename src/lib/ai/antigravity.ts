@@ -9,7 +9,7 @@ import {
   findDegenerateText,
   isQuotaExhausted,
   repairJson,
-} from "./gemini";
+} from "./shared";
 import type { ChatModelInfo } from "./openai-compatible";
 
 const execFileAsync = promisify(execFile);

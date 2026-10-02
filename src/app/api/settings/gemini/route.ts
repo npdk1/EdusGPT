@@ -54,7 +54,7 @@ export async function POST(request: NextRequest) {
 
   const provider: ProviderId = PROVIDER_IDS.includes(body.provider as ProviderId)
     ? (body.provider as ProviderId)
-    : "gemini";
+    : "nvidia";
   const spec = PROVIDERS[provider];
 
   // CLI backends have no key: the agent authenticates once, interactively, and
@@ -208,7 +208,7 @@ export async function DELETE(request: NextRequest) {
   if (!isLocalRequest(request.headers.get("host"))) {
     return NextResponse.json({ error: LOCAL_ONLY_MESSAGE }, { status: 403 });
   }
-  let provider: ProviderId = "gemini";
+  let provider: ProviderId = "nvidia";
   try {
     const body = (await request.json().catch(() => ({}))) as { provider?: string };
     if (PROVIDER_IDS.includes(body.provider as ProviderId)) {

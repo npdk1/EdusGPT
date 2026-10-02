@@ -1,7 +1,7 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { PROVIDERS, PROVIDER_IDS, resolveProvider, type ProviderId } from "@/lib/ai/config";
 import { credentialGate } from "@/lib/ai/readiness";
-import { GeminiError, listModels } from "@/lib/ai/llm";
+import { AiError, listModels } from "@/lib/ai/llm";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -53,7 +53,7 @@ export async function GET(request: NextRequest) {
     );
   } catch (error) {
     const message =
-      error instanceof GeminiError
+      error instanceof AiError
         ? error.message
         : error instanceof Error
           ? error.message

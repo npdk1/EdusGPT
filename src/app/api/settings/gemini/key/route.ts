@@ -25,7 +25,7 @@ export async function GET(request: NextRequest) {
   const requested = new URL(request.url).searchParams.get("provider");
   const provider: ProviderId = PROVIDER_IDS.includes(requested as ProviderId)
     ? (requested as ProviderId)
-    : "gemini";
+    : "nvidia";
   // CLI providers hold no secret — there is nothing to echo back into the form.
   if (PROVIDERS[provider].kind === "cli") {
     return NextResponse.json(

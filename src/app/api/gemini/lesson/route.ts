@@ -1,8 +1,8 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { resolveProvider } from "@/lib/ai/config";
 import { credentialGate } from "@/lib/ai/readiness";
-import { GeminiError, generateJson } from "@/lib/ai/llm";
-import { isQuotaExhausted } from "@/lib/ai/gemini";
+import { AiError, generateJson } from "@/lib/ai/llm";
+import { isQuotaExhausted } from "@/lib/ai/shared";
 import { SCENE_ACCENTS, SCENE_KINDS, POINTER_TARGETS, iconSetFor, newLessonId, type SlideTheme } from "@/lib/lesson/types";
 import { DEFAULT_SLIDE_THEME } from "@/lib/lesson/themes";
 import {
@@ -1036,7 +1036,7 @@ export async function POST(request: NextRequest) {
 
         const planned = (outline.scenes ?? []).slice(0, sceneCount);
         if (planned.length === 0) {
-          throw new GeminiError("Gemini không trả về cảnh nào. Thử lại.");
+          throw new AiError("Mô hình không trả về cảnh nào. Thử lại.");
         }
 
         send({
@@ -1354,7 +1354,7 @@ export async function POST(request: NextRequest) {
         // instead of shipping a deck the teacher has to audit slide by slide.
         const fallbackLimit = Math.max(3, Math.round(planned.length * 0.2));
         if (fallbackScenes > fallbackLimit) {
-          throw new GeminiError(
+          throw new AiError(
             `Chỉ viết được ${planned.length - fallbackScenes}/${planned.length} cảnh, ` +
               `phần còn lại không viết nổi (có thể đã hết hạn mức của nhà cung cấp). ` +
               `Bài chưa được lưu — thử lại sau.`,
@@ -1385,7 +1385,7 @@ export async function POST(request: NextRequest) {
         });
 
         if (!lesson) {
-          throw new GeminiError("Không dựng được bài giảng từ dàn ý.");
+          throw new AiError("Không dựng được bài giảng từ dàn ý.");
         }
 
         send({
@@ -1396,7 +1396,7 @@ export async function POST(request: NextRequest) {
         });
       } catch (error) {
         const detail =
-          error instanceof GeminiError || error instanceof Error
+          error instanceof AiError || error instanceof Error
             ? error.message
             : "Lỗi không xác định";
         // The CLI reports a spent quota in English, buried under a JSON error

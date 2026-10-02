@@ -1,14 +1,6 @@
 import type { ProviderCredentials, ProviderId } from "./config";
 import { PROVIDERS } from "./config";
-import {
-  GeminiError,
-  generateJson as generateGeminiJson,
-  isNoiseModel,
-  isTextModel,
-  listModels as listGeminiModels,
-  recommendModels,
-  validateKey as validateGeminiKey,
-} from "./gemini";
+import { AiError, isNoiseModel } from "./shared";
 import {
   generateAntigravityJson,
   listAntigravityModels,
@@ -24,7 +16,7 @@ import {
  * Providers that speak the OpenAI chat-completions dialect, served by one
  * adapter. They differ only in base URL and label, both from the provider map.
  */
-const OPENAI_COMPATIBLE: readonly ProviderId[] = ["openrouter", "groq", "nvidia"];
+const OPENAI_COMPATIBLE: readonly ProviderId[] = ["groq", "nvidia"];
 
 /**
  * Provider-agnostic front door.
@@ -72,29 +64,23 @@ const isOpenAICompatible = (creds: ProviderCredentials) =>
  * Whether a listed model can actually write a lesson.
  *
  * The vendor list endpoints return *every* model the account can see, which
- * includes image, TTS, music, embedding and research models — 29 of Gemini's
- * 44 were of that kind. Those cannot emit our JSON, so putting them in the
- * dropdown only lets someone pick one and get a schema-validation failure with
- * no hint about why. Filtering here keeps the number honest rather than the
- * dropdown long.
+ * includes image, TTS, music, embedding and research models. Those cannot emit
+ * our JSON, so putting them in the dropdown only lets someone pick one and get
+ * a schema-validation failure with no hint about why. Filtering here keeps the
+ * number honest rather than the dropdown long.
  */
 function canWriteLessons(provider: ProviderId, id: string): boolean {
   if (!id) return false;
   // The local agent resolves "auto" itself and only ever emits the requested
   // JSON, so every curated Antigravity entry is lesson-capable.
   if (provider === "antigravity") return true;
-  // Gemini's own ids must be a gemini text model; every other vendor nests or
-  // prefixes ids differently, so only the noise check applies.
-  if (provider === "gemini") return isTextModel(id);
   return !isNoiseModel(id);
 }
 
 export async function listModels(creds: ProviderCredentials): Promise<ModelInfo[]> {
   const models = isAntigravity(creds)
     ? listAntigravityModels(creds)
-    : isOpenAICompatible(creds)
-      ? await listChatModels(creds)
-      : await listGeminiModels(creds);
+    : await listChatModels(creds);
   return models.filter((model) => canWriteLessons(creds.provider, model.id));
 }
 
@@ -110,9 +96,7 @@ export async function validateKey(creds: ProviderCredentials): Promise<Validatio
       latencyMs: Date.now() - started,
     };
   }
-  return isOpenAICompatible(creds)
-    ? validateChatKey(creds)
-    : validateGeminiKey(creds);
+  return validateChatKey(creds);
 }
 
 export async function generateJson<T>(
@@ -128,17 +112,15 @@ export async function generateJson<T>(
     });
     return { data, model: creds.model, text: JSON.stringify(data) };
   }
-  return isOpenAICompatible(creds)
-    ? generateChatJson<T>(creds, options)
-    : generateGeminiJson<T>(creds, options);
+  return generateChatJson<T>(creds, options);
 }
 
 /**
  * Fallback ranking used by the setup screen when only the static list is known.
  */
 export function suggestModels(creds: ProviderCredentials, limit = 4): string[] {
-  const spec = PROVIDERS[creds.provider] ?? PROVIDERS.gemini;
+  const spec = PROVIDERS[creds.provider];
   return spec.modelChoices.slice(0, limit);
 }
 
-export { GeminiError, recommendModels };
+export { AiError };

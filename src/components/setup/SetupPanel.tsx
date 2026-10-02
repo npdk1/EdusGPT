@@ -33,15 +33,13 @@ type ProviderEntry = PublicAiStatus["providers"][number];
 /**
  * Live model lists, kept per provider.
  *
- * One shared array was the bug behind a very confusing dropdown: pulling the
- * Gemini list and then switching to OpenRouter left the OpenRouter select
- * offering `gemini-*` ids that vendor does not serve.
+ * One shared array was the bug behind a very confusing dropdown: pulling one
+ * vendor’s list and then switching to another left the select offering ids that the
+ * new vendor does not serve.
  */
 type LiveModels = Partial<Record<ProviderId, LiveModel[]>>;
 
 const PROVIDER_MARKS: Record<ProviderId, { src: string; alt: string }> = {
-  gemini: { src: "/providers/gemini.svg", alt: "Logo Gemini" },
-  openrouter: { src: "/providers/openrouter.svg", alt: "Logo OpenRouter" },
   groq: { src: "/providers/groq.svg", alt: "Mark Groq" },
   nvidia: { src: "/providers/nvidia.svg", alt: "Mark NVIDIA API" },
   antigravity: { src: "/providers/antigravity.svg", alt: "Logo Antigravity CLI" },
@@ -56,10 +54,6 @@ const PROVIDER_MARKS: Record<ProviderId, { src: string; alt: string }> = {
  * the vendor's own docs, which is what each sentence ends with.
  */
 const PROVIDER_NOTES: Record<ProviderId, string> = {
-  gemini:
-    "Gói free tính theo project trong AI Studio, hạn mức công bố theo model và thay đổi theo thời gian — xem trang rate limits của Google.",
-  openrouter:
-    "Chỉ nhóm model đuôi :free chạy được với key chưa nạp tiền — mọi model trả phí đều báo hết credit. Nhóm :free giới hạn theo số request mỗi phút và mỗi ngày, và danh sách model free có thể bị đổi bất kỳ lúc nào. Lưu ý: các model :free hiện có đều chưa sinh nổi một bài hoàn chỉnh, nên nạp credits là cách duy nhất để dùng nhà cung cấp này tạo bài. Gói :free còn bị giới hạn số request free mỗi ngày cho cả tài khoản.",
   groq:
     "Gói free không cần thẻ, tính theo token mỗi ngày cho từng model, nên hết hạn mức sẽ tự reset vào 0 giờ theo giờ UTC. Trần thấp hơn con số trên: một bài chỉ khoảng 8.000 token/phút, nên bài dài sẽ phải chờ xen kẽ.",
   nvidia:
@@ -712,7 +706,7 @@ export function SetupPanel() {
                 onKeyDown={(event) => {
                   if (event.key === "Enter") void submit(true);
                 }}
-                placeholder={activeProvider === "openrouter" ? "sk-or-v1-…" : "AIzaSy…"}
+                placeholder={activeProvider === "nvidia" ? "nvapi-…" : "gsk_…"}
                 autoComplete="off"
                 spellCheck={false}
                 className="field"
@@ -835,9 +829,7 @@ export function SetupPanel() {
             </summary>
             <div className="mt-3">
               <label className="label" htmlFor="provider-base">
-                {activeProvider === "openrouter"
-                  ? "OPENROUTER_BASE_URL"
-                  : "GEMINI_BASE_URL"}
+                {activeProvider === "nvidia" ? "NVIDIA_BASE_URL" : "GROQ_BASE_URL"}
               </label>
               <input
                 id="provider-base"
