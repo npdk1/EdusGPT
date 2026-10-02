@@ -1091,6 +1091,11 @@ export async function POST(request: NextRequest) {
           { model: string; elapsedMs: number; retried: boolean; fallback: boolean }
         >();
         const perSceneSeconds = perScene(planned.length);
+        // The system prompt is identical for every scene call (and its
+        // retry), so build it once. Concatenating the same string N times
+        // burns CPU but never tokens — still, no reason to burn it.
+        const sceneSystemPrompt =
+          sceneSystem(useImages) + style.rules + iconRules(iconNames);
 
         /**
          * Writes one scene. Split out from the loop because the loop is batched,
@@ -1117,7 +1122,7 @@ export async function POST(request: NextRequest) {
 
           const sceneRequest = {
             model: modelOverride,
-            system: sceneSystem(useImages) + style.rules + iconRules(iconNames),
+            system: sceneSystemPrompt,
             prompt: `${context}\n\nBài: "${outline.title ?? topic}"\nCảnh ${
               index + 1
             }/${planned.length}: loại "${kind}", tiêu đề "${sceneTitle}"${

@@ -1,0 +1,280 @@
+{
+  "format": "eduai-studio/course@1",
+  "updatedAt": "2026-10-02T14:10:37.022Z",
+  "lesson": {
+    "id": "lesson-mur1j30u-zbdvon",
+    "title": "Định luật bảo toàn năng lượng",
+    "subject": "Vật lý",
+    "grade": "10",
+    "language": "vi",
+    "fps": 30,
+    "duration": 144,
+    "scenes": [
+      {
+        "id": "ai-1",
+        "kind": "cover",
+        "accent": "brand",
+        "title": "Năng lượng không bao giờ mất đi, chỉ chuyển hóa",
+        "subtitle": "Khám phá quy luật cốt lõi của vật lý",
+        "bullets": [
+          "Năng lượng chuyển đổi giữa các dạng",
+          "Tổng năng lượng hệ kín không đổi"
+        ],
+        "narration": "Chào các em, hôm nay chúng ta sẽ tìm hiểu tại sao năng lượng không bao giờ biến mất mà chỉ thay đổi hình thái. Ví dụ, khi quả bóng ném lên, năng lượng động chuyển thành năng lượng vị trí rồi ngược lại. Hãy cùng khám phá quy luật bảo toàn này nhé.",
+        "pointer": [
+          {
+            "target": "title",
+            "label": "Mở đầu giới thiệu chủ đề"
+          },
+          {
+            "target": "bullet-0",
+            "label": "Minh hoạ chuyển hóa năng lượng"
+          },
+          {
+            "target": "subtitle",
+            "label": "Nhấn mạnh mục tiêu bài học"
+          }
+        ],
+        "start": 0,
+        "duration": 24
+      },
+      {
+        "id": "ai-2",
+        "kind": "concept",
+        "accent": "gold",
+        "title": "Định luật bảo toàn: năng lượng tổng hệ kín không đổi",
+        "subtitle": "Hệ kín: không trao đổi năng lượng với môi trường",
+        "bullets": [
+          "Tổng năng lượng (động + thế) luôn không đổi trong hệ kín.",
+          "Năng lượng chỉ chuyển hóa giữa các dạng, không mất cũng không sinh ra."
+        ],
+        "visualNote": "Sơ đồ hệ kín với năng lượng động ↔ thế",
+        "narration": "Trong một hệ kín, tổng năng lượng bao gồm năng lượng động và năng lượng thế luôn giữ nguyên giá trị. Năng lượng có thể chuyển từ dạng này sang dạng khác, ví dụ quả bóng rơi chuyển thế thành động, nhưng tổng cộng không tăng cũng không giảm. Đó là nội dung cốt lõi của định luật bảo toàn năng lượng.",
+        "pointer": [
+          {
+            "target": "bullet-0",
+            "label": "tổng năng lượng bao gồm động và thế"
+          },
+          {
+            "target": "bullet-1",
+            "label": "chuyển hóa năng lượng"
+          },
+          {
+            "target": "title",
+            "label": "định luật bảo toàn"
+          }
+        ],
+        "start": 24,
+        "duration": 24
+      },
+      {
+        "id": "ai-3",
+        "kind": "formula",
+        "accent": "ember",
+        "title": "Công thức tổng năng lượng không đổi theo thời gian",
+        "subtitle": "Các dạng năng lượng phổ biến trong bài toán trung học",
+        "bullets": [
+          "Động năng K = ½ m v²",
+          "Thế năng trọng trường U_g = m g h",
+          "Thế năng đàn hồi U_e = ½ k x²"
+        ],
+        "formula": "E = K + U_g + U_e = \\text{const}",
+        "narration": "Tổng năng lượng cơ học bằng động năng cộng các thế năng. Động năng K = ½ m v², thế năng trọng trường U_g = m g h, thế năng đàn hồi U_e = ½ k x². Khi chỉ có lực bảo toàn, E = K + U_g + U_e không đổi.",
+        "pointer": [
+          {
+            "target": "title",
+            "label": "Mở đầu khái niệm tổng năng lượng"
+          },
+          {
+            "target": "formula",
+            "label": "Các thành phần năng lượng trong công thức"
+          },
+          {
+            "target": "formula",
+            "label": "Điều kiện bảo toàn năng lượng"
+          }
+        ],
+        "start": 48,
+        "duration": 24
+      },
+      {
+        "id": "ai-4",
+        "kind": "example",
+        "accent": "brand",
+        "title": "Ví dụ: quả bóng ném lên – động năng chuyển thành vị trí năng",
+        "subtitle": "Tính năng lượng tại đỉnh và tại mặt đất bằng nhau",
+        "bullets": [
+          "Động năng ban đầu chuyển hết thành vị trí năng tại đỉnh",
+          "Độ cao tối đa h = v²/(2g)"
+        ],
+        "steps": [
+          "Cho quả bóng khối lượng m, ném lên với vận tốc v.",
+          "Động năng ban đầu Ek = ½ m v².",
+          "Tại đỉnh v = 0 ⇒ Ep = m g h, Ek = 0.",
+          "Áp dụng bảo toàn: ½ m v² = m g h ⇒ h = v²/(2g)."
+        ],
+        "formula": "E_k = \\frac{1}{2} m v^2",
+        "narration": "Xét quả bóng ném lên với vận tốc v. Động năng ban đầu là ½ m v². Tại đỉnh vận tốc bằng 0, động năng bằng 0, toàn bộ thành vị trí năng m g h. Bảo toàn năng lượng cho ½ m v² = m g h, suy ra h = v²/(2g).",
+        "pointer": [
+          {
+            "target": "title",
+            "label": "Mở đầu ví dụ"
+          },
+          {
+            "target": "formula",
+            "label": "Động năng ban đầu"
+          },
+          {
+            "target": "bullet-0",
+            "label": "Chuyển đổi năng lượng tại đỉnh"
+          },
+          {
+            "target": "bullet-1",
+            "label": "Kết luận độ cao"
+          }
+        ],
+        "start": 72,
+        "duration": 24
+      },
+      {
+        "id": "ai-5",
+        "kind": "quiz",
+        "accent": "gold",
+        "title": "Kiểm tra lại xem bạn đã hiểu chưa",
+        "subtitle": "Chọn đáp án đúng về nội dung vừa học.",
+        "bullets": [
+          "Đọc lại tóm tắt ở slide trước nếu chưa nhớ.",
+          "Chọn một đáp án, bạn sẽ được giải thích ngay."
+        ],
+        "narration": "Mình cùng kiểm tra lại xem bạn đã nắm được chưa. Đọc câu hỏi và chọn đáp án mình nghĩ là đúng. Chọn sai cũng không sao, mình sẽ giải thích lại ngay tại đây, và đó là cách nhanh nhất để biết mình cần xem lại phần nào.",
+        "quiz": {
+          "question": "Bạn đã nắm được nội dung chính của bài học này chưa?",
+          "options": [
+            {
+              "id": "opt-1",
+              "text": "Rồi, mình hiểu và tự giải thích lại được cho bạn nghe",
+              "isCorrect": true,
+              "explanation": "Đó là đúng. Tự kể lại bằng lời mình mới thật sự nắm."
+            },
+            {
+              "id": "opt-2",
+              "text": "Mình hiểu phần đầu, phần sau hơi mơ hồ",
+              "isCorrect": false,
+              "explanation": "Không sao. Xem lại phần cuối, đó là phần hay quên nhất."
+            },
+            {
+              "id": "opt-3",
+              "text": "Chưa, mình thấy hơi nhiều thông tin",
+              "isCorrect": false,
+              "explanation": "Bài dài là chủ ý. Xem lại dàn ý theo thứ tự, từng phần một sẽ dễ hơn."
+            },
+            {
+              "id": "opt-4",
+              "text": "Chưa, mình muốn xem ví dụ thực tế thêm",
+              "isCorrect": false,
+              "explanation": "Phần ví dụ gần cuối bài. Đọc nó sẽ giúp bạn thấy bài học dùng được thế nào."
+            }
+          ]
+        },
+        "start": 96,
+        "duration": 24
+      },
+      {
+        "id": "ai-6",
+        "kind": "summary",
+        "accent": "gold",
+        "title": "Tóm tắt: năng lượng tổng hệ kín không đổi, chỉ đổi dạng",
+        "subtitle": "Ôn lại ba ý chính: định nghĩa, công thức, ví dụ",
+        "bullets": [
+          "Năng lượng tổng hệ kín không đổi",
+          "E_tổng = E_động + E_thể",
+          "Quả bóng ném lên rơi xuống đổi động ↔ vị"
+        ],
+        "narration": "Đầu tiên, năng lượng của hệ kín luôn giữ nguyên tổng giá trị. Tiếp theo, công thức E_tổng = E_động + E_thể hiện rõ sự chuyển đổi. Cuối cùng, ví dụ quả bóng ném lên rồi rơi xuống minh hoạ chuyển đổi giữa động và vị. Hãy nhớ ba ý này cho bài kiểm tra.",
+        "pointer": [
+          {
+            "target": "title",
+            "label": "Mở đầu nhắc lại định luật"
+          },
+          {
+            "target": "bullet-0",
+            "label": "Định nghĩa bảo toàn"
+          },
+          {
+            "target": "bullet-1",
+            "label": "Công thức tổng quát"
+          },
+          {
+            "target": "bullet-2",
+            "label": "Ví dụ minh hoạ"
+          }
+        ],
+        "start": 120,
+        "duration": 24
+      }
+    ],
+    "chapters": [
+      {
+        "id": "ch-1",
+        "title": "Năng lượng không bao giờ mất đi, chỉ chuyển hóa",
+        "start": 0,
+        "end": 24,
+        "sceneIds": [
+          "ai-1"
+        ]
+      },
+      {
+        "id": "ch-2",
+        "title": "Định luật bảo toàn: năng lượng tổng hệ kín không đổi",
+        "start": 24,
+        "end": 48,
+        "sceneIds": [
+          "ai-2"
+        ]
+      },
+      {
+        "id": "ch-3",
+        "title": "Công thức tổng năng lượng không đổi theo thời gian",
+        "start": 48,
+        "end": 72,
+        "sceneIds": [
+          "ai-3"
+        ]
+      },
+      {
+        "id": "ch-4",
+        "title": "Ví dụ: quả bóng ném lên – động năng chuyển thành vị trí năng",
+        "start": 72,
+        "end": 96,
+        "sceneIds": [
+          "ai-4"
+        ]
+      },
+      {
+        "id": "ch-5",
+        "title": "Kiểm tra lại xem bạn đã hiểu chưa",
+        "start": 96,
+        "end": 120,
+        "sceneIds": [
+          "ai-5"
+        ]
+      },
+      {
+        "id": "ch-6",
+        "title": "Tóm tắt: năng lượng tổng hệ kín không đổi, chỉ đổi dạng",
+        "start": 120,
+        "end": 144,
+        "sceneIds": [
+          "ai-6"
+        ]
+      }
+    ],
+    "source": "gemini",
+    "theme": "paper",
+    "voice": "vi-VN-HoaiMyNeural",
+    "showPointer": true,
+    "pointerColor": "#f59e0b",
+    "model": "nvidia/nemotron-3-ultra-550b-a55b",
+    "createdAt": "2026-10-02T14:10:36.942Z"
+  }
+}

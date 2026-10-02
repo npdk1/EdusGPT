@@ -3,10 +3,10 @@
     {
       "provider": "nvidia",
       "model": "nvidia/nemotron-3-ultra-550b-a55b",
-      "lessonId": "lesson-mur1bbyg-tgenws",
+      "lessonId": "lesson-mur1j30u-zbdvon",
       "scenes": 6,
-      "words": 330,
-      "verifiedAt": "2026-10-02T14:04:35.276Z"
+      "words": 325,
+      "verifiedAt": "2026-10-02T14:10:36.945Z"
     },
     {
       "provider": "nvidia",

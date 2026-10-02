@@ -343,15 +343,18 @@ async function synthesizeOnce(
   // the real duration of everything before it.
   let timelineOffset = 0;
 
+  // One metadata handshake per narration, not per chunk: the voice and the
+  // format never change mid-narration, and each setMetadata is a network
+  // round trip. (The third argument stays mandatory — msedge-tts reads
+  // `metadataOptions.voiceLocale` unguarded, so omitting it throws as soon as
+  // the voice is already configured.)
+  await shared.tts.setMetadata(name, OUTPUT_FORMAT.AUDIO_24KHZ_96KBITRATE_MONO_MP3, {
+    // Without this the service returns audio with no word timings at all, and
+    // the subtitle can only be highlighted by guessing.
+    wordBoundaryEnabled: true,
+  });
+
   for (const piece of pieces) {
-    // The third argument is mandatory in practice: msedge-tts reads
-    // `metadataOptions.voiceLocale` unguarded, so omitting it throws as soon as
-    // the voice is already configured — which is every call after the first.
-    await shared.tts.setMetadata(name, OUTPUT_FORMAT.AUDIO_24KHZ_96KBITRATE_MONO_MP3, {
-      // Without this the service returns audio with no word timings at all, and
-      // the subtitle can only be highlighted by guessing.
-      wordBoundaryEnabled: true,
-    });
     const dir = await mkdtemp(join(shared.dir, "chunk-"));
     try {
       // Work around a bug in msedge-tts: when a chunk comes back with no

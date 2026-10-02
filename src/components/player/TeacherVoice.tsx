@@ -421,41 +421,72 @@ export function TeacherVoice({
   );
 
   /**
-   * Warms the next slide's audio while the current one is playing.
+   * Fetches one slide's narration into the cache without playing it.
    *
-   * Synthesis is seconds of latency; without this a presenter reaches slide 2
-   * and hears nothing. Cached hits are free, and misses only move work earlier
-   * rather than adding to it.
+   * Shared by the prefetch below (current slide, before the first play) and
+   * the lookahead (next slides, while playing). The guards make double work
+   * impossible: a slide already cached or already being warmed is skipped, and
+   * the in-flight set is cleared even when the fetch fails.
+   */
+  const warmScene = useCallback(
+    (index: number) => {
+      const scene = lesson.scenes[index];
+      if (!scene?.narration) return;
+      const key = `${scene.id}|${voice}`;
+      if (cacheRef.current.has(key) || warmingRef.current.has(key)) return;
+
+      warmingRef.current.add(key);
+      fetch("/api/tts", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ text: scene.narration, voice }),
+      })
+        .then(async (response) => {
+          if (response.ok) {
+            // Timings are warmed too, otherwise the next slide would come back
+            // without a highlight even though the server sent one.
+            const words = await decodeWordMarks(response.headers.get("x-tts-words"));
+            cacheRef.current.set(key, {
+              url: URL.createObjectURL(await response.blob()),
+              words,
+            });
+          }
+        })
+        .catch(() => {
+          // Warming is best effort; the real request retries on its own.
+        })
+        .finally(() => warmingRef.current.delete(key));
+    },
+    [lesson.scenes, voice],
+  );
+
+  /**
+   * Prefetches the current slide as soon as the lesson loads.
+   *
+   * The old behaviour only warmed while playing, so the very first press of
+   * play always paid a full cold synthesis (tens of seconds) on slide 0. This
+   * moves that work to the moment the deck opens, when the student is still
+   * reading the title — by the time they press play, slide 0 is usually a
+   * cache hit.
+   */
+  useEffect(() => {
+    if (!enabled) return;
+    warmScene(activeSceneIndex);
+  }, [activeSceneIndex, enabled, lesson.scenes, voice, warmScene]);
+
+  /**
+   * Warms the next two slides' audio while the current one is playing.
+   *
+   * Synthesis is seconds of latency; without this a presenter reaches the next
+   * slide and hears nothing. Two slides instead of one because a short slide
+   * can finish before the single lookahead lands. Cached hits are free, and
+   * misses only move work earlier rather than adding to it.
    */
   useEffect(() => {
     if (!enabled || !timebase.playing) return;
-    const next = lesson.scenes[activeSceneIndex + 1];
-    if (!next?.narration) return;
-    const key = `${next.id}|${voice}`;
-    if (cacheRef.current.has(key) || warmingRef.current.has(key)) return;
-
-    warmingRef.current.add(key);
-    fetch("/api/tts", {
-      method: "POST",
-      headers: { "content-type": "application/json" },
-      body: JSON.stringify({ text: next.narration, voice }),
-    })
-      .then(async (response) => {
-        if (response.ok) {
-          // Timings are warmed too, otherwise the next slide would come back
-          // without a highlight even though the server sent one.
-          const words = await decodeWordMarks(response.headers.get("x-tts-words"));
-          cacheRef.current.set(key, {
-            url: URL.createObjectURL(await response.blob()),
-            words,
-          });
-        }
-      })
-      .catch(() => {
-        // Warming is best effort; the real request retries on its own.
-      })
-      .finally(() => warmingRef.current.delete(key));
-  }, [activeSceneIndex, enabled, lesson.scenes, timebase.playing, voice]);
+    warmScene(activeSceneIndex + 1);
+    warmScene(activeSceneIndex + 2);
+  }, [activeSceneIndex, enabled, lesson.scenes, timebase.playing, voice, warmScene]);
 
   /**
    * Everything the playhead subscription needs, published after `speak` exists.
