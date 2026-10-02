@@ -1,6 +1,7 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { buildStandaloneHtml } from "@/lib/lesson/export-html";
 import { coerceLesson } from "@/lib/lesson/validate";
+import { alignNarration, type KaraokeToken } from "@/lib/karaoke";
 import { DEFAULT_VOICE, isViVoice, speak } from "@/lib/server/tts";
 import { slugify } from "@/lib/format";
 
@@ -39,14 +40,19 @@ export async function POST(request: NextRequest) {
   // server to speak. A scene that fails to synthesise stays silent instead of
   // failing the whole export.
   const audios: (string | null)[] = [];
+  // Word timings per scene, aligned to the narration on the server with the
+  // same `alignNarration` the web player uses. The standalone file has no
+  // server to ask, so the highlight data rides inside it next to the audio.
+  const karaoke: KaraokeToken[][] = [];
   let audioBytes = 0;
   for (const scene of lesson.scenes) {
     if (!scene.narration) {
       audios.push(null);
+      karaoke.push([]);
       continue;
     }
     try {
-      const { audio } = await speak(scene.narration, voice);
+      const { audio, words } = await speak(scene.narration, voice);
       audioBytes += audio.length;
       if (audioBytes > MAX_EXPORT_AUDIO_BYTES) {
         return NextResponse.json(
@@ -58,12 +64,14 @@ export async function POST(request: NextRequest) {
         );
       }
       audios.push(`data:audio/mpeg;base64,${Buffer.from(audio).toString("base64")}`);
+      karaoke.push(alignNarration(scene.narration, words));
     } catch {
       audios.push(null);
+      karaoke.push([]);
     }
   }
 
-  const html = buildStandaloneHtml({ lesson, audios });
+  const html = buildStandaloneHtml({ lesson, audios, karaoke });
   const filename = `${slugify(lesson.title) || "bai-giang"}.html`;
 
   return new NextResponse(html, {

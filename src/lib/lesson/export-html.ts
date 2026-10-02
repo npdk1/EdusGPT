@@ -1,4 +1,5 @@
 import { SCENE_KIND_LABEL, type Lesson } from "./types";
+import { type KaraokeToken } from "@/lib/karaoke";
 import {
   isDarkTheme,
   resolveSlideTheme,
@@ -39,6 +40,8 @@ ul.bullets li{display:flex;gap:10px;font-size:15px;line-height:1.55;color:#cfe0e
 ul.bullets li:before{content:"";width:6px;height:6px;margin-top:9px;border-radius:999px;background:var(--brand);flex:0 0 auto}
 .formula{margin:0;width:fit-content;border:1px solid rgba(246,185,59,.4);background:rgba(246,185,59,.1);color:var(--gold3);border-radius:12px;padding:12px 16px;font-family:ui-monospace,monospace;font-size:clamp(16px,2.2vw,24px);font-weight:600}
 .narration{margin:0;max-width:820px;border-left:2px solid rgba(15,161,146,.7);background:rgba(12,21,26,.75);border-radius:12px;padding:10px 14px;font-size:13px;font-style:italic;color:var(--mist3)}
+.narration .w{border-radius:4px;padding:0 1px;transition:background-color .15s,color .15s}
+.narration .w.lit{background:var(--brand);color:#04090b;font-style:normal}
 .bar{position:absolute;left:0;bottom:0;height:3px;width:100%;transform:scaleX(0);transform-origin:left center;background:linear-gradient(90deg,var(--brand),var(--gold3))}
 .controls{margin-top:16px;border:1px solid var(--line);background:rgba(8,15,19,.75);border-radius:16px;padding:14px}
 .row{display:flex;flex-wrap:wrap;align-items:center;gap:8px}
@@ -105,7 +108,36 @@ function escapeHtml(value: string): string {
     .replace(/"/g, "&quot;");
 }
 
-function sceneMarkup(lesson: Lesson, audios: (string | null)[]): string {
+/**
+ * Renders one scene's narration as word spans carrying their speaking windows.
+ * Tokens without a window (no timings, or the alignment's coverage check
+ * rejected them) render as plain text — a wrong highlight is worse than none,
+ * the same rule the web player follows.
+ */
+function narrationMarkup(narration: string, tokens: KaraokeToken[]): string {
+  // No timings (a scene whose voice failed to synthesise, or an alignment the
+  // coverage check rejected): fall back to the plain paragraph. The spans must
+  // never change the visible text, so an empty token list renders no spans.
+  const inner =
+    tokens.length > 0
+      ? tokens
+          .map((token) => {
+            const text = escapeHtml(token.text);
+            if (token.start === null || token.end === null) {
+              return `<span class="w">${text}</span>`;
+            }
+            return `<span class="w" data-s="${token.start.toFixed(3)}" data-e="${token.end.toFixed(3)}">${text}</span>`;
+          })
+          .join("")
+      : escapeHtml(narration);
+  return `<p class="narration">&ldquo;${inner}&rdquo;</p>`;
+}
+
+function sceneMarkup(
+  lesson: Lesson,
+  audios: (string | null)[],
+  karaoke: KaraokeToken[][],
+): string {
   return lesson.scenes
     .map((scene, index) => {
       const glowClass = scene.accent === "brand" ? "glow" : `glow ${scene.accent}`;
@@ -128,7 +160,7 @@ function sceneMarkup(lesson: Lesson, audios: (string | null)[]): string {
         `<ul class="bullets">${bullets}</ul>`,
         scene.formula ? `<p class="formula">${escapeHtml(scene.formula)}</p>` : "",
         scene.narration
-          ? `<p class="narration">&ldquo;${escapeHtml(scene.narration)}&rdquo;</p>`
+          ? narrationMarkup(scene.narration, karaoke[index] ?? [])
           : "",
         `<div class="bar"></div>`,
         `</div></article>`,
@@ -201,6 +233,51 @@ const PLAYER_JS = `
   var voiceOn = true;
   var voiceScene = -1;
 
+  // --- karaoke subtitle: each narration word carries its speaking window in
+  // data-s/data-e (seconds into the scene's own clip, aligned server-side).
+  // The voice element is the clock: every paint looks up the word spoken at
+  // the current offset and lights exactly that span. Words without a window
+  // never light up, and a scene with no timings keeps its plain paragraph.
+  var karaokeTracks = [];
+  for (var ki = 0; ki < data.scenes.length; ki++) {
+    var kel = stage.querySelector('[data-scene="' + ki + '"] .narration');
+    var spans = kel ? kel.querySelectorAll('span.w[data-s]') : [];
+    var starts = [];
+    var order = [];
+    for (var si = 0; si < spans.length; si++) {
+      var s = parseFloat(spans[si].getAttribute('data-s'));
+      if (isFinite(s)) { starts.push(s); order.push(si); }
+    }
+    karaokeTracks.push({ spans: spans, starts: starts, order: order, lit: -1 });
+  }
+
+  function paintKaraoke() {
+    var idx = sceneIndexAt(current);
+    for (var i = 0; i < karaokeTracks.length; i++) {
+      var track = karaokeTracks[i];
+      var want = -1;
+      if (i === idx && track.starts.length > 0) {
+        var off = Math.max(0, current - data.scenes[idx].start);
+        var low = 0, high = track.starts.length - 1;
+        while (low <= high) {
+          var mid = (low + high) >> 1;
+          if (track.starts[mid] <= off) { want = mid; low = mid + 1; }
+          else { high = mid - 1; }
+        }
+        if (want >= 0) want = track.order[want];
+      }
+      if (want !== track.lit) {
+        if (track.lit >= 0 && track.spans[track.lit]) {
+          track.spans[track.lit].className = 'w';
+        }
+        if (want >= 0 && track.spans[want]) {
+          track.spans[want].className = 'w lit';
+        }
+        track.lit = want;
+      }
+    }
+  }
+
   function sceneIndexAt(t) {
     var idx = 0;
     for (var i = 0; i < data.scenes.length; i++) {
@@ -245,6 +322,7 @@ const PLAYER_JS = `
     tl.time(current);
     range.value = String(current);
     clock.textContent = fmt(current) + ' / ' + fmt(total);
+    paintKaraoke();
     if (playing) {
       var idx = sceneIndexAt(current);
       if (idx !== voiceScene) syncVoice();
@@ -355,9 +433,15 @@ export interface StandaloneHtmlOptions {
    * narration. The file stays server-free: every clip rides inside it.
    */
   audios: (string | null)[];
+  /**
+   * One aligned token list per scene, from the same `alignNarration` the web
+   * player uses. Scenes with no timings pass an empty list and render their
+   * narration as plain text.
+   */
+  karaoke: KaraokeToken[][];
 }
 
-export function buildStandaloneHtml({ lesson, audios }: StandaloneHtmlOptions): string {
+export function buildStandaloneHtml({ lesson, audios, karaoke }: StandaloneHtmlOptions): string {
   const preset = resolveSlideTheme(lesson.theme);
   const theme = themeCss(preset.palette, isDarkTheme(lesson.theme));
   // `<` is escaped so the JSON blob can never close its own <script> tag.
@@ -385,7 +469,7 @@ export function buildStandaloneHtml({ lesson, audios }: StandaloneHtmlOptions): 
     <span class="tag mono">${lesson.duration.toFixed(1)}s &middot; ${lesson.scenes.length} cảnh</span>
     <span class="tag">${escapeHtml(preset.label)}</span>
   </div>
-  <div class="stage" id="stage"><div class="grid"></div>${sceneMarkup(lesson, audios)}</div>
+  <div class="stage" id="stage"><div class="grid"></div>${sceneMarkup(lesson, audios, karaoke)}</div>
   <div class="controls">
     <audio id="voice" preload="auto" style="display:none"></audio>
     <div class="row">
