@@ -27,7 +27,7 @@ body{background-image:radial-gradient(50rem 32rem at 12% -8%,rgba(36,189,172,.16
 .stage{position:relative;aspect-ratio:16/9;background:var(--ink2);border:1px solid var(--line);border-radius:18px;overflow:hidden}
 .stage .grid{position:absolute;inset:0;background-image:linear-gradient(to right,rgba(46,70,80,.35) 1px,transparent 1px),linear-gradient(to bottom,rgba(46,70,80,.35) 1px,transparent 1px);background-size:52px 52px}
 .scene{position:absolute;inset:0;opacity:0;visibility:hidden}
-.card{position:relative;height:100%;display:flex;flex-direction:column;justify-content:center;gap:14px;padding:40px 46px;overflow:hidden}
+.card{position:relative;height:100%;display:flex;flex-direction:column;justify-content:center;gap:14px;padding:40px 46px 120px;overflow:hidden}
 .glow{position:absolute;inset:0;pointer-events:none;background:linear-gradient(140deg,rgba(36,189,172,.22),transparent 62%)}
 .glow.gold{background:linear-gradient(140deg,rgba(246,185,59,.22),transparent 62%)}
 .glow.ember{background:linear-gradient(140deg,rgba(255,138,91,.2),transparent 62%)}
@@ -39,7 +39,7 @@ ul.bullets{margin:0;padding:0;list-style:none;display:flex;flex-direction:column
 ul.bullets li{display:flex;gap:10px;font-size:15px;line-height:1.55;color:#cfe0e1}
 ul.bullets li:before{content:"";width:6px;height:6px;margin-top:9px;border-radius:999px;background:var(--brand);flex:0 0 auto}
 .formula{margin:0;width:fit-content;border:1px solid rgba(246,185,59,.4);background:rgba(246,185,59,.1);color:var(--gold3);border-radius:12px;padding:12px 16px;font-family:ui-monospace,monospace;font-size:clamp(16px,2.2vw,24px);font-weight:600}
-.narration{margin:0;max-width:820px;padding:10px 0;font-size:17px;line-height:1.7;font-style:italic;color:var(--mist3)}
+.narration{position:absolute;left:0;right:0;bottom:16px;width:min(860px,92%);margin:0 auto;text-align:center;padding:6px 0;font-size:17px;line-height:1.7;font-style:italic;color:var(--mist3);text-shadow:0 1px 8px rgba(0,0,0,.35);pointer-events:none}
 .narration .w{border-radius:4px;padding:0 1px;transition:background-color .15s,color .15s}
 .narration .w.lit{background:var(--brand);color:#04090b;font-style:normal}
 .bar{position:absolute;left:0;bottom:0;height:3px;width:100%;transform:scaleX(0);transform-origin:left center;background:linear-gradient(90deg,var(--brand),var(--gold3))}
