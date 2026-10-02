@@ -2,6 +2,14 @@
   "entries": [
     {
       "provider": "nvidia",
+      "model": "nvidia/nemotron-3-ultra-550b-a55b",
+      "lessonId": "lesson-mur1bbyg-tgenws",
+      "scenes": 6,
+      "words": 330,
+      "verifiedAt": "2026-10-02T14:04:35.276Z"
+    },
+    {
+      "provider": "nvidia",
       "model": "openai/gpt-oss-20b",
       "lessonId": "lesson-mur0ge51-5p6gds",
       "scenes": 5,
@@ -23,14 +31,6 @@
       "scenes": 6,
       "words": 337,
       "verifiedAt": "2026-10-02T13:32:50.826Z"
-    },
-    {
-      "provider": "nvidia",
-      "model": "nvidia/nemotron-3-ultra-550b-a55b",
-      "lessonId": "lesson-mur01o1z-pn0d6d",
-      "scenes": 6,
-      "words": 339,
-      "verifiedAt": "2026-10-02T13:29:04.776Z"
     },
     {
       "provider": "groq",
