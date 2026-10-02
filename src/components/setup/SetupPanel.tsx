@@ -463,20 +463,21 @@ export function SetupPanel() {
 
   // Keep the selected model in the dropdown even if the live list has not
   // loaded, and offer the *selected provider's* models — not the active
-  // backend's — so switching provider in the UI is coherent.
-  const options = useMemo(
-    () =>
-      Array.from(
-        new Set(
-          [
-            model,
-            ...(liveModels[activeProvider] ?? []).map((item) => item.id),
-            ...(activeProviderInfo?.modelChoices ?? []),
-          ].filter((item): item is string => Boolean(item)),
-        ),
+  // backend's — so switching provider in the UI is coherent. Ids with a
+  // trust tick sort first so a refresh keeps the proven models on top;
+  // everything else keeps its existing order (stable sort).
+  const options = useMemo(() => {
+    const trusted = new Set(activeProviderInfo?.trustedModels ?? []);
+    return Array.from(
+      new Set(
+        [
+          model,
+          ...(liveModels[activeProvider] ?? []).map((item) => item.id),
+          ...(activeProviderInfo?.modelChoices ?? []),
+        ].filter((item): item is string => Boolean(item)),
       ),
-    [activeProvider, activeProviderInfo, liveModels, model],
-  );
+    ).sort((a, b) => Number(trusted.has(b)) - Number(trusted.has(a)));
+  }, [activeProvider, activeProviderInfo, liveModels, model]);
 
   const liveCount = liveModels[activeProvider]?.length ?? 0;
 
