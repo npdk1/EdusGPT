@@ -39,7 +39,7 @@ ul.bullets{margin:0;padding:0;list-style:none;display:flex;flex-direction:column
 ul.bullets li{display:flex;gap:10px;font-size:15px;line-height:1.55;color:#cfe0e1}
 ul.bullets li:before{content:"";width:6px;height:6px;margin-top:9px;border-radius:999px;background:var(--brand);flex:0 0 auto}
 .formula{margin:0;width:fit-content;border:1px solid rgba(246,185,59,.4);background:rgba(246,185,59,.1);color:var(--gold3);border-radius:12px;padding:12px 16px;font-family:ui-monospace,monospace;font-size:clamp(16px,2.2vw,24px);font-weight:600}
-.narration{margin:0;max-width:820px;border-left:2px solid rgba(15,161,146,.7);background:rgba(12,21,26,.75);border-radius:12px;padding:10px 14px;font-size:13px;font-style:italic;color:var(--mist3)}
+.narration{margin:0;max-width:820px;padding:10px 0;font-size:17px;line-height:1.7;font-style:italic;color:var(--mist3)}
 .narration .w{border-radius:4px;padding:0 1px;transition:background-color .15s,color .15s}
 .narration .w.lit{background:var(--brand);color:#04090b;font-style:normal}
 .bar{position:absolute;left:0;bottom:0;height:3px;width:100%;transform:scaleX(0);transform-origin:left center;background:linear-gradient(90deg,var(--brand),var(--gold3))}
@@ -93,8 +93,6 @@ function themeCss(palette: SlidePalette, dark: boolean): string {
     `color-mix(in srgb, #f6b93b 22%, transparent),transparent 62%)}` +
     `.glow.ember{background:linear-gradient(140deg,` +
     `color-mix(in srgb, #ff8a5b 20%, transparent),transparent 62%)}` +
-    `.narration{border-left-color:color-mix(in srgb, ${p.accent} 70%, transparent);` +
-    `background:color-mix(in srgb, ${p.bgSunk} 75%, transparent)}` +
     `.formula{border-color:color-mix(in srgb, #f6b93b 40%, transparent);` +
     `background:color-mix(in srgb, #f6b93b 10%, transparent)}`
   );
