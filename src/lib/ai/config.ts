@@ -13,11 +13,10 @@ import path from "node:path";
  *   openrouter  — Bearer token against the OpenAI-compatible /chat/completions
  *   groq        — same dialect, free tier, separate daily quota
  *   nvidia      — same dialect, free prototyping endpoints
- *   mistral     — same dialect, free-mode project credits
  *   antigravity — local `agy` agent binary (Antigravity CLI), no key, the agent
  *                 itself reads files and teaches from the course library
  *
- * The four Bearer-token entries differ only in base URL and vendor label, so
+ * The three Bearer-token entries differ only in base URL and vendor label, so
  * one adapter (`./openai-compatible`) serves all of them. Adding another
  * OpenAI-compatible vendor is therefore a config entry, not new code.
  */
@@ -44,7 +43,6 @@ export const PROVIDER_IDS = [
   "openrouter",
   "groq",
   "nvidia",
-  "mistral",
   "antigravity",
 ] as const;
 export type ProviderId = (typeof PROVIDER_IDS)[number];
@@ -147,33 +145,21 @@ export const PROVIDERS: Record<ProviderId, ProviderSpec> = {
     signupUrl: "https://build.nvidia.com",
     keyEnvNames: ["NVIDIA_API_KEY"],
     defaultBaseUrl: "https://integrate.api.nvidia.com/v1",
-    defaultModel: "meta/llama-3.3-70b-instruct",
+    defaultModel: "nvidia/nemotron-3-ultra-550b-a55b",
+    // Both of these were called through the API with `response_format:
+    // json_object` and answered with parseable JSON, so they are listed because
+    // they work for lesson generation, not because a blog post recommended them.
+    // NVIDIA retired three of the five ids this list used to carry
+    // (`meta/llama-3.3-70b-instruct` and `openai/gpt-oss-120b` reached end of
+    // life on 2026-08-26 and 2026-09-03, `nvidia/llama-3.1-nemotron-70b-instruct`
+    // now 404s), which is why an old pin failed at setup with a timeout instead
+    // of a useful "model gone" message.
     modelChoices: [
-      "meta/llama-3.3-70b-instruct",
-      "openai/gpt-oss-120b",
-      "nvidia/llama-3.1-nemotron-70b-instruct",
-      "qwen/qwen3-coder-480b-a35b-instruct",
-      "deepseek-ai/deepseek-r1",
+      "nvidia/nemotron-3-ultra-550b-a55b",
+      "nvidia/nemotron-3-super-120b-a12b",
     ],
     keyHintPrefix: "nvapi-",
     docs: "https://build.nvidia.com/explore/discover",
-  },
-  mistral: {
-    id: "mistral",
-    kind: "cloud",
-    label: "Mistral",
-    signupUrl: "https://console.mistral.ai/api-keys",
-    keyEnvNames: ["MISTRAL_API_KEY"],
-    defaultBaseUrl: "https://api.mistral.ai/v1",
-    defaultModel: "mistral-small-latest",
-    modelChoices: [
-      "mistral-small-latest",
-      "magistral-medium-latest",
-      "ministral-8b-latest",
-      "codestral-latest",
-      "open-mistral-nemo",
-    ],
-    docs: "https://docs.mistral.ai/deployment/laplateforme/tier/",
   },
   antigravity: {
     id: "antigravity",
@@ -227,7 +213,6 @@ const ALLOWED_BASE_HOSTS: Record<ProviderId, readonly string[]> = {
   openrouter: ["openrouter.ai"],
   groq: ["api.groq.com"],
   nvidia: ["integrate.api.nvidia.com"],
-  mistral: ["api.mistral.ai"],
   antigravity: [],
 };
 

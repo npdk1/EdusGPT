@@ -1,0 +1,886 @@
+{
+  "format": "eduai-studio/course@1",
+  "updatedAt": "2026-10-02T07:23:59.401Z",
+  "lesson": {
+    "id": "lesson-muqn05qb-jhwdpm",
+    "title": "Phân tích tích phân xác định – từ cơ bản tới ứng dụng",
+    "subject": "Toán",
+    "grade": "12",
+    "language": "vi",
+    "fps": 30,
+    "duration": 608,
+    "scenes": [
+      {
+        "id": "ai-1",
+        "kind": "cover",
+        "accent": "brand",
+        "title": "Phân tích là công cụ đo lường tổng lũy",
+        "subtitle": "Từ đường cong tới diện tích thực tế",
+        "bullets": [
+          "Diện tích dưới đường cong = tích phân xác định",
+          "Áp dụng: vận tốc → quãng đường, lực → công"
+        ],
+        "narration": "Chào các em, hôm nay chúng ta bắt đầu hành trình tìm hiểu tích phân xác định. Tích phân cho phép đo diện tích nằm dưới một đường cong, biến hình học thành số liệu chính xác. Ví dụ, từ đồ thị vận tốc theo thời gian ta tính được quãng đường đi thực tế. Đó chính là lý do tích phân trở thành công cụ đo lường tổng lũy trong khoa học và kỹ thuật.",
+        "pointer": [
+          {
+            "target": "title",
+            "label": "Mở đầu giới thiệu chủ đề"
+          },
+          {
+            "target": "bullet-0",
+            "label": "Giải thích ý nghĩa tích phân"
+          },
+          {
+            "target": "bullet-1",
+            "label": "Ví dụ ứng dụng thực tế"
+          },
+          {
+            "target": "subtitle",
+            "label": "Tóm gọn thông điệp chính"
+          }
+        ],
+        "start": 0,
+        "duration": 38
+      },
+      {
+        "id": "ai-2",
+        "kind": "concept",
+        "accent": "gold",
+        "title": "Định nghĩa tích phân xác định",
+        "subtitle": "Giới hạn của tổng Riemann khi phân đoạn tiến tới 0",
+        "bullets": [
+          "Chia đoạn, chọn điểm, tính tổng Riemann",
+          "Dùng để tính diện tích, thể tích, đại lượng vật lý"
+        ],
+        "formula": "\\int_{a}^{b} f(x) \\, dx = \\lim_{\\max \\Delta x_i \\to 0} \\sum_{i=1}^{n} f(\\xi_i) \\Delta x_i",
+        "narration": "Tích phân xác định của hàm số f trên đoạn [a,b] là giới hạn của tổng Riemann khi độ dài phân đoạn lớn nhất tiến tới không. Cụ thể, ta chia đoạn thành n phần nhỏ, chọn điểm đại diện trong mỗi phần, tính tổng diện tích các hình chữ nhật và để n tiến tới vô cùng. Nếu giới hạn này tồn tại và không phụ thuộc vào cách chọn điểm, ta gọi đó là ∫ từ a đến b f(x)dx. Đây là nền tảng để tính diện tích, thể tích và nhiều đại lượng vật lý khác.",
+        "pointer": [
+          {
+            "target": "title",
+            "label": "Định nghĩa chính"
+          },
+          {
+            "target": "bullet-0",
+            "label": "Quy trình chia đoạn và tổng Riemann"
+          },
+          {
+            "target": "formula",
+            "label": "Công thức giới hạn tổng Riemann"
+          },
+          {
+            "target": "bullet-1",
+            "label": "Ứng dụng thực tế"
+          }
+        ],
+        "start": 38,
+        "duration": 38
+      },
+      {
+        "id": "ai-3",
+        "kind": "concept",
+        "accent": "ember",
+        "title": "Tích phân giải quyết diện tích đường cong",
+        "subtitle": "Công thức cơ bản chỉ áp dụng cho hình khối đơn giản",
+        "bullets": [
+          "Diện tích dưới parabol y = x² từ 0 đến 1 không có công thức sẵn",
+          "Tích phân cộng dồn vô số mảnh diện tích nhỏ cho kết quả chính xác"
+        ],
+        "narration": "Khi hình vẽ có đường cong, ta không thể chia thành hình chữ nhật hay tam giác đơn giản. Ví dụ, diện tích dưới parabol y = x^2 từ 0 đến 1 không có công thức sẵn. Tích phân cho phép cộng dồn vô số mảnh diện tích nhỏ để tìm kết quả chính xác. Đó là lý do ta giới thiệu khái niệm tích phân xác định ngay hôm nay.",
+        "pointer": [
+          {
+            "target": "title",
+            "label": "Mở đầu vấn đề"
+          },
+          {
+            "target": "bullet-0",
+            "label": "Ví dụ parabol"
+          },
+          {
+            "target": "bullet-1",
+            "label": "Ý tưởng cộng dồn"
+          },
+          {
+            "target": "subtitle",
+            "label": "Kết luận nhu cầu tích phân"
+          }
+        ],
+        "start": 76,
+        "duration": 38
+      },
+      {
+        "id": "ai-4",
+        "kind": "formula",
+        "accent": "brand",
+        "title": "Công thức tính tích phân của hàm lũy thừa",
+        "subtitle": "∫ x^n dx = x^(n+1)/(n+1) + C (n≠-1)",
+        "bullets": [
+          "Ví dụ: ∫ x^2 dx = x^3/3 + C.",
+          "Điều kiện n ≠ -1 để tránh chia cho zero; khi n = -1 kết quả là ln|x| + C."
+        ],
+        "formula": "\\int x^n dx = \\frac{x^{n+1}}{n+1} + C (n\\neq -1)",
+        "narration": "Chúng ta bắt đầu với công thức tính tích phân của hàm lũy thừa, đó là tiêu đề của slide này. Công thức cụ thể là ∫ x^n dx = x^(n+1)/(n+1) + C, áp dụng khi n khác –1, như phụ đề đã ghi. Ví dụ, với n = 2 ta có ∫ x^2 dx = x^3/3 + C, minh hoạ cho trường hợp n dương. Lưu ý rằng khi n = –1 công thức trên không dùng được; thay vào đó ta có ∫ x^{-1} dx = ln|x| + C, điều này được nêu trong bullet thứ hai.",
+        "pointer": [
+          {
+            "target": "title",
+            "label": "giới thiệu tiêu đề"
+          },
+          {
+            "target": "subtitle",
+            "label": "nêu công thức"
+          },
+          {
+            "target": "bullet-0",
+            "label": "ví dụ n=2"
+          },
+          {
+            "target": "bullet-1",
+            "label": "điều kiện n=-1"
+          }
+        ],
+        "start": 114,
+        "duration": 38
+      },
+      {
+        "id": "ai-5",
+        "kind": "diagram",
+        "accent": "gold",
+        "title": "Minh họa diện tích dưới đường cong y = x^2 từ 0 tới 2",
+        "subtitle": "Chopping vùng thành các hình thang nhỏ",
+        "bullets": [
+          "Chia khoảng [0,2] thành 4 đoạn Δx = 0,5",
+          "Tổng diện tích 4 hình thang ≈ 2,75",
+          "Giới hạn n→∞ cho diện tích chính xác 8/3"
+        ],
+        "graph": {
+          "title": "y = x^2 trên [0,2]",
+          "xlabel": "x",
+          "ylabel": "y",
+          "xs": [
+            0,
+            0.25,
+            0.5,
+            0.75,
+            1,
+            1.25,
+            1.5,
+            1.75,
+            2
+          ],
+          "ys": [
+            0,
+            0.0625,
+            0.25,
+            0.5625,
+            1,
+            1.5625,
+            2.25,
+            3.0625,
+            4
+          ],
+          "vlines": [
+            {
+              "x": 0,
+              "label": "0"
+            },
+            {
+              "x": 2,
+              "label": "2"
+            }
+          ]
+        },
+        "narration": "Thầy vẽ đồ thị y bằng x bình phương từ không đến hai. Vùng dưới đường cong được cắt thành ba hình thang cùng chiều rộng không coma năm. Diện tích mỗi hình thang bằng trung bình hai đáy nhân chiều cao, cộng lại ta được gần hai chín. Khi tăng số hình thang lên rất nhiều, tổng này tiến tới giá trị chính xác tám phần ba. Hãy quan sát đường cong và các hình thang trên slide.",
+        "pointer": [
+          {
+            "target": "graph",
+            "label": "đồ thị y = x^2"
+          },
+          {
+            "target": "bullet-0",
+            "label": "chia khoảng Δx = 0,5"
+          },
+          {
+            "target": "bullet-1",
+            "label": "tổng hình thang ≈ 2,75"
+          },
+          {
+            "target": "bullet-2",
+            "label": "giới hạn diện tích 8/3"
+          }
+        ],
+        "start": 152,
+        "duration": 38
+      },
+      {
+        "id": "ai-6",
+        "kind": "example",
+        "accent": "ember",
+        "title": "Ví dụ: Tích phân của hàm bậc hai",
+        "subtitle": "Tính ∫_0^3 (2x+1) dx",
+        "bullets": [
+          "Nguyên hàm của 2x+1 là x² + x",
+          "Áp dụng Newton‑Leibniz: F(3)−F(0)",
+          "Kết quả = 12"
+        ],
+        "steps": [
+          "Tìm nguyên hàm: F(x) = x² + x",
+          "Áp dụng công thức: ∫_0^3 (2x+1)dx = F(3) − F(0)",
+          "Thay số: F(3) = 9 + 3 = 12, F(0) = 0",
+          "Kết luận: giá trị tích phân = 12"
+        ],
+        "formula": "\\int_{0}^{3} (2x+1)\\,dx = \\left[x^{2}+x\\right]_{0}^{3}=12",
+        "visualNote": "Đồ thị y = 2x+1 và diện tích dưới đường cong từ 0 đến 3",
+        "narration": "Đây là ví dụ áp dụng nguyên hàm cho hàm bậc nhất. Trước hết, chúng ta tìm nguyên hàm của 2x cộng 1, là x bình phương cộng x. Theo công thức Newton‑Leibniz, tích phân từ 0 đến 3 bằng F(3) trừ F(0). Thay số ta có F(3) bằng 9 cộng 3 bằng 12, F(0) bằng 0. Vậy giá trị tích phân trên đoạn từ 0 đến 3 bằng 12 đơn vị diện tích.",
+        "pointer": [
+          {
+            "target": "title",
+            "label": "Mở đầu ví dụ"
+          },
+          {
+            "target": "step-0",
+            "label": "Tìm nguyên hàm"
+          },
+          {
+            "target": "step-1",
+            "label": "Áp dụng Newton‑Leibniz"
+          },
+          {
+            "target": "step-2",
+            "label": "Thay số tính giá trị"
+          },
+          {
+            "target": "step-3",
+            "label": "Kết luận kết quả"
+          }
+        ],
+        "start": 190,
+        "duration": 38
+      },
+      {
+        "id": "ai-7",
+        "kind": "example",
+        "accent": "brand",
+        "title": "Ví dụ: Hàm lượng giác",
+        "subtitle": "Tính ∫_0^π sin x dx",
+        "bullets": [
+          "Nguyên hàm của sin x là -cos x",
+          "Kết quả tích phân bằng 2"
+        ],
+        "steps": [
+          "Nguyên hàm của sin x là -cos x",
+          "Áp dụng Newton-Leibniz: [-cos x] từ 0 đến π",
+          "Thay giá trị: -cos π - (-cos 0) = -(-1) - (-1) = 2"
+        ],
+        "formula": "\\int_0^{\\pi} \\sin x \\, dx = 2",
+        "visualNote": "Đồ thị sin x trên [0, π] với diện tích dưới đường cong",
+        "narration": "Chúng ta tính tích phân xác định của sin x từ 0 đến π. Nguyên hàm của sin x là trừ cos x. Theo công thức Newton-Leibniz, giá trị bằng trừ cos π trừ trừ cos 0. Cos π bằng trừ 1, cos 0 bằng 1. Do đó kết quả là trừ trừ 1 trừ trừ 1, bằng 2. Đây là diện tích dưới đồ thị sin x trên đoạn này.",
+        "pointer": [
+          {
+            "target": "title",
+            "label": "Mở đầu bài toán"
+          },
+          {
+            "target": "step-0",
+            "label": "Nêu nguyên hàm"
+          },
+          {
+            "target": "step-1",
+            "label": "Viết công thức Newton-Leibniz"
+          },
+          {
+            "target": "step-2",
+            "label": "Thay số và tính"
+          },
+          {
+            "target": "bullet-1",
+            "label": "Tóm tắt kết quả"
+          }
+        ],
+        "start": 228,
+        "duration": 38
+      },
+      {
+        "id": "ai-8",
+        "kind": "example",
+        "accent": "gold",
+        "title": "Ví dụ: Ứng dụng vật lý – khoảng cách vận tốc",
+        "subtitle": "s = ∫ v(t) dt với v(t)=3t^2",
+        "bullets": [
+          "Khoảng cách = tích phân vận tốc theo thời gian",
+          "Nguyên hàm của 3t² là t³"
+        ],
+        "steps": [
+          "Viết tích phân s = ∫₀² 3t² dt",
+          "Nguyên hàm của 3t² là t³",
+          "Thay giới hạn: 2³ − 0 = 8",
+          "Khoảng cách = 8 m"
+        ],
+        "formula": "s = \\int_{0}^{2} 3t^{2}\\,dt",
+        "narration": "Vừa rồi ta đã thấy tích phân cho diện tích dưới đường cong, giờ ta áp dụng vào chuyển động. Vận tốc của vật là v(t) = ba t bình phương. Khoảng cách đi được từ giây không đến giây hai bằng tích phân xác định của v(t) từ không đến hai. Nguyên hàm của ba t bình phương là t mũ ba. Thay giới hạn ta có hai mũ ba trừ không bằng tám. Vậy vật di chuyển tám mét trong hai giây đầu.",
+        "pointer": [
+          {
+            "target": "title",
+            "label": "mở đầu liên hệ diện tích"
+          },
+          {
+            "target": "subtitle",
+            "label": "v(t) = 3t²"
+          },
+          {
+            "target": "bullet-0",
+            "label": "khoảng cách = tích phân"
+          },
+          {
+            "target": "bullet-1",
+            "label": "nguyên hàm t³"
+          },
+          {
+            "target": "step-2",
+            "label": "thay giới hạn tính 8"
+          },
+          {
+            "target": "step-3",
+            "label": "kết quả 8 mét"
+          }
+        ],
+        "start": 266,
+        "duration": 38
+      },
+      {
+        "id": "ai-9",
+        "kind": "example",
+        "accent": "ember",
+        "title": "Bảng nguyên hàm phổ biến",
+        "subtitle": "Các hàm thường gặp và kết quả tích phân",
+        "bullets": [
+          "Tra cứu nhanh khi tính nguyên hàm",
+          "Áp dụng trực tiếp cho bài tập cơ bản"
+        ],
+        "table": {
+          "caption": "Bảng nguyên hàm phổ biến",
+          "columns": [
+            "Hàm số",
+            "Nguyên hàm"
+          ],
+          "rows": [
+            [
+              "x^n (n≠-1)",
+              "x^{n+1}/(n+1)"
+            ],
+            [
+              "1/x",
+              "ln"
+            ],
+            [
+              "e^x",
+              "e^x"
+            ],
+            [
+              "a^x (a>0, a≠1)",
+              "a^x/ln a"
+            ],
+            [
+              "sin x",
+              "-cos x"
+            ],
+            [
+              "cos x",
+              "sin x"
+            ],
+            [
+              "sec^2 x",
+              "tan x"
+            ],
+            [
+              "csc^2 x",
+              "-cot x"
+            ]
+          ]
+        },
+        "narration": "Đây là bảng tra cứu nguyên hàm của các hàm sơ cấp thường gặp. Cột bên trái ghi hàm số, cột bên phải là kết quả tích phân không xác định. Ví dụ, nguyên hàm của x mũ n là x mũ n cộng một chia n cộng một, với n khác trừ một. Hàm một phần x cho logarit tự nhiên giá trị tuyệt đối, hàm mũ e mũ x giữ nguyên, sin x cho trừ cos x, cos x cho sin x. Các công thức còn lại tương tự, bạn chỉ cần nhìn vào bảng và áp dụng ngay.",
+        "pointer": [
+          {
+            "target": "title",
+            "label": "Giới thiệu bảng tra cứu"
+          },
+          {
+            "target": "table",
+            "label": "Chỉ cột hàm số và kết quả"
+          },
+          {
+            "target": "bullet-0",
+            "label": "Ví dụ công thức x^n"
+          },
+          {
+            "target": "bullet-1",
+            "label": "Các hàm lượng giác, mũ, logarit"
+          },
+          {
+            "target": "bullet-1",
+            "label": "Hướng dẫn sử dụng bảng"
+          }
+        ],
+        "start": 304,
+        "duration": 38
+      },
+      {
+        "id": "ai-10",
+        "kind": "concept",
+        "accent": "brand",
+        "title": "Cạm bẫy: Hàm có dấu âm",
+        "subtitle": "Tích phân cho giá trị có dấu, diện tích thực phải lấy giá trị tuyệt đối",
+        "bullets": [
+          "Tích phân cho giá trị có dấu, không phải diện tích",
+          "Diện tích thực = ∫ |f(x)| dx trên đoạn",
+          "Ví dụ sin x trên [0, 3π/2] cho kết quả âm"
+        ],
+        "visualNote": "Sơ đồ: phần dưới trục Ox lấy giá trị tuyệt đối",
+        "narration": "Khi hàm số đổi dấu trên đoạn tích phân, giá trị tích phân có thể âm hoặc dương tùy phần diện tích nào chiếm ưu thế. Ví dụ, tích phân từ 0 đến 2 của sin x bằng 2, nhưng từ 0 đến 3π/2 lại cho kết quả âm vì phần dưới trục Ox lớn hơn. Do đó diện tích thực giữa đồ thị và trục hoành luôn là tích phân của giá trị tuyệt đối. Hãy nhớ lấy |f(x)| trước khi tính diện tích.",
+        "pointer": [
+          {
+            "target": "title",
+            "label": "Mở đầu nhắc cạm bẫy dấu âm"
+          },
+          {
+            "target": "bullet-2",
+            "label": "Minh hoạ bằng sin x"
+          },
+          {
+            "target": "bullet-1",
+            "label": "Công thức diện tích thực"
+          },
+          {
+            "target": "bullet-0",
+            "label": "Nhắc lại quy tắc lấy giá trị tuyệt đối"
+          }
+        ],
+        "start": 342,
+        "duration": 38
+      },
+      {
+        "id": "ai-11",
+        "kind": "concept",
+        "accent": "gold",
+        "title": "Khi nào không dùng công thức lũy thừa?",
+        "subtitle": "n = -1 dẫn tới ln|x|, không áp dụng công thức bình thường",
+        "bullets": [
+          "Công thức ∫x^n = x^{n+1}/(n+1) chỉ đúng khi n ≠ -1",
+          "Khi n = -1, nguyên hàm là ln|x| + C"
+        ],
+        "formula": "\\int x^n dx = \\frac{x^{n+1}}{n+1} \\;(n\\neq -1),\\quad \\int \\frac{1}{x}dx = \\ln|x|+C",
+        "visualNote": "So sánh hai công thức: lũy thừa và ln|x|",
+        "narration": "Thầy nhắc lại công thức lũy thừa: tích phân x mu n bằng x mu n cộng 1 chia n cộng 1, nhưng nó chỉ hoạt động khi n khác trừ 1. Nếu n bằng trừ 1, mẫu số bằng 0, công thức vỡ. Lúc này nguyên hàm của 1 chia x là ln giá trị tuyệt đối của x thêm hằng số C. Vì vậy, mỗi khi thấy mẫu số là x đơn lẻ, hãy nhớ chuyển sang ln chứ không dùng quy tắc lũy thừa.",
+        "pointer": [
+          {
+            "target": "title",
+            "label": "Mở đầu khái niệm ngoại lệ"
+          },
+          {
+            "target": "bullet-0",
+            "label": "Điều kiện n khác -1"
+          },
+          {
+            "target": "bullet-1",
+            "label": "Nguyên hàm ln|x|"
+          },
+          {
+            "target": "formula",
+            "label": "Hai công thức đối chiếu"
+          }
+        ],
+        "start": 380,
+        "duration": 38
+      },
+      {
+        "id": "ai-12",
+        "kind": "quiz",
+        "accent": "ember",
+        "title": "Bài tập tự kiểm tra",
+        "subtitle": "Tính ∫_1^4 (x^2 - 2x + 3) dx",
+        "bullets": [
+          "Nguyên hàm: x^3/3 - x^2 + 3x",
+          "Thay x = 4 và x = 1, trừ hai giá trị",
+          "Kết quả = 15"
+        ],
+        "narration": "Chào các em, đây là bài tập tự kiểm tra. Đề bài yêu cầu tính tích phân từ 1 đến 4 của x bình phương trừ 2x cộng 3. Trước hết, các em tìm nguyên hàm là x mũ ba chia ba trừ x bình phương cộng ba x. Sau đó thay giới hạn trên 4 và dưới 1, trừ hai giá trị này. Kết quả thu được là mười lăm. Hãy so sánh đáp án của em với phương án B mười lăm nhé.",
+        "pointer": [
+          {
+            "target": "title",
+            "label": "Mở đầu bài tập"
+          },
+          {
+            "target": "subtitle",
+            "label": "Đề bài tích phân"
+          },
+          {
+            "target": "bullet-0",
+            "label": "Tìm nguyên hàm"
+          },
+          {
+            "target": "bullet-1",
+            "label": "Thay giới hạn và trừ"
+          },
+          {
+            "target": "bullet-2",
+            "label": "Kết quả cuối cùng"
+          },
+          {
+            "target": "quiz",
+            "label": "So sánh với đáp án"
+          }
+        ],
+        "quiz": {
+          "question": "Giá trị của ∫_1^4 (x^2 - 2x + 3) dx là bao nhiêu?",
+          "options": [
+            {
+              "id": "A",
+              "text": "12",
+              "isCorrect": false,
+              "explanation": "Kết quả 12 sai do tính sai nguyên hàm hoặc thay giới hạn."
+            },
+            {
+              "id": "B",
+              "text": "15",
+              "isCorrect": true,
+              "explanation": "Nguyên hàm x^3/3 - x^2 + 3x, thay 4 và 1 cho hiệu 15."
+            },
+            {
+              "id": "C",
+              "text": "18",
+              "isCorrect": false,
+              "explanation": "Kết quả 18 sai, thường do quên chia 3 ở hạng tử x^3."
+            },
+            {
+              "id": "D",
+              "text": "21",
+              "isCorrect": false,
+              "explanation": "Kết quả 21 sai, thường do cộng thay vì trừ giá trị tại giới hạn dưới."
+            }
+          ]
+        },
+        "start": 418,
+        "duration": 38
+      },
+      {
+        "id": "ai-13",
+        "kind": "simulation3d",
+        "accent": "brand",
+        "title": "Mô phỏng thể tích quay quanh trục x",
+        "subtitle": "Vùng dưới y = √x từ 0 tới 4 quay tạo hình học",
+        "bullets": [
+          "Hàm y = √x trên đoạn [0,4]",
+          "Quay quanh trục x tạo hình nón cụt",
+          "Thể tích V = π∫₀⁴ x dx = 32π"
+        ],
+        "narration": "Chúng ta quan sát vùng dưới đường cong y bằng căn bậc hai của x từ 0 đến 4 quay quanh trục x tạo thành một hình thể ba chiều. Mỗi lát cắt vuông góc với trục x là một hình tròn có bán kính bằng giá trị hàm tại điểm đó. Diện tích lát cắt là pi nhân bình phương căn bậc hai x, tức là pi nhân x. Tích phân từ 0 đến 4 của pi x dx cho thể tích bằng 32 pi đơn vị khối.",
+        "pointer": [
+          {
+            "target": "title",
+            "label": "giới thiệu hình thể"
+          },
+          {
+            "target": "bullet-0",
+            "label": "mô tả vùng quay"
+          },
+          {
+            "target": "bullet-1",
+            "label": "diện tích lát cắt"
+          },
+          {
+            "target": "bullet-2",
+            "label": "kết quả tích phân"
+          }
+        ],
+        "simulation3d": {
+          "type": "molecule"
+        },
+        "start": 456,
+        "duration": 38
+      },
+      {
+        "id": "ai-14",
+        "kind": "diagram",
+        "accent": "gold",
+        "title": "Khu vực giữa hai đường cong y = x^2 và y = x từ 0 tới 1",
+        "subtitle": "Tích phân của hiệu hàm cho diện tích riêng",
+        "bullets": [
+          "Hàm trên: y = x",
+          "Hàm dưới: y = x²",
+          "Diện tích = 1/6 ≈ 0,167"
+        ],
+        "formula": "\\int_{0}^{1} (x - x^2) dx = \\frac{1}{6}",
+        "graph": {
+          "title": "Đồ thị y = x - x² trên [0,1]",
+          "xlabel": "x",
+          "ylabel": "y",
+          "xs": [
+            0,
+            0.1,
+            0.2,
+            0.3,
+            0.4,
+            0.5,
+            0.6,
+            0.7,
+            0.8,
+            0.9,
+            1
+          ],
+          "ys": [
+            0,
+            0.09,
+            0.16,
+            0.21,
+            0.24,
+            0.25,
+            0.24,
+            0.21,
+            0.16,
+            0.09,
+            0
+          ]
+        },
+        "visualNote": "Đồ thị hàm hiệu y = x - x² trên [0,1]; diện tích dưới đường cong là 1/6",
+        "narration": "Để tìm diện tích giữa hai đường cong y bằng x và y bằng x bình phương từ 0 đến 1, ta lấy hàm trên trừ hàm dưới là x trừ x bình phương. Tích phân xác định từ 0 tới 1 của biểu thức này cho kết quả một phần sáu, xấp xỉ nought một sáu bảy. Trên đồ thị, đường cong hiệu nằm hoàn toàn phía trên trục hoành, nên diện tích chính là diện tích dưới đường cong đó.",
+        "pointer": [
+          {
+            "target": "title",
+            "label": "Mở đầu khái niệm khu vực giữa hai đường cong"
+          },
+          {
+            "target": "formula",
+            "label": "Kết quả tích phân cho diện tích"
+          },
+          {
+            "target": "graph",
+            "label": "Minh hoạ đường cong hiệu và diện tích"
+          }
+        ],
+        "start": 494,
+        "duration": 38
+      },
+      {
+        "id": "ai-15",
+        "kind": "example",
+        "accent": "ember",
+        "title": "Ứng dụng kinh tế – still excess",
+        "subtitle": "Tổng lợi nhuận = ∫ (MR - MC) dq",
+        "bullets": [
+          "Lợi nhuận biên = MR - MC",
+          "Tích phân cho tổng lợi nhuận"
+        ],
+        "steps": [
+          "Cho MR(q) = 100 - 2q, MC(q) = 20 + q",
+          "Lợi nhuận biên = MR - MC = 80 - 3q",
+          "Tích phân ∫_0^20 (80 - 3q) dq = [80q - 1.5 q^2]_0^20 = 1600 - 600 = 1000",
+          "Tổng lợi nhuận = 1000 đơn vị tiền"
+        ],
+        "formula": "\\int (MR - MC) \\, dq",
+        "narration": "Trong kinh tế học, lợi nhuận biên bằng hiệu giữa doanh thu biên MR và chi phí biên MC. Ta viết hàm lợi nhuận biên là MR(q) trừ MC(q) rồi tích phân theo lượng sản xuất q. Ví dụ, nếu MR = 100 - 2q và MC = 20 + q, tích phân từ 0 đến 20 cho tổng lợi nhuận 1000 đơn vị tiền. Kết quả cho thấy vùng diện tích dưới đường MR - MC chính là lợi nhuận tối đa doanh nghiệp có thể đạt.",
+        "pointer": [
+          {
+            "target": "bullet-0",
+            "label": "Định nghĩa lợi nhuận biên"
+          },
+          {
+            "target": "formula",
+            "label": "Công thức tích phân lợi nhuận biên"
+          },
+          {
+            "target": "step-2",
+            "label": "Thực hiện tích phân ví dụ"
+          },
+          {
+            "target": "bullet-1",
+            "label": "Ý nghĩa diện tích dưới đường MR-MC"
+          }
+        ],
+        "start": 532,
+        "duration": 38
+      },
+      {
+        "id": "ai-16",
+        "kind": "summary",
+        "accent": "brand",
+        "title": "Tóm tắt khóa học phân tích cơ bản",
+        "subtitle": "Từ định nghĩa tới ứng dụng thực tiễn",
+        "bullets": [
+          "1. Định nghĩa Riemann: giới hạn tổng Riemann",
+          "2. Định lý Newton–Leibniz: F(b)−F(a)",
+          "3. Mở rộng: tích phân vô hạn khi giới hạn tiến tới vô cùng"
+        ],
+        "narration": "Chào các em, hôm nay chúng ta tóm gọn toàn bộ quy trình tính tích phân xác định từ khái niệm Riemann cho đến bài toán diện tích thực tế. Đầu tiên, nhớ công thức cơ bản ∫_a^b f(x)dx = lim Σ f(x_i)Δx và điều kiện hàm liên tục trên đoạn. Tiếp theo, áp dụng định lý Newton – Leibniz: F(b) – F(a) để tính nhanh giá trị số, ví dụ ∫_0^1 x^2 dx = 1/3. Cuối cùng, các em sẽ gặp tích phân vô hạn khi giới hạn tích phân tiến tới vô cùng hoặc hàm không xác định, chủ đề của khóa học tới.",
+        "pointer": [
+          {
+            "target": "title",
+            "label": "Mở đầu tóm tắt khóa học"
+          },
+          {
+            "target": "bullet-0",
+            "label": "Nhắc lại định nghĩa Riemann"
+          },
+          {
+            "target": "bullet-1",
+            "label": "Áp dụng định lý Newton–Leibniz"
+          },
+          {
+            "target": "bullet-2",
+            "label": "Dẫn dắt tới tích phân vô hạn"
+          }
+        ],
+        "start": 570,
+        "duration": 38
+      }
+    ],
+    "chapters": [
+      {
+        "id": "ch-1",
+        "title": "Phân tích là công cụ đo lường tổng lũy",
+        "start": 0,
+        "end": 38,
+        "sceneIds": [
+          "ai-1"
+        ]
+      },
+      {
+        "id": "ch-2",
+        "title": "Định nghĩa tích phân xác định",
+        "start": 38,
+        "end": 76,
+        "sceneIds": [
+          "ai-2"
+        ]
+      },
+      {
+        "id": "ch-3",
+        "title": "Tích phân giải quyết diện tích đường cong",
+        "start": 76,
+        "end": 114,
+        "sceneIds": [
+          "ai-3"
+        ]
+      },
+      {
+        "id": "ch-4",
+        "title": "Công thức tính tích phân của hàm lũy thừa",
+        "start": 114,
+        "end": 152,
+        "sceneIds": [
+          "ai-4"
+        ]
+      },
+      {
+        "id": "ch-5",
+        "title": "Minh họa diện tích dưới đường cong y = x^2 từ 0 tới 2",
+        "start": 152,
+        "end": 190,
+        "sceneIds": [
+          "ai-5"
+        ]
+      },
+      {
+        "id": "ch-6",
+        "title": "Ví dụ: Tích phân của hàm bậc hai",
+        "start": 190,
+        "end": 228,
+        "sceneIds": [
+          "ai-6"
+        ]
+      },
+      {
+        "id": "ch-7",
+        "title": "Ví dụ: Hàm lượng giác",
+        "start": 228,
+        "end": 266,
+        "sceneIds": [
+          "ai-7"
+        ]
+      },
+      {
+        "id": "ch-8",
+        "title": "Ví dụ: Ứng dụng vật lý – khoảng cách vận tốc",
+        "start": 266,
+        "end": 304,
+        "sceneIds": [
+          "ai-8"
+        ]
+      },
+      {
+        "id": "ch-9",
+        "title": "Bảng nguyên hàm phổ biến",
+        "start": 304,
+        "end": 342,
+        "sceneIds": [
+          "ai-9"
+        ]
+      },
+      {
+        "id": "ch-10",
+        "title": "Cạm bẫy: Hàm có dấu âm",
+        "start": 342,
+        "end": 380,
+        "sceneIds": [
+          "ai-10"
+        ]
+      },
+      {
+        "id": "ch-11",
+        "title": "Khi nào không dùng công thức lũy thừa?",
+        "start": 380,
+        "end": 418,
+        "sceneIds": [
+          "ai-11"
+        ]
+      },
+      {
+        "id": "ch-12",
+        "title": "Bài tập tự kiểm tra",
+        "start": 418,
+        "end": 456,
+        "sceneIds": [
+          "ai-12"
+        ]
+      },
+      {
+        "id": "ch-13",
+        "title": "Mô phỏng thể tích quay quanh trục x",
+        "start": 456,
+        "end": 494,
+        "sceneIds": [
+          "ai-13"
+        ]
+      },
+      {
+        "id": "ch-14",
+        "title": "Khu vực giữa hai đường cong y = x^2 và y = x từ 0 tới 1",
+        "start": 494,
+        "end": 532,
+        "sceneIds": [
+          "ai-14"
+        ]
+      },
+      {
+        "id": "ch-15",
+        "title": "Ứng dụng kinh tế – still excess",
+        "start": 532,
+        "end": 570,
+        "sceneIds": [
+          "ai-15"
+        ]
+      },
+      {
+        "id": "ch-16",
+        "title": "Tóm tắt khóa học phân tích cơ bản",
+        "start": 570,
+        "end": 608,
+        "sceneIds": [
+          "ai-16"
+        ]
+      }
+    ],
+    "source": "gemini",
+    "theme": "paper",
+    "showPointer": true,
+    "model": "nvidia/nemotron-3-ultra-550b-a55b",
+    "createdAt": "2026-10-02T07:23:59.363Z"
+  }
+}

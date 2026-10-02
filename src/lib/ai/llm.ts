@@ -24,12 +24,7 @@ import {
  * Providers that speak the OpenAI chat-completions dialect, served by one
  * adapter. They differ only in base URL and label, both from the provider map.
  */
-const OPENAI_COMPATIBLE: readonly ProviderId[] = [
-  "openrouter",
-  "groq",
-  "nvidia",
-  "mistral",
-];
+const OPENAI_COMPATIBLE: readonly ProviderId[] = ["openrouter", "groq", "nvidia"];
 
 /**
  * Provider-agnostic front door.

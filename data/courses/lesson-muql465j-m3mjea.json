@@ -1,0 +1,273 @@
+{
+  "format": "eduai-studio/course@1",
+  "updatedAt": "2026-10-02T06:31:07.357Z",
+  "lesson": {
+    "id": "lesson-muql465j-m3mjea",
+    "title": "Định nghĩa tích phân Riemann",
+    "subject": "Vi tích phân 2",
+    "grade": "12",
+    "language": "vi",
+    "fps": 30,
+    "duration": 144,
+    "scenes": [
+      {
+        "id": "ai-1",
+        "kind": "cover",
+        "accent": "brand",
+        "title": "Tích phân Riemann là gì",
+        "subtitle": "Khám phá cách tính diện tích dưới đường cong",
+        "bullets": [
+          "Định nghĩa: giới hạn tổng Riemann khi độ rộng đoạn → 0",
+          "Ý tưởng: chia miền thành các hình chữ nhật nhỏ"
+        ],
+        "narration": "Các bạn nghĩ làm sao tính diện tích dưới một đường cong? Tích phân Riemann trả lời bằng cách chia miền thành các đoạn nhỏ, tính tổng diện tích hình chữ nhật gần đúng, rồi lấy giới hạn khi độ rộng đoạn tiến tới 0. Đây là khái niệm cơ bản.",
+        "pointer": [
+          {
+            "target": "subtitle",
+            "label": "câu hỏi mở đầu"
+          },
+          {
+            "target": "bullet-0",
+            "label": "giải thích khái niệm"
+          },
+          {
+            "target": "bullet-1",
+            "label": "tóm tắt cuối cùng"
+          }
+        ],
+        "start": 0,
+        "duration": 24
+      },
+      {
+        "id": "ai-2",
+        "kind": "concept",
+        "accent": "gold",
+        "title": "Tích phân Riemann là giới hạn tổng Riemann",
+        "subtitle": "Giới hạn tổng Riemann khi độ dài phân đoạn tiến tới 0",
+        "bullets": [
+          "∑ f(ξ_i)·Δx_i khi Δx_i→0",
+          "Nếu giới hạn tồn tại, giá trị không phụ thuộc vào vị trí mẫu"
+        ],
+        "formula": "\\int_{a}^{b} f(x)\\,dx=\\lim_{\\|P\\|\\to 0}\\sum_{i=1}^{n} f(\\xi_i)\\,\\Delta x_i",
+        "narration": "Nếu ta chia đoạn [a,b] thành nhiều phần nhỏ, tính tổng f(ξ_i)·Δx_i và cho độ dài các phần giảm dần, giới hạn của các tổng này, nếu tồn tại, chính là ∫_a^b f(x)dx. Đây là cách định nghĩa tích phân Riemann, dùng để đo diện tích dưới đồ thị.",
+        "pointer": [
+          {
+            "target": "bullet-0",
+            "label": "Giới thiệu tổng Riemann"
+          },
+          {
+            "target": "formula",
+            "label": "Định nghĩa tích phân"
+          }
+        ],
+        "start": 24,
+        "duration": 24
+      },
+      {
+        "id": "ai-3",
+        "kind": "concept",
+        "accent": "ember",
+        "title": "Tích phân Riemann giúp tính diện tích thực tế",
+        "subtitle": "Đo diện tích thực tế trong các bài toán vật lý và kinh tế",
+        "bullets": [
+          "Xác định diện tích dưới đường cong phi tuyến bằng cách cộng các hình chữ nhật nhỏ",
+          "Ứng dụng trong tính năng lượng, quãng đường, lợi nhuận liên tục qua thời gian"
+        ],
+        "narration": "Khi muốn tính diện tích một vùng không có công thức đơn giản, chúng ta dùng tích phân Riemann để cộng các hình chữ nhật nhỏ. Ví dụ, tính diện tích dưới đường tốc độ‑thời gian của xe để xác định quãng đường đi. Ở kinh tế, tích phân giúp tính tổng lợi nhuận liên tục qua thời gian.",
+        "pointer": [
+          {
+            "target": "bullet-0",
+            "label": "giới thiệu mục đích"
+          },
+          {
+            "target": "bullet-1",
+            "label": "đưa ví dụ cụ thể"
+          },
+          {
+            "target": "subtitle",
+            "label": "liên hệ ứng dụng thực tiễn"
+          }
+        ],
+        "start": 48,
+        "duration": 24
+      },
+      {
+        "id": "ai-4",
+        "kind": "example",
+        "accent": "brand",
+        "title": "Tính diện tích dưới y = x^2 trên [0,2]",
+        "subtitle": "Áp dụng định nghĩa tổng Riemann với phân hoạch đều",
+        "bullets": [
+          "Chia đoạn [0,2] thành 4 phần bằng nhau",
+          "Lấy các điểm trái để tính tổng Riemann"
+        ],
+        "steps": [
+          "Δx = (2-0)/4 = 0.5",
+          "Các điểm trái: x₀=0, x₁=0.5, x₂=1, x₃=1.5",
+          "Tính f(x_i)=x_i^2 cho mỗi i",
+          "S = Σ f(x_i)·Δx = (0+0.25+1+2.25)·0.5 = 1.875",
+          "Kết quả 1.875 là ước tính diện tích dưới parabol"
+        ],
+        "narration": "Hãy chia đoạn [0,2] thành bốn phần bằng nhau, mỗi phần dài 0.5. Lấy các điểm trái của mỗi phần, tính giá trị hàm tại các điểm này, rồi nhân với Δx và cộng lại. Ta được tổng Riemann bằng 1.875, là ước tính diện tích dưới parabol.",
+        "pointer": [
+          {
+            "target": "title",
+            "label": "Giới thiệu ví dụ"
+          },
+          {
+            "target": "bullet-0",
+            "label": "Phân hoạch"
+          },
+          {
+            "target": "step-2",
+            "label": "Tính giá trị hàm"
+          },
+          {
+            "target": "step-4",
+            "label": "Kết quả"
+          }
+        ],
+        "start": 72,
+        "duration": 24
+      },
+      {
+        "id": "ai-5",
+        "kind": "quiz",
+        "accent": "gold",
+        "title": "Kiểm tra lại xem bạn đã hiểu chưa",
+        "subtitle": "Chọn đáp án đúng về nội dung vừa học.",
+        "bullets": [
+          "Đọc lại tóm tắt ở slide trước nếu chưa nhớ.",
+          "Chọn một đáp án, bạn sẽ được giải thích ngay."
+        ],
+        "narration": "Mình cùng kiểm tra lại xem bạn đã nắm được chưa. Đọc câu hỏi và chọn đáp án mình nghĩ là đúng. Chọn sai cũng không sao, mình sẽ giải thích lại ngay tại đây, và đó là cách nhanh nhất để biết mình cần xem lại phần nào.",
+        "quiz": {
+          "question": "Bạn đã nắm được nội dung chính của bài học này chưa?",
+          "options": [
+            {
+              "id": "opt-1",
+              "text": "Rồi, mình hiểu và tự giải thích lại được cho bạn nghe",
+              "isCorrect": true,
+              "explanation": "Đó là đúng. Tự kể lại bằng lời mình mới thật sự nắm."
+            },
+            {
+              "id": "opt-2",
+              "text": "Mình hiểu phần đầu, phần sau hơi mơ hồ",
+              "isCorrect": false,
+              "explanation": "Không sao. Xem lại phần cuối, đó là phần hay quên nhất."
+            },
+            {
+              "id": "opt-3",
+              "text": "Chưa, mình thấy hơi nhiều thông tin",
+              "isCorrect": false,
+              "explanation": "Bài dài là chủ ý. Xem lại dàn ý theo thứ tự, từng phần một sẽ dễ hơn."
+            },
+            {
+              "id": "opt-4",
+              "text": "Chưa, mình muốn xem ví dụ thực tế thêm",
+              "isCorrect": false,
+              "explanation": "Phần ví dụ gần cuối bài. Đọc nó sẽ giúp bạn thấy bài học dùng được thế nào."
+            }
+          ]
+        },
+        "start": 96,
+        "duration": 24
+      },
+      {
+        "id": "ai-6",
+        "kind": "summary",
+        "accent": "gold",
+        "title": "Tóm tắt lại khái niệm tích phân Riemann",
+        "subtitle": "Những điểm chính cần ghi nhớ về tích phân Riemann",
+        "bullets": [
+          "Giá trị tích phân là giới hạn tổng Riemann khi độ dài phân đoạn tiến tới 0",
+          "Tích phân tồn tại khi hàm bị chặn và tập hợp các điểm chia đều",
+          "Ví dụ: ∫₀¹ x²dx = 1/3",
+          "Câu hỏi: Khi nào hàm không khả tích?"
+        ],
+        "narration": "Chúng ta vừa học cách định nghĩa tích phân Riemann qua giới hạn tổng các hình chữ nhật. Nhớ rằng hàm phải bị chặn và phân hoạch phải làm mịn dần để giới hạn tồn tại. Ví dụ, tích phân ∫₀¹ x²dx cho kết quả 1/3. Hãy suy nghĩ, hàm nào không thỏa mãn điều kiện để tích phân được?",
+        "pointer": [
+          {
+            "target": "title",
+            "label": "giới thiệu"
+          },
+          {
+            "target": "bullet-0",
+            "label": "điều kiện"
+          },
+          {
+            "target": "bullet-2",
+            "label": "ví dụ"
+          },
+          {
+            "target": "bullet-3",
+            "label": "câu hỏi"
+          }
+        ],
+        "start": 120,
+        "duration": 24
+      }
+    ],
+    "chapters": [
+      {
+        "id": "ch-1",
+        "title": "Tích phân Riemann là gì",
+        "start": 0,
+        "end": 24,
+        "sceneIds": [
+          "ai-1"
+        ]
+      },
+      {
+        "id": "ch-2",
+        "title": "Tích phân Riemann là giới hạn tổng Riemann",
+        "start": 24,
+        "end": 48,
+        "sceneIds": [
+          "ai-2"
+        ]
+      },
+      {
+        "id": "ch-3",
+        "title": "Tích phân Riemann giúp tính diện tích thực tế",
+        "start": 48,
+        "end": 72,
+        "sceneIds": [
+          "ai-3"
+        ]
+      },
+      {
+        "id": "ch-4",
+        "title": "Tính diện tích dưới y = x^2 trên [0,2]",
+        "start": 72,
+        "end": 96,
+        "sceneIds": [
+          "ai-4"
+        ]
+      },
+      {
+        "id": "ch-5",
+        "title": "Kiểm tra lại xem bạn đã hiểu chưa",
+        "start": 96,
+        "end": 120,
+        "sceneIds": [
+          "ai-5"
+        ]
+      },
+      {
+        "id": "ch-6",
+        "title": "Tóm tắt lại khái niệm tích phân Riemann",
+        "start": 120,
+        "end": 144,
+        "sceneIds": [
+          "ai-6"
+        ]
+      }
+    ],
+    "source": "gemini",
+    "theme": "paper",
+    "showPointer": true,
+    "model": "openai/gpt-oss-120b",
+    "createdAt": "2026-10-02T06:31:07.303Z"
+  }
+}

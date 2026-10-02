@@ -994,7 +994,11 @@ export async function POST(request: NextRequest) {
           // with an empty `response` when it overruns. Measured: the outline for
           // "định nghĩa tích phân Riemann" was killed at 82s with 225k input
           // tokens spent and nothing to show for it.
-          totalTimeoutMs: Math.min(300_000, 150_000 + sceneCount * 8_000),
+          // Raised from a 300s ceiling: a Vietnamese outline of 16 scenes runs
+          // about 3k output tokens, and when that gets truncated the retry asks
+          // for twice the room — measured at ~60s per 3k tokens on the 550B
+          // NVIDIA model. A 300s cap stopped the retry mid-answer.
+          totalTimeoutMs: Math.min(480_000, 180_000 + sceneCount * 12_000),
           // Only a missing goal is treated as a failure worth retrying. A missing
           // goal means stage 2 has nothing but a title to work from, and every
           // scene it writes comes out thin — there is no way to salvage that

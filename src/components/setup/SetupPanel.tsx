@@ -44,8 +44,28 @@ const PROVIDER_MARKS: Record<ProviderId, { src: string; alt: string }> = {
   openrouter: { src: "/providers/openrouter.svg", alt: "Logo OpenRouter" },
   groq: { src: "/providers/groq.svg", alt: "Mark Groq" },
   nvidia: { src: "/providers/nvidia.svg", alt: "Mark NVIDIA API" },
-  mistral: { src: "/providers/mistral.svg", alt: "Mark Mistral" },
   antigravity: { src: "/providers/antigravity.svg", alt: "Logo Antigravity CLI" },
+};
+
+/**
+ * What each vendor's free tier actually is, in one sentence.
+ *
+ * Deliberately free of hard numbers: every vendor counts quota in a different
+ * unit (requests per day, tokens per model per day, project credits) and the
+ * published limits move, so a stale figure in the UI is worse than a pointer to
+ * the vendor's own docs, which is what each sentence ends with.
+ */
+const PROVIDER_NOTES: Record<ProviderId, string> = {
+  gemini:
+    "Gói free tính theo project trong AI Studio, hạn mức công bố theo model và thay đổi theo thời gian — xem trang rate limits của Google.",
+  openrouter:
+    "Nhóm model đuôi :free dùng không tốn tiền, giới hạn theo số request mỗi phút và mỗi ngày; danh sách model free có thể bị đổi.",
+  groq:
+    "Gói free không cần thẻ, tính theo token mỗi ngày cho từng model, nên hết hạn mức sẽ tự reset vào 0 giờ theo giờ UTC.",
+  nvidia:
+    "Endpoint miễn phí để thử nghiệm, giới hạn theo số request mỗi phút và có thể yêu cầu khoá API cho endpoint mới.",
+  antigravity:
+    "Chạy agent ngay trên máy bạn và đọc được slide trong thư viện, nên không tốn quota lượt nào — chỉ giới hạn theo tài khoản Google của bạn.",
 };
 
 /** Provider logos: official brand marks (Simple Icons CDN) + the CLI mark. */
@@ -291,6 +311,16 @@ export function SetupPanel() {
   const activeProviderLabel = activeProviderInfo?.label ?? activeProvider;
   const activeSignupUrl = activeProviderInfo?.signupUrl ?? "";
   const storedHintForActive = activeProviderInfo?.keyHint ?? null;
+  /**
+   * One line per provider, shown only for the provider actually selected.
+   *
+   * A single sentence about "free quotas" in general was both wrong (each vendor
+   * counts differently, and the numbers change) and useless next to a card for
+   * a different vendor. Each entry says what that vendor's free tier actually
+   * is, so the sentence under the cards always describes the vendor you just
+   * clicked.
+   */
+  const activeNote = PROVIDER_NOTES[activeProvider] ?? null;
 
   /**
    * Whether the selected provider holds a secret at all. A CLI provider is
@@ -628,25 +658,24 @@ export function SetupPanel() {
           )}
         </div>
 
-        <p className="text-[11px] leading-relaxed text-mist-500">
-          {activeIsCli
-            ? "Antigravity CLI chạy agent ngay trên máy bạn và đọc được slide trong thư viện, nên không tốn quota lượt nào."
-            : "Gemini miễn phí giới hạn 20 lượt/ngày. Hết lượt thì dùng OpenRouter với model đuôi :free."}{" "}
-          {!activeIsCli && activeSignupUrl ? (
-            <>
-              Lấy key:{" "}
-              <a
-                href={activeSignupUrl}
-                target="_blank"
-                rel="noreferrer"
-                className="text-gold-200 underline"
-              >
-                {activeSignupUrl}
-              </a>
-              .
-            </>
-          ) : null}
-        </p>
+        {activeNote ? (
+          <p className="text-[11px] leading-relaxed text-mist-500">
+            {activeNote} {activeSignupUrl ? (
+              <>
+                Lấy key:{" "}
+                <a
+                  href={activeSignupUrl}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="text-gold-200 underline"
+                >
+                  {activeSignupUrl}
+                </a>
+                .
+              </>
+            ) : null}
+          </p>
+        ) : null}
 
 
         {/* CLI providers have no key, so the box is replaced by their install
