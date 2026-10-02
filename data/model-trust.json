@@ -1,0 +1,60 @@
+{
+  "entries": [
+    {
+      "provider": "nvidia",
+      "model": "openai/gpt-oss-20b",
+      "lessonId": "lesson-mur0ge51-5p6gds",
+      "scenes": 5,
+      "words": 307,
+      "verifiedAt": "2026-10-02T13:40:31.767Z"
+    },
+    {
+      "provider": "nvidia",
+      "model": "nvidia/nemotron-3-super-120b-a12b",
+      "lessonId": "lesson-mur0a2j2-74pyfu",
+      "scenes": 6,
+      "words": 339,
+      "verifiedAt": "2026-10-02T13:35:36.784Z"
+    },
+    {
+      "provider": "nvidia",
+      "model": "meta/muse-glimmer-30b",
+      "lessonId": "lesson-mur06ih3-b7589j",
+      "scenes": 6,
+      "words": 337,
+      "verifiedAt": "2026-10-02T13:32:50.826Z"
+    },
+    {
+      "provider": "nvidia",
+      "model": "nvidia/nemotron-3-ultra-550b-a55b",
+      "lessonId": "lesson-mur01o1z-pn0d6d",
+      "scenes": 6,
+      "words": 339,
+      "verifiedAt": "2026-10-02T13:29:04.776Z"
+    },
+    {
+      "provider": "groq",
+      "model": "qwen/qwen3.8-27b",
+      "lessonId": "lesson-muqzsdi3-pknzy1",
+      "scenes": 6,
+      "words": 392,
+      "verifiedAt": "2026-10-02T13:21:51.196Z"
+    },
+    {
+      "provider": "groq",
+      "model": "openai/gpt-oss-safeguard-20b",
+      "lessonId": "lesson-muqzp6kg-ydb5pu",
+      "scenes": 6,
+      "words": 320,
+      "verifiedAt": "2026-10-02T13:19:22.243Z"
+    },
+    {
+      "provider": "groq",
+      "model": "openai/gpt-oss-120b",
+      "lessonId": "lesson-muqzlban-nefr4v",
+      "scenes": 5,
+      "words": 323,
+      "verifiedAt": "2026-10-02T13:16:21.749Z"
+    }
+  ]
+}

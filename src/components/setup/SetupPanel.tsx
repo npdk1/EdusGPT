@@ -31,6 +31,15 @@ type Message = { tone: "ok" | "error" | "info"; text: string };
 type ProviderEntry = PublicAiStatus["providers"][number];
 
 /**
+ * Where the form starts before `/api/health` answers.
+ *
+ * Must name a real provider: `activeProviderInfo` is looked up by id and a
+ * provider that does not exist yields no model choices, no note and no card —
+ * a blank form instead of a usable one. Mirrors the server default.
+ */
+const DEFAULT_PROVIDER_ID: ProviderId = "nvidia";
+
+/**
  * Live model lists, kept per provider.
  *
  * One shared array was the bug behind a very confusing dropdown: pulling one
@@ -207,7 +216,7 @@ export function SetupPanel() {
    */
   const loadModels = useCallback(
     async (target?: ProviderId, quiet?: boolean) => {
-      const resolved = target ?? ((provider || "gemini") as ProviderId);
+      const resolved = target ?? ((provider || DEFAULT_PROVIDER_ID) as ProviderId);
       setBusy("models");
       if (!quiet) setMessage(null);
       try {
@@ -300,7 +309,7 @@ export function SetupPanel() {
     [status, loadStoredKey, liveModels, loadModels],
   );
 
-  const activeProvider = (provider || "gemini") as ProviderId;
+  const activeProvider = (provider || DEFAULT_PROVIDER_ID) as ProviderId;
   const activeProviderInfo = status?.providers?.find((item) => item.id === activeProvider);
   const activeProviderLabel = activeProviderInfo?.label ?? activeProvider;
   const activeSignupUrl = activeProviderInfo?.signupUrl ?? "";
@@ -411,7 +420,7 @@ export function SetupPanel() {
         });
         // Nothing was written for a CLI provider, so there is no key to refill.
         if (payload.saved && !wantsCli) {
-          void loadStoredKey((provider || "gemini") as ProviderId);
+          void loadStoredKey((provider || DEFAULT_PROVIDER_ID) as ProviderId);
         }
       } catch (error) {
         setMessage({
@@ -470,6 +479,19 @@ export function SetupPanel() {
   );
 
   const liveCount = liveModels[activeProvider]?.length ?? 0;
+
+  /**
+   * Ids that have written a complete lesson on this machine, per provider.
+   *
+   * Kept next to the options because the mark only means something in the same
+   * list the user is choosing from: a green tick on an id in the dropdown says
+   * "this exact model finished a real lesson here", and nothing else — it is
+   * not a vendor rating, and an unmarked id is untested rather than broken.
+   */
+  const trustedModels = useMemo(
+    () => new Set(activeProviderInfo?.trustedModels ?? []),
+    [activeProviderInfo],
+  );
 
   /**
    * Searchable model box. Typing filters the known ids; Enter takes the first
@@ -779,22 +801,39 @@ export function SetupPanel() {
                       <button
                         type="button"
                         onClick={() => pickModel(option)}
-                        className={`block w-full truncate px-3 py-2 text-left font-mono text-xs ${
+                        title={
+                          trustedModels.has(option)
+                            ? "Model này đã tự sinh được một bài hoàn chỉnh trên máy bạn."
+                            : undefined
+                        }
+                        className={`flex w-full items-center gap-2 px-3 py-2 text-left font-mono text-xs ${
                           option === model
                             ? "bg-brand-500/12 text-mist-50"
                             : "text-mist-300 hover:bg-ink-850"
                         }`}
                       >
-                        {option}
+                        <span className="min-w-0 flex-1 truncate">{option}</span>
+                        {trustedModels.has(option) ? (
+                          <span
+                            aria-label="Đã tạo được bài"
+                            title="Đã tạo được bài"
+                            className="shrink-0 text-brand-300"
+                          >
+                            &#10003;
+                          </span>
+                        ) : null}
                       </button>
                     </li>
                   ))}
                 </ul>
               ) : null}
             </div>
-            {liveCount > 0 ? (
+            {liveCount > 0 || trustedModels.size > 0 ? (
               <p className="mt-1.5 text-[11px] text-mist-500">
-                {liveCount} model của {activeProviderLabel}.
+                {liveCount > 0 ? `${liveCount} model của ${activeProviderLabel}.` : null}
+                {trustedModels.size > 0
+                  ? ` Dấu ✓ là model đã tự sinh được bài trên máy này (${trustedModels.size}).`
+                  : " Chưa model nào của hãng này được thử sinh bài."}
               </p>
             ) : null}
           </div>

@@ -3,6 +3,7 @@ import { resolveProvider } from "@/lib/ai/config";
 import { credentialGate } from "@/lib/ai/readiness";
 import { AiError, generateJson } from "@/lib/ai/llm";
 import { isQuotaExhausted } from "@/lib/ai/shared";
+import { recordModelTrust } from "@/lib/ai/model-trust";
 import { SCENE_ACCENTS, SCENE_KINDS, POINTER_TARGETS, iconSetFor, newLessonId, type SlideTheme } from "@/lib/lesson/types";
 import { DEFAULT_SLIDE_THEME } from "@/lib/lesson/themes";
 import {
@@ -1387,6 +1388,25 @@ export async function POST(request: NextRequest) {
         if (!lesson) {
           throw new AiError("Không dựng được bài giảng từ dàn ý.");
         }
+
+        // The one piece of evidence that settles "can this model be trusted":
+        // a finished lesson, credited to the model that actually wrote it. The
+        // setup screen marks exactly these ids, so the mark cannot go stale or
+        // survive an F5 — it is read back from disk.
+        await recordModelTrust({
+          provider: creds.provider,
+          model: generatedModel,
+          lessonId: lesson.id,
+          scenes: lesson.scenes.length,
+          words: lesson.scenes.reduce(
+            (total, scene) =>
+              total +
+              (typeof scene.narration === "string"
+                ? scene.narration.trim().split(/\s+/).filter(Boolean).length
+                : 0),
+            0,
+          ),
+        });
 
         send({
           type: "done",
