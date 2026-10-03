@@ -250,7 +250,13 @@ export function SlideSurface({
     >
       {/* Fills the paper, which owns the 16:9 box the cqw units measure. */}
       <div ref={stageRef} className="absolute inset-0">
-        <div className="scene-card relative flex h-full flex-col overflow-hidden">
+        <div
+          className={`scene-card scene-on-${layout} relative flex h-full flex-col overflow-hidden`}
+        >
+          {/* The tinted corner behind the content. Empty on purpose: it is
+              paint, not content, and the layout class on the card picks its
+              direction from the palette. */}
+          <div aria-hidden="true" className="scene-wash" />
           <div className={`scene-fit scene-layout-${layout}`}>
             {head}
             {split ? (

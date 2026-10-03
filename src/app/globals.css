@@ -728,6 +728,107 @@
   }
 
   /*
+   * The wash: a tinted corner behind the content, the way a designed deck
+   * breathes instead of sitting on flat paper.
+   *
+   * It is drawn as a pseudo-element in front of the paper and behind the
+   * content, tinted with the theme's own accent so it follows the palette —
+   * a dark theme washes with light accent, a paper theme with its warm ink —
+   * and it is only strong enough on the layouts that have room for it. The
+   * text-carrying layouts stay near-flat: a wash behind a paragraph is the
+   * first thing that makes a slide look decorated rather than designed.
+   */
+  .slide-fitted .scene-wash {
+    position: absolute;
+    inset: 0;
+    /* Behind the in-flow content but still inside the slide: `.slide-fitted`
+       carries `z-index: 1`, so this can never escape onto the page. */
+    z-index: -1;
+    pointer-events: none;
+    background: radial-gradient(
+      120% 90% at 88% -10%,
+      color-mix(in srgb, var(--slide-accent-soft) 16%, transparent) 0%,
+      transparent 62%
+    );
+  }
+
+  .scene-on-cover .scene-wash {
+    background: radial-gradient(
+      90% 70% at 50% 8%,
+      color-mix(in srgb, var(--slide-accent-soft) 22%, transparent) 0%,
+      transparent 70%
+    );
+  }
+
+  .scene-on-statement .scene-wash {
+    background: radial-gradient(
+      85% 75% at 4% 100%,
+      color-mix(in srgb, var(--slide-accent-soft) 14%, transparent) 0%,
+      transparent 66%
+    );
+  }
+
+  .scene-on-image-left .scene-wash {
+    background: radial-gradient(
+      80% 80% at 100% 100%,
+      color-mix(in srgb, var(--slide-accent-soft) 13%, transparent) 0%,
+      transparent 64%
+    );
+  }
+
+  .scene-on-image-right .scene-wash {
+    background: radial-gradient(
+      80% 80% at 0% 100%,
+      color-mix(in srgb, var(--slide-accent-soft) 13%, transparent) 0%,
+      transparent 64%
+    );
+  }
+
+  /* Two columns and cards carry their own blocks; a wash would fight them. */
+  .scene-on-two-col .scene-wash,
+  .scene-on-cards .scene-wash,
+  .scene-on-full-figure .scene-wash {
+    background: none;
+  }
+
+  /*
+   * A hairline frame. The slide sits inside the room, and this is the edge of
+   * the paper itself — one pixel of the theme's own rule colour, so a dark
+   * theme gets a light edge and a paper theme a dark one.
+   */
+  .slide-fitted {
+    box-shadow: inset 0 0 0 1px
+      color-mix(in srgb, var(--slide-rule) 70%, transparent);
+  }
+
+  /*
+   * Cards and pictures get depth: a rounded block, a hairline, and a shadow
+   * built from the theme's ink, which is a soft dark on paper and a soft glow
+   * on an ink theme.
+   */
+  .scene-layout-cards .scene-bullet {
+    border: 1px solid color-mix(in srgb, var(--slide-rule) 85%, transparent);
+    box-shadow: 0 0.5cqw 1.4cqw
+      color-mix(in srgb, var(--slide-ink) 12%, transparent);
+  }
+
+  .scene-split-figure,
+  .scene-layout-image-left .scene-image,
+  .scene-layout-image-right .scene-image,
+  .scene-layout-full-figure .scene-image {
+    border-radius: 1.1cqw;
+    overflow: hidden;
+  }
+
+  .scene-split-figure img,
+  .scene-layout-image-left .scene-image img,
+  .scene-layout-image-right .scene-image img,
+  .scene-layout-full-figure .scene-image img {
+    box-shadow: 0 0.8cqw 2cqw
+      color-mix(in srgb, var(--slide-ink) 16%, transparent);
+  }
+
+  /*
    * The function graph: same hairline rhythm as bullets and steps, with the
    * curve in the slide accent and asymptotes dashed in the soft accent — the
    * dash is what says "not part of the curve".
