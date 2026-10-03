@@ -1,7 +1,9 @@
 /**
- * Shared 3D palette. Kept in one place so the WebGL layer can never drift into
- * the red-blue colour family that this project deliberately avoids.
+ * Shared 3D palette. Kept in one place so the WebGL layer can never drift.
  * Hex values mirror the CSS tokens in src/app/globals.css.
+ *
+ * The `blue` family matches the site's brand blues: the tutor robot wears it
+ * because it is the site's primary colour, not an accent.
  */
 export const THREECOLORS = {
   ink950: 0x04090b,
@@ -13,6 +15,11 @@ export const THREECOLORS = {
   brand400: 0x24bdac,
   brand500: 0x0fa192,
   brand700: 0x0d665e,
+  blue300: 0x6db3e8,
+  blue400: 0x2f8fd0,
+  blue500: 0x1a6fc0,
+  blue700: 0x0d4a7d,
+  blush: 0xf5a3b7,
   gold300: 0xfbd275,
   gold400: 0xf6b93b,
   gold500: 0xe79a12,

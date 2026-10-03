@@ -124,60 +124,89 @@ export function SceneLoader3D({
       return mesh;
     };
 
-    // --- the tutor robot -------------------------------------------------
+    // --- the tutor robot, chibi edition ------------------------------------
+    // Big round head, tiny body, big eyes with highlights, blush cheeks and
+    // a graduation cap — all in the site's own blues.
     const robot = new THREE.Group();
     world.add(robot);
 
-    // Body and belly light.
-    robot.add(box(1.15, 1.3, 0.75, solid(THREECOLORS.brand500), 0, 0.1));
-    robot.add(box(0.5, 0.62, 0.06, solid(THREECOLORS.mist100), 0, 0.12, 0.39));
-    robot.add(ball(0.09, solid(THREECOLORS.gold400), 0, 0.28, 0.42));
+    // Small body with a white belly panel and a gold button.
+    robot.add(box(0.95, 0.75, 0.65, solid(THREECOLORS.blue400), 0, -0.25));
+    robot.add(box(0.5, 0.42, 0.06, solid(THREECOLORS.mist100), 0, -0.25, 0.34));
+    robot.add(ball(0.07, solid(THREECOLORS.gold400), 0, -0.12, 0.38));
 
-    // Head with glowing eyes.
+    // Big round head.
     const head = new THREE.Group();
-    head.position.set(0, 1.18, 0);
+    head.position.set(0, 0.75, 0);
     robot.add(head);
-    head.add(box(1.0, 0.78, 0.78, solid(THREECOLORS.brand400), 0, 0, 0));
-    const eyeMaterial = solid(THREECOLORS.gold300);
-    const eyeLeft = ball(0.1, eyeMaterial, -0.24, 0.05, 0.4);
-    const eyeRight = ball(0.1, eyeMaterial, 0.24, 0.05, 0.4);
-    head.add(eyeLeft, eyeRight);
-    // Smile: a thin bar under the eyes.
-    head.add(box(0.34, 0.06, 0.04, solid(THREECOLORS.ink800), 0, -0.24, 0.4));
+    head.add(ball(0.8, solid(THREECOLORS.blue500), 0, 0, 0));
+
+    // Round ears on the sides.
+    head.add(ball(0.16, solid(THREECOLORS.blue400), -0.82, 0.05, 0));
+    head.add(ball(0.16, solid(THREECOLORS.blue400), 0.82, 0.05, 0));
+
+    // Big cute eyes: white + deep-blue pupil + sparkle highlight. Each eye
+    // lives in a group so blinking scales the whole eye at once.
+    const makeEye = (x: number) => {
+      const group = new THREE.Group();
+      group.position.set(x, 0.1, 0.62);
+      group.add(ball(0.23, solid(THREECOLORS.mist100), 0, 0, 0));
+      group.add(ball(0.11, solid(THREECOLORS.blue700), 0, -0.02, 0.15));
+      group.add(ball(0.045, solid(THREECOLORS.mist100), 0.06, 0.07, 0.24));
+      head.add(group);
+      return group;
+    };
+    const eyeL = makeEye(-0.3);
+    const eyeR = makeEye(0.3);
+
+    // Blush cheeks: flattened pink spheres hugging the face.
+    const cheekL = ball(0.11, solid(THREECOLORS.blush), -0.52, -0.15, 0.55);
+    cheekL.scale.set(1, 0.6, 0.5);
+    const cheekR = ball(0.11, solid(THREECOLORS.blush), 0.52, -0.15, 0.55);
+    cheekR.scale.set(1, 0.6, 0.5);
+    head.add(cheekL, cheekR);
+
+    // Smile: the lower half of a torus ring.
+    const smileGeometry = new THREE.TorusGeometry(0.16, 0.035, 8, 16, Math.PI);
+    disposables.push(smileGeometry);
+    const smile = new THREE.Mesh(smileGeometry, solid(THREECOLORS.ink800));
+    smile.position.set(0, -0.28, 0.72);
+    smile.rotation.z = Math.PI;
+    head.add(smile);
 
     // Graduation cap: mortarboard, button and a tassel hanging aside.
     const cap = new THREE.Group();
-    cap.position.set(0, 0.47, 0);
-    cap.rotation.z = 0.08;
+    cap.position.set(0, 0.72, 0);
+    cap.rotation.z = 0.1;
     head.add(cap);
-    cap.add(box(1.32, 0.09, 1.32, solid(THREECOLORS.ink800), 0, 0, 0));
-    cap.add(rod(0.07, 0.1, solid(THREECOLORS.gold400), 0, 0.09, 0));
-    cap.add(rod(0.022, 0.52, solid(THREECOLORS.gold400), 0.58, -0.26, 0.3));
-    cap.add(ball(0.05, solid(THREECOLORS.gold300), 0.58, -0.54, 0.3));
+    cap.add(box(1.15, 0.09, 1.15, solid(THREECOLORS.ink800), 0, 0, 0));
+    cap.add(rod(0.06, 0.09, solid(THREECOLORS.gold400), 0, 0.08, 0));
+    cap.add(rod(0.02, 0.45, solid(THREECOLORS.gold400), 0.5, -0.24, 0.25));
+    cap.add(ball(0.045, solid(THREECOLORS.gold300), 0.5, -0.48, 0.25));
 
-    // Legs and feet.
-    robot.add(box(0.3, 0.5, 0.4, solid(THREECOLORS.ink700), -0.28, -0.8));
-    robot.add(box(0.3, 0.5, 0.4, solid(THREECOLORS.ink700), 0.28, -0.8));
-    robot.add(box(0.42, 0.16, 0.62, solid(THREECOLORS.ink800), -0.28, -1.1));
-    robot.add(box(0.42, 0.16, 0.62, solid(THREECOLORS.ink800), 0.28, -1.1));
+    // Short legs and feet.
+    robot.add(box(0.28, 0.4, 0.36, solid(THREECOLORS.blue700), -0.24, -0.85));
+    robot.add(box(0.28, 0.4, 0.36, solid(THREECOLORS.blue700), 0.24, -0.85));
+    robot.add(box(0.4, 0.14, 0.55, solid(THREECOLORS.ink800), -0.24, -1.1));
+    robot.add(box(0.4, 0.14, 0.55, solid(THREECOLORS.ink800), 0.24, -1.1));
 
     // Left arm hangs relaxed.
-    const armLeft = rod(0.11, 0.85, solid(THREECOLORS.brand500), -0.78, 0.05);
-    armLeft.rotation.z = 0.18;
+    const armLeft = rod(0.09, 0.6, solid(THREECOLORS.blue400), -0.6, -0.3);
+    armLeft.rotation.z = 0.25;
     robot.add(armLeft);
 
     // Right arm raises the pointer stick, like pointing at a board.
     const armRight = new THREE.Group();
-    armRight.position.set(0.68, 0.5, 0);
+    armRight.position.set(0.55, -0.05, 0);
     robot.add(armRight);
-    const upperArm = rod(0.11, 0.7, solid(THREECOLORS.brand500), 0, -0.2, 0);
+    const upperArm = rod(0.09, 0.55, solid(THREECOLORS.blue400), 0, -0.15, 0);
     upperArm.rotation.z = -0.5;
     armRight.add(upperArm);
-    const pointer = rod(0.032, 1.7, solid(THREECOLORS.brand300), 0.62, 0.62, 0);
+    const pointer = rod(0.028, 1.5, solid(THREECOLORS.blue700), 0.55, 0.55, 0);
     pointer.rotation.z = -0.9;
     armRight.add(pointer);
-    const tipMaterial = solid(THREECOLORS.gold300);
-    const tip = ball(0.075, tipMaterial, 1.32, 1.02, 0);
+    const tipMaterial = solid(THREECOLORS.blue300);
+    const tip = ball(0.07, tipMaterial, 1.18, 0.9, 0);
     armRight.add(tip);
 
     // --- orbit rings -------------------------------------------------------
@@ -247,11 +276,11 @@ export function SceneLoader3D({
       robot.position.y = Math.sin(time * 2.1) * 0.09;
       robot.rotation.y = Math.sin(time * 0.55) * 0.16;
       head.rotation.z = Math.sin(time * 1.3) * 0.07;
-      // Blink: eyes shut briefly every few seconds.
+      // Blink: both eyes shut briefly every few seconds.
       const blink = time % 3.4;
       const lid = blink > 3.2 ? 0.12 : 1;
-      eyeLeft.scale.y += (lid - eyeLeft.scale.y) * 0.5;
-      eyeRight.scale.y = eyeLeft.scale.y;
+      eyeL.scale.y += (lid - eyeL.scale.y) * 0.5;
+      eyeR.scale.y = eyeL.scale.y;
       // The pointer waves at the imaginary board; its tip breathes.
       armRight.rotation.z = Math.sin(time * 1.6) * 0.09;
       tip.scale.setScalar(tipBase + Math.sin(time * 3.2) * 0.18);
