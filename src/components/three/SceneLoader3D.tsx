@@ -7,11 +7,11 @@ import { THREECOLORS } from "@/lib/three-palette";
 /**
  * The "next slide is being written" moment, made watchable.
  *
- * A small raw-three.js scene in the project's own palette: a breathing
- * wireframe icosahedron (the slide being formed) wrapped in two orbit rings
- * and a sparse particle drift. Deliberately lighter than the hero
- * `KnowledgeCore` — one geometry, no GSAP, a rAF loop that sleeps offscreen —
- * because this mounts and unmounts once per slide of every generated deck.
+ * A small raw-three.js scene in the project's own palette: a tutor robot
+ * wearing a graduation cap and holding a pointer stick, bobbing gently while
+ * it waits for the model — wrapped in two orbit rings and a sparse particle
+ * drift. Built from plain primitives (no model files, no new dependency), so
+ * it mounts and unmounts once per slide without loading anything.
  *
  * Honest fallbacks: `prefers-reduced-motion` renders one still frame, and a
  * machine without WebGL gets a CSS pulse. The HTML label and progress bar
@@ -62,55 +62,150 @@ export function SceneLoader3D({
 
     const scene = new THREE.Scene();
     const camera = new THREE.PerspectiveCamera(46, width / height, 0.1, 60);
-    camera.position.set(0, 0, 6.2);
+    camera.position.set(0, 0.3, 6.4);
     const world = new THREE.Group();
+    world.position.y = -0.4;
     scene.add(world);
 
-    // The forming slide: a wireframe shell that breathes.
-    const coreGeometry = new THREE.IcosahedronGeometry(1.35, 1);
-    const coreMaterial = new THREE.MeshBasicMaterial({
-      color: THREECOLORS.brand400,
-      wireframe: true,
-      transparent: true,
-      opacity: 0.55,
-    });
-    const core = new THREE.Mesh(coreGeometry, coreMaterial);
-    world.add(core);
+    const disposables: THREE.BufferGeometry[] = [];
+    const materials: THREE.Material[] = [];
+    const solid = (color: number, opacity = 1) => {
+      const material = new THREE.MeshBasicMaterial({
+        color,
+        transparent: opacity < 1,
+        opacity,
+      });
+      materials.push(material);
+      return material;
+    };
+    const box = (
+      w: number,
+      h: number,
+      d: number,
+      material: THREE.Material,
+      x: number,
+      y: number,
+      z = 0,
+    ) => {
+      const geometry = new THREE.BoxGeometry(w, h, d);
+      disposables.push(geometry);
+      const mesh = new THREE.Mesh(geometry, material);
+      mesh.position.set(x, y, z);
+      return mesh;
+    };
+    const ball = (
+      radius: number,
+      material: THREE.Material,
+      x: number,
+      y: number,
+      z = 0,
+    ) => {
+      const geometry = new THREE.SphereGeometry(radius, 20, 14);
+      disposables.push(geometry);
+      const mesh = new THREE.Mesh(geometry, material);
+      mesh.position.set(x, y, z);
+      return mesh;
+    };
+    const rod = (
+      radius: number,
+      length: number,
+      material: THREE.Material,
+      x: number,
+      y: number,
+      z = 0,
+    ) => {
+      const geometry = new THREE.CylinderGeometry(radius, radius, length, 12);
+      disposables.push(geometry);
+      const mesh = new THREE.Mesh(geometry, material);
+      mesh.position.set(x, y, z);
+      return mesh;
+    };
 
-    const seedGeometry = new THREE.IcosahedronGeometry(0.55, 0);
-    const seedMaterial = new THREE.MeshBasicMaterial({
-      color: THREECOLORS.gold400,
-      transparent: true,
-      opacity: 0.9,
-    });
-    const seed = new THREE.Mesh(seedGeometry, seedMaterial);
-    world.add(seed);
+    // --- the tutor robot -------------------------------------------------
+    const robot = new THREE.Group();
+    world.add(robot);
 
-    // Two orbit rings, counter-rotating.
+    // Body and belly light.
+    robot.add(box(1.15, 1.3, 0.75, solid(THREECOLORS.brand500), 0, 0.1));
+    robot.add(box(0.5, 0.62, 0.06, solid(THREECOLORS.mist100), 0, 0.12, 0.39));
+    robot.add(ball(0.09, solid(THREECOLORS.gold400), 0, 0.28, 0.42));
+
+    // Head with glowing eyes.
+    const head = new THREE.Group();
+    head.position.set(0, 1.18, 0);
+    robot.add(head);
+    head.add(box(1.0, 0.78, 0.78, solid(THREECOLORS.brand400), 0, 0, 0));
+    const eyeMaterial = solid(THREECOLORS.gold300);
+    const eyeLeft = ball(0.1, eyeMaterial, -0.24, 0.05, 0.4);
+    const eyeRight = ball(0.1, eyeMaterial, 0.24, 0.05, 0.4);
+    head.add(eyeLeft, eyeRight);
+    // Smile: a thin bar under the eyes.
+    head.add(box(0.34, 0.06, 0.04, solid(THREECOLORS.ink800), 0, -0.24, 0.4));
+
+    // Graduation cap: mortarboard, button and a tassel hanging aside.
+    const cap = new THREE.Group();
+    cap.position.set(0, 0.47, 0);
+    cap.rotation.z = 0.08;
+    head.add(cap);
+    cap.add(box(1.32, 0.09, 1.32, solid(THREECOLORS.ink800), 0, 0, 0));
+    cap.add(rod(0.07, 0.1, solid(THREECOLORS.gold400), 0, 0.09, 0));
+    cap.add(rod(0.022, 0.52, solid(THREECOLORS.gold400), 0.58, -0.26, 0.3));
+    cap.add(ball(0.05, solid(THREECOLORS.gold300), 0.58, -0.54, 0.3));
+
+    // Legs and feet.
+    robot.add(box(0.3, 0.5, 0.4, solid(THREECOLORS.ink700), -0.28, -0.8));
+    robot.add(box(0.3, 0.5, 0.4, solid(THREECOLORS.ink700), 0.28, -0.8));
+    robot.add(box(0.42, 0.16, 0.62, solid(THREECOLORS.ink800), -0.28, -1.1));
+    robot.add(box(0.42, 0.16, 0.62, solid(THREECOLORS.ink800), 0.28, -1.1));
+
+    // Left arm hangs relaxed.
+    const armLeft = rod(0.11, 0.85, solid(THREECOLORS.brand500), -0.78, 0.05);
+    armLeft.rotation.z = 0.18;
+    robot.add(armLeft);
+
+    // Right arm raises the pointer stick, like pointing at a board.
+    const armRight = new THREE.Group();
+    armRight.position.set(0.68, 0.5, 0);
+    robot.add(armRight);
+    const upperArm = rod(0.11, 0.7, solid(THREECOLORS.brand500), 0, -0.2, 0);
+    upperArm.rotation.z = -0.5;
+    armRight.add(upperArm);
+    const pointer = rod(0.032, 1.7, solid(THREECOLORS.brand300), 0.62, 0.62, 0);
+    pointer.rotation.z = -0.9;
+    armRight.add(pointer);
+    const tipMaterial = solid(THREECOLORS.gold300);
+    const tip = ball(0.075, tipMaterial, 1.32, 1.02, 0);
+    armRight.add(tip);
+
+    // --- orbit rings -------------------------------------------------------
     const rings: THREE.LineLoop[] = [];
     [THREECOLORS.brand300, THREECOLORS.gold300].forEach((color, index) => {
-      const radius = 2.1 + index * 0.45;
+      const radius = 2.35 + index * 0.45;
       const curve = new THREE.EllipseCurve(0, 0, radius, radius, 0, Math.PI * 2, false, 0);
       const geometry = new THREE.BufferGeometry().setFromPoints(
         curve.getPoints(120).map((point) => new THREE.Vector3(point.x, point.y, 0)),
       );
-      const ring = new THREE.LineLoop(
-        geometry,
-        new THREE.LineBasicMaterial({ color, transparent: true, opacity: 0.4 }),
-      );
+      disposables.push(geometry);
+      const material = new THREE.LineBasicMaterial({
+        color,
+        transparent: true,
+        opacity: 0.35,
+      });
+      materials.push(material);
+      const ring = new THREE.LineLoop(geometry, material);
       ring.rotation.set(0.5 + index * 0.7, index * 0.5, index * 0.4);
       rings.push(ring);
       world.add(ring);
     });
 
-    // Sparse drift: 220 points, teal-dominant with a warm minority.
+    // --- sparse particle drift ---------------------------------------------
     const palette = [THREECOLORS.brand300, THREECOLORS.brand400, THREECOLORS.gold400];
-    const count = 220;
+    const count = 200;
     const positions = new Float32Array(count * 3);
     const colors = new Float32Array(count * 3);
     const tint = new THREE.Color();
     for (let i = 0; i < count; i += 1) {
-      const radius = 2.8 + Math.random() * 4.2;
+      const radius = 2.9 + Math.random() * 4.2;
       const theta = Math.random() * Math.PI * 2;
       const phi = Math.acos(2 * Math.random() - 1);
       positions[i * 3] = radius * Math.sin(phi) * Math.cos(theta);
@@ -122,39 +217,44 @@ export function SceneLoader3D({
       colors[i * 3 + 2] = tint.b;
     }
     const fieldGeometry = new THREE.BufferGeometry();
+    disposables.push(fieldGeometry);
     fieldGeometry.setAttribute("position", new THREE.BufferAttribute(positions, 3));
     fieldGeometry.setAttribute("color", new THREE.BufferAttribute(colors, 3));
-    const field = new THREE.Points(
-      fieldGeometry,
-      new THREE.PointsMaterial({
-        size: 0.05,
-        vertexColors: true,
-        transparent: true,
-        opacity: 0.8,
-        depthWrite: false,
-        blending: THREE.AdditiveBlending,
-      }),
-    );
+    const fieldMaterial = new THREE.PointsMaterial({
+      size: 0.05,
+      vertexColors: true,
+      transparent: true,
+      opacity: 0.8,
+      depthWrite: false,
+      blending: THREE.AdditiveBlending,
+    });
+    materials.push(fieldMaterial);
+    const field = new THREE.Points(fieldGeometry, fieldMaterial);
     world.add(field);
 
     const clock = new THREE.Clock();
     let raf = 0;
     let visible = true;
+    const tipBase = 1;
     const tick = () => {
       if (!visible) return;
       const delta = Math.min(clock.getDelta(), 0.05);
       const time = clock.elapsedTime;
-      // Breathe: the shell swells while the slide is being written.
-      const breath = 1 + Math.sin(time * 1.6) * 0.07;
-      core.scale.setScalar(breath);
-      core.rotation.y += delta * 0.5;
-      core.rotation.x += delta * 0.18;
-      seed.rotation.y -= delta * 0.8;
-      seed.rotation.x += delta * 0.3;
+      // Idle life: bobbing, a slight sway, and the head nodding along.
+      robot.position.y = Math.sin(time * 2.1) * 0.09;
+      robot.rotation.y = Math.sin(time * 0.55) * 0.16;
+      head.rotation.z = Math.sin(time * 1.3) * 0.07;
+      // Blink: eyes shut briefly every few seconds.
+      const blink = time % 3.4;
+      const lid = blink > 3.2 ? 0.12 : 1;
+      eyeLeft.scale.y += (lid - eyeLeft.scale.y) * 0.5;
+      eyeRight.scale.y = eyeLeft.scale.y;
+      // The pointer waves at the imaginary board; its tip breathes.
+      armRight.rotation.z = Math.sin(time * 1.6) * 0.09;
+      tip.scale.setScalar(tipBase + Math.sin(time * 3.2) * 0.18);
       rings[0].rotation.z += delta * 0.6;
       rings[1].rotation.z -= delta * 0.45;
       field.rotation.y += delta * 0.03;
-      world.rotation.y = Math.sin(time * 0.24) * 0.18;
       renderer.render(scene, camera);
       raf = requestAnimationFrame(tick);
     };
@@ -179,16 +279,8 @@ export function SceneLoader3D({
     return () => {
       observer.disconnect();
       cancelAnimationFrame(raf);
-      coreGeometry.dispose();
-      coreMaterial.dispose();
-      seedGeometry.dispose();
-      seedMaterial.dispose();
-      rings.forEach((ring) => {
-        ring.geometry.dispose();
-        (ring.material as THREE.Material).dispose();
-      });
-      fieldGeometry.dispose();
-      (field.material as THREE.Material).dispose();
+      disposables.forEach((geometry) => geometry.dispose());
+      materials.forEach((material) => material.dispose());
       renderer.dispose();
       renderer.forceContextLoss();
       if (renderer.domElement.parentNode === host) {
