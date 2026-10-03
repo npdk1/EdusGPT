@@ -18,6 +18,7 @@ import {
   sliceForScene,
 } from "@/lib/lesson/reference-skim";
 import { clientKey, rateLimit, rejectRemote } from "@/lib/server/guard";
+import { deleteDraft, saveDraft } from "@/lib/server/course-store";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -64,6 +65,12 @@ export interface StreamEvent {
   provider?: string;
   model?: string;
   elapsedMs?: number;
+  /**
+   * Zero-based position of `scene` in the deck. Batches finish out of order
+   * (each scene event is sent the moment its own call lands), so the client
+   * orders the progressive script by this instead of arrival order.
+   */
+  sceneIndex?: number;
 }
 
 const quizSchema: Record<string, unknown> = {
@@ -983,8 +990,22 @@ export async function POST(request: NextRequest) {
         controller.enqueue(encoder.encode(`data: ${JSON.stringify(event)}\n\n`));
       };
 
+      // Draft identity, hoisted so the catch block can mark the draft failed
+      // even when the outline itself never came back. Assigned once stage 1
+      // lands; the `plannedTotal > 0` guard keeps an outline-stage failure
+      // from writing a draft for a deck that has no shape yet.
+      let lessonId = "";
+      let draftTitle = "";
+      let draftSubject = "";
+      let plannedTotal = 0;
+      let draftDone = 0;
+
       try {
         // ---------- stage 1: outline ----------
+        // The id is minted before anything is written so the in-progress run
+        // already has a stable identity: the library draft card, every scene
+        // event and the final lesson all share it.
+        lessonId = newLessonId();
         send({
           type: "stage",
           stage: "outline",
@@ -1071,6 +1092,28 @@ export async function POST(request: NextRequest) {
             })),
           },
         });
+
+        // The library learns about this run now, not at `done`: a teacher who
+        // opens /library mid-run sees a "Đang tạo…" card with live progress
+        // instead of nothing. Updated after every finished scene below, deleted
+        // when the final lesson lands (or marked with the error on failure).
+        draftTitle = String(outline.title ?? topic).slice(0, 200);
+        draftSubject = String(outline.subject ?? subject ?? "").slice(0, 120);
+        plannedTotal = planned.length;
+        const writeDraft = (message: string, error?: string) =>
+          saveDraft({
+            id: lessonId,
+            title: draftTitle,
+            subject: draftSubject,
+            total: planned.length,
+            done: draftDone,
+            message: message.slice(0, 300),
+            updatedAt: new Date().toISOString(),
+            error,
+          }).catch(() => {
+            // A draft is a courtesy, not the lesson: never fail the run over it.
+          });
+        await writeDraft(`Dàn ý xong: ${planned.length} cảnh. Bắt đầu viết chi tiết…`);
 
         // ---------- stage 2: one call per scene, streamed as it lands ----------
         const scenes: Array<Record<string, unknown>> = [];
@@ -1333,6 +1376,31 @@ export async function POST(request: NextRequest) {
         // existing. Six at a time makes the wall clock proportional to the number
         // of batches rather than the number of slides, and stays well clear of the
         // provider's concurrency limit.
+        //
+        // Each scene is reported the moment its own call lands, not when its
+        // batch finishes: the studio shows the finished slide and reads its
+        // voice-over straight away, instead of waiting for the whole deck.
+        // Batches still finish out of order, so every event carries its
+        // position and the client orders the progressive script by it.
+        const reportScene = (index: number, result: Record<string, unknown>) => {
+          scenes[index] = result;
+          draftDone += 1;
+          const stats = sceneStats.get(index);
+          send({
+            type: "scene",
+            stage: "scene",
+            message: `Xong cảnh ${index + 1}: ${
+              String(result.title ?? planned[index].title ?? "")
+            }`,
+            progress: Math.round(25 + (draftDone / planned.length) * 70),
+            scene: result,
+            sceneIndex: index,
+            provider: creds.provider,
+            model: stats?.fallback ? undefined : stats?.model,
+            elapsedMs: stats?.elapsedMs,
+          });
+          void writeDraft(`Đã xong ${draftDone}/${planned.length} cảnh.`);
+        };
         const BATCH = 6;
         for (let start = 0; start < planned.length; start += BATCH) {
           const batch = planned.slice(start, start + BATCH);
@@ -1342,25 +1410,13 @@ export async function POST(request: NextRequest) {
             message: `Đang viết cảnh ${start + 1}–${start + batch.length}/${planned.length}`,
             progress: Math.round(25 + (start / planned.length) * 70),
           });
-          const written = await Promise.all(
-            batch.map((_, offset) => writeScene(start + offset)),
+          await Promise.all(
+            batch.map((_, offset) =>
+              writeScene(start + offset).then((result) => {
+                reportScene(start + offset, result);
+              }),
+            ),
           );
-          for (let offset = 0; offset < written.length; offset += 1) {
-            scenes.push(written[offset]);
-            const stats = sceneStats.get(start + offset);
-            send({
-              type: "scene",
-              stage: "scene",
-              message: `Xong cảnh ${start + offset + 1}: ${
-                String(written[offset].title ?? planned[start + offset].title ?? "")
-              }`,
-              progress: Math.round(25 + ((start + offset + 1) / planned.length) * 70),
-              scene: written[offset],
-              provider: creds.provider,
-              model: stats?.fallback ? undefined : stats?.model,
-              elapsedMs: stats?.elapsedMs,
-            });
-          }
         }
 
         // ---------- enforce the shape, whatever the outline said ----------
@@ -1417,7 +1473,7 @@ export async function POST(request: NextRequest) {
 
         // ---------- assemble ----------
         const lesson = coerceLesson({
-          id: newLessonId(),
+          id: lessonId,
           title: outline.title ?? topic,
           subject: outline.subject ?? subject,
           grade: outline.grade ?? body.grade,
@@ -1470,6 +1526,9 @@ export async function POST(request: NextRequest) {
           model: generatedModel,
           elapsedMs: Date.now() - outlineStart,
         });
+        // The finished lesson replaces the draft card under the same id; the
+        // client save is idempotent, so deleting here cannot strand the deck.
+        await deleteDraft(lessonId).catch(() => null);
       } catch (error) {
         const detail =
           error instanceof AiError || error instanceof Error
@@ -1479,10 +1538,28 @@ export async function POST(request: NextRequest) {
         // blob. Lead with what happened and when it clears, then keep the raw
         // line for anything the user recognises.
         const quota = isQuotaExhausted(detail);
+        const message = quota
+          ? `Hết hạn mức dùng của Antigravity CLI. ${detail}`
+          : detail;
+        // Leave the failure on the draft card instead of silently withdrawing
+        // it: the library shows what went wrong, and the card can be deleted.
+        // Skipped when the outline never landed — a shapeless run has no card.
+        if (plannedTotal > 0) {
+          await saveDraft({
+            id: lessonId,
+            title: draftTitle || String(topic).slice(0, 200),
+            subject: draftSubject,
+            total: plannedTotal,
+            done: draftDone,
+            message: "Không sinh được bài giảng.",
+            updatedAt: new Date().toISOString(),
+            error: message.slice(0, 500),
+          }).catch(() => null);
+        }
         send({
           type: "error",
           message: "Không sinh được bài giảng.",
-          error: quota ? `Hết hạn mức dùng của Antigravity CLI. ${detail}` : detail,
+          error: message,
           quota,
         });
       } finally {

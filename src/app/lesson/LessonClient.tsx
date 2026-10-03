@@ -1,8 +1,10 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { LoaderCircle } from "lucide-react";
+import { ChevronDown, LoaderCircle } from "lucide-react";
 import type { Lesson } from "@/lib/lesson/types";
+import type { RunLogEntry } from "@/lib/lesson/run-log";
+import { RunLog } from "@/components/studio/GenerationTimeline";
 import { LessonPlayer } from "@/components/player/LessonPlayer";
 import { SAMPLE_LESSON, SAMPLE_LESSONS } from "@/lib/lesson/sample-lesson";
 import { loadStoredLessons } from "@/lib/lesson/storage";
@@ -22,6 +24,9 @@ export default function LessonClient({ courseId }: LessonClientProps) {
   const [lesson, setLesson] = useState<Lesson>(SAMPLE_LESSON);
   const [loading, setLoading] = useState(Boolean(courseId));
   const [loadError, setLoadError] = useState<string | null>(null);
+  /** The run log saved with the lesson, shown behind a toggle below. */
+  const [runLog, setRunLog] = useState<RunLogEntry[]>([]);
+  const [logOpen, setLogOpen] = useState(false);
 
   useEffect(() => {
     if (!courseId) {
@@ -57,8 +62,9 @@ export default function LessonClient({ courseId }: LessonClientProps) {
           setLesson(SAMPLE_LESSON);
           return;
         }
-        const payload = (await response.json()) as { lesson?: Lesson };
+        const payload = (await response.json()) as { lesson?: Lesson; log?: RunLogEntry[] };
         if (!cancelled && payload.lesson) setLesson(payload.lesson);
+        if (!cancelled && Array.isArray(payload.log)) setRunLog(payload.log);
       } catch {
         if (!cancelled) setLoadError("Không tải được bài từ máy chủ.");
       } finally {
@@ -90,6 +96,24 @@ export default function LessonClient({ courseId }: LessonClientProps) {
         initialLesson={lesson}
         samples={SAMPLE_LESSONS.filter((item) => item.id !== lesson.id)}
       />
+      {runLog.length > 0 ? (
+        <div className="panel mt-4 p-4">
+          <button
+            type="button"
+            onClick={() => setLogOpen((open) => !open)}
+            className="flex w-full items-center justify-between gap-2 text-left"
+            aria-expanded={logOpen}
+          >
+            <span className="text-sm font-semibold text-mist-100">
+              Nhật ký tạo bài ({runLog.length} dòng)
+            </span>
+            <ChevronDown
+              className={`h-4 w-4 shrink-0 text-mist-400 transition-transform ${logOpen ? "rotate-180" : ""}`}
+            />
+          </button>
+          {logOpen ? <RunLog log={runLog} /> : null}
+        </div>
+      ) : null}
     </>
   );
 }

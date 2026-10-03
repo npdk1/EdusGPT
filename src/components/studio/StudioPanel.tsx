@@ -47,6 +47,7 @@ import {
   setActiveLessonId,
 } from "@/lib/lesson/storage";
 import { useGenerationStream, GenerationTimeline, RunLog } from "./GenerationTimeline";
+import type { LiveScene } from "./GenerationTimeline";
 import { formatClock, slugify } from "@/lib/format";
 
 const PRESETS = [
@@ -87,6 +88,161 @@ function PreviewFormula({ formula }: { formula: string }) {
       className="mt-2 w-fit max-w-full overflow-x-auto rounded-lg border border-gold-500/40 bg-gold-500/10 px-3 py-1.5 text-gold-200 [&_.katex]:!text-inherit"
       dangerouslySetInnerHTML={{ __html: html }}
     />
+  );
+}
+
+/**
+ * The progressive script: finished scenes appear here the moment their model
+ * call lands, with their voice-over playable straight away — no waiting for
+ * the whole deck. An auto-voice toggle reads each new scene as it arrives, so
+ * a long lesson can be listened to while it is still being written.
+ */
+function LiveScript({
+  scenes,
+  voice,
+  running,
+}: {
+  scenes: LiveScene[];
+  voice: string;
+  running: boolean;
+}) {
+  const [autoVoice, setAutoVoice] = useState(true);
+  const [playingIndex, setPlayingIndex] = useState<number | null>(null);
+  const [voiceError, setVoiceError] = useState<string | null>(null);
+  const audioRef = useRef<HTMLAudioElement | null>(null);
+  const playedRef = useRef<Set<number>>(new Set());
+
+  const stop = useCallback(() => {
+    audioRef.current?.pause();
+    audioRef.current = null;
+    setPlayingIndex(null);
+  }, []);
+
+  const playScene = useCallback(
+    async (index: number, narration: string) => {
+      const text = narration.trim();
+      if (!text) return;
+      stop();
+      setVoiceError(null);
+      try {
+        const response = await fetch("/api/tts", {
+          method: "POST",
+          headers: { "content-type": "application/json" },
+          body: JSON.stringify({ text: text.slice(0, 4000), voice }),
+        });
+        if (!response.ok) throw new Error(`giọng đọc trả lỗi ${response.status}`);
+        const blob = await response.blob();
+        const url = URL.createObjectURL(blob);
+        const audio = new Audio(url);
+        audioRef.current = audio;
+        setPlayingIndex(index);
+        audio.onended = () => {
+          URL.revokeObjectURL(url);
+          if (audioRef.current === audio) {
+            audioRef.current = null;
+            setPlayingIndex(null);
+          }
+        };
+        await audio.play();
+      } catch {
+        setPlayingIndex(null);
+        setVoiceError("Không đọc được giọng cảnh này. Bấm nút phát để thử lại.");
+      }
+    },
+    [stop, voice],
+  );
+
+  // A new run starts with an empty scene list: forget what the old run read.
+  useEffect(() => {
+    if (scenes.length === 0) {
+      playedRef.current.clear();
+      stop();
+    }
+  }, [scenes.length, stop]);
+
+  // Read each new scene once, in arrival order, while nothing else is playing.
+  useEffect(() => {
+    if (!autoVoice || playingIndex !== null) return;
+    const next = scenes.find(
+      (scene) => scene.narration.trim() && !playedRef.current.has(scene.index),
+    );
+    if (!next) return;
+    playedRef.current.add(next.index);
+    void playScene(next.index, next.narration);
+  }, [scenes, autoVoice, playingIndex, playScene]);
+
+  useEffect(() => stop, [stop]);
+
+  if (scenes.length === 0) return null;
+
+  return (
+    <div className="mt-4 space-y-2 rounded-xl border border-brand-700/50 bg-brand-500/[0.07] p-4">
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <p className="text-sm font-semibold text-mist-100">
+          Kịch bản đang viết — {scenes.length} cảnh đã xong
+          {running ? " (vẫn đang viết tiếp)" : ""}
+        </p>
+        <div className="flex items-center gap-2">
+          {playingIndex !== null ? (
+            <button type="button" onClick={stop} className="btn-ghost px-3 py-1 text-xs">
+              <Pause className="h-3.5 w-3.5" /> Dừng giọng
+            </button>
+          ) : null}
+          <label className="flex cursor-pointer items-center gap-1.5 text-xs text-mist-300">
+            <input
+              type="checkbox"
+              checked={autoVoice}
+              onChange={(event) => setAutoVoice(event.target.checked)}
+              className="h-3.5 w-3.5 accent-emerald-400"
+            />
+            <Volume2 className="h-3.5 w-3.5" /> Đọc giọng ngay khi xong cảnh
+          </label>
+        </div>
+      </div>
+      {voiceError ? (
+        <p className="text-xs text-gold-200">{voiceError}</p>
+      ) : null}
+      <ol className="space-y-1.5">
+        {scenes.map((scene) => (
+          <li
+            key={scene.index}
+            className="flex items-start gap-2 rounded-lg border border-ink-700/70 bg-ink-950/50 px-3 py-2"
+          >
+            <span className="mt-0.5 font-mono text-[11px] text-mist-500">
+              {String(scene.index + 1).padStart(2, "0")}
+            </span>
+            <span className="min-w-0 flex-1">
+              <span className="block truncate text-sm font-medium text-mist-100">
+                {scene.title}
+              </span>
+              {scene.narration ? (
+                <span className="mt-0.5 line-clamp-2 block text-xs italic text-mist-400">
+                  {scene.narration}
+                </span>
+              ) : null}
+            </span>
+            {scene.narration ? (
+              <button
+                type="button"
+                onClick={() => {
+                  playedRef.current.add(scene.index);
+                  void playScene(scene.index, scene.narration);
+                }}
+                className="btn-icon shrink-0"
+                title={`Nghe giọng cảnh ${scene.index + 1}`}
+                aria-label={`Nghe giọng cảnh ${scene.index + 1}`}
+              >
+                {playingIndex === scene.index ? (
+                  <LoaderCircle className="h-4 w-4 animate-spin" />
+                ) : (
+                  <Play className="h-4 w-4" />
+                )}
+              </button>
+            ) : null}
+          </li>
+        ))}
+      </ol>
+    </div>
   );
 }
 
@@ -177,7 +333,7 @@ export function StudioPanel() {
         const response = await fetch("/api/courses", {
           method: "POST",
           headers: { "content-type": "application/json" },
-          body: JSON.stringify({ lesson: finishedLesson }),
+          body: JSON.stringify({ lesson: finishedLesson, log: stream.progress.log }),
         });
         if (!response.ok) throw new Error(`HTTP ${response.status}`);
         const payload = (await response.json()) as { id?: string };
@@ -564,6 +720,22 @@ export function StudioPanel() {
 
         {busy || stream.progress.steps.length > 0 || streamError ? (
           <GenerationTimeline progress={stream.progress} />
+        ) : null}
+        {busy ? (
+          <p className="mt-3 text-xs text-mist-400">
+            Bài đang được lưu nháp trong{" "}
+            <Link href="/library" className="text-brand-200 underline underline-offset-2">
+              Thư viện
+            </Link>{" "}
+            — qua đó vẫn thấy trạng thái đang tạo.
+          </p>
+        ) : null}
+        {!lesson && stream.progress.liveScenes.length > 0 ? (
+          <LiveScript
+            scenes={stream.progress.liveScenes}
+            voice={voice}
+            running={busy}
+          />
         ) : null}
         {!lesson && stream.progress.log.length > 0 ? (
           <RunLog log={stream.progress.log} />

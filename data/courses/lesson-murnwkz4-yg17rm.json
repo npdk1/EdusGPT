@@ -1,0 +1,799 @@
+{
+  "format": "eduai-studio/course@1",
+  "updatedAt": "2026-10-03T00:36:58.348Z",
+  "lesson": {
+    "id": "lesson-murnwkz4-yg17rm",
+    "title": "Làm sao để học tốt Node.js",
+    "subject": "Chung",
+    "grade": "Phổ thông",
+    "language": "vi",
+    "fps": 30,
+    "duration": 608,
+    "scenes": [
+      {
+        "id": "ai-1",
+        "kind": "cover",
+        "accent": "brand",
+        "title": "Làm sao để học tốt Node.js",
+        "subtitle": "Khởi đầu cho hành trình lập trình web",
+        "bullets": [
+          "Lộ trình từ cài đặt đến triển khai",
+          "Nắm vững event loop và async/await",
+          "Thực hành dự án backend thực tế"
+        ],
+        "icon": "Rocket",
+        "narration": "Chào các bạn, hôm nay chúng ta bắt đầu khóa học về cách học tốt Node.js. Node.js cho phép viết JavaScript chạy phía máy chủ, mở ra khả năng xây dựng API, ứng dụng thời gian thực và micro‑service. Trong ba mươi phút tới mình sẽ chia sẻ lộ trình từ cài đặt, hiểu event loop, làm việc với npm, viết code async/await, đến triển khai dự án thực tế. Mục tiêu là các bạn tự tin xây dựng backend ngay sau khóa học.",
+        "pointer": [
+          {
+            "target": "title",
+            "label": "Mở đầu khóa học"
+          },
+          {
+            "target": "subtitle",
+            "label": "Mục tiêu hành trình"
+          },
+          {
+            "target": "bullet-1",
+            "label": "Nội dung chi tiết lộ trình"
+          },
+          {
+            "target": "bullet-2",
+            "label": "Kết quả mong đợi"
+          }
+        ],
+        "start": 0,
+        "duration": 38
+      },
+      {
+        "id": "ai-2",
+        "kind": "concept",
+        "accent": "gold",
+        "title": "Node.js là gì?",
+        "subtitle": "Công nghệ chạy JavaScript ngoài trình duyệt",
+        "bullets": [
+          "Cung cấp môi trường thực thi JavaScript trên máy chủ",
+          "Dựa trên Engine V8 của Chrome",
+          "Cho phép xây dựng API, microservices, websocket"
+        ],
+        "icon": "Code2",
+        "narration": "Bạn có bao giờ tự hỏi làm sao một đoạn mã JavaScript chạy trên máy chủ mà không qua trình duyệt? Node.js trả lời: nó là một runtime được xây dựng trên Engine V8, cách bạn viết JavaScript vẫn giống, nhưng giờ nó chạy trên máy chủ, mở ra khả năng tạo API, server web, xử lý file và giao tiếp mạng. Điều này cho phép lập trình viên khai thác cùng ngôn ngữ cho front và back end, giảm chi phí học và phát triển. Để ví dụ thực tế, hãy thử gõ \"console.log('Hello Node')\" trong file .js và chạy bằng lệnh node.",
+        "start": 38,
+        "duration": 38
+      },
+      {
+        "id": "ai-3",
+        "kind": "concept",
+        "accent": "gold",
+        "title": "Node.js chinh phục backend nhanh",
+        "subtitle": "Nhu cầu phát triển backend nhanh và hiệu năng cao",
+        "bullets": [
+          "Cơ chế single‑thread event loop giúp xử lý nhiều kết nối đồng thời",
+          "Trong thời đại microservices, Node.js hỗ trợ xây dựng API RESTful nhanh chóng",
+          "Môi trường npm cung cấp 180k+ package, giảm thời gian viết mã tính toán",
+          "Performance benchmark: Node.js nhanh hơn Java 6× và Python 4× trong xử lý I/O"
+        ],
+        "icon": "Zap",
+        "narration": "Bạn đang học Node.js, chúng ta hãy nhìn vào cách nó giúp backend tải nhanh chóng mà không cần thread pool. Với event loop, số kết nối đồng thời lên hàng chục nghìn không cần tạo thread. Đây là lý do các công ty như Netflix, Uber sử dụng Node.js cho API. Bạn có thể so sánh tốc độ thực thi giữa Node.js và Java trong cùng một benchmark mẫu. Câu hỏi nhỏ: vì sao event loop lại chiếm ưu thế trong I/O-bound?",
+        "start": 76,
+        "duration": 38
+      },
+      {
+        "id": "ai-4",
+        "kind": "concept",
+        "accent": "gold",
+        "title": "Kiến trúc event‑loop",
+        "subtitle": "Cơ chế xử lý bất đồng bộ trong Node.js",
+        "bullets": [
+          "Chế độ không chặn I/O, để thread lib xử lý",
+          "Callback queue chờ để thực thi trên event loop",
+          "Microtasks ưu tiên, thực thi ngay sau callback"
+        ],
+        "imagePrompt": "illustration of Node.js event loop diagram with event queue, task queue, microtasks, and I/O threads, no text",
+        "icon": "Zap",
+        "visualNote": "Sơ đồ vòng lặp đơn giản: Input → I/O → Callback → Microtasks → Output",
+        "narration": "Học sinh đang thắc mắc gì ở đây? Khái niệm event‑loop là trụ cột giúp Node.js xử lý đồng thời nhiều yêu cầu mà không chặn thread chính. Khi một yêu cầu đến, Node.js chuyển I/O vào libuv thread pool, trong khi event loop tiếp tục chạy. Khi I/O xong, một callback được đưa vào task queue, sau đó microtasks được thực thi ngay trước callbacks. Khi hành trình này tròn, dữ liệu được trả về cho client. Lúc này, chúng ta thấy Node.js có thể nhận 1,000+ yêu cầu đồng thời mà không cần nhiều thread khác, nhờ vào vòng lặp không chặn này.",
+        "pointer": [
+          {
+            "target": "title",
+            "label": "Giới thiệu"
+          }
+        ],
+        "start": 114,
+        "duration": 38
+      },
+      {
+        "id": "ai-5",
+        "kind": "formula",
+        "accent": "ember",
+        "title": "Cấu trúc mô-đun CommonJS",
+        "subtitle": "module.exports và require",
+        "bullets": [
+          "module.exports xuất ra các hàm/đối tượng",
+          "require nhập khẩu từ file khác",
+          "đường dẫn tương đối bắt đầu bằng ./",
+          "module tự động được lưu trong cache",
+          "gọi lại không tạo instance mới"
+        ],
+        "formula": "\\text{module.exports =}\\{\\text{foo: () => {} }\\}\\;,\\,\\text{require('./foo')}",
+        "imagePrompt": "illustration of two JavaScript files connected by arrows, no text",
+        "icon": "Code2",
+        "narration": "Bạn đang giao tiếp giữa các file trong Node.js, thì CommonJS giúp chia nhỏ mã thành module. Khi một file xuất ra một hàm hay đối tượng qua module.exports, file khác có thể import nó bằng require. Đường dẫn tương đối bắt đầu bằng ./ cho file trong thư mục hiện tại. Node lưu module trong cache, vì vậy lần gọi lại không tạo instance mới. Ví dụ: file foo.js xuất ra một hàm tính tiền, file main.js gọi require('./foo') để dùng hàm đó.",
+        "pointer": [
+          {
+            "target": "title",
+            "label": "khởi đầu"
+          },
+          {
+            "target": "bullet-0",
+            "label": "định nghĩa module.exports"
+          },
+          {
+            "target": "bullet-1",
+            "label": "trích xuất require"
+          },
+          {
+            "target": "bullet-2",
+            "label": "đường dẫn"
+          },
+          {
+            "target": "bullet-3",
+            "label": "cache"
+          },
+          {
+            "target": "bullet-4",
+            "label": "ví dụ thực tế"
+          },
+          {
+            "target": "formula",
+            "label": "định dạng syntax"
+          },
+          {
+            "target": "image",
+            "label": "hình minh hoạ"
+          }
+        ],
+        "start": 152,
+        "duration": 38
+      },
+      {
+        "id": "ai-6",
+        "kind": "example",
+        "accent": "brand",
+        "title": "Ví dụ: server HTTP đơn giản",
+        "subtitle": "Sử dụng http module để lắng nghe port",
+        "bullets": [
+          "Khai báo module http",
+          "Tạo server với hàm callback",
+          "Sử dụng listen port 3000",
+          "Gửi phản hồi \"Hello Node\""
+        ],
+        "steps": [
+          "1. const http = require('http');",
+          "2. const server = http.createServer((req,res)=>{res.end('Hello Node');});",
+          "3. server.listen(3000,()=>{console.log('Server chạy ở port 3000');});"
+        ],
+        "imagePrompt": "illustration of a simple Node.js server listening on port 3000, no text",
+        "icon": "Code2",
+        "narration": "Học sinh, hãy mở file mới và nhập dòng 1 để tải module http. Tiếp theo, dòng 2 tạo một server và trả về chuỗi \"Hello Node\" khi có yêu cầu. Cuối cùng, dòng 3 khởi động server trên port 3000 và in ra thông báo khi sẵn sàng. Khi truy cập http://localhost:3000 bạn sẽ thấy thông điệp \"Hello Node\" xuất hiện. Thử thay port thành 8080 và quan sát sự thay đổi.",
+        "pointer": [
+          {
+            "target": "title",
+            "label": "giới thiệu ví dụ"
+          },
+          {
+            "target": "bullet-0",
+            "label": "định nghĩa module"
+          },
+          {
+            "target": "bullet-1",
+            "label": "định nghĩa callback"
+          },
+          {
+            "target": "bullet-2",
+            "label": "lắng nghe port"
+          },
+          {
+            "target": "bullet-3",
+            "label": "gửi phản hồi"
+          },
+          {
+            "target": "step-0",
+            "label": "điều khiển dòng 1"
+          },
+          {
+            "target": "step-1",
+            "label": "điều khiển dòng 2"
+          },
+          {
+            "target": "step-2",
+            "label": "điều khiển dòng 3"
+          },
+          {
+            "target": "image",
+            "label": "định hướng hình minh hoạ"
+          }
+        ],
+        "start": 190,
+        "duration": 38
+      },
+      {
+        "id": "ai-7",
+        "kind": "example",
+        "accent": "brand",
+        "title": "Ví dụ: readFileAsync",
+        "subtitle": "Đọc file bất đồng bộ với fs.promises",
+        "bullets": [
+          "Sử dụng async/await để tránh callback hell",
+          "Chứa nội dung file trong biến result",
+          "Xử lý lỗi bằng try/catch"
+        ],
+        "steps": [
+          "Bước 0: Khai báo hàm async readFileAsync",
+          "Bước 1: Gọi await fs.promises.readFile('example.txt','utf8')",
+          "Bước 2: Gán kết quả vào biến content",
+          "Bước 3: In nội dung ra console",
+          "Bước 4: Bắt lỗi nếu file không tồn tại"
+        ],
+        "narration": "Hãy tưởng tượng bạn muốn đọc một file văn bản mà không chờ đợi. Bước đầu tiên, khai báo hàm async readFileAsync. Tiếp theo, sử dụng await fs.promises.readFile với tên file và encoding. Kết quả trả về là chuỗi, ta lưu vào biến content. Cuối cùng, in ra console để kiểm tra nội dung. Nếu file thiếu, lỗi sẽ được bắt trong khối catch. Bạn có thể thử chạy đoạn code này ngay bây giờ.",
+        "pointer": [
+          {
+            "target": "title",
+            "label": "giới thiệu ví dụ"
+          },
+          {
+            "target": "bullet-0",
+            "label": "đề cập async/await"
+          },
+          {
+            "target": "bullet-1",
+            "label": "nêu nội dung file"
+          },
+          {
+            "target": "bullet-2",
+            "label": "đề cập try/catch"
+          },
+          {
+            "target": "step-0",
+            "label": "khai báo hàm"
+          },
+          {
+            "target": "step-1",
+            "label": "await readFile"
+          },
+          {
+            "target": "step-2",
+            "label": "gán content"
+          },
+          {
+            "target": "step-3",
+            "label": "in ra console"
+          },
+          {
+            "target": "step-4",
+            "label": "bắt lỗi"
+          }
+        ],
+        "start": 228,
+        "duration": 38
+      },
+      {
+        "id": "ai-8",
+        "kind": "concept",
+        "accent": "gold",
+        "title": "Cơ chế NPM",
+        "subtitle": "Quản lý gói, cài đặt thư viện",
+        "bullets": [
+          "NPM làm cửa sổ tới kho gói rộng lớn",
+          "Câu lệnh npm install thêm thư viện ngay trong thư mục",
+          "File package.json ghi lại phiên bản gói",
+          "Câu lệnh npm update duy trì các gói mới",
+          "npm init nhanh tạo cấu trúc dự án"
+        ],
+        "imagePrompt": "illustration of npm command line interface with node_modules folder, educational style, no text",
+        "icon": "BarChart3",
+        "narration": "Học sinh đang thắc mắc gì ở đây? Khi cần thư viện Express, ta gõ npm install express và NPM tải xuống thư mục node_modules, đồng thời ghi vào package.json. Đối với dự án, npm init tạo package.json với thông tin tên, version, entry point. Sau đó npm update cập nhật tất cả gói. Nhớ ghi lại chính xác phiên bản để tránh xung đột. Số gói được cài thường 3–5, v.v.",
+        "start": 266,
+        "duration": 38
+      },
+      {
+        "id": "ai-9",
+        "kind": "diagram",
+        "accent": "brand",
+        "title": "Cấu trúc thư mục dự án Node.js",
+        "subtitle": "package.json, src, dist, node_modules",
+        "bullets": [
+          "1. package.json lưu trữ dependencies",
+          "2. src chứa mã nguồn gốc",
+          "3. dist lưu mã đã build"
+        ],
+        "narration": "Học sinh, khi bắt đầu dự án Node.js, hãy khởi tạo package.json để quản lý dependencies. Sắp xếp mã nguồn trong thư mục src, biên dịch hoặc chuyển compile sang dist khi build. Đừng quên đặt node_modules trong thư mục root, được tự động quản lý bởi npm. Ví dụ, ứng dụng Express có package.json, mã src/server.js, file dist/server.js khi chạy.",
+        "pointer": [
+          {
+            "target": "title",
+            "label": "Giới thiệu đề mục"
+          },
+          {
+            "target": "bullet-0",
+            "label": "Khởi tạo package.json"
+          },
+          {
+            "target": "bullet-1",
+            "label": "Sắp xếp mã nguồn"
+          },
+          {
+            "target": "bullet-2",
+            "label": "Build sang dist"
+          }
+        ],
+        "start": 304,
+        "duration": 38
+      },
+      {
+        "id": "ai-10",
+        "kind": "concept",
+        "accent": "gold",
+        "title": "Quản lý lỗi trong async",
+        "subtitle": "try/catch, Promise.catch, asyncHandler",
+        "bullets": [
+          "Sử dụng try/catch khi await để bắt lỗi ngay tại source",
+          "Dùng Promise.catch khi trả Promise rời",
+          "asyncHandler làm middleware chung giúp tránh lặp code"
+        ],
+        "imagePrompt": "flowchart of async error handling with try/catch and asyncHandler, no text",
+        "icon": "Code2",
+        "narration": "Bạn muốn lỗi async không làm hỏng chương trình? Bắt đầu bằng try/catch khi gọi await và dùng .catch trên Promise. Đối với nhiều route, tạo asyncHandler để tự động catch và truyền sang middleware lỗi, ví dụ router.get('/', asyncHandler(async(req,res)=>{throw new Error('oops');}));. Nhớ ghi log trong catch cuối block và trả 500; nếu quên catch, lỗi sẽ tràn ra process và dừng server, vì vậy luôn bảo vệ bất đồng bộ bằng try/catch, Promise.catch, hoặc asyncHandler là chìa khóa.",
+        "pointer": [
+          {
+            "target": "bullet-0",
+            "label": "Giới thiệu try/catch"
+          },
+          {
+            "target": "bullet-1",
+            "label": "Giải thích Promise.catch"
+          },
+          {
+            "target": "bullet-2",
+            "label": "Chứng minh asyncHandler"
+          },
+          {
+            "target": "bullet-3",
+            "label": "Kết luận và thực hành"
+          }
+        ],
+        "start": 342,
+        "duration": 38
+      },
+      {
+        "id": "ai-11",
+        "kind": "concept",
+        "accent": "gold",
+        "title": "Middleware giúp tách rời logic xử lý",
+        "subtitle": "Xử lý request trước controller",
+        "bullets": [
+          "Kiểm tra xác thực token trước controller",
+          "Ghi log, thời gian thực thi",
+          "Reusability: tái dùng trong nhiều route"
+        ],
+        "imagePrompt": "illustration of Express middleware flowchart, showing request passing through middleware before reaching controller, no text",
+        "icon": "Zap",
+        "narration": "Học sinh đang thắc mắc gì ở đây? Middleware giúp tách rời logic xử lý, kiểm tra xác thực, ghi log trước controller. Ví dụ: một “auth” middleware kiểm tra header token, nếu thiếu chuyển sang lỗi 401, nếu có thì gọi next() để controller tiếp tục. Đặt middleware trong middleware stack, Express gọi tuần tự, cho phép tái sử dụng và bảo trì mã dễ. Bạn thử viết middleware ghi thời gian thực thi, ta học cách chèn vào luồng request.",
+        "pointer": [
+          {
+            "target": "title",
+            "label": "Giới thiệu nội dung main"
+          },
+          {
+            "target": "bullet-0",
+            "label": "Mô tả chức năng kiểm tra token"
+          },
+          {
+            "target": "bullet-1",
+            "label": "Giải thích ghi log, thời gian"
+          },
+          {
+            "target": "bullet-2",
+            "label": "Nhấn mạnh tái sử dụng"
+          }
+        ],
+        "start": 380,
+        "duration": 38
+      },
+      {
+        "id": "ai-12",
+        "kind": "example",
+        "accent": "brand",
+        "title": "Ví dụ: middleware log request",
+        "subtitle": "Ghi log thời gian và endpoint",
+        "bullets": [
+          "Ghi thời gian bắt đầu request",
+          "Ghi endpoint được gọi",
+          "Ghi thời gian kết thúc request"
+        ],
+        "steps": [
+          "Bước 1: Khởi tạo middleware với async (req, res, next) => {",
+          "Bước 2: Lưu thời gian bắt đầu: const start = Date.now();",
+          "Bước 3: Gọi next() để tiếp tục xử lý request",
+          "Bước 4: Khi request trả về, tính thời gian: const duration = Date.now() - start;",
+          "Bước 5: Ghi log: console.log(`[${req.method}] ${req.originalUrl} took ${duration}ms`);",
+          "Bước 6: Hoàn thành middleware"
+        ],
+        "imagePrompt": "illustration of a Node.js server receiving a request and logging time, no text",
+        "icon": "Zap",
+        "narration": "Bắt đầu với middleware, chúng ta lưu thời gian ngay khi nhận request. Khi request được xử lý, chúng ta tính độ trễ và ghi log endpoint cùng thời gian. Ví dụ này cho thấy cách giữ code sạch và dễ bảo trì. Bạn có thể mở rộng bằng cách ghi log vào file hoặc dịch vụ thu thập dữ liệu. Thử viết lại để ghi log vào MongoDB nhé?",
+        "pointer": [
+          {
+            "target": "title",
+            "label": "Giới thiệu"
+          },
+          {
+            "target": "bullet-0",
+            "label": "Thời gian bắt đầu"
+          },
+          {
+            "target": "bullet-1",
+            "label": "Endpoint"
+          },
+          {
+            "target": "bullet-2",
+            "label": "Thời gian kết thúc"
+          },
+          {
+            "target": "step-0",
+            "label": "Khởi tạo"
+          },
+          {
+            "target": "step-1",
+            "label": "Lưu thời gian"
+          },
+          {
+            "target": "step-2",
+            "label": "Gọi next"
+          },
+          {
+            "target": "step-3",
+            "label": "Tính độ trễ"
+          },
+          {
+            "target": "step-4",
+            "label": "Ghi log"
+          },
+          {
+            "target": "step-5",
+            "label": "Hoàn thành"
+          }
+        ],
+        "start": 418,
+        "duration": 38
+      },
+      {
+        "id": "ai-13",
+        "kind": "concept",
+        "accent": "gold",
+        "title": "Tối ưu hiệu năng Node.js",
+        "subtitle": "Cluster, worker_threads, caching",
+        "bullets": [
+          "Cluster chia máy thành nhiều tiến trình, đồng thời xử lý nhiều request",
+          "worker_threads cho phép đa luồng trong một tiến trình, giảm chi phí fork",
+          "Caching trữ dữ liệu tạm thời, giảm truy vấn DB, giảm độ trễ"
+        ],
+        "imagePrompt": "illustration of a Node.js server using cluster and worker threads to process requests in parallel, no text",
+        "icon": "Rocket",
+        "visualNote": "Sơ đồ lưu trữ dữ liệu, cache, worker và cluster",
+        "narration": "Bạn có thấy web Node.js của mình chậm không? Thì hãy thử dùng Cluster – một cú fork sang các tiến trình con, giúp mỗi request chạy song song. Khi cần tính toán nặng, worker_threads cho phép tạo luồng riêng mà vẫn giữ nguyên tiến trình chính, tránh chi phí tạo tiến trình mới. Đừng quên caching: lưu dữ liệu thường dùng trong bộ nhớ, như Redis, để giảm số lần gọi database. Hãy ghi nhớ ba công cụ: Cluster, worker_threads, caching – cùng tạo nền tảng hiệu năng bền vững cho ứng dụng Node.js của bạn.",
+        "pointer": [
+          {
+            "target": "title",
+            "label": "Giới thiệu"
+          },
+          {
+            "target": "subtitle",
+            "label": "Bối cảnh"
+          },
+          {
+            "target": "bullet-0",
+            "label": "Cluster"
+          },
+          {
+            "target": "bullet-1",
+            "label": "worker_threads"
+          },
+          {
+            "target": "bullet-2",
+            "label": "caching"
+          }
+        ],
+        "start": 456,
+        "duration": 38
+      },
+      {
+        "id": "ai-14",
+        "kind": "concept",
+        "accent": "gold",
+        "title": "Cạm bẫy thường gặp",
+        "subtitle": "Sử dụng sync I/O, callback hell",
+        "bullets": [
+          "Sync I/O chậm, blocking thread",
+          "Callback Hell làm code rối, khó debug",
+          "Promise/async‑await làm code tuyến tính, dễ bảo trì"
+        ],
+        "imagePrompt": "illustration of Node.js event loop with a blocking sync I/O operation and nested callbacks, no text",
+        "icon": "Code2",
+        "narration": "If we use synchronous I/O in Node, the event loop blocks until the data is returned, causing the whole application to pause and reducing concurrency. Callback Hell occurs when many callbacks are nested, leading to tangled code that is hard to read and debug. Switching to Promises or async/await linearizes the flow, making the code easier to follow and maintain. A practical example: reading files with fs.readFileSync blocks the thread for 200 ms, whereas fs.readFile with a promise keeps the event loop free. Remembering to avoid sync I/O and to refactor callbacks into async functions prevents these pitfalls.",
+        "pointer": [
+          {
+            "target": "title",
+            "label": "introduce the problem"
+          },
+          {
+            "target": "bullet-0",
+            "label": "sync I/O blocks"
+          },
+          {
+            "target": "bullet-1",
+            "label": "callback hell"
+          },
+          {
+            "target": "bullet-2",
+            "label": "promises/async await"
+          },
+          {
+            "target": "bullet-0",
+            "label": "example to illustrate"
+          }
+        ],
+        "start": 494,
+        "duration": 38
+      },
+      {
+        "id": "ai-15",
+        "kind": "quiz",
+        "accent": "ember",
+        "title": "Kiểm tra nhanh",
+        "subtitle": "5 câu hỏi trắc nghiệm",
+        "bullets": [
+          "Vòng lặp sự kiện điều phối I/O",
+          "Xử lý lỗi bằng try/catch",
+          "Triển khai dự án thực tế"
+        ],
+        "icon": "Target",
+        "narration": "Chào các bạn, đây là phần kiểm tra nhanh để xem bạn đã nắm được những ý chính của khóa học. Câu hỏi đầu tiên tập trung vào vòng lặp sự kiện, cách Node.js xử lý tác vụ bất đồng bộ. Hãy chọn đáp án đúng nhất trong bốn lựa chọn bên dưới. Sau khi trả lời, mình sẽ giải thích tại sao đáp án đó chính xác và các đáp án còn lại sai ở đâu.",
+        "pointer": [
+          {
+            "target": "title",
+            "label": "Mở đầu kiểm tra"
+          },
+          {
+            "target": "bullet-0",
+            "label": "Nhắc event loop"
+          },
+          {
+            "target": "quiz",
+            "label": "Đọc câu hỏi"
+          },
+          {
+            "target": "quiz",
+            "label": "Giải thích đáp án"
+          }
+        ],
+        "quiz": {
+          "question": "Trong Node.js, cơ chế nào cho phép xử lý nhiều tác vụ I/O bất đồng bộ mà không chặn luồng chính?",
+          "options": [
+            {
+              "id": "A",
+              "text": "Multi-threading",
+              "isCorrect": false,
+              "explanation": "Node.js chạy đơn luồng, không dùng đa luồng để xử lý I/O."
+            },
+            {
+              "id": "B",
+              "text": "Event Loop",
+              "isCorrect": true,
+              "explanation": "Event Loop liên tục.poll và thực thi callback, cho phép I/O không chặn."
+            },
+            {
+              "id": "C",
+              "text": "Child Process",
+              "isCorrect": false,
+              "explanation": "Child Process tạo tiến trình con, không phải cơ chế chính cho I/O bất đồng bộ."
+            },
+            {
+              "id": "D",
+              "text": "Cluster",
+              "isCorrect": false,
+              "explanation": "Cluster dùng nhiều tiến trình để tận dụng đa lõi, không thay thế Event Loop."
+            }
+          ]
+        },
+        "start": 532,
+        "duration": 38
+      },
+      {
+        "id": "ai-16",
+        "kind": "summary",
+        "accent": "brand",
+        "title": "Tóm tắt và tiếp theo",
+        "subtitle": "Bước tiếp theo học về TypeScript và Docker",
+        "bullets": [
+          "Nắm vững CommonJS và ES Modules",
+          "Thực hành async/await với Express",
+          "Triển khai container bằng Docker"
+        ],
+        "icon": "BookOpen",
+        "narration": "Chúng ta đã đi qua cấu trúc module, xử lý bất đồng bộ và cách xây dựng API REST cơ bản với Express. Tiếp theo, hãy tập trung vào TypeScript để thêm kiểu tĩnh, giúp mã ít lỗi hơn khi mở rộng. Sau đó, học Docker để đóng gói ứng dụng thành container, đảm bảo môi trường chạy giống nhau từ máy dev đến production. Khi đã quen hai công cụ này, bạn có thể xây dựng hệ thống backend bền vững và dễ bảo trì.",
+        "pointer": [
+          {
+            "target": "bullet-0",
+            "label": "tóm tắt module và async"
+          },
+          {
+            "target": "bullet-1",
+            "label": "gợi ý học TypeScript"
+          },
+          {
+            "target": "bullet-2",
+            "label": "gợi ý học Docker"
+          },
+          {
+            "target": "title",
+            "label": "kết luận chung"
+          }
+        ],
+        "start": 570,
+        "duration": 38
+      }
+    ],
+    "chapters": [
+      {
+        "id": "ch-1",
+        "title": "Làm sao để học tốt Node.js",
+        "start": 0,
+        "end": 38,
+        "sceneIds": [
+          "ai-1"
+        ]
+      },
+      {
+        "id": "ch-2",
+        "title": "Node.js là gì?",
+        "start": 38,
+        "end": 76,
+        "sceneIds": [
+          "ai-2"
+        ]
+      },
+      {
+        "id": "ch-3",
+        "title": "Node.js chinh phục backend nhanh",
+        "start": 76,
+        "end": 114,
+        "sceneIds": [
+          "ai-3"
+        ]
+      },
+      {
+        "id": "ch-4",
+        "title": "Kiến trúc event‑loop",
+        "start": 114,
+        "end": 152,
+        "sceneIds": [
+          "ai-4"
+        ]
+      },
+      {
+        "id": "ch-5",
+        "title": "Cấu trúc mô-đun CommonJS",
+        "start": 152,
+        "end": 190,
+        "sceneIds": [
+          "ai-5"
+        ]
+      },
+      {
+        "id": "ch-6",
+        "title": "Ví dụ: server HTTP đơn giản",
+        "start": 190,
+        "end": 228,
+        "sceneIds": [
+          "ai-6"
+        ]
+      },
+      {
+        "id": "ch-7",
+        "title": "Ví dụ: readFileAsync",
+        "start": 228,
+        "end": 266,
+        "sceneIds": [
+          "ai-7"
+        ]
+      },
+      {
+        "id": "ch-8",
+        "title": "Cơ chế NPM",
+        "start": 266,
+        "end": 304,
+        "sceneIds": [
+          "ai-8"
+        ]
+      },
+      {
+        "id": "ch-9",
+        "title": "Cấu trúc thư mục dự án Node.js",
+        "start": 304,
+        "end": 342,
+        "sceneIds": [
+          "ai-9"
+        ]
+      },
+      {
+        "id": "ch-10",
+        "title": "Quản lý lỗi trong async",
+        "start": 342,
+        "end": 380,
+        "sceneIds": [
+          "ai-10"
+        ]
+      },
+      {
+        "id": "ch-11",
+        "title": "Middleware giúp tách rời logic xử lý",
+        "start": 380,
+        "end": 418,
+        "sceneIds": [
+          "ai-11"
+        ]
+      },
+      {
+        "id": "ch-12",
+        "title": "Ví dụ: middleware log request",
+        "start": 418,
+        "end": 456,
+        "sceneIds": [
+          "ai-12"
+        ]
+      },
+      {
+        "id": "ch-13",
+        "title": "Tối ưu hiệu năng Node.js",
+        "start": 456,
+        "end": 494,
+        "sceneIds": [
+          "ai-13"
+        ]
+      },
+      {
+        "id": "ch-14",
+        "title": "Cạm bẫy thường gặp",
+        "start": 494,
+        "end": 532,
+        "sceneIds": [
+          "ai-14"
+        ]
+      },
+      {
+        "id": "ch-15",
+        "title": "Kiểm tra nhanh",
+        "start": 532,
+        "end": 570,
+        "sceneIds": [
+          "ai-15"
+        ]
+      },
+      {
+        "id": "ch-16",
+        "title": "Tóm tắt và tiếp theo",
+        "start": 570,
+        "end": 608,
+        "sceneIds": [
+          "ai-16"
+        ]
+      }
+    ],
+    "source": "gemini",
+    "theme": "midnight",
+    "voice": "vi-VN-NamMinhNeural#tram",
+    "showPointer": true,
+    "pointerColor": "#f59e0b",
+    "model": "nvidia/nemotron-3-ultra-550b-a55b",
+    "createdAt": "2026-10-03T00:36:58.288Z"
+  }
+}

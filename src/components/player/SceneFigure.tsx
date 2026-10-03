@@ -70,6 +70,16 @@ export function SlideImageView({
   // `r` parameter only busts the failed response out of the browser cache;
   // the seed stays untouched, so a retry never re-rolls the picture.
   const [retry, setRetry] = useState(0);
+  /**
+   * Where the current picture comes from. A dead AI render does not end at
+   * the "Không tìm được ảnh" chip: it falls back to the open archive with
+   * the scene's own search query, and only when the archive has nothing does
+   * it use a seeded Picsum photo — clearly labelled as a random filler, so a
+   * slide always has a picture and nobody mistakes it for an illustration.
+   */
+  const [stage, setStage] = useState<"generated" | "archive" | "filler">(
+    "generated",
+  );
 
   const query = scene.imageQuery?.trim() ?? "";
   const prompt = scene.imagePrompt?.trim() ?? "";
@@ -96,6 +106,7 @@ export function SlideImageView({
   // the image element below to reload.
   useEffect(() => {
     setRetry(0);
+    setStage("generated");
   }, [key]);
 
   useEffect(() => {
@@ -111,7 +122,7 @@ export function SlideImageView({
 
     // Generated pictures skip the archive entirely: no search request, no
     // "Đang tìm ảnh…" wait, just the render URL.
-    if (generatedUrl) {
+    if (generatedUrl && stage === "generated") {
       setImage({
         url: generatedUrl,
         title: scene.title,
@@ -121,7 +132,24 @@ export function SlideImageView({
       return;
     }
 
-    if (query.length < 3) return;
+    // Last resort: a stable seeded photo. Random, and labelled as such — a
+    // slide always has a picture, and nobody mistakes it for an illustration.
+    if (stage === "filler" || (!generatedUrl && query.length < 3)) {
+      setImage({
+        url: `https://picsum.photos/seed/${encodeURIComponent(lessonId)}-${encodeURIComponent(scene.id)}/1024/640`,
+        title: scene.title,
+        credit: "Ảnh minh hoạ ngẫu nhiên · picsum.photos",
+        sourcePage: "https://picsum.photos/",
+      });
+      return;
+    }
+
+    // No prompt, or the AI render died: the open archive with the scene's own
+    // query. An empty result falls through to the filler above.
+    if (query.length < 3) {
+      setStage("filler");
+      return;
+    }
 
     let cancelled = false;
     const controller = new AbortController();
@@ -134,17 +162,17 @@ export function SlideImageView({
         });
         if (cancelled) return;
         if (!response.ok) {
-          setFailed(true);
+          setStage("filler");
           return;
         }
         const payload = (await response.json()) as { images?: SlideImageType[] };
         const first = payload.images?.[0];
         if (first) setImage(first);
-        // An empty result is normal for abstract topics, so it gets a quiet
-        // placeholder rather than a red "not found" the teacher must worry about.
-        else setFailed(true);
+        // An empty result is normal for abstract topics: fall through to the
+        // filler rather than a "not found" the teacher must worry about.
+        else setStage("filler");
       } catch {
-        if (!cancelled) setFailed(true);
+        if (!cancelled) setStage("filler");
       } finally {
         clearTimeout(timer);
       }
@@ -155,7 +183,7 @@ export function SlideImageView({
       clearTimeout(timer);
       controller.abort();
     };
-  }, [generatedUrl, key, query, scene.title]);
+  }, [generatedUrl, key, lessonId, query, scene.id, scene.title, stage]);
 
   if (hidden || (!generatedUrl && query.length < 3)) return null;
 
@@ -179,10 +207,16 @@ export function SlideImageView({
             referrerPolicy="no-referrer"
             className="h-full w-full rounded-xl border border-ink-700 bg-ink-900 object-cover"
             onError={() => {
-              if (generatedUrl && retry < 1) {
+              if (generatedUrl && stage === "generated" && retry < 1) {
                 window.setTimeout(() => {
                   setRetry((current) => (current < 1 ? current + 1 : current));
                 }, 2500);
+              } else if (stage === "generated") {
+                // The AI render is dead: the effect drops to the archive.
+                setStage("archive");
+              } else if (stage === "archive") {
+                // The archive has nothing: the effect drops to the filler.
+                setStage("filler");
               } else {
                 setFailed(true);
               }

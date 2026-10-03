@@ -2,27 +2,27 @@
   "entries": [
     {
       "provider": "nvidia",
-      "model": "openai/gpt-oss-20b",
-      "lessonId": "lesson-murnm5ud-i2ynnm",
+      "model": "nvidia/nemotron-3-super-120b-a12b",
+      "lessonId": "lesson-muropw51-r8j8e5",
       "scenes": 6,
-      "words": 312,
-      "verifiedAt": "2026-10-03T00:28:52.120Z"
+      "words": 348,
+      "verifiedAt": "2026-10-03T01:05:05.420Z"
+    },
+    {
+      "provider": "nvidia",
+      "model": "openai/gpt-oss-20b",
+      "lessonId": "lesson-murok2yu-fm0s53",
+      "scenes": 6,
+      "words": 310,
+      "verifiedAt": "2026-10-03T00:57:54.782Z"
     },
     {
       "provider": "nvidia",
       "model": "nvidia/nemotron-3-ultra-550b-a55b",
-      "lessonId": "lesson-mur1j30u-zbdvon",
-      "scenes": 6,
-      "words": 325,
-      "verifiedAt": "2026-10-02T14:10:36.945Z"
-    },
-    {
-      "provider": "nvidia",
-      "model": "nvidia/nemotron-3-super-120b-a12b",
-      "lessonId": "lesson-mur0a2j2-74pyfu",
-      "scenes": 6,
-      "words": 339,
-      "verifiedAt": "2026-10-02T13:35:36.784Z"
+      "lessonId": "lesson-murnwkz4-yg17rm",
+      "scenes": 16,
+      "words": 1330,
+      "verifiedAt": "2026-10-03T00:36:58.290Z"
     },
     {
       "provider": "nvidia",

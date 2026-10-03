@@ -3,13 +3,17 @@ import { isLocalRequest, publicAiStatus } from "@/lib/ai/config";
 import {
   deleteAllCourses,
   deleteCourse,
+  deleteDraft,
   isValidCourseId,
   listCourses,
+  listDrafts,
   readCourse,
+  readCourseLog,
   renameCourse,
   saveCourse,
 } from "@/lib/server/course-store";
 import { coerceLesson } from "@/lib/lesson/validate";
+import { sanitizeRunLog } from "@/lib/lesson/run-log";
 import { newLessonId } from "@/lib/lesson/types";
 
 export const runtime = "nodejs";
@@ -38,11 +42,17 @@ export async function GET(request: NextRequest) {
     if (!lesson) {
       return NextResponse.json({ error: "Không tìm thấy bài." }, { status: 404 });
     }
-    return NextResponse.json({ ok: true, lesson });
+    return NextResponse.json({ ok: true, lesson, log: await readCourseLog(id) });
   }
 
   return NextResponse.json(
-    { ok: true, courses: await listCourses() },
+    {
+      ok: true,
+      courses: await listCourses(),
+      // Lessons still being written, so the library can show a "Đang tạo…"
+      // card instead of nothing while a run is in flight.
+      drafts: await listDrafts(),
+    },
     { headers: { "cache-control": "no-store" } },
   );
 }
@@ -52,7 +62,7 @@ export async function POST(request: NextRequest) {
   const denied = guard(request);
   if (denied) return denied;
 
-  let body: { lesson?: unknown; title?: string };
+  let body: { lesson?: unknown; title?: string; log?: unknown };
   try {
     body = (await request.json()) as typeof body;
   } catch {
@@ -70,7 +80,7 @@ export async function POST(request: NextRequest) {
   if (!isValidCourseId(lesson.id)) lesson.id = newLessonId();
   if (body.title?.trim()) lesson.title = body.title.trim().slice(0, 200);
 
-  await saveCourse(lesson);
+  await saveCourse(lesson, sanitizeRunLog(body.log) ?? undefined);
   return NextResponse.json({ ok: true, id: lesson.id, lesson });
 }
 
@@ -112,7 +122,7 @@ export async function DELETE(request: NextRequest) {
     return NextResponse.json({ error: "Thiếu id." }, { status: 400 });
   }
 
-  const removed = await deleteCourse(id);
+  const removed = (await deleteCourse(id)) || (await deleteDraft(id));
   if (!removed) {
     return NextResponse.json({ error: "Không tìm thấy bài." }, { status: 404 });
   }

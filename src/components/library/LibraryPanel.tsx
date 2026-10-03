@@ -25,6 +25,29 @@ interface CourseSummary {
   model?: string;
 }
 
+/** A lesson still being written — shown as a "Đang tạo…" card, not nothing. */
+interface DraftInfo {
+  id: string;
+  title: string;
+  subject: string;
+  total: number;
+  done: number;
+  message: string;
+  updatedAt: string;
+  error?: string;
+}
+
+/** A draft older than this with no error is a run the server did not finish. */
+const STALE_DRAFT_MS = 15 * 60 * 1000;
+
+function draftState(draft: DraftInfo): "failed" | "stale" | "running" {
+  if (draft.error) return "failed";
+  if (Date.now() - new Date(draft.updatedAt).getTime() > STALE_DRAFT_MS) {
+    return "stale";
+  }
+  return "running";
+}
+
 function formatClock(seconds: number): string {
   const m = Math.floor(seconds / 60);
   const s = Math.round(seconds % 60);
@@ -44,36 +67,51 @@ function relative(iso: string): string {
 /** Server-backed course library — survives a browser reinstall. */
 export function LibraryPanel() {
   const [courses, setCourses] = useState<CourseSummary[]>([]);
+  const [drafts, setDrafts] = useState<DraftInfo[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [busyId, setBusyId] = useState<string | null>(null);
   const [clearing, setClearing] = useState(false);
 
-  const load = useCallback(async () => {
-    setLoading(true);
-    setError(null);
+  const load = useCallback(async (quiet = false) => {
+    if (!quiet) {
+      setLoading(true);
+      setError(null);
+    }
     try {
       const response = await fetch("/api/courses", { cache: "no-store" });
       const payload = (await response.json()) as {
         ok?: boolean;
         courses?: CourseSummary[];
+        drafts?: DraftInfo[];
         error?: string;
       };
       if (!response.ok) {
-        setError(payload.error ?? "Không tải được thư viện.");
+        if (!quiet) setError(payload.error ?? "Không tải được thư viện.");
         return;
       }
       setCourses(payload.courses ?? []);
+      setDrafts(payload.drafts ?? []);
     } catch (caught) {
-      setError(caught instanceof Error ? caught.message : "Lỗi mạng.");
+      if (!quiet) setError(caught instanceof Error ? caught.message : "Lỗi mạng.");
     } finally {
-      setLoading(false);
+      if (!quiet) setLoading(false);
     }
   }, []);
 
   useEffect(() => {
     void load();
   }, [load]);
+
+  // While anything is being written, re-read quietly so the draft card's
+  // progress bar moves without flashing the whole library.
+  useEffect(() => {
+    if (drafts.length === 0) return;
+    const timer = window.setInterval(() => {
+      void load(true);
+    }, 8000);
+    return () => window.clearInterval(timer);
+  }, [drafts.length, load]);
 
   const remove = useCallback(async (id: string) => {
     setBusyId(id);
@@ -160,6 +198,75 @@ export function LibraryPanel() {
           </Link>
         </div>
       </div>
+
+      {drafts.map((draft) => {
+        const state = draftState(draft);
+        const percent =
+          draft.total > 0 ? Math.round((draft.done / draft.total) * 100) : 0;
+        return (
+          <div
+            key={draft.id}
+            className="rounded-xl border border-gold-500/40 bg-gold-500/[0.06] p-4"
+          >
+            <div className="flex items-start justify-between gap-2">
+              <div className="min-w-0">
+                <p className="flex items-center gap-2 text-sm font-semibold text-mist-50">
+                  {state === "running" ? (
+                    <LoaderCircle className="h-4 w-4 shrink-0 animate-spin text-gold-300" />
+                  ) : (
+                    <BookOpen className="h-4 w-4 shrink-0 text-mist-400" />
+                  )}
+                  <span className="truncate">{draft.title}</span>
+                </p>
+                <p className="mt-0.5 text-xs text-mist-400">
+                  {state === "running"
+                    ? `Đang tạo ${draft.done}/${draft.total} cảnh`
+                    : state === "failed"
+                      ? "Tạo bài thất bại"
+                      : "Có thể đã dừng (máy chủ tắt giữa chừng)"}
+                  {draft.subject ? ` · ${draft.subject}` : ""}
+                  {` · ${relative(draft.updatedAt)}`}
+                </p>
+              </div>
+              <div className="flex shrink-0 gap-2">
+                {state === "running" ? (
+                  <Link
+                    href="/studio"
+                    className="btn-ghost px-3 py-1.5 text-xs"
+                    title="Mở trang tạo bài để xem và nghe từng cảnh"
+                  >
+                    Xem tiến độ
+                  </Link>
+                ) : null}
+                <button
+                  type="button"
+                  onClick={() => void remove(draft.id)}
+                  disabled={busyId === draft.id}
+                  className="btn-icon"
+                  aria-label={`Xoá bản nháp ${draft.title}`}
+                >
+                  {busyId === draft.id ? (
+                    <LoaderCircle className="h-4 w-4 animate-spin" />
+                  ) : (
+                    <Trash2 className="h-4 w-4" />
+                  )}
+                </button>
+              </div>
+            </div>
+            {state === "running" ? (
+              <div className="mt-2 h-1.5 w-full overflow-hidden rounded-full bg-ink-800">
+                <div
+                  className="h-full rounded-full bg-gradient-to-r from-brand-400 to-gold-400 transition-[width] duration-500 ease-out"
+                  style={{ width: `${Math.max(2, percent)}%` }}
+                />
+              </div>
+            ) : null}
+            <p className="mt-1.5 text-xs text-mist-400">
+              {state === "failed" ? draft.error : draft.message}
+            </p>
+          </div>
+        );
+      })}
 
       {error ? (
         <p className="rounded-xl border border-ember-500/50 bg-ember-500/10 px-3.5 py-2.5 text-sm text-mist-100">

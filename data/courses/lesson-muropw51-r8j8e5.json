@@ -1,0 +1,404 @@
+{
+  "format": "eduai-studio/course@1",
+  "updatedAt": "2026-10-03T01:05:05.485Z",
+  "lesson": {
+    "id": "lesson-muropw51-r8j8e5",
+    "title": "Định Luật Bảo Toàn Năng Lượng",
+    "subject": "Chung",
+    "grade": "Phổ thông",
+    "language": "vi",
+    "fps": 30,
+    "duration": 144,
+    "scenes": [
+      {
+        "id": "ai-1",
+        "kind": "cover",
+        "accent": "brand",
+        "title": "Năng lượng giữ nguyên trong mọi hiện tượng",
+        "subtitle": "Khám phá cách năng lượng chuyển đổi mà tổng lượng không thay đổi",
+        "bullets": [
+          "Vật rơi từ độ cao 10 m: năng lượng vị thế mgh = 1 kg × 9,8 m/s² × 10 m ≈ 98 J chuyển thành năng lượng động ½mv² khi chạm đất.",
+          "Xích lắc質量 1 kg, amplitudo 0,5 m: năng lượng động tối đa ở vị trí thấp nhất bằng năng lượng vị thế tối đa ở cao nhất, tổng ≈ 2,45 J (g≈9,8)."
+        ],
+        "narration": "Chúng ta đặt ra câu hỏi: Bạn đã bao giờ tự hỏi năng lượng có thể giữ nguyên không? Khi vật rơi, năng lượng posição của nó chuyển thành năng lượng động, nhưng tổng năng lượng trước và sau va chạm không đổi. Đây là Định luật bảo toàn năng lượng, quy luật cơ bản mà chúng ta sẽ khám phá bài giảng hôm nay.",
+        "pointer": [
+          {
+            "target": "title",
+            "label": "Câu hỏi mở đầu"
+          },
+          {
+            "target": "bullet-0",
+            "label": "Ví dụ rơi vật"
+          },
+          {
+            "target": "subtitle",
+            "label": "Mô tả tổng quan"
+          }
+        ],
+        "start": 0,
+        "duration": 24
+      },
+      {
+        "id": "ai-2",
+        "kind": "concept",
+        "accent": "gold",
+        "title": "Năng lượng là gì?",
+        "subtitle": "Định nghĩa cơ bản của năng lượng",
+        "bullets": [
+          "Năng lượng mô tả khả năng làm công việc",
+          "Khi chuyển đổi năng lượng, giá trị tổng luôn giữ nguyên"
+        ],
+        "imagePrompt": "illustration of a ball falling and converting potential energy to kinetic energy, minimalistic style, no text",
+        "narration": "Năng lượng là một khái niệm mô tả khả năng thực hiện công việc. Ví dụ, một bóng đổ phải có năng lượng chuyển thành động năng khi di chuyển xuống. Khi ta hỏi bạn, năng lượng có thể được chuyển đổi nhưng không bị mất. Bạn nhớ ví dụ nào khác? Năng lượng có thể chuyển từ hình học sang nhiệt.",
+        "pointer": [
+          {
+            "target": "title",
+            "label": "Introduce title"
+          },
+          {
+            "target": "bullet-0",
+            "label": "Explain first bullet"
+          },
+          {
+            "target": "bullet-1",
+            "label": "Explain second bullet"
+          },
+          {
+            "target": "subtitle",
+            "label": "Clarify subtitle"
+          }
+        ],
+        "start": 24,
+        "duration": 24
+      },
+      {
+        "id": "ai-3",
+        "kind": "concept",
+        "accent": "ember",
+        "title": "Tại sao năng lượng không biến mất?",
+        "subtitle": "Lý do quy luật bảo toàn năng lượng quan trọng",
+        "bullets": [
+          "Năng lượng chuyển dạng khi vật động",
+          "Không có mất mát, chỉ chuyển động thành nhiệt",
+          "Quy luật giúp tính toán hệ thống máy móc"
+        ],
+        "imagePrompt": "illustration of a rolling ball converting potential energy to kinetic energy, no text",
+        "narration": "Bạn có thể thấy khi một chiếc xe chạy tạm dừng, năng lượng không mất mà chuyển thành nhiệt. Quy luật bảo toàn năng lượng bảo rằng tổng năng lượng hằng, chỉ biến dạng. Ví dụ, khi bóng rơi, năng lượng thế chuyển thành động. Hãy nhớ: năng lượng không biến mất, chỉ chuyển dạng.",
+        "pointer": [
+          {
+            "target": "bullet-0",
+            "label": "intro"
+          }
+        ],
+        "start": 48,
+        "duration": 24
+      },
+      {
+        "id": "ai-4",
+        "kind": "example",
+        "accent": "brand",
+        "title": "Ví dụ: Năng lượng trong bánh xe trượt",
+        "subtitle": "Sự chuyển đổi năng lượng cơ học",
+        "bullets": [
+          "Bánh xe trượt, vận tốc 5 m/s, góc 30°",
+          "Động năng chuyển thành thế khi lên cao",
+          "Tổng năng lượng không đổi, bảo toàn",
+          "Kiểm tra bằng công thức KE+PE"
+        ],
+        "steps": [
+          "Cho bánh xe: khởi động từ mặt đất, vận tốc 5 m/s, góc 30°",
+          "Tính động năng: KE = ½ m v²",
+          "Tại điểm cao nhất, KE = 0, toàn năng lượng là thế",
+          "Tính năng lượng thế: PE = m g h, với h = r(1‑cosθ)"
+        ],
+        "imagePrompt": "cartoon wheel rolling on inclined surface showing velocity vector and potential energy arrow, no text",
+        "narration": "Ở ví dụ này, bánh xe trượt khởi động với vận tốc 5 m/s và góc quay 30°. Khi bánh trượt lên mặt đất, năng lượng chuyển từ động năng thành năng lượng thế. Tính năng lượng thế tại điểm cao nhất và kiểm tra tổng năng lượng không thay đổi.",
+        "pointer": [
+          {
+            "target": "title",
+            "label": "đưa ra ví dụ"
+          },
+          {
+            "target": "bullet-0",
+            "label": "đưa ví dụ"
+          },
+          {
+            "target": "bullet-1",
+            "label": "giải thích chuyển đổi"
+          },
+          {
+            "target": "bullet-2",
+            "label": "kết luận bảo toàn"
+          }
+        ],
+        "start": 72,
+        "duration": 24
+      },
+      {
+        "id": "ai-5",
+        "kind": "quiz",
+        "accent": "gold",
+        "title": "Kiểm tra lại xem bạn đã hiểu chưa",
+        "subtitle": "Chọn đáp án đúng về nội dung vừa học.",
+        "bullets": [
+          "Đọc lại tóm tắt ở slide trước nếu chưa nhớ.",
+          "Chọn một đáp án, bạn sẽ được giải thích ngay."
+        ],
+        "narration": "Mình cùng kiểm tra lại xem bạn đã nắm được chưa. Đọc câu hỏi và chọn đáp án mình nghĩ là đúng. Chọn sai cũng không sao, mình sẽ giải thích lại ngay tại đây, và đó là cách nhanh nhất để biết mình cần xem lại phần nào.",
+        "quiz": {
+          "question": "Bạn đã nắm được nội dung chính của bài học này chưa?",
+          "options": [
+            {
+              "id": "opt-1",
+              "text": "Rồi, mình hiểu và tự giải thích lại được cho bạn nghe",
+              "isCorrect": true,
+              "explanation": "Đó là đúng. Tự kể lại bằng lời mình mới thật sự nắm."
+            },
+            {
+              "id": "opt-2",
+              "text": "Mình hiểu phần đầu, phần sau hơi mơ hồ",
+              "isCorrect": false,
+              "explanation": "Không sao. Xem lại phần cuối, đó là phần hay quên nhất."
+            },
+            {
+              "id": "opt-3",
+              "text": "Chưa, mình thấy hơi nhiều thông tin",
+              "isCorrect": false,
+              "explanation": "Bài dài là chủ ý. Xem lại dàn ý theo thứ tự, từng phần một sẽ dễ hơn."
+            },
+            {
+              "id": "opt-4",
+              "text": "Chưa, mình muốn xem ví dụ thực tế thêm",
+              "isCorrect": false,
+              "explanation": "Phần ví dụ gần cuối bài. Đọc nó sẽ giúp bạn thấy bài học dùng được thế nào."
+            }
+          ]
+        },
+        "start": 96,
+        "duration": 24
+      },
+      {
+        "id": "ai-6",
+        "kind": "summary",
+        "accent": "gold",
+        "title": "Nhắc nhớ định luật bảo toàn năng lượng",
+        "subtitle": "Tóm tắt nhanh về bảo toàn năng lượng",
+        "bullets": [
+          "Mối liên hệ năng lượng dạng động – thế",
+          "Mức năng lượng tổng không đổi trong hệ",
+          "Ví dụ: bánh xe trượt xuống đèo duy trì năng lượng",
+          "Câu hỏi gợi nhớ: làm sao lượng năng lượng chuyển đổi?",
+          "Kết nối với hiện thực: xe đạp di chuyển",
+          "Thành phần cơ cấu chuyển đổi",
+          "Định luật bảo toàn là nền tảng"
+        ],
+        "narration": "Nhớ rằng năng lượng động và thế trong một hệ kín không thay đổi. Khi bánh xe trượt xuống đèo, năng lượng động giảm nhưng chuyển thành năng lượng thế, giữ tổng năng lượng không đổi. Câu hỏi: khi chất liệu rung, năng lượng chuyển thành nhiệt, nhưng tổng năng lượng vẫn không biến mất. Bạn đã hiểu ứng dụng thực tiễn của điều này chưa?",
+        "pointer": [
+          {
+            "target": "title",
+            "label": "bắt đầu"
+          },
+          {
+            "target": "subtitle",
+            "label": "tổ chức"
+          },
+          {
+            "target": "bullet-0",
+            "label": "động – thế"
+          },
+          {
+            "target": "bullet-1",
+            "label": "để không đổi"
+          },
+          {
+            "target": "bullet-2",
+            "label": "ví dụ bánh xe"
+          },
+          {
+            "target": "bullet-3",
+            "label": "câu hỏi"
+          },
+          {
+            "target": "bullet-4",
+            "label": "kết nối"
+          },
+          {
+            "target": "bullet-5",
+            "label": "thành phần"
+          },
+          {
+            "target": "bullet-6",
+            "label": "định luật"
+          }
+        ],
+        "start": 120,
+        "duration": 24
+      }
+    ],
+    "chapters": [
+      {
+        "id": "ch-1",
+        "title": "Năng lượng giữ nguyên trong mọi hiện tượng",
+        "start": 0,
+        "end": 24,
+        "sceneIds": [
+          "ai-1"
+        ]
+      },
+      {
+        "id": "ch-2",
+        "title": "Năng lượng là gì?",
+        "start": 24,
+        "end": 48,
+        "sceneIds": [
+          "ai-2"
+        ]
+      },
+      {
+        "id": "ch-3",
+        "title": "Tại sao năng lượng không biến mất?",
+        "start": 48,
+        "end": 72,
+        "sceneIds": [
+          "ai-3"
+        ]
+      },
+      {
+        "id": "ch-4",
+        "title": "Ví dụ: Năng lượng trong bánh xe trượt",
+        "start": 72,
+        "end": 96,
+        "sceneIds": [
+          "ai-4"
+        ]
+      },
+      {
+        "id": "ch-5",
+        "title": "Kiểm tra lại xem bạn đã hiểu chưa",
+        "start": 96,
+        "end": 120,
+        "sceneIds": [
+          "ai-5"
+        ]
+      },
+      {
+        "id": "ch-6",
+        "title": "Nhắc nhớ định luật bảo toàn năng lượng",
+        "start": 120,
+        "end": 144,
+        "sceneIds": [
+          "ai-6"
+        ]
+      }
+    ],
+    "source": "gemini",
+    "theme": "paper",
+    "voice": "vi-VN-HoaiMyNeural",
+    "showPointer": true,
+    "pointerColor": "#f59e0b",
+    "model": "nvidia/nemotron-3-super-120b-a12b",
+    "createdAt": "2026-10-03T01:05:05.418Z"
+  },
+  "log": [
+    {
+      "message": "Đang lên dàn ý bài học…",
+      "kind": "stage",
+      "at": "07:59:45",
+      "stage": "outline",
+      "provider": "nvidia",
+      "model": "openai/gpt-oss-20b"
+    },
+    {
+      "message": "Dàn ý: 5 cảnh: \"Định Luật Bảo Toàn Năng Lượng\"",
+      "kind": "stage",
+      "at": "08:00:11",
+      "stage": "outline-done",
+      "provider": "nvidia",
+      "model": "openai/gpt-oss-20b",
+      "elapsedMs": 25849
+    },
+    {
+      "message": "Đang viết cảnh 1–5/5",
+      "kind": "stage",
+      "at": "08:00:11",
+      "stage": "scene"
+    },
+    {
+      "message": "Xong cảnh 5: Nhắc nhớ định luật bảo toàn năng lượng",
+      "kind": "scene",
+      "at": "08:01:41",
+      "stage": "scene",
+      "provider": "nvidia",
+      "model": "openai/gpt-oss-20b",
+      "elapsedMs": 90248
+    },
+    {
+      "message": "Xong cảnh 3: Tại sao năng lượng không biến mất?",
+      "kind": "scene",
+      "at": "08:02:10",
+      "stage": "scene",
+      "provider": "nvidia",
+      "model": "openai/gpt-oss-20b",
+      "elapsedMs": 119249
+    },
+    {
+      "message": "Cảnh \"Năng lượng là gì?\" bị cắt giữa chừng, thử lại lần nữa.",
+      "kind": "stage",
+      "at": "08:02:12",
+      "stage": "scene-retry",
+      "provider": "nvidia",
+      "elapsedMs": 120653
+    },
+    {
+      "message": "Cảnh \"Bạn đã bao giờ tự hỏi năng lượng có thể giữ nguyên không?\" bị cắt giữa chừng, thử lại lần nữa.",
+      "kind": "stage",
+      "at": "08:02:12",
+      "stage": "scene-retry",
+      "provider": "nvidia",
+      "elapsedMs": 121008
+    },
+    {
+      "message": "Cảnh \"Ví dụ: Năng lượng trong bánh xe trượt\" bị cắt giữa chừng, thử lại lần nữa.",
+      "kind": "stage",
+      "at": "08:02:12",
+      "stage": "scene-retry",
+      "provider": "nvidia",
+      "elapsedMs": 121006
+    },
+    {
+      "message": "Xong cảnh 4: Ví dụ: Năng lượng trong bánh xe trượt",
+      "kind": "scene",
+      "at": "08:03:06",
+      "stage": "scene",
+      "provider": "nvidia",
+      "model": "openai/gpt-oss-20b",
+      "elapsedMs": 175207
+    },
+    {
+      "message": "Xong cảnh 2: Năng lượng là gì?",
+      "kind": "scene",
+      "at": "08:03:07",
+      "stage": "scene",
+      "provider": "nvidia",
+      "model": "openai/gpt-oss-20b",
+      "elapsedMs": 175953
+    },
+    {
+      "message": "Xong cảnh 1: Năng lượng giữ nguyên trong mọi hiện tượng",
+      "kind": "scene",
+      "at": "08:05:05",
+      "stage": "scene",
+      "provider": "nvidia",
+      "model": "nvidia/nemotron-3-super-120b-a12b",
+      "elapsedMs": 293785
+    },
+    {
+      "message": "6 cảnh, 144s.",
+      "kind": "done",
+      "at": "08:05:05",
+      "provider": "nvidia",
+      "model": "nvidia/nemotron-3-super-120b-a12b",
+      "elapsedMs": 319640
+    }
+  ]
+}

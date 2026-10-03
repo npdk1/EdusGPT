@@ -3,6 +3,9 @@
 import { useCallback, useEffect, useState } from "react";
 import { CircleCheck, Circle, LoaderCircle } from "lucide-react";
 import type { Lesson } from "@/lib/lesson/types";
+import type { RunLogEntry } from "@/lib/lesson/run-log";
+
+export type { RunLogEntry };
 
 export interface OutlineStep {
   id: string;
@@ -24,17 +27,21 @@ export interface GenerationProgress {
   error?: string | null;
   /** Every SSE event of this run, in order — the run log below the script. */
   log: RunLogEntry[];
+  /**
+   * Scenes finished so far, ordered by deck position. The server reports each
+   * scene the moment its own call lands (batches finish out of order), so the
+   * studio can show the slide and read its voice-over straight away instead
+   * of waiting for the whole deck.
+   */
+  liveScenes: LiveScene[];
 }
 
-export interface RunLogEntry {
-  /** Client clock when the event arrived, HH:MM:SS. */
-  at: string;
-  stage?: string;
-  message: string;
-  provider?: string;
-  model?: string;
-  elapsedMs?: number;
-  kind: "stage" | "scene" | "done" | "error";
+/** One finished scene, as far as the progressive script needs to show it. */
+export interface LiveScene {
+  index: number;
+  title: string;
+  narration: string;
+  kind: string;
 }
 
 export interface StreamEvent {
@@ -46,6 +53,8 @@ export interface StreamEvent {
   outline?: { title: string; scenes: OutlineStep[] } | null;
   lesson?: unknown;
   error?: string;
+  /** Zero-based deck position of `scene` — batches finish out of order. */
+  sceneIndex?: number;
   /** True when the provider ran out of quota — waiting is the only fix. */
   quota?: boolean;
   provider?: string;
@@ -60,6 +69,7 @@ const EMPTY: GenerationProgress = {
   steps: [],
   done: false,
   log: [],
+  liveScenes: [],
 };
 
 /**
@@ -142,12 +152,12 @@ function broadcast(): void {
  * watching: without this, a run that completes while the user is on another
  * page would vanish — the exact loss this singleton exists to prevent. The
  * POST is idempotent per lesson id, so the panel saving again on reattach is
- * harmless. */
-function saveRunToLibrary(lesson: Lesson): void {
+ * harmless. The run log travels along so the library can show it later. */
+function saveRunToLibrary(lesson: Lesson, log: RunLogEntry[]): void {
   void fetch("/api/courses", {
     method: "POST",
     headers: { "content-type": "application/json" },
-    body: JSON.stringify({ lesson }),
+    body: JSON.stringify({ lesson, log }),
   }).catch(() => {
     /* the panel retries on reattach; a silent run keeps its snapshot */
   });
@@ -198,6 +208,7 @@ function reduceProgress(
         lesson: (event.lesson as Lesson) ?? null,
         error: null,
         log,
+        liveScenes: current.liveScenes,
       },
       steps: doneSteps,
     };
@@ -219,7 +230,12 @@ function reduceProgress(
   }
 
   if (event.type === "scene" && event.scene) {
-    const scene = event.scene as { title?: string; bullets?: unknown[] };
+    const scene = event.scene as {
+      title?: string;
+      bullets?: unknown[];
+      narration?: unknown;
+      kind?: unknown;
+    };
     const next = steps.map((step) =>
       step.state === "active"
         ? {
@@ -234,8 +250,21 @@ function reduceProgress(
     if (nextPending >= 0) {
       next[nextPending] = { ...next[nextPending], state: "active" };
     }
+    // The progressive script: keep every finished scene, ordered by deck
+    // position. Narration is what the voice reads straight away.
+    const live: LiveScene = {
+      index: typeof event.sceneIndex === "number" ? event.sceneIndex : current.liveScenes.length,
+      title:
+        typeof scene.title === "string" && scene.title.trim()
+          ? scene.title.trim().slice(0, 200)
+          : `Cảnh ${current.liveScenes.length + 1}`,
+      narration:
+        typeof scene.narration === "string" ? scene.narration.slice(0, 4000) : "",
+      kind: typeof scene.kind === "string" ? scene.kind : "concept",
+    };
+    const liveScenes = [...current.liveScenes, live].sort((a, b) => a.index - b.index);
     return {
-      progress: { ...current, percent, message: event.message, outlineReady: true, steps: next, log },
+      progress: { ...current, percent, message: event.message, outlineReady: true, steps: next, log, liveScenes },
       steps: next,
     };
   }
@@ -287,7 +316,7 @@ async function pumpRun(run: ActiveRun, body: Record<string, unknown>): Promise<v
           run.steps = reduced.steps;
           if (event.type === "done" && reduced.progress.lesson && !run.saveAttempted) {
             run.saveAttempted = true;
-            saveRunToLibrary(reduced.progress.lesson);
+            saveRunToLibrary(reduced.progress.lesson, reduced.progress.log);
           }
           broadcast();
         } catch {
