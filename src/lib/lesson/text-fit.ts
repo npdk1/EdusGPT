@@ -13,6 +13,8 @@
  * systems measure in the same numbers without converting anything.
  */
 
+import { plainText } from "./inline";
+
 /** Text height in pixels for 1, 2, 3, 4 and 5 lines, keyed by font size. */
 export const TEXT_HEIGHT_TABLE: Record<number, readonly number[]> = {
   14: [43, 64, 85, 106, 127],
@@ -86,12 +88,13 @@ export function linesNeeded(text: string, boxWidth: number, fontPx: number): num
  * Slides write emphasis as `**like this**`, the way a writer types it. The
  * renderer turns it into real bold and italic; this is the same text without
  * the marks, which is what has to fit in the box.
+ *
+ * It asks `@/lib/lesson/inline` rather than keeping its own patterns, so what is
+ * measured here is exactly what the renderer will draw — the fit pass used to
+ * disagree with the emphasis regex on `*italic*` and shave a line off the box.
  */
 export function stripInline(text: string): string {
-  return text
-    .replace(/\*\*([^*]+)\*\*/g, "$1")
-    .replace(/(^|[^*])\*([^*\n]+)\*/g, "$1$2")
-    .replace(/`([^`]+)`/g, "$1");
+  return plainText(text);
 }
 
 /** How many lines this box has room for, at this size. */

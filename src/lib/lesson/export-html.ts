@@ -3,6 +3,8 @@ import path from "node:path";
 import katex from "katex";
 import { SCENE_KIND_LABEL, type Lesson } from "./types";
 import { type AlignedSentence } from "@/lib/karaoke";
+import { inlineHtml } from "./inline";
+import { pollinationsImageUrl } from "./pollinations";
 import {
   isDarkTheme,
   resolveSlideTheme,
@@ -13,6 +15,12 @@ import {
  * Builds a standalone, self-contained HTML "player" for one lesson — one file,
  * timeline and all, with no server involved, and scrubbable in both directions
  * out of the box.
+ *
+ * The slide and the subtitle are the web player's, not a lookalike: same type
+ * ladder in `cqw` against the same 16:9 box, same hairline bullets, same
+ * two-row caption with the sentence being spoken over the one coming next, and
+ * the same three word states. A download that only resembled the page it came
+ * from was a second renderer to keep in step with the first, and it drifted.
  *
  * GSAP is loaded from a CDN, so the file needs internet on first open; the
  * lesson data itself is embedded inline.
@@ -27,27 +35,57 @@ body{background-image:radial-gradient(50rem 32rem at 12% -8%,rgba(36,189,172,.16
 .head h1{margin:0;font-size:20px;letter-spacing:-.01em}
 .tag{font-size:11px;border:1px solid var(--line);border-radius:999px;padding:3px 10px;color:var(--mist3)}
 .mono{font-family:ui-monospace,Consolas,monospace}
-.stage{position:relative;aspect-ratio:16/9;background:var(--ink2);border:1px solid var(--line);border-radius:18px;overflow:hidden}
-.stage .grid{position:absolute;inset:0;background-image:linear-gradient(to right,rgba(46,70,80,.35) 1px,transparent 1px),linear-gradient(to bottom,rgba(46,70,80,.35) 1px,transparent 1px);background-size:52px 52px}
+
+/* The slide box. \`container-type\` is what lets everything inside measure its
+   type in \`cqw\` against this box, so the sizes below are the same numbers the
+   web player's stylesheet uses rather than a fresh guess at "about right". */
+.stage{position:relative;aspect-ratio:16/9;container-type:inline-size;background:var(--ink2);border:1px solid var(--line);border-radius:20px;overflow:hidden;box-shadow:0 28px 60px -34px rgba(0,0,0,.75)}
 .scene{position:absolute;inset:0;opacity:0;visibility:hidden}
-.card{position:relative;height:100%;display:flex;flex-direction:column;justify-content:center;gap:14px;padding:40px 46px 120px;overflow:hidden}
-.glow{position:absolute;inset:0;pointer-events:none;background:linear-gradient(140deg,rgba(36,189,172,.22),transparent 62%)}
-.glow.gold{background:linear-gradient(140deg,rgba(246,185,59,.22),transparent 62%)}
-.glow.ember{background:linear-gradient(140deg,rgba(255,138,91,.2),transparent 62%)}
-.idx{position:absolute;right:18px;top:6px;font-family:ui-monospace,monospace;font-size:96px;font-weight:700;line-height:1;color:rgba(34,53,62,.75)}
-.kind{display:inline-block;font-size:11px;border:1px solid var(--line);border-radius:999px;padding:3px 10px;color:var(--mist3);background:rgba(4,9,11,.7)}
-.title{margin:12px 0 0;font-size:clamp(22px,3.4vw,38px);line-height:1.15;letter-spacing:-.02em}
-.sub{margin:8px 0 0;color:var(--mist3);font-size:15px}
-ul.bullets{margin:0;padding:0;list-style:none;display:flex;flex-direction:column;gap:8px;max-width:820px}
-ul.bullets li{display:flex;gap:10px;font-size:15px;line-height:1.55;color:#cfe0e1}
-ul.bullets li:before{content:"";width:6px;height:6px;margin-top:9px;border-radius:999px;background:var(--brand);flex:0 0 auto}
-.formula{margin:0;width:fit-content;border:1px solid rgba(246,185,59,.4);background:rgba(246,185,59,.1);color:var(--gold3);border-radius:12px;padding:12px 16px;font-family:ui-monospace,monospace;font-size:clamp(16px,2.2vw,24px);font-weight:600}
-.narration{position:absolute;left:0;right:0;bottom:16px;width:min(860px,92%);margin:0 auto;text-align:center;padding:6px 0;font-size:17px;line-height:1.7;font-style:italic;color:var(--mist3);text-shadow:0 1px 8px rgba(0,0,0,.35);pointer-events:none}
-.narration .w{border-radius:4px;padding:0 1px;transition:background-color .15s,color .15s}
-.narration .w.lit{background:var(--brand);font-style:normal}
-.narration .sent{opacity:0;transform:translateY(8px);transition:opacity .35s ease,transform .35s ease}
-.narration .sent.on{opacity:1;transform:none}
+.card{--slide-fit:1;position:absolute;inset:0;display:flex;flex-direction:column;justify-content:safe center;gap:1.1cqw;padding:3.4cqw 5.5cqw 9cqw;overflow:hidden;background-image:linear-gradient(180deg,color-mix(in srgb,var(--ink) 88%,var(--mist5)) 0%,var(--ink) 38%,var(--ink3) 100%)}
+.wash{position:absolute;inset:0;z-index:-1;pointer-events:none;background:radial-gradient(120% 90% at 88% -10%,color-mix(in srgb,var(--brand3) 16%,transparent) 0%,transparent 62%)}
+.wm{position:absolute;right:6%;bottom:4%;font-family:ui-monospace,monospace;font-size:1.6cqw;font-weight:700;color:color-mix(in srgb,var(--mist5) 70%,transparent)}
+.head-in{position:relative;z-index:1;width:100%;max-width:86%}
+.kicker{display:inline-flex;align-items:center;gap:.6cqw;font-size:calc(1.05cqw * var(--slide-fit));font-weight:700;letter-spacing:.18em;text-transform:uppercase;color:var(--brand)}
+.title{margin:2.5% 0 0;font-size:calc(5.2cqw * var(--slide-fit));line-height:1.04;letter-spacing:-.03em;font-weight:700;color:var(--mist);text-wrap:balance}
+.sub{margin:2% 0 0;font-size:calc(1.7cqw * var(--slide-fit));color:var(--mist3)}
+.rule{border:0;border-top:1px solid var(--line);width:22%;margin:3% 0 0}
+
+/* Hairlines, not filled cards: one alignment for the eye and none of the visual
+   weight, which is what keeps a long list looking designed. */
+.body{position:relative;z-index:1;display:grid;width:100%;max-width:86%;gap:0 6%;grid-template-columns:1fr;margin:0;padding:0;list-style:none}
+@container (min-width:620px){.body{grid-template-columns:1fr 1fr}}
+.body li{display:flex;align-items:baseline;gap:1.5cqw;font-size:calc(1.4cqw * var(--slide-fit));line-height:1.62;padding:.75cqw 0;border-top:1px solid var(--line);color:var(--mist3)}
+.body .bi{font-family:ui-monospace,monospace;font-size:.8em;font-weight:600;color:var(--brand);flex:0 0 auto}
+.body li>span:last-child{display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:3;line-clamp:3;overflow:hidden}
+.inline-code{font-family:ui-monospace,monospace;font-size:.92em;padding:0 .3em;border-radius:.3em;background:color-mix(in srgb,var(--mist) 8%,transparent)}
+.formula{margin:0;width:fit-content;border:1px solid rgba(246,185,59,.4);background:rgba(246,185,59,.1);color:var(--gold3);border-radius:12px;padding:12px 16px;font-family:ui-monospace,monospace;font-size:calc(2cqw * var(--slide-fit));font-weight:600}
+.fig{position:relative;z-index:1;margin:1.2cqw 0 0;display:flex;flex-direction:column;align-items:center}
+.fig img{max-width:78%;max-height:32cqw;border-radius:1.2cqw;border:1px solid var(--line);cursor:zoom-in;background:var(--ink3)}
+.fig figcaption{margin-top:.5cqw;font-size:calc(1cqw * var(--slide-fit));color:var(--mist5)}
+.fig.gone{display:none}
+
+/* The caption: two rows held open at all times, the sentence being spoken over
+   the one coming next. Reserving both rows is the point — a caption whose height
+   changes when the hand-over happens moves every line on screen, and the reader
+   feels it as a stutter at the exact moment they are following the voice. */
+.cap{position:absolute;left:4%;right:4%;bottom:1.08cqw;height:5.22cqw;overflow:hidden;text-align:center;pointer-events:none}
+.sent{position:absolute;left:0;right:0;margin:0;font-size:1.75cqw;line-height:1.32;font-weight:500;letter-spacing:.005em;color:var(--mist);opacity:0;transition:opacity .16s linear}
+.sent[data-row="live"]{top:0;opacity:1}
+.sent[data-row="next"]{top:2.91cqw;opacity:1;color:var(--mist5)}
+.sent .w{padding:0 1px;transition:color 90ms linear}
+.sent .w[data-state="idle"]{color:var(--mist5)}
+.sent .w[data-state="said"]{color:var(--mist3)}
+.sent .w[data-state="now"]{color:var(--brand)}
+.cap-plain{position:absolute;left:0;right:0;top:0;margin:0;font-size:1.75cqw;line-height:1.32;font-weight:500;color:var(--mist3)}
 .bar{position:absolute;left:0;bottom:0;height:3px;width:100%;transform:scaleX(0);transform-origin:left center;background:linear-gradient(90deg,var(--brand),var(--gold3))}
+
+/* Click a picture to read it: a downloaded file has no player to go back to, so
+   the zoom is the only way to see the detail the slide was pointing at. */
+.zoom{position:fixed;inset:0;z-index:80;display:none;align-items:center;justify-content:center;padding:24px;background:rgba(4,9,11,.86);backdrop-filter:blur(2px)}
+.zoom.on{display:flex}
+.zoom img{max-width:96vw;max-height:88vh;border-radius:14px;border:1px solid var(--line)}
+.zoom-x{position:absolute;top:16px;right:16px;width:38px;height:38px;border-radius:999px;padding:0;font-size:20px;line-height:1}
+
 .controls{margin-top:16px;border:1px solid var(--line);background:rgba(8,15,19,.75);border-radius:16px;padding:14px}
 .row{display:flex;flex-wrap:wrap;align-items:center;gap:8px}
 button{font:inherit;color:var(--mist);background:rgba(17,29,35,.9);border:1px solid var(--line);border-radius:10px;padding:8px 12px;cursor:pointer}
@@ -64,44 +102,35 @@ input[type=range]::-moz-range-thumb{width:16px;height:16px;border-radius:999px;b
 .ab{display:flex;align-items:center;gap:6px;border:1px solid var(--line);border-radius:12px;padding:4px}
 .ab.on{background:var(--gold);color:#04090b;border-color:var(--gold);font-weight:700}
 .hint{color:var(--mist5);font-size:11px;margin-top:10px;font-family:ui-monospace,monospace}
+@media (prefers-reduced-motion:reduce){.sent,.sent .w{transition:none}}
 `;
 
 /**
- * Recolours the generic dark player chrome with the lesson's own paper.
+ * Recolours the generic player chrome with the lesson's own paper.
  *
- * The web player reads every colour through `var(--slide-*)`, so a deck on
- * "Giấy kem" is light and a deck on "Mực tàu" is dark. The standalone file
- * used to ignore that and always ship the dark look, which is why a download
- * never resembled the web page. Redefining the same variables keeps the layout
- * untouched while the whole page — stage, controls, buttons — follows the
- * chosen preset.
+ * The web player reads every colour through the slide's palette, so a deck on
+ * "Giấy kem" is light and a deck on "Mực tàu" is dark. The standalone file used
+ * to ignore that and always ship the dark look, which is why a download never
+ * resembled the web page. Redefining the same variables keeps the layout
+ * untouched while the whole page — paper, wash, controls, buttons, caption —
+ * follows the chosen preset.
  */
 function themeCss(palette: SlidePalette, dark: boolean): string {
   const p = palette;
-  const grid = `color-mix(in srgb, ${p.rule} 38%, transparent)`;
   return (
     `:root{color-scheme:${dark ? "dark" : "light"};` +
     `--ink:${p.bg};--ink2:${p.bg};--ink3:${p.bgSunk};--line:${p.rule};` +
     `--mist:${p.ink};--mist3:${p.inkSoft};--mist5:${p.inkFaint};` +
     `--brand:${p.accent};--brand3:${p.accentSoft};--brand7:${p.accent}}` +
     `body{background-image:none}` +
+    `.stage{background:${p.bg}}` +
     `.controls{background:color-mix(in srgb, ${p.bgSunk} 72%, transparent)}` +
     `button{background:color-mix(in srgb, ${p.bgSunk} 90%, transparent)}` +
     `button.primary{color:${dark ? "#04090b" : "#ffffff"}}` +
-    `.kind{background:color-mix(in srgb, ${p.bgSunk} 70%, transparent)}` +
-    `.stage .grid{background-image:linear-gradient(to right,${grid} 1px,transparent 1px),` +
-    `linear-gradient(to bottom,${grid} 1px,transparent 1px)}` +
-    `.idx{color:color-mix(in srgb, ${p.inkFaint} 70%, transparent)}` +
-    // Lit word: dark ink on the (light) accent of dark papers, white ink on
-    // the (dark) accent of light papers. A fixed colour here is what made the
-    // spoken word unreadable on half the themes.
-    `.narration .w.lit{color:${dark ? "#04090b" : "#ffffff"}}` +
-    `.glow{background:linear-gradient(140deg,` +
-    `color-mix(in srgb, ${p.accent} 22%, transparent),transparent 62%)}` +
-    `.glow.gold{background:linear-gradient(140deg,` +
-    `color-mix(in srgb, #f6b93b 22%, transparent),transparent 62%)}` +
-    `.glow.ember{background:linear-gradient(140deg,` +
-    `color-mix(in srgb, #ff8a5b 20%, transparent),transparent 62%)}` +
+    `.wash{background:radial-gradient(120% 90% at 88% -10%,` +
+    `color-mix(in srgb, ${p.accentSoft} 16%, transparent) 0%,transparent 62%)}` +
+    `.fig img{background:${p.bgSunk}}` +
+    `.zoom{background:color-mix(in srgb, ${p.ink} 82%, transparent)}` +
     `.formula{border-color:color-mix(in srgb, #f6b93b 40%, transparent);` +
     `background:color-mix(in srgb, #f6b93b 10%, transparent)}`
   );
@@ -158,36 +187,62 @@ function formulaMarkup(formula: string): string {
 }
 
 /**
- * Renders one scene's narration as sentences that pop up one at a time, each
- * word carrying its speaking window. A sentence with no measured start rides
- * with the previous one so it is never stranded invisible; a scene with no
- * timings at all falls back to the plain paragraph.
+ * Renders one scene's narration as the web player's caption: every sentence in
+ * the file, each word carrying its speaking window, and the script below showing
+ * the sentence being spoken over the one coming next.
+ *
+ * Every sentence is written out rather than only the current one because this
+ * file has no state to rebuild DOM from — the whole point is that it scrubs
+ * backwards. The rows are placed by the script; a scene with no timings at all
+ * (a voice that failed, an alignment the coverage check rejected) falls back to
+ * the plain paragraph, because a caption that can never light up is worse than
+ * the text it was hiding.
  */
 function narrationMarkup(narration: string, sentences: AlignedSentence[]): string {
-  // No timings (a scene whose voice failed to synthesise, or an alignment the
-  // coverage check rejected): fall back to the plain paragraph. The spans must
-  // never change the visible text, so an empty list renders no spans.
   if (sentences.length === 0) {
-    return `<p class="narration">&ldquo;${escapeHtml(narration)}&rdquo;</p>`;
+    return `<div class="cap"><p class="cap-plain">${escapeHtml(narration)}</p></div>`;
   }
   let lastStart = 0;
   const inner = sentences
-    .map((sentence) => {
+    .map((sentence, index) => {
       const start = sentence.start ?? lastStart;
       lastStart = start;
       const words = sentence.tokens
         .map((token) => {
           const text = escapeHtml(token.text);
           if (token.start === null || token.end === null) {
-            return `<span class="w">${text}</span>`;
+            return `<span class="w" data-state="idle">${text}</span>`;
           }
-          return `<span class="w" data-s="${token.start.toFixed(3)}" data-e="${token.end.toFixed(3)}">${text}</span>`;
+          return `<span class="w" data-state="idle" data-s="${token.start.toFixed(3)}">${text}</span>`;
         })
         .join("");
-      return `<span class="sent" data-start="${start.toFixed(3)}">${words}</span>`;
+      return `<p class="sent" data-row="off" data-sent="${index}" data-start="${start.toFixed(3)}">${words}</p>`;
     })
-    .join(" ");
-  return `<p class="narration">&ldquo;${inner}&rdquo;</p>`;
+    .join("");
+  return `<div class="cap">${inner}</div>`;
+}
+
+/**
+ * The slide's own picture, asked of the same URL the web player asks for.
+ *
+ * The seed is derived from the lesson and the scene id, so the downloaded file
+ * and the web page show the same picture for the same slide. It is a remote URL
+ * on purpose: an archive search would need a server this file does not have, and
+ * a data-URI copy of every picture would multiply the size of the download for
+ * something the fallback chain already covers.
+ */
+function figureMarkup(lesson: Lesson, scene: Lesson["scenes"][number]): string {
+  const prompt = (scene.imagePrompt ?? "").trim();
+  if (prompt.length < 3) return "";
+  const src = pollinationsImageUrl(lesson.id, scene.id, prompt);
+  return (
+    `<figure class="fig">` +
+    // Remote picture: there is no image pipeline in a downloaded file.
+    // eslint-disable-next-line @next/next/no-img-element
+    `<img src="${escapeHtml(src)}" alt="${escapeHtml(scene.title)}" loading="lazy" referrerpolicy="no-referrer" />` +
+    `<figcaption>Ảnh AI &middot; pollinations.ai &mdash; bấm để phóng to</figcaption>` +
+    `</figure>`
+  );
 }
 
 function sceneMarkup(
@@ -197,9 +252,19 @@ function sceneMarkup(
 ): string {
   return lesson.scenes
     .map((scene, index) => {
-      const glowClass = scene.accent === "brand" ? "glow" : `glow ${scene.accent}`;
       const bullets = scene.bullets
-        .map((bullet) => `<li>${escapeHtml(bullet)}</li>`)
+        .map(
+          (bullet, bulletIndex) =>
+            `<li><span class="bi">${String(bulletIndex + 1).padStart(2, "0")}</span>` +
+            `<span>${inlineHtml(bullet, escapeHtml)}</span></li>`,
+        )
+        .join("");
+      const steps = (scene.steps ?? [])
+        .map(
+          (step, stepIndex) =>
+            `<li><span class="bi">B${stepIndex + 1}</span>` +
+            `<span>${inlineHtml(step, escapeHtml)}</span></li>`,
+        )
         .join("");
       const audio = audios[index];
       return [
@@ -208,17 +273,21 @@ function sceneMarkup(
           ? `<audio data-voice preload="auto" src="${audio}"></audio>`
           : "",
         `<div class="card">`,
-        `<div class="${glowClass}"></div>`,
-        `<div class="idx">${String(index + 1).padStart(2, "0")}</div>`,
-        `<header><span class="kind">${SCENE_KIND_LABEL[scene.kind]}</span>`,
-        `<h2 class="title">${escapeHtml(scene.title)}</h2>`,
-        scene.subtitle ? `<p class="sub">${escapeHtml(scene.subtitle)}</p>` : "",
+        `<div class="wash"></div>`,
+        `<header class="head-in">`,
+        `<span class="kicker">${escapeHtml(SCENE_KIND_LABEL[scene.kind])}</span>`,
+        `<h2 class="title">${inlineHtml(scene.title, escapeHtml)}</h2>`,
+        scene.subtitle ? `<p class="sub">${inlineHtml(scene.subtitle, escapeHtml)}</p>` : "",
+        `<hr class="rule" />`,
         `</header>`,
-        `<ul class="bullets">${bullets}</ul>`,
+        bullets ? `<ul class="body">${bullets}</ul>` : "",
+        steps ? `<ol class="body">${steps}</ol>` : "",
         scene.formula ? formulaMarkup(scene.formula) : "",
+        figureMarkup(lesson, scene),
         scene.narration
           ? narrationMarkup(scene.narration, karaoke[index] ?? [])
           : "",
+        `<span class="wm">${String(index + 1).padStart(2, "0")}</span>`,
         `<div class="bar"></div>`,
         `</div></article>`,
       ]
@@ -250,19 +319,21 @@ const PLAYER_JS = `
     var card = el.querySelector('.card');
     var title = el.querySelector('.title');
     var sub = el.querySelector('.sub');
-    var bullets = el.querySelectorAll('ul.bullets li');
+    var rows = el.querySelectorAll('.body li');
     var formula = el.querySelector('.formula');
-    var narration = el.querySelector('.narration');
+    var figure = el.querySelector('.fig');
+    var cap = el.querySelector('.cap');
     var bar = el.querySelector('.bar');
     var at = scene.start;
     tl.set(el, { autoAlpha: 1, zIndex: 2 }, at)
       .set(el, { autoAlpha: 0, zIndex: 1 }, at + scene.duration - 0.001)
-      .fromTo(card, { y: 26, opacity: 0 }, { y: 0, opacity: 1, duration: 0.6 }, at)
-      .fromTo(title, { yPercent: 60, opacity: 0 }, { yPercent: 0, opacity: 1, duration: 0.55 }, at + 0.08)
-      .fromTo(sub, { y: 14, opacity: 0 }, { y: 0, opacity: 1, duration: 0.5 }, at + 0.18)
-      .fromTo(bullets, { x: -18, opacity: 0 }, { x: 0, opacity: 1, duration: 0.5, stagger: 0.09 }, at + 0.3);
+      .fromTo(card, { y: 26, opacity: 0 }, { y: 0, opacity: 1, duration: 0.6 }, at);
+    if (title) tl.fromTo(title, { yPercent: 60, opacity: 0 }, { yPercent: 0, opacity: 1, duration: 0.55 }, at + 0.08);
+    if (sub) tl.fromTo(sub, { y: 14, opacity: 0 }, { y: 0, opacity: 1, duration: 0.5 }, at + 0.18);
+    if (rows.length) tl.fromTo(rows, { x: -18, opacity: 0 }, { x: 0, opacity: 1, duration: 0.5, stagger: 0.09 }, at + 0.3);
     if (formula) tl.fromTo(formula, { scale: 0.94, opacity: 0 }, { scale: 1, opacity: 1, duration: 0.5, ease: 'back.out(1.5)' }, at + 0.45);
-    if (narration) tl.fromTo(narration, { opacity: 0, y: 10 }, { opacity: 1, y: 0, duration: 0.5 }, at + Math.min(scene.duration * 0.55, 1.6));
+    if (figure) tl.fromTo(figure, { opacity: 0, y: 10 }, { opacity: 1, y: 0, duration: 0.5 }, at + 0.5);
+    if (cap) tl.fromTo(cap, { opacity: 0, y: 10 }, { opacity: 1, y: 0, duration: 0.5 }, at + Math.min(scene.duration * 0.55, 1.6));
     if (bar) tl.fromTo(bar, { scaleX: 0 }, { scaleX: 1, duration: scene.duration, ease: 'none' }, at);
   });
   tl.duration(Math.max(data.duration || 0, tl.duration()));
@@ -290,68 +361,100 @@ const PLAYER_JS = `
   var voiceOn = true;
   var voiceScene = -1;
 
-  // --- karaoke subtitle: each narration word carries its speaking window in
-  // data-s/data-e (seconds into the scene's own clip, aligned server-side),
-  // grouped into one .sent span per caption sentence. The voice element is
-  // the clock: every paint looks up the word spoken at the current offset and
-  // lights exactly that span, and shows only the sentence being spoken so each
-  // line pops up in turn like a film subtitle. Words without a window never
-  // light up, and a scene with no timings keeps its plain paragraph.
-  var karaokeTracks = [];
-  for (var ki = 0; ki < data.scenes.length; ki++) {
-    var kel = stage.querySelector('[data-scene="' + ki + '"] .narration');
-    var spans = kel ? kel.querySelectorAll('span.w[data-s]') : [];
-    var starts = [];
-    var order = [];
-    for (var si = 0; si < spans.length; si++) {
-      var s = parseFloat(spans[si].getAttribute('data-s'));
-      if (isFinite(s)) { starts.push(s); order.push(si); }
+  // --- the caption, read the way the web player reads it.
+  //
+  // Every sentence of every scene is already in the file, each word carrying its
+  // speaking window in data-s (seconds into the scene's own clip, aligned
+  // server-side). The playhead decides two things per frame, and only two:
+  // which sentence is live, and which word inside it is being spoken. Words
+  // before the current one are "said", the current one takes the accent, the
+  // rest stay faint — three states, because a line that only lights the current
+  // word is hard to read: the eye needs the words already spoken to follow the
+  // sentence, and the ones not yet reached to know what is coming.
+  //
+  // The sentence rule is the last one whose first word has begun. A caption that
+  // advanced on a timer would drift from the voice, and drift is the one thing
+  // that makes a karaoke caption feel broken.
+  var caps = [];
+  for (var ci = 0; ci < data.scenes.length; ci++) {
+    var capEl = stage.querySelector('[data-scene="' + ci + '"] .cap');
+    var sentEls = capEl ? capEl.querySelectorAll('.sent') : [];
+    var sents = [];
+    for (var si = 0; si < sentEls.length; si++) {
+      var wordEls = sentEls[si].querySelectorAll('.w');
+      var words = [];
+      for (var wi = 0; wi < wordEls.length; wi++) {
+        var ws = parseFloat(wordEls[wi].getAttribute('data-s'));
+        words.push({ el: wordEls[wi], start: isFinite(ws) ? ws : null, state: 'idle' });
+      }
+      var ss = parseFloat(sentEls[si].getAttribute('data-start'));
+      sents.push({ el: sentEls[si], words: words, start: isFinite(ss) ? ss : null, row: 'off', lit: -2 });
     }
-    var sentEls = kel ? kel.querySelectorAll('span.sent') : [];
-    var sentStarts = [];
-    for (var gi = 0; gi < sentEls.length; gi++) {
-      var gs = parseFloat(sentEls[gi].getAttribute('data-start'));
-      sentStarts.push(isFinite(gs) ? gs : 0);
-    }
-    karaokeTracks.push({ spans: spans, starts: starts, order: order, lit: -1, sents: sentEls, sentStarts: sentStarts, sentOn: -2 });
+    caps.push(sents);
   }
 
-  function paintKaraoke() {
-    var idx = sceneIndexAt(current);
-    for (var i = 0; i < karaokeTracks.length; i++) {
-      var track = karaokeTracks[i];
-      var want = -1;
-      var wantSent = -1;
-      if (i === idx && track.starts.length > 0) {
-        var off = Math.max(0, current - data.scenes[idx].start);
-        var low = 0, high = track.starts.length - 1;
-        while (low <= high) {
-          var mid = (low + high) >> 1;
-          if (track.starts[mid] <= off) { want = mid; low = mid + 1; }
-          else { high = mid - 1; }
-        }
-        if (want >= 0) want = track.order[want];
-        for (var qi = 0; qi < track.sentStarts.length; qi++) {
-          if (track.sentStarts[qi] <= off) wantSent = qi;
-        }
+  function restamp(sent, active) {
+    for (var i = 0; i < sent.words.length; i++) {
+      var state = active > -1 && i < active ? 'said' : (active === i ? 'now' : 'idle');
+      if (sent.words[i].state !== state) {
+        sent.words[i].el.setAttribute('data-state', state);
+        sent.words[i].state = state;
       }
-      if (want !== track.lit) {
-        if (track.lit >= 0 && track.spans[track.lit]) {
-          track.spans[track.lit].className = 'w';
+    }
+    sent.lit = active;
+  }
+
+  function paintCaption(idx, off) {
+    for (var i = 0; i < caps.length; i++) {
+      var list = caps[i];
+      var spoken = -1;
+      if (i === idx) {
+        for (var j = 0; j < list.length; j++) {
+          var start = list[j].start;
+          if (start === null) continue;
+          if (start <= off) spoken = j;
         }
-        if (want >= 0 && track.spans[want]) {
-          track.spans[want].className = 'w lit';
-        }
-        track.lit = want;
+        if (spoken < 0) spoken = 0;
       }
-      if (wantSent !== track.sentOn) {
-        if (track.sentOn >= 0 && track.sents[track.sentOn]) {
-          track.sents[track.sentOn].className = 'sent';
+      for (var k = 0; k < list.length; k++) {
+        var sent = list[k];
+        var row = i !== idx ? 'off' : (k === spoken ? 'live' : (k === spoken + 1 ? 'next' : 'off'));
+        if (row !== sent.row) {
+          sent.el.setAttribute('data-row', row);
+          sent.row = row;
         }
-        if (wantSent >= 0 && track.sents[wantSent]) {
-          track.sents[wantSent].className = 'sent on';
+        if (k !== spoken) {
+          // Off screen, so the words do not matter — but they must not keep a
+          // highlight from the last time this sentence was the live one.
+          if (sent.lit !== -1) restamp(sent, -1);
+          continue;
         }
-        track.sentOn = wantSent;
+        // The word being spoken: the last one that has already started. A step
+        // forward rewrites two words, the one left and the one entered; a seek
+        // can jump the length of the sentence, so the whole range is re-stamped.
+        var want = -1;
+        for (var w = 0; w < sent.words.length; w++) {
+          if (sent.words[w].start !== null && sent.words[w].start <= off) want = w;
+        }
+        if (want === sent.lit) continue;
+        if (Math.abs(want - sent.lit) > 1) {
+          restamp(sent, want);
+        } else {
+          var leaving = sent.lit >= 0 ? sent.words[sent.lit] : null;
+          if (leaving) {
+            var left = sent.lit < want ? 'said' : 'idle';
+            if (leaving.state !== left) {
+              leaving.el.setAttribute('data-state', left);
+              leaving.state = left;
+            }
+          }
+          var entering = want >= 0 ? sent.words[want] : null;
+          if (entering && entering.state !== 'now') {
+            entering.el.setAttribute('data-state', 'now');
+            entering.state = 'now';
+          }
+          sent.lit = want;
+        }
       }
     }
   }
@@ -400,11 +503,9 @@ const PLAYER_JS = `
     tl.time(current);
     range.value = String(current);
     clock.textContent = fmt(current) + ' / ' + fmt(total);
-    paintKaraoke();
-    if (playing) {
-      var idx = sceneIndexAt(current);
-      if (idx !== voiceScene) syncVoice();
-    }
+    var idx = sceneIndexAt(current);
+    paintCaption(idx, Math.max(0, current - data.scenes[idx].start));
+    if (playing && idx !== voiceScene) syncVoice();
   }
 
   function seek(value) {
@@ -442,6 +543,50 @@ const PLAYER_JS = `
     paint();
     raf = requestAnimationFrame(tick);
   }
+
+  // --- pictures: click to open, and a missing one takes its figure with it.
+  //
+  // A generated picture can fail to load on a machine with no network, and the
+  // alternative was an empty bordered box the slide carried for the rest of the
+  // lesson. Hiding the figure leaves the slide as it would have been without one.
+  Array.prototype.forEach.call(stage.querySelectorAll('.fig img'), function (img) {
+    img.addEventListener('error', function () {
+      var fig = img.closest ? img.closest('.fig') : null;
+      if (fig) fig.classList.add('gone');
+    });
+  });
+
+  var zoom = document.createElement('div');
+  zoom.className = 'zoom';
+  zoom.setAttribute('role', 'dialog');
+  zoom.setAttribute('aria-label', 'Phóng to ảnh');
+  var zoomImg = document.createElement('img');
+  zoomImg.alt = '';
+  var zoomClose = document.createElement('button');
+  zoomClose.type = 'button';
+  zoomClose.className = 'zoom-x';
+  zoomClose.setAttribute('aria-label', 'Đóng');
+  zoomClose.textContent = '×';
+  zoom.appendChild(zoomImg);
+  zoom.appendChild(zoomClose);
+  document.body.appendChild(zoom);
+
+  function closeZoom() {
+    zoom.classList.remove('on');
+  }
+  zoom.addEventListener('click', closeZoom);
+  zoomClose.addEventListener('click', function (event) {
+    event.stopPropagation();
+    closeZoom();
+  });
+  stage.addEventListener('click', function (event) {
+    var node = event.target;
+    if (!node || node.tagName !== 'IMG' || !node.closest) return;
+    var fig = node.closest('.fig');
+    if (!fig || fig.classList.contains('gone')) return;
+    zoomImg.src = node.src;
+    zoom.classList.add('on');
+  });
 
   document.getElementById('play').addEventListener('click', function () { playing ? stop() : start(); });
   document.getElementById('back').addEventListener('click', function () { seek(current - 5); });
@@ -487,7 +632,8 @@ const PLAYER_JS = `
     var tag = event.target && event.target.tagName ? event.target.tagName : '';
     if (/INPUT|TEXTAREA|SELECT/.test(tag)) return;
     var key = event.key;
-    if (key === ' ') { event.preventDefault(); playing ? stop() : start(); }
+    if (key === 'Escape') closeZoom();
+    else if (key === ' ') { event.preventDefault(); playing ? stop() : start(); }
     else if (key === 'ArrowLeft') { event.preventDefault(); seek(current - (event.shiftKey ? 1 : 5)); }
     else if (key === 'ArrowRight') { event.preventDefault(); seek(current + (event.shiftKey ? 1 : 5)); }
     else if (key === 'j' || key === 'J') seek(current - 10);
@@ -547,7 +693,7 @@ export function buildStandaloneHtml({ lesson, audios, karaoke }: StandaloneHtmlO
     <span class="tag mono">${lesson.duration.toFixed(1)}s &middot; ${lesson.scenes.length} cảnh</span>
     <span class="tag">${escapeHtml(preset.label)}</span>
   </div>
-  <div class="stage" id="stage"><div class="grid"></div>${sceneMarkup(lesson, audios, karaoke)}</div>
+  <div class="stage" id="stage">${sceneMarkup(lesson, audios, karaoke)}</div>
   <div class="controls">
     <audio id="voice" preload="auto" style="display:none"></audio>
     <div class="row">
@@ -565,7 +711,7 @@ export function buildStandaloneHtml({ lesson, audios, karaoke }: StandaloneHtmlO
     </div>
     <input type="range" id="scrub" min="0" max="1" step="0.01" value="0" aria-label="Timeline bài giảng" />
     <div class="marks">${chapterMarkup(lesson)}</div>
-    <p class="hint">Space phát/dừng · &larr;/&rarr; tua 5s · Shift+&larr;/&rarr; tua 1s · ,/. từng khung hình · J/L tua 10s · Home/End · [ ] đặt A/B</p>
+    <p class="hint">Space phát/dừng · &larr;/&rarr; tua 5s · Shift+&larr;/&rarr; tua 1s · ,/. từng khung hình · J/L tua 10s · Home/End · A/B đặt vùng lặp · Esc đóng ảnh phóng to</p>
   </div>
 </div>
 <script id="lesson-data" type="application/json">${payload}</script>
@@ -575,5 +721,3 @@ export function buildStandaloneHtml({ lesson, audios, karaoke }: StandaloneHtmlO
 </html>
 `;
 }
-
-
