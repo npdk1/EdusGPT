@@ -1,5 +1,9 @@
 @import "tailwindcss";
 
+/* Dark mode is driven by one attribute on <html>, so a `dark:` utility and the
+   token block below always mean the same thing. */
+@custom-variant dark (&:where([data-theme="dark"], [data-theme="dark"] *));
+
 /* =============================================================================
    EduAI Studio — design tokens
    Palette: white paper + brand blue + signal gold + ember.
@@ -171,6 +175,57 @@
       animation-iteration-count: 1 !important;
       transition-duration: 0.001ms !important;
     }
+  }
+
+  /* ---------------------------------------------------------------------------
+     Dark mode.
+
+     The ramps above are written so that flipping their direction repaints the
+     whole app: a component only ever names a role ("bg-ink-900",
+     "text-mist-300"), so dark mode is this one block and no component edit.
+     Slides are deliberately untouched — a lesson slide is paper, and its
+     colours live in --slide-*, not here.
+     --------------------------------------------------------------------------- */
+  html[data-theme="dark"] {
+    color-scheme: dark;
+
+    /* ink — the paper, now the dark end of the ramp. */
+    --color-ink-950: #0a1116;
+    --color-ink-900: #101a20;
+    --color-ink-850: #16222a;
+    --color-ink-800: #1d2c34;
+    --color-ink-700: #27383f;
+    --color-ink-600: #35484f;
+    --color-ink-500: #45585f;
+
+    /* mist — text, now the light end. */
+    --color-mist-50: #eaf1f4;
+    --color-mist-100: #d6e1e5;
+    --color-mist-200: #bcc9ce;
+    --color-mist-300: #9db0b7;
+    --color-mist-400: #7f939b;
+    --color-mist-500: #6a7f88;
+
+    /* brand — the same blue, stepped so light type stays legible on it:
+       500 carries the primary buttons, which is why it is the deep step. */
+    --color-brand-100: #cfe4f7;
+    --color-brand-200: #a8cdf0;
+    --color-brand-300: #7fb6e8;
+    --color-brand-400: #2b83cc;
+    --color-brand-500: #1f6fb5;
+    --color-brand-600: #1a5d99;
+    --color-brand-700: #174f85;
+    --color-brand-800: #12395c;
+    --color-brand-900: #0d2740;
+
+    /* gold and ember — the warm signals, lightened for a dark page. */
+    --color-gold-200: #f0c979;
+    --color-gold-300: #e2b158;
+    --color-gold-400: #cf9a33;
+    --color-gold-500: #b8842a;
+    --color-gold-600: #97691f;
+    --color-ember-400: #f2762f;
+    --color-ember-500: #ff8a3d;
   }
 }
 

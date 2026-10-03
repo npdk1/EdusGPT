@@ -219,7 +219,7 @@ export default function ClassroomClient({ sessionId }: { sessionId: string | nul
                   isCurrent
                     ? "border-brand-500/60 bg-brand-500/10"
                     : scene
-                      ? "border-ink-600 bg-white hover:border-brand-400 hover:bg-brand-900/40"
+                      ? "border-ink-600 bg-ink-950 hover:border-brand-400 hover:bg-brand-900/40"
                       : "border-ink-600 bg-ink-900"
                 }`;
                 return (
@@ -310,7 +310,7 @@ export default function ClassroomClient({ sessionId }: { sessionId: string | nul
               log={progress.log}
             />
           ) : (
-            <div className="mx-auto w-full max-w-lg rounded-2xl border border-ink-700 bg-white p-8 text-center">
+            <div className="mx-auto w-full max-w-lg rounded-2xl border border-ink-700 bg-ink-950 p-8 text-center">
               <p className="text-sm text-mist-300">
                 Không thấy buổi tạo bài này — có thể trang đã tải lại sau khi
                 luồng tạo dừng. Bấm tạo lại ở studio để vào lớp mới.
@@ -369,7 +369,7 @@ function SlidePreview({
       onClick={onClose}
     >
       <div
-        className="w-full max-w-4xl rounded-2xl border border-ink-600 bg-white p-4 shadow-2xl"
+        className="w-full max-w-4xl rounded-2xl border border-ink-600 bg-ink-950 p-4 shadow-2xl"
         onClick={(event) => event.stopPropagation()}
       >
         <div className="mb-3 flex items-center justify-between gap-3">
@@ -496,7 +496,7 @@ function WaitingHero({
       </div>
       <h2 className="mt-4 text-center text-xl font-semibold">{title}</h2>
       <p className="mt-1 text-center text-sm text-mist-400">{subtitle}</p>
-      <div className="mt-4 space-y-2 rounded-2xl border border-ink-700 bg-white p-4 text-sm">
+      <div className="mt-4 space-y-2 rounded-2xl border border-ink-700 bg-ink-950 p-4 text-sm">
         <div className="flex items-center justify-between gap-3">
           <span className="text-mist-500">Trạng thái</span>
           <span className="min-w-0 flex-1 truncate text-right text-mist-100">

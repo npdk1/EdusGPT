@@ -11,7 +11,7 @@ const NAV = [
   { href: "/lesson", label: "Trình phát" },
   { href: "/studio", label: "Studio AI" },
   { href: "/library", label: "Thư viện" },
-  { href: "/setup", label: "Cài key" },
+  { href: "/setup", label: "Cài đặt" },
 ];
 
 export function SiteHeader() {

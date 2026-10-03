@@ -310,7 +310,7 @@ export function PremierePlayer({
     : null;
   return (
     <div className="mt-4 space-y-3">
-      <div className="overflow-hidden rounded-xl border border-ink-600 bg-white">
+      <div className="overflow-hidden rounded-xl border border-ink-600 bg-ink-950">
         <div className="flex flex-wrap items-center justify-between gap-2 border-b border-ink-600 px-4 py-2.5">
           <p className="flex items-center gap-2 text-sm font-semibold text-mist-100">
             <span className="h-2 w-2 animate-pulse rounded-full bg-ember-500" />
