@@ -13,6 +13,7 @@ import {
 import {
   useGenerationStream,
   type LiveScene,
+  type RunLogEntry,
 } from "@/components/studio/GenerationTimeline";
 import { PremierePlayer } from "@/components/studio/Premiere";
 import { SceneLoader3D } from "@/components/three/SceneLoader3D";
@@ -238,15 +239,24 @@ export default function ClassroomClient({ sessionId }: { sessionId: string | nul
               onSceneChange={handleSceneChange}
             />
           ) : waiting ? (
-            <div className="mx-auto max-w-md">
-              <SceneLoader3D label={waitLabel} progress={progress.percent} />
-              <p className="mt-3 text-center text-lg font-semibold">
-                Đang dựng đề cương bài học
-              </p>
-              <p className="mt-1 text-center text-sm text-mist-400">
-                Đang sắp xếp lộ trình học…
-              </p>
-            </div>
+            <WaitingHero
+              loaderLabel={waitLabel}
+              title={
+                mine && !progress.outlineReady
+                  ? "Đang dựng đề cương bài học"
+                  : "Đang viết từng cảnh"
+              }
+              subtitle={
+                mine && !progress.outlineReady
+                  ? "Đang sắp xếp lộ trình học…"
+                  : "Xong cảnh nào, lớp học chiếu ngay cảnh đó kèm giọng đọc."
+              }
+              message={mine ? progress.message : (draft?.message ?? progress.message)}
+              percent={progress.percent}
+              done={progress.steps.filter((s) => s.state === "done").length}
+              total={progress.steps.length || draft?.total || 0}
+              log={progress.log}
+            />
           ) : (
             <div className="mx-auto max-w-md rounded-2xl border border-white/10 bg-white/[0.02] p-8 text-center">
               <p className="text-sm text-mist-300">
@@ -280,6 +290,99 @@ export default function ClassroomClient({ sessionId }: { sessionId: string | nul
             Các tác nhân AI đang làm việc…
           </p>
         </main>
+      </div>
+    </div>
+  );
+}
+
+/**
+ * The waiting room: the robot on a tall center stage, the deck's live status
+ * under it, and the last model calls as a feed — so "loading" always answers
+ * what is happening, how far along it is, and what just finished.
+ */
+function WaitingHero({
+  loaderLabel,
+  title,
+  subtitle,
+  message,
+  percent,
+  done,
+  total,
+  log,
+}: {
+  loaderLabel: string;
+  title: string;
+  subtitle: string;
+  message: string;
+  percent: number;
+  done: number;
+  total: number;
+  log: RunLogEntry[];
+}) {
+  const clamped = Math.max(0, Math.min(100, Math.round(percent)));
+  const model = [...log].reverse().find((entry) => entry.model)?.model ?? null;
+  const feed = log.slice(-3).reverse();
+  return (
+    <div className="mx-auto max-w-xl">
+      <div className="relative">
+        <div
+          aria-hidden="true"
+          className="pointer-events-none absolute -inset-8 rounded-[2rem] bg-[radial-gradient(closest-side,rgba(36,189,172,0.14),transparent)]"
+        />
+        <SceneLoader3D label={loaderLabel} progress={percent} height={300} />
+      </div>
+      <h2 className="mt-4 text-center text-xl font-semibold">{title}</h2>
+      <p className="mt-1 text-center text-sm text-mist-400">{subtitle}</p>
+      <div className="mt-4 space-y-2 rounded-2xl border border-white/10 bg-white/[0.02] p-4 text-sm">
+        <div className="flex items-center justify-between gap-3">
+          <span className="text-mist-500">Trạng thái</span>
+          <span className="min-w-0 flex-1 truncate text-right text-mist-100">
+            {message || "Đang chuẩn bị…"}
+          </span>
+        </div>
+        <div className="flex items-center gap-3">
+          <span className="shrink-0 text-mist-500">Tiến độ</span>
+          <div className="h-1.5 min-w-0 flex-1 overflow-hidden rounded-full bg-ink-800">
+            <div
+              className="h-full rounded-full bg-gradient-to-r from-brand-400 to-gold-400 transition-[width] duration-500"
+              style={{ width: `${Math.max(2, clamped)}%` }}
+            />
+          </div>
+          <span className="shrink-0 font-mono text-xs tabular-nums text-mist-200">
+            {clamped}%
+          </span>
+        </div>
+        <div className="flex items-center justify-between gap-3">
+          <span className="text-mist-500">Cảnh</span>
+          <span className="font-mono text-xs tabular-nums text-mist-100">
+            {total > 0 ? `${done}/${total} đã xong` : "đang chờ dàn ý…"}
+          </span>
+        </div>
+        {model ? (
+          <div className="flex items-center justify-between gap-3">
+            <span className="text-mist-500">Model</span>
+            <span
+              className="min-w-0 flex-1 truncate text-right font-mono text-xs text-brand-200"
+              title={model}
+            >
+              {model}
+            </span>
+          </div>
+        ) : null}
+        {feed.length > 0 ? (
+          <ol className="space-y-1 border-t border-white/5 pt-2">
+            {feed.map((entry, i) => (
+              <li key={`${entry.at}-${i}`} className="flex items-baseline gap-2 text-xs">
+                <span className="shrink-0 font-mono text-[11px] text-mist-500">
+                  {entry.at ?? ""}
+                </span>
+                <span className="min-w-0 flex-1 truncate text-mist-300">
+                  {entry.message}
+                </span>
+              </li>
+            ))}
+          </ol>
+        ) : null}
       </div>
     </div>
   );

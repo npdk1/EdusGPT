@@ -20,11 +20,14 @@ import { THREECOLORS } from "@/lib/three-palette";
 export function SceneLoader3D({
   label,
   progress,
+  height = 220,
 }: {
   /** e.g. "Đang viết cảnh 4…" — what the wait is for. */
   label: string;
   /** 0..100, deck progress for the bar under the label. */
   progress: number;
+  /** Canvas height in px; the classroom hero uses a taller stage. */
+  height?: number;
 }) {
   const hostRef = useRef<HTMLDivElement>(null);
   const [noWebGL, setNoWebGL] = useState(false);
@@ -52,16 +55,16 @@ export function SceneLoader3D({
     }
 
     const width = Math.max(host.clientWidth, 280);
-    const height = 220;
+    const stageH = Math.max(160, height);
     renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
-    renderer.setSize(width, height, false);
+    renderer.setSize(width, stageH, false);
     renderer.domElement.style.width = "100%";
-    renderer.domElement.style.height = `${height}px`;
+    renderer.domElement.style.height = `${stageH}px`;
     renderer.domElement.style.display = "block";
     host.appendChild(renderer.domElement);
 
     const scene = new THREE.Scene();
-    const camera = new THREE.PerspectiveCamera(46, width / height, 0.1, 60);
+    const camera = new THREE.PerspectiveCamera(46, width / stageH, 0.1, 60);
     camera.position.set(0, 0.3, 6.4);
     const world = new THREE.Group();
     world.position.y = -0.4;
@@ -287,15 +290,16 @@ export function SceneLoader3D({
         host.removeChild(renderer.domElement);
       }
     };
-  }, []);
+  }, [height]);
 
   const clamped = Math.max(0, Math.min(100, Math.round(progress)));
+  const stageStyle = { height: `${Math.max(160, height)}px` } as const;
 
   return (
     <div className="overflow-hidden rounded-xl border border-brand-700/50 bg-ink-950/70">
       <div ref={hostRef} className="relative" aria-hidden="true">
         {noWebGL ? (
-          <div className="flex h-[220px] items-center justify-center">
+          <div className="flex items-center justify-center" style={stageStyle}>
             <span className="h-16 w-16 animate-ping rounded-full border-2 border-brand-400/60" />
           </div>
         ) : null}
