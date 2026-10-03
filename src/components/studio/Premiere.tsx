@@ -43,6 +43,8 @@ export function PremierePlayer({
   done,
   progress,
   lessonId,
+  jumpTo,
+  showIndex = true,
   onSceneChange,
 }: {
   scenes: LiveScene[];
@@ -55,6 +57,14 @@ export function PremierePlayer({
   progress: number;
   /** Stable deck id — seeds the slide pictures, same as the saved lesson. */
   lessonId: string;
+  /**
+   * "Play this slide now", asked for from outside — the classroom's own slide
+   * list is the index, and a click there hands the deck back to the player.
+   * `seq` makes every click land even when the same slide is asked twice.
+   */
+  jumpTo?: { index: number; seq: number } | null;
+  /** False where the room draws its own numbered list down the side. */
+  showIndex?: boolean;
   /**
    * Fires with the scene whose voice starts, and with null when nothing is
    * speaking — the classroom's bottom narration bar listens to this.
@@ -144,6 +154,9 @@ export function PremierePlayer({
       setSentences([]);
       setNote(null);
       setPhase({ name: "loading-audio", index });
+      // Say which slide is on screen straight away: making the voice-over takes
+      // a moment, and the room should already name the slide it moved to.
+      onSceneChange?.(scene);
       try {
         const cached = await fetchAudio(scene);
         // The deck moved on while the voice was being made.
@@ -235,6 +248,22 @@ export function PremierePlayer({
     },
     [playAt, stopAudio],
   );
+
+  // The room's slide list drives the deck from outside: it hands over an
+  // index and the player takes it from here, so the voice, the captions and
+  // the "đang viết cảnh" loader all stay in one place. The sequence number
+  // is what makes this fire exactly once per click — the scene list itself
+  // changes on every new slide, and a plain index would replay the deck.
+  const jumpSeqRef = useRef(0);
+  useEffect(() => {
+    if (!jumpTo || jumpTo.seq === jumpSeqRef.current) return;
+    if (!scenes.some((scene) => scene.index === jumpTo.index)) return;
+    jumpSeqRef.current = jumpTo.seq;
+    busyRef.current = false;
+    stopAudio();
+    atRef.current = null;
+    void playAt(jumpTo.index);
+  }, [jumpTo, playAt, scenes, stopAudio]);
 
   const replay = useCallback(() => {
     playedRef.current.clear();
@@ -385,34 +414,37 @@ export function PremierePlayer({
 
       {note ? <p className="text-xs text-gold-200">{note}</p> : null}
 
-      <ol className="flex flex-wrap gap-1.5">
-        {[...scenes]
-          .sort((a, b) => a.index - b.index)
-          .map((scene) => {
-            const isCurrent =
-              (phase.name === "playing" || phase.name === "loading-audio") &&
-              phase.index === scene.index;
-            const heard = playedRef.current.has(scene.index);
-            return (
-              <li key={scene.index}>
-                <button
-                  type="button"
-                  onClick={() => jump(scene.index)}
-                  title={scene.title}
-                  className={`rounded-lg border px-2.5 py-1 font-mono text-[11px] transition-colors ${
-                    isCurrent
-                      ? "border-ember-500/60 bg-ember-500/10 text-ember-200"
-                      : heard
-                        ? "border-brand-700/60 bg-brand-500/10 text-brand-200"
-                        : "border-ink-700 bg-ink-900/50 text-mist-500 hover:text-mist-200"
-                  }`}
-                >
-                  {scene.index + 1}
-                </button>
-              </li>
-            );
-          })}
-      </ol>
+      {/* The room draws its own index down the side, with slide pictures. */}
+      {showIndex ? (
+        <ol className="flex flex-wrap gap-1.5">
+          {[...scenes]
+            .sort((a, b) => a.index - b.index)
+            .map((scene) => {
+              const isCurrent =
+                (phase.name === "playing" || phase.name === "loading-audio") &&
+                phase.index === scene.index;
+              const heard = playedRef.current.has(scene.index);
+              return (
+                <li key={scene.index}>
+                  <button
+                    type="button"
+                    onClick={() => jump(scene.index)}
+                    title={scene.title}
+                    className={`rounded-lg border px-2.5 py-1 font-mono text-[11px] transition-colors ${
+                      isCurrent
+                        ? "border-ember-500/60 bg-ember-500/10 text-ember-200"
+                        : heard
+                          ? "border-brand-700/60 bg-brand-500/10 text-brand-200"
+                          : "border-ink-700 bg-ink-900/50 text-mist-500 hover:text-mist-200"
+                    }`}
+                  >
+                    {scene.index + 1}
+                  </button>
+                </li>
+              );
+            })}
+        </ol>
+      ) : null}
     </div>
   );
 }

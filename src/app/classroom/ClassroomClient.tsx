@@ -9,6 +9,7 @@ import {
   Play,
   TriangleAlert,
   Volume2,
+  X,
 } from "lucide-react";
 import {
   useGenerationStream,
@@ -16,6 +17,9 @@ import {
   type RunLogEntry,
 } from "@/components/studio/GenerationTimeline";
 import { PremierePlayer } from "@/components/studio/Premiere";
+import { FigureZoom, SlideImageView } from "@/components/player/SceneFigure";
+import { pollinationsImageUrl } from "@/lib/lesson/pollinations";
+import type { Lesson } from "@/lib/lesson/types";
 import { SceneLoader3D } from "@/components/three/SceneLoader3D";
 
 interface DraftInfo {
@@ -45,6 +49,15 @@ export default function ClassroomClient({ sessionId }: { sessionId: string | nul
   const [voice, setVoice] = useState("");
   const [speaking, setSpeaking] = useState<LiveScene | null>(null);
   const [draft, setDraft] = useState<DraftInfo | null>(null);
+  /**
+   * The slide the teacher asked to look at, and the request to play one.
+   *
+   * A finished slide used to leave the screen the moment its voice ended, with
+   * nothing to click to bring it back — the room now keeps a list of every
+   * slide written so far, and one click opens it.
+   */
+  const [preview, setPreview] = useState<LiveScene | null>(null);
+  const [jump, setJump] = useState<{ index: number; seq: number } | null>(null);
 
   useEffect(() => {
     try {
@@ -53,6 +66,16 @@ export default function ClassroomClient({ sessionId }: { sessionId: string | nul
       /* default voice */
     }
   }, []);
+
+  // Escape leaves the preview, the way it leaves the zoomed picture.
+  useEffect(() => {
+    if (!preview) return;
+    const onKey = (event: KeyboardEvent) => {
+      if (event.key === "Escape") setPreview(null);
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [preview]);
 
   const mine =
     !!sessionId && (progress.lessonId ?? null) === sessionId;
@@ -87,6 +110,11 @@ export default function ClassroomClient({ sessionId }: { sessionId: string | nul
 
   const handleSceneChange = useCallback((scene: LiveScene | null) => {
     setSpeaking(scene);
+  }, []);
+
+  /** "Play this one now" from the slide list — the player owns the audio. */
+  const playScene = useCallback((index: number) => {
+    setJump((prev) => ({ index, seq: (prev?.seq ?? 0) + 1 }));
   }, []);
 
   if (!sessionId) {
@@ -151,69 +179,100 @@ export default function ClassroomClient({ sessionId }: { sessionId: string | nul
 
   return (
     <div className="min-h-screen text-mist-50">
-      <header className="flex items-center justify-between gap-3 border-b border-ink-700 px-4 py-3 sm:px-6 lg:px-8">
+      <header className="flex items-center gap-3 border-b border-ink-700 px-4 py-3 sm:px-6 lg:px-8">
         <Link
           href="/"
-          className="flex items-center gap-1.5 text-sm text-mist-300 hover:text-mist-50"
+          className="flex shrink-0 items-center gap-1.5 text-sm text-mist-400 hover:text-mist-50"
         >
           <ArrowLeft className="h-4 w-4" /> Về trang chủ
         </Link>
-        <p className="min-w-0 flex-1 truncate text-center text-sm font-semibold">
+        <span aria-hidden="true" className="h-4 w-px shrink-0 bg-ink-600" />
+        {/* What is playing, read from the left of the room beside the list. */}
+        <p className="min-w-0 flex-1 truncate text-left text-sm font-semibold">
           {speaking ? (
             <>
-              <span className="mr-2 font-mono text-[11px] font-normal uppercase tracking-widest text-brand-300">
-                Cảnh hiện tại
+              <span className="mr-2 font-mono text-[11px] font-normal uppercase tracking-widest text-brand-400">
+                Cảnh {String(speaking.index + 1).padStart(2, "0")}
               </span>
               {speaking.title}
             </>
           ) : (
-            <span className="font-normal text-mist-400">Lớp học đang chuẩn bị…</span>
+            <span className="font-normal text-mist-400">
+              Lớp học đang chuẩn bị…
+            </span>
           )}
         </p>
-        <span className="w-24 shrink-0 text-right font-mono text-sm text-mist-400">
-          {scenes.length > 0 && speaking
-            ? String(speaking.index + 1).padStart(2, "0")
-            : ""}
-        </span>
       </header>
 
       <div className="flex w-full flex-col gap-4 px-4 py-4 sm:px-6 lg:flex-row lg:px-8">
-        {/* Left rail: the deck list, with unwritten scenes marked. */}
+        {/* Left rail: the deck list, with unwritten scenes marked. Every slide
+            that has landed is a button — one click opens it, picture and all. */}
         <aside className="w-full shrink-0 space-y-2 lg:w-72 xl:w-80">
           <p className="font-mono text-[11px] uppercase tracking-widest text-mist-500">
-            Cảnh hiện tại
+            Mục lục slide
           </p>
           {progress.steps.length > 0 ? (
-            <ol className="space-y-1.5">
+            <ol className="max-h-[64vh] space-y-1.5 overflow-y-auto pr-1">
               {progress.steps.map((step, i) => {
-                const landed = scenes.some((s) => s.index === i);
+                const scene = scenes.find((s) => s.index === i) ?? null;
                 const isCurrent = speaking?.index === i;
+                const row = `flex w-full items-center gap-2.5 rounded-xl border px-2 py-2 text-left text-xs transition-colors ${
+                  isCurrent
+                    ? "border-brand-500/60 bg-brand-500/10"
+                    : scene
+                      ? "border-ink-600 bg-white hover:border-brand-400 hover:bg-brand-900/40"
+                      : "border-ink-600 bg-ink-900"
+                }`;
                 return (
-                  <li
-                    key={step.id}
-                    className={`rounded-xl border px-3 py-2 text-xs ${
-                      isCurrent
-                        ? "border-brand-500/60 bg-brand-500/10 text-mist-50"
-                        : landed
-                          ? "border-ink-700 bg-white text-mist-200"
-                          : "border-ink-700 bg-ink-900 text-mist-500"
-                    }`}
-                  >
-                    <span className="flex items-center gap-2">
-                      {step.state === "done" || landed ? (
-                        <CircleCheck className="h-3.5 w-3.5 shrink-0 text-brand-300" />
-                      ) : step.state === "active" ? (
-                        <LoaderCircle className="h-3.5 w-3.5 shrink-0 animate-spin text-gold-300" />
-                      ) : (
-                        <span className="h-3.5 w-3.5 shrink-0 rounded-full border border-mist-600" />
-                      )}
-                      <span className="min-w-0 flex-1 truncate">{step.title}</span>
-                    </span>
-                    {!landed && step.state !== "done" ? (
-                      <span className="mt-1 block pl-5 text-[11px] text-mist-500">
-                        Đang tạo…
-                      </span>
-                    ) : null}
+                  <li key={step.id}>
+                    {scene ? (
+                      <button
+                        type="button"
+                        onClick={() => setPreview(scene)}
+                        className={`${row} cursor-pointer`}
+                        title={`Xem trước: ${step.title}`}
+                      >
+                        <SceneThumb lessonId={sessionId ?? ""} scene={scene} />
+                        <span className="min-w-0 flex-1">
+                          <span className="flex items-center gap-2">
+                            {isCurrent ? (
+                              <span className="h-2 w-2 shrink-0 animate-pulse rounded-full bg-ember-500" />
+                            ) : (
+                              <CircleCheck className="h-3.5 w-3.5 shrink-0 text-brand-400" />
+                            )}
+                            <span
+                              className={`min-w-0 flex-1 truncate ${
+                                isCurrent ? "text-mist-50" : "text-mist-200"
+                              }`}
+                            >
+                              {step.title}
+                            </span>
+                          </span>
+                          <span className="mt-0.5 block pl-5 text-[11px] text-mist-400">
+                            {isCurrent ? "đang chiếu · bấm để xem lại" : "bấm để xem"}
+                          </span>
+                        </span>
+                      </button>
+                    ) : (
+                      <div className={`${row} text-mist-500`}>
+                        <span className="flex h-9 w-14 shrink-0 items-center justify-center rounded-lg border border-ink-600 bg-ink-800 font-mono text-[11px]">
+                          {String(i + 1).padStart(2, "0")}
+                        </span>
+                        <span className="min-w-0 flex-1">
+                          <span className="flex items-center gap-2">
+                            {step.state === "active" ? (
+                              <LoaderCircle className="h-3.5 w-3.5 shrink-0 animate-spin text-gold-400" />
+                            ) : (
+                              <span className="h-3.5 w-3.5 shrink-0 rounded-full border border-mist-500" />
+                            )}
+                            <span className="min-w-0 flex-1 truncate">{step.title}</span>
+                          </span>
+                          <span className="mt-0.5 block pl-5 text-[11px]">
+                            Đang tạo…
+                          </span>
+                        </span>
+                      </div>
+                    )}
                   </li>
                 );
               })}
@@ -237,6 +296,8 @@ export default function ClassroomClient({ sessionId }: { sessionId: string | nul
               done={progress.done}
               progress={progress.percent}
               lessonId={sessionId ?? ""}
+              jumpTo={jump}
+              showIndex={false}
               onSceneChange={handleSceneChange}
             />
           ) : waiting ? (
@@ -292,7 +353,169 @@ export default function ClassroomClient({ sessionId }: { sessionId: string | nul
           </p>
         </main>
       </div>
+
+      {preview ? (
+        <SlidePreview
+          lessonId={sessionId ?? ""}
+          scene={preview}
+          onClose={() => setPreview(null)}
+          onPlay={() => {
+            playScene(preview.index);
+            setPreview(null);
+          }}
+        />
+      ) : null}
     </div>
+  );
+}
+
+/**
+ * A finished slide, opened from the list: its picture, its points and the
+ * words the teacher hears — plus a way to send the room straight back to it.
+ *
+ * The picture comes from the same view a saved lesson uses, so the classroom
+ * shows the slide the course file will keep, not a second, looser render.
+ */
+function SlidePreview({
+  lessonId,
+  scene,
+  onClose,
+  onPlay,
+}: {
+  lessonId: string;
+  scene: LiveScene;
+  onClose: () => void;
+  onPlay: () => void;
+}) {
+  // The stable id the saved lesson carries, so the picture seed matches.
+  const figure: Lesson["scenes"][number] = {
+    id: `ai-${scene.index + 1}`,
+    kind: "concept",
+    accent: "brand",
+    title: scene.title,
+    subtitle: scene.subtitle,
+    bullets: scene.bullets,
+    narration: scene.narration,
+    imagePrompt: scene.imagePrompt,
+    imageQuery: scene.imageQuery,
+    start: 0,
+    duration: 0,
+  };
+  const hasFigure = Boolean(
+    (scene.imagePrompt ?? "").trim() || (scene.imageQuery ?? "").trim(),
+  );
+  return (
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 p-4 backdrop-blur-[2px]"
+      role="dialog"
+      aria-modal="true"
+      aria-label={`Xem trước cảnh ${scene.index + 1}`}
+      onClick={onClose}
+    >
+      <div
+        className="max-h-[88vh] w-full max-w-3xl overflow-y-auto rounded-2xl border border-ink-600 bg-white p-5 shadow-2xl"
+        onClick={(event) => event.stopPropagation()}
+      >
+        <div className="flex items-start gap-3">
+          <div className="min-w-0 flex-1">
+            <p className="font-mono text-[11px] uppercase tracking-widest text-brand-400">
+              Slide {String(scene.index + 1).padStart(2, "0")}
+            </p>
+            <h3 className="mt-1 text-xl font-semibold text-mist-50">{scene.title}</h3>
+            {scene.subtitle ? (
+              <p className="mt-1 text-sm text-mist-400">{scene.subtitle}</p>
+            ) : null}
+          </div>
+          <button
+            type="button"
+            onClick={onClose}
+            aria-label="Đóng"
+            className="shrink-0 rounded-full border border-ink-600 p-1.5 text-mist-400 hover:border-brand-500 hover:text-mist-50"
+          >
+            <X className="h-4 w-4" />
+          </button>
+        </div>
+
+        {hasFigure ? (
+          <div className="preview-figure mt-3">
+            <FigureZoom label={`Phóng to ảnh slide ${scene.index + 1}`}>
+              <SlideImageView lessonId={lessonId} scene={figure} />
+            </FigureZoom>
+          </div>
+        ) : (
+          <p className="mt-3 rounded-xl border border-dashed border-ink-600 bg-ink-900 px-4 py-6 text-center text-sm text-mist-400">
+            Slide này chưa có ảnh minh hoạ.
+          </p>
+        )}
+
+        {scene.bullets.length > 0 ? (
+          <ul className="mt-4 space-y-1.5">
+            {scene.bullets.map((bullet, i) => (
+              <li key={i} className="flex gap-2 text-sm leading-relaxed text-mist-200">
+                <span className="font-mono text-[11px] text-brand-400">
+                  {String(i + 1).padStart(2, "0")}
+                </span>
+                <span className="min-w-0 flex-1">{bullet}</span>
+              </li>
+            ))}
+          </ul>
+        ) : null}
+
+        {scene.narration ? (
+          <div className="mt-4 rounded-xl border border-ink-600 bg-ink-900 p-3.5">
+            <p className="font-mono text-[11px] uppercase tracking-widest text-mist-500">
+              Lời giảng
+            </p>
+            <p className="mt-1 text-sm leading-relaxed text-mist-200">
+              {scene.narration}
+            </p>
+          </div>
+        ) : null}
+
+        <div className="mt-4 flex flex-wrap items-center gap-2">
+          <button type="button" onClick={onPlay} className="btn-primary">
+            <Play className="h-4 w-4" /> Phát slide này
+          </button>
+          <button type="button" onClick={onClose} className="btn-ghost">
+            Đóng
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/**
+ * The slide's own picture, small: the same URL the full view asks for, so the
+ * browser has it already cached by the time the slide is opened. A render the
+ * free image service refuses falls back to the seeded photo rather than an
+ * empty tile.
+ */
+function SceneThumb({ lessonId, scene }: { lessonId: string; scene: LiveScene }) {
+  const [failed, setFailed] = useState(false);
+  const id = `ai-${scene.index + 1}`;
+  const prompt = (scene.imagePrompt ?? "").trim();
+  const src =
+    !failed && prompt.length >= 3
+      ? pollinationsImageUrl(lessonId, id, prompt)
+      : `https://picsum.photos/seed/${encodeURIComponent(`${lessonId}-${id}`)}/160/100`;
+  return (
+    <span className="relative block h-9 w-14 shrink-0 overflow-hidden rounded-lg border border-ink-600 bg-ink-800">
+      {/* Remote picture: next/image cannot optimise it. */}
+      {/* eslint-disable-next-line @next/next/no-img-element */}
+      <img
+        key={src}
+        src={src}
+        alt=""
+        loading="lazy"
+        referrerPolicy="no-referrer"
+        onError={() => setFailed(true)}
+        className="h-full w-full object-cover"
+      />
+      <span className="absolute inset-x-0 bottom-0 bg-ink-950/80 py-px text-center font-mono text-[10px] text-mist-300">
+        {String(scene.index + 1).padStart(2, "0")}
+      </span>
+    </span>
   );
 }
 
