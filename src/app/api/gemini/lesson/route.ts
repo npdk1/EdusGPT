@@ -454,7 +454,22 @@ const SLIDE_DESIGN_RULES = `QUY TẮC BỐ CỤC SLIDE (bắt buộc — đây l
       500-562 là chỗ phụ đề đè lên, đừng đặt chữ vào đó).
     - Hai khối không được chồng lấn; khe hở giữa hai khối tối thiểu 20.
     - Muốn nói chuyện với người xem bằng cách sắp xếp, hãy sắp xếp: một khối
-      "text" ngắn giữa slide trống đọc mạnh hơn một câu dài kèm tiêu đề.`;
+      "text" ngắn giữa slide trống đọc mạnh hơn một câu dài kèm tiêu đề.
+10. BẢNG TRA CHIỀU CAO CHỮ (dùng để không chữ nào bị tràn khung):
+    Khi bạn đặt khối chữ bằng "blocks", chiều cao phải tra bảng này theo CỠ CHỮ LỚN NHẤT
+    trong khối, KHÔNG tự ước lượng. Giá trị là chiều cao (px) cho 1 / 2 / 3 / 4 / 5 dòng:
+    14px: 43/64/85/106/127 | 16px: 46/70/94/118/142 | 18px: 49/76/103/130/157
+    20px: 52/82/112/142/172 | 24px: 58/94/130/166/202 | 28px: 64/106/148/190/232
+    32px: 70/118/166/214/262 | 36px: 76/130/184/238/292.
+    Cách tính số dòng: characters_per_line = (chiều rộng khối - 20) / cỡ chữ; số dòng của
+    một đoạn = ceil(số ký tự / characters_per_line); tổng số dòng của khối = tổng các
+    đoạn + 0.8 (làm tròn lên).
+11. CHECKLIST P0 — BẮT BUỘC TRƯỚC KHI TRẢ LỜI (tự kiểm, không được sai mục nào):
+    [chiều cao] mọi khối chữ đã lấy chiều cao từ bảng tra cứu ở mục 10;
+    [chiều rộng] mọi khối chữ thỏa char_count <= (chiều rộng - 20) / cỡ chữ;
+    [căn giữa] khối nào căn giữa thì tâm lệch nhau dưới 2px;
+    [lề] mọi khối nằm trong lề 50px mỗi cạnh (x 50-950, y 30-500);
+    [không tràn] không khối nào chồng lấn khối khác, và không khối nào chạm mép.`;
 
 const OUTLINE_SYSTEM = `Bạn là giáo viên KINH NGHIỆM lâu năm, tự thiết kế bài giảng cho học sinh phổ thông Việt Nam.
 Trả về DUY NHẤT một JSON đúng schema, không kèm giải thích, không markdown.

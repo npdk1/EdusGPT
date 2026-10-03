@@ -17,6 +17,7 @@ import {
   type SlideLayout,
   type SlideTable,
 } from "./types";
+import { BLOCK_TYPE_CQW, fitBlockText } from "./text-fit";
 import { DEFAULT_SLIDE_THEME } from "./themes";
 import { SLIDE_ICON_NAMES } from "./types";
 import { MAX_LESSON_SCENES } from "./presentation-styles";
@@ -184,13 +185,29 @@ export function sanitizeBlocks(raw: unknown): SlideBlock[] | undefined {
           ? text.length > 0
           : text.length > 0 || Boolean(label);
     if (!usable) continue;
+    // The text has to fit the box it was placed in. The prompt asks the model to
+    // check this against the same table; doing it here as well means a slide
+    // that ignored the rule still reads from the back of the room instead of
+    // running off the bottom of the page.
+    const cqw =
+      kind === "title"
+        ? BLOCK_TYPE_CQW.title
+        : kind === "subtitle"
+          ? BLOCK_TYPE_CQW.subtitle
+          : kind === "card"
+            ? BLOCK_TYPE_CQW.card
+            : BLOCK_TYPE_CQW.text;
+    const fitted = text.length
+      ? fitBlockText(text, w, h, cqw)
+      : undefined;
+    if (kind !== "image" && kind !== "formula" && !fitted) continue;
     blocks.push({
       kind: kind as SlideBlockKind,
       x,
       y,
       w,
       h,
-      text: text || undefined,
+      text: fitted || undefined,
       label,
       imagePrompt,
       imageQuery,
