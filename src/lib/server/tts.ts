@@ -1,70 +1,35 @@
-﻿import { MsEdgeTTS, OUTPUT_FORMAT, type ProsodyOptions } from "msedge-tts";
+﻿import { MsEdgeTTS, OUTPUT_FORMAT } from "msedge-tts";
 import { mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 
 /**
- * Vietnamese-first text to speech.
+ * Speech synthesis, Vietnamese and English first.
  *
  * Microsoft Edge's neural voices are genuinely native Vietnamese — the model was
  * trained on Vietnamese speakers, so stress and tone land correctly instead of
  * being spelled out letter by letter. It also needs no API key, which matters
  * because a teacher should be able to press play the moment they install this.
+ *
+ * The catalogue itself lives in `@/lib/lesson/voices`, so client components can
+ * ask which voice suits a lesson's language; this module only talks to the
+ * service.
  */
-export const VI_VOICES = [
-  { id: "vi-VN-HoaiMyNeural", label: "Hoài My (nữ)" },
-  {
-    id: "vi-VN-HoaiMyNeural#cham",
-    label: "Hoài My chậm (nữ)",
-    prosody: { rate: "slow" },
-  },
-  {
-    id: "vi-VN-HoaiMyNeural#cao",
-    label: "Hoài My cao (nữ)",
-    prosody: { pitch: "high" },
-  },
-  { id: "vi-VN-NamMinhNeural", label: "Nam Minh (nam)" },
-  {
-    id: "vi-VN-NamMinhNeural#tram",
-    label: "Nam Minh trầm (nam)",
-    prosody: { pitch: "low" },
-  },
-  {
-    id: "vi-VN-NamMinhNeural#cham",
-    label: "Nam Minh chậm (nam)",
-    prosody: { rate: "slow" },
-  },
-] as const;
+export {
+  DEFAULT_VOICE,
+  EN_VOICES,
+  VI_VOICES,
+  VOICES,
+  isVoiceId,
+  isVietnameseVoice,
+  pickVoice,
+  resolveVoice,
+  voiceForLanguage,
+  voicesForLanguage,
+  type LessonVoiceId,
+} from "@/lib/lesson/voices";
 
-export type ViVoiceId = (typeof VI_VOICES)[number]["id"];
-
-export const DEFAULT_VOICE: ViVoiceId = "vi-VN-HoaiMyNeural";
-
-export function isViVoice(value: unknown): value is ViVoiceId {
-  return VI_VOICES.some((v) => v.id === value);
-}
-
-/**
- * A variant id is an Edge voice name plus a `#suffix` carrying the prosody
- * ("...#cham" reads slow). The cache key, the lesson file and the x-tts-voice
- * header all keep the full id, so two variants never share cached audio; only
- * the service itself sees the base name, with the prosody as the `toFile`
- * third argument.
- */
-export function resolveVoice(voice: ViVoiceId): {
-  name: string;
-  prosody?: ProsodyOptions;
-} {
-  const entry = VI_VOICES.find((v) => v.id === voice);
-  const prosody =
-    entry && "prosody" in entry
-      ? (entry.prosody as ProsodyOptions)
-      : undefined;
-  return {
-    name: voice.split("#")[0] ?? voice,
-    ...(prosody ? { prosody } : {}),
-  };
-}
+import { resolveVoice, type LessonVoiceId } from "@/lib/lesson/voices";
 
 /**
  * Keeps a bug in msedge-tts from killing the whole app.
@@ -331,7 +296,7 @@ async function readWordMarks(metadataFilePath: string): Promise<WordMark[]> {
 /** Synthesises every chunk down one connection, then hands the bytes back. */
 async function synthesizeOnce(
   pieces: string[],
-  voice: ViVoiceId,
+  voice: LessonVoiceId,
 ): Promise<Synthesis> {
   if (!shared) shared = await openConnection();
   const { name, prosody } = resolveVoice(voice);
@@ -399,7 +364,7 @@ async function synthesizeOnce(
 
 export interface SpeakResult {
   audio: Uint8Array;
-  voice: ViVoiceId;
+  voice: LessonVoiceId;
   chunks: number;
   /** Per-word timings, empty when the service sent no boundary metadata. */
   words: WordMark[];
@@ -407,7 +372,7 @@ export interface SpeakResult {
 
 const MAX_ATTEMPTS = 3;
 
-export async function speak(text: string, voice: ViVoiceId): Promise<SpeakResult> {
+export async function speak(text: string, voice: LessonVoiceId): Promise<SpeakResult> {
   const pieces = splitForSpeech(text);
   if (pieces.length === 0) throw new Error("Không có chữ để đọc.");
 

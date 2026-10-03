@@ -10,6 +10,7 @@ import {
   resolveLessonLength,
   resolvePresentationStyle,
 } from "@/lib/lesson/presentation-styles";
+import { resolveLessonLanguage } from "@/lib/lesson/lesson-languages";
 import { coerceLesson } from "@/lib/lesson/validate";
 import {
   sceneNeedsExcerpt,
@@ -906,7 +907,32 @@ export async function POST(request: NextRequest) {
   // list — just a less specific one.
   const iconNames = style.icons ? iconSetFor(subject) : [];
   const grade = body.grade?.trim() || "";
-  const language = body.language?.trim() || "Tiếng Việt";
+  // The lesson is written in the language of the brief. A teacher who asks in
+  // English gets an English deck without touching a setting; the studio can
+  // still pin the language when a mixed-language brief needs a specific one.
+  const language = resolveLessonLanguage(
+    body.language,
+    [
+      body.topic ?? "",
+      body.notes ?? "",
+      body.referenceMaterial ?? "",
+      body.subject ?? "",
+    ].join("\n"),
+  );
+  // Everything the model is told about the output language, in one block, so
+  // the outline and the scenes cannot drift apart on it.
+  const isVietnamese = language === "vi";
+  const languageRule = [
+    "",
+    `NGÔN NGỮ ĐẦU RA: viết TOÀN BỘ bài giảng bằng "${language}" — tiêu đề, phụ đề,`,
+    'ý chính, lời giảng và câu hỏi. Giữ nguyên các thuật ngữ khoa học và ký hiệu',
+    "toán, viết tên riêng và công thức đúng như gốc.",
+    'Riêng "imagePrompt" LUÔN viết bằng tiếng Anh (không dấu), vì đó là prompt',
+    "cho AI vẽ tranh.",
+    isVietnamese
+      ? "Văn phong thầy giảng tự nhiên, xưng 'các bạn' khi cần."
+      : "Write in clear, plain teaching English — short sentences, no markdown.",
+  ].join("\n");
   const reference = body.referenceMaterial?.trim();
   const totalSeconds = Math.round(minutes * 60);
 
@@ -940,6 +966,7 @@ export async function POST(request: NextRequest) {
     `Môn: ${subject}`,
     grade ? `Trình độ/khối: ${grade}` : "",
     `Ngôn ngữ: ${language}`,
+    languageRule,
     body.notes?.trim() ? `Yêu cầu thêm: ${body.notes.trim()}` : "",
     reference
       ? `\n--- TÀI LIỆU THAM KHẢO (markdown, giữ tiêu đề/bảng/mốc trang) ---\n${skimReference(reference)}\n--- HẾT TÀI LIỆU ---`
@@ -1473,7 +1500,7 @@ export async function POST(request: NextRequest) {
           title: outline.title ?? topic,
           subject: outline.subject ?? subject,
           grade: outline.grade ?? body.grade,
-          language: "vi",
+          language,
           fps: 30,
           theme,
           voice: typeof body.voice === "string" ? body.voice.slice(0, 60) : undefined,

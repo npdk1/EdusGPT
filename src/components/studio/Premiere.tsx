@@ -13,6 +13,7 @@ import {
   type NarrationChannel,
 } from "@/lib/karaoke";
 import { useCopy } from "@/i18n/provider";
+import { pickVoice } from "@/lib/lesson/voices";
 
 const COPY = {
   en: {
@@ -176,7 +177,7 @@ export function PremierePlayer({
       const response = await fetch("/api/tts", {
         method: "POST",
         headers: { "content-type": "application/json" },
-        body: JSON.stringify({ text, voice }),
+        body: JSON.stringify({ text, voice: pickVoice(voice, text) }),
       });
       if (!response.ok) throw new Error(`tts voice returned ${response.status}`);
       const [blob, marks] = await Promise.all([

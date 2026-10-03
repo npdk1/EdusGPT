@@ -48,6 +48,8 @@ import {
   setActiveLessonId,
 } from "@/lib/lesson/storage";
 import { useGenerationStream, GenerationTimeline, RunLog } from "./GenerationTimeline";
+import { LanguagePicker } from "./LanguagePicker";
+import { AUTO_LANGUAGE } from "@/lib/lesson/lesson-languages";
 import { PremierePlayer } from "./Premiere";
 import { formatClock, slugify } from "@/lib/format";
 import { useCopy, useLang } from "@/i18n/provider";
@@ -55,6 +57,7 @@ import { useCopy, useLang } from "@/i18n/provider";
 const COPY = {
   en: {
     createLesson: "Create lesson",
+    studioLessonLanguage: "Lesson language",
     introLead:
       "Write what you want to teach and drop in any documents. The lesson is built scene by scene with narration, then opens in the",
     introPlayer: "player",
@@ -157,6 +160,7 @@ const COPY = {
   },
   vi: {
     createLesson: "Tạo bài giảng",
+    studioLessonLanguage: "Ngôn ngữ bài giảng",
     introLead:
       "Viết ý bạn muốn dạy, thả tài liệu vào nếu có. Bài giảng được dựng thành từng cảnh kèm lời giảng, rồi mở ngay trong",
     introPlayer: "trình phát",
@@ -335,6 +339,9 @@ export function StudioPanel() {
   const [useImages, setUseImages] = useState(
     PRESENTATION_STYLES.find((item) => item.id === DEFAULT_PRESENTATION_STYLE)?.images ?? true,
   );
+  // The language the lesson is written in. "auto" is the default and hands the
+  // decision to the brief: ask in English, get an English lesson.
+  const [language, setLanguage] = useState(AUTO_LANGUAGE);
   // The teacher's pointer: on unless switched off. Carried on the lesson so
   // the player honours it without asking again.
   const [showPointer, setShowPointer] = useState(true);
@@ -447,7 +454,7 @@ export function StudioPanel() {
       minutes,
       notes: topic,
       referenceMaterial: referenceText,
-      language: "Tiếng Việt",
+      language,
       theme,
       voice,
       useImages,
@@ -456,7 +463,7 @@ export function StudioPanel() {
       style: styleId,
       lessonLength,
     });
-  }, [lessonLength, minutes, pointerColor, referenceText, sceneCount, showPointer, stream, styleId, theme, topic, useImages, voice]);
+  }, [language, lessonLength, minutes, pointerColor, referenceText, sceneCount, showPointer, stream, styleId, theme, topic, useImages, voice]);
 
   /** Saves to the server library (survives a browser wipe) and mirrors to local. */
   const save = useCallback(async () => {
@@ -698,6 +705,13 @@ export function StudioPanel() {
         <ThemePicker value={theme} onChange={setTheme} open={themeOpen} setOpen={setThemeOpen} />
 
         <ImageModeToggle value={useImages} onChange={setUseImages} />
+
+        <div>
+          <p className="mb-1 text-xs font-medium text-mist-300">
+            {t.studioLessonLanguage}
+          </p>
+          <LanguagePicker value={language} onChange={setLanguage} />
+        </div>
 
         <PointerModeToggle
           visible={showPointer}

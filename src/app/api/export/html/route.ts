@@ -2,7 +2,7 @@ import { NextResponse, type NextRequest } from "next/server";
 import { buildStandaloneHtml } from "@/lib/lesson/export-html";
 import { coerceLesson } from "@/lib/lesson/validate";
 import { alignSentences, type AlignedSentence } from "@/lib/karaoke";
-import { DEFAULT_VOICE, isViVoice, speak } from "@/lib/server/tts";
+import { DEFAULT_VOICE, isVoiceId, pickVoice, speak } from "@/lib/server/tts";
 import { slugify } from "@/lib/format";
 
 export const runtime = "nodejs";
@@ -35,7 +35,8 @@ export async function POST(request: NextRequest) {
     );
   }
 
-  const voice = isViVoice(lesson.voice) ? lesson.voice : DEFAULT_VOICE;
+  // The lesson's own voice when it fits the script, the default otherwise.
+  const voice = isVoiceId(lesson.voice) ? lesson.voice : DEFAULT_VOICE;
   // One narration clip per scene, embedded as a data URI so the file needs no
   // server to speak. A scene that fails to synthesise stays silent instead of
   // failing the whole export.
@@ -52,7 +53,10 @@ export async function POST(request: NextRequest) {
       continue;
     }
     try {
-      const { audio, words } = await speak(scene.narration, voice);
+      const { audio, words } = await speak(
+        scene.narration,
+        pickVoice(voice, scene.narration),
+      );
       audioBytes += audio.length;
       if (audioBytes > MAX_EXPORT_AUDIO_BYTES) {
         return NextResponse.json(

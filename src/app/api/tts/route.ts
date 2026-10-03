@@ -1,6 +1,6 @@
 import { gzipSync } from "node:zlib";
 import { NextResponse, type NextRequest } from "next/server";
-import { speak, isViVoice, DEFAULT_VOICE, VI_VOICES, type ViVoiceId, type WordMark } from "@/lib/server/tts";
+import { speak, isVoiceId, pickVoice, DEFAULT_VOICE, VOICES, type LessonVoiceId, type WordMark } from "@/lib/server/tts";
 import { pruneCache, readCachedAudio, writeCachedAudio } from "@/lib/server/tts-cache";
 import { clientKey, rateLimit, rejectRemote } from "@/lib/server/guard";
 
@@ -34,7 +34,7 @@ function encodeWords(words: WordMark[]): string {
 const MAX_TEXT = 4_000;
 
 export async function GET() {
-  return NextResponse.json({ voices: VI_VOICES, default: DEFAULT_VOICE, maxChars: MAX_TEXT });
+  return NextResponse.json({ voices: VOICES, default: DEFAULT_VOICE, maxChars: MAX_TEXT });
 }
 
 export async function POST(request: NextRequest) {
@@ -71,7 +71,13 @@ export async function POST(request: NextRequest) {
     );
   }
 
-  const voice: ViVoiceId = isViVoice(body.voice) ? body.voice : DEFAULT_VOICE;
+  // The studio remembers one voice, but a lesson can be written in another
+  // language than the screen: read an English slide with an English voice rather
+  // than pronouncing it with Vietnamese one.
+  const voice: LessonVoiceId = pickVoice(
+    isVoiceId(body.voice) ? body.voice : DEFAULT_VOICE,
+    text,
+  );
 
   // Narrating the same sentence again is the common case, not the exception:
   // serve it from disk and skip the voice service entirely.
