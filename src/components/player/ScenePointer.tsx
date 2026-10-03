@@ -30,6 +30,7 @@ import type { Lesson } from "@/lib/lesson/types";
  */
 export function ScenePointer({
   lesson,
+  scene,
   stageRef,
   channel,
   playing,
@@ -37,6 +38,13 @@ export function ScenePointer({
   colorRgb,
 }: {
   lesson: Lesson;
+  /**
+   * The classroom and the premiere draw one slide at a time and have no deck to
+   * look up. Handing the scene straight in lets the same pointer, the same
+   * spotlight and the same highlight run there instead of a second, lesser
+   * implementation.
+   */
+  scene?: Lesson["scenes"][number];
   stageRef: RefObject<HTMLDivElement | null>;
   channel: NarrationChannel;
   playing: boolean;
@@ -47,6 +55,12 @@ export function ScenePointer({
 }) {
   const dotRef = useRef<HTMLDivElement>(null);
   const ringRef = useRef<HTMLDivElement>(null);
+  /**
+   * The spotlight: a hole in a dimmed page, cut around whatever the pointer is
+   * on. A ring alone marks a word; dimming everything else says "read this one
+   * now", which is what a teacher does with their hand.
+   */
+  const veilRef = useRef<HTMLDivElement>(null);
   const stateRef = useRef("");
   /** Last resolved anchor, so a sentence that matches nothing holds position. */
   const heldRef = useRef<{ scene: number; target: string } | null>(null);
@@ -98,6 +112,7 @@ export function ScenePointer({
       const stage = stageRef.current;
       const dot = dotRef.current;
       const ring = ringRef.current;
+      const veil = veilRef.current;
       if (!stage || !dot || !ring) return;
 
       const live = channel.live;
@@ -106,6 +121,7 @@ export function ScenePointer({
           stateRef.current = "hidden";
           dot.style.opacity = "0";
           ring.style.opacity = "0";
+          if (veil) veil.style.opacity = "0";
           stage.querySelectorAll('[data-pointer="on"]').forEach((node) => {
             node.removeAttribute("data-pointer");
           });
@@ -123,8 +139,8 @@ export function ScenePointer({
         hide();
         return;
       }
-      const scene = lesson.scenes[live.sceneIndex];
-      if (!scene?.narration) {
+      const deckScene = scene ?? lesson.scenes[live.sceneIndex];
+      if (!deckScene?.narration) {
         hide();
         return;
       }
@@ -132,9 +148,9 @@ export function ScenePointer({
       // The sentence the voice is inside — the exact rule the caption uses
       // (last timed sentence at or before now; parked on the first when the
       // voice never measured one), so pointer and caption cannot disagree.
-      const narration = scene.narration;
+      const narration = deckScene.narration;
       const marks = channel.words.get(live.sceneIndex) ?? [];
-      const cacheKey = `${scene.id}:${narration.length}:${marks.length}`;
+      const cacheKey = `${deckScene.id}:${narration.length}:${marks.length}`;
       let aligned = alignedRef.current;
       if (!aligned || aligned.key !== cacheKey) {
         aligned = { key: cacheKey, sentences: alignSentences(narration, marks) };
@@ -155,7 +171,10 @@ export function ScenePointer({
       const sentenceText =
         sentences[sentence]?.text ?? splitSentences(narration)[sentence] ?? narration;
 
-      const article = stage.querySelector<HTMLElement>(`[data-scene="${live.sceneIndex}"]`);
+      // A single-scene surface (the classroom, the premiere) paints one slide
+      // and numbers it 0, because it has no deck to index into.
+      const domIndex = scene ? 0 : live.sceneIndex;
+      const article = stage.querySelector<HTMLElement>(`[data-scene="${domIndex}"]`);
       if (!article) {
         hide();
         return;
@@ -169,7 +188,7 @@ export function ScenePointer({
       // 2) Nothing matches: the AI cue for this exact sentence, if it names a
       // part this scene actually shows.
       if (!node) {
-        const cue = scene.pointer?.[sentence];
+        const cue = deckScene.pointer?.[sentence];
         if (cue) {
           const cueNode = resolveTarget(article, cue.target);
           if (cueNode) {
@@ -222,6 +241,14 @@ export function ScenePointer({
       ring.style.transform = `translate(${x - 8}px, ${y - 8}px)`;
       ring.style.width = `${box.width + 16}px`;
       ring.style.height = `${box.height + 16}px`;
+      // The spotlight sits under the ring and the dot but over the slide: same
+      // box, one giant shadow that dims everything the pointer is not on.
+      if (veil) {
+        veil.style.opacity = "1";
+        veil.style.transform = `translate(${x - 8}px, ${y - 8}px)`;
+        veil.style.width = `${box.width + 16}px`;
+        veil.style.height = `${box.height + 16}px`;
+      }
 
       const key = `${live.sceneIndex}:${sentence}:${targetKey}`;
       if (stateRef.current !== key) {
@@ -240,6 +267,11 @@ export function ScenePointer({
 
   return (
     <>
+      <div
+        ref={veilRef}
+        aria-hidden="true"
+        className="scene-spotlight-veil"
+      />
       <div
         ref={ringRef}
         aria-hidden="true"

@@ -1147,6 +1147,32 @@
   }
 
   /*
+   * The spotlight.
+   *
+   * One box the size of whatever the pointer is on, with a shadow large enough
+   * to reach the edge of the slide. The shadow is the dimming: everything
+   * outside the box goes quiet while the pointed-at part stays lit, which is
+   * what a teacher's hand does over a page.
+   */
+  .scene-spotlight-veil {
+    position: absolute;
+    left: 0;
+    top: 0;
+    z-index: 9;
+    pointer-events: none;
+    border-radius: 0.9cqw;
+    opacity: 0;
+    transition: opacity 300ms ease;
+    /*
+     * The dimming colour comes from the same `--pointer-rgb` triple the ring
+     * and the dot read, written the way the rest of the file writes it: `rgba`
+     * with the triple inside. A `color-mix` here would be wrong — substituting
+     * "245, 158, 11" into a two-argument mix reads as three arguments.
+     */
+    box-shadow: 0 0 0 9999px rgba(var(--pointer-rgb, 245, 158, 11), 0.4);
+  }
+
+  /*
    * The function graph: same hairline rhythm as bullets and steps, with the
    * curve in the slide accent and asymptotes dashed in the soft accent — the
    * dash is what says "not part of the curve".

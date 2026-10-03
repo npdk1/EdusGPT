@@ -26,6 +26,12 @@ import {
 } from "./SceneFigure";
 import { InteractiveQuiz } from "./InteractiveQuiz";
 import { InteractiveSimulation } from "./InteractiveSimulation";
+import { ScenePointer } from "./ScenePointer";
+import { pointerColorToRgb } from "@/lib/lesson/pollinations";
+import {
+  createNarrationChannel,
+  type NarrationChannel,
+} from "@/lib/karaoke";
 import { useCopy } from "@/i18n/provider";
 
 const COPY = {
@@ -81,6 +87,9 @@ export function SlideSurface({
   lessonId,
   theme,
   caption,
+  channel,
+  playing,
+  pointerColor,
   className = "",
 }: {
   scene: Lesson["scenes"][number];
@@ -92,11 +101,26 @@ export function SlideSurface({
   theme?: string | null;
   /** Karaoke caption, pinned to the band the slide reserves at the bottom. */
   caption?: ReactNode;
+  /**
+   * The shared voice channel. Given one, the slide points at the part it is
+   * reading and dims the rest — the same run the full player uses, so a slide
+   * behaves the same wherever it is shown.
+   */
+  channel?: NarrationChannel;
+  /** Whether the voice is actually reading right now. */
+  playing?: boolean;
+  /** Pointer colour, hex; the slide's default amber is used when absent. */
+  pointerColor?: string;
   className?: string;
 }) {
   const t = useCopy(COPY);
   const stageRef = useRef<HTMLDivElement | null>(null);
   const KickerIcon = slideIcon(scene.icon);
+  // The pointer needs a voice channel whether or not one was passed: a slide
+  // shown on its own has nothing to read, and a fresh channel simply never
+  // reports a playhead.
+  const silentChannel = useRef<NarrationChannel>(createNarrationChannel());
+  const voice = channel ?? silentChannel.current;
 
   const hasFigure = Boolean(
     scene.formula ||
@@ -333,6 +357,7 @@ export function SlideSurface({
       {/* Fills the paper, which owns the 16:9 box the cqw units measure. */}
       <div ref={stageRef} className="absolute inset-0">
         <div
+          data-scene="0"
           className={`scene-card scene-on-${layout} relative flex h-full flex-col overflow-hidden`}
         >
           {/* The tinted corner behind the content. Empty on purpose: it is
@@ -418,6 +443,20 @@ export function SlideSurface({
             >
               {caption}
             </div>
+          ) : null}
+
+          {channel ? (
+            <ScenePointer
+              scene={scene}
+              // One scene is the whole deck from here: the pointer resolves its
+              // target inside the slide it is handed, not in a deck it walks.
+              lesson={{ scenes: [scene] } as Lesson}
+              stageRef={stageRef}
+              channel={voice}
+              playing={Boolean(playing)}
+              enabled
+              colorRgb={pointerColorToRgb(pointerColor)}
+            />
           ) : null}
         </div>
       </div>

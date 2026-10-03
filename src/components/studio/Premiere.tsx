@@ -516,6 +516,8 @@ export function PremierePlayer({
               scene={currentSlide}
               index={current.index}
               lessonId={lessonId}
+              channel={channelRef.current}
+              playing={phase.name === "playing"}
               caption={
                 // Karaoke needs a playhead: with the sound off there is
                 // nothing to highlight against, so the slide sits plain.
