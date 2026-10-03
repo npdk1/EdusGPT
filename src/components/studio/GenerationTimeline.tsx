@@ -49,6 +49,8 @@ export interface LiveScene {
   bullets: string[];
   narration: string;
   kind: string;
+  imagePrompt?: string;
+  imageQuery?: string;
 }
 
 export interface StreamEvent {
@@ -246,6 +248,8 @@ function reduceProgress(
       bullets?: unknown[];
       narration?: unknown;
       kind?: unknown;
+      imagePrompt?: unknown;
+      imageQuery?: unknown;
     };
     const next = steps.map((step) =>
       step.state === "active"
@@ -276,6 +280,14 @@ function reduceProgress(
       narration:
         typeof scene.narration === "string" ? scene.narration.slice(0, 4000) : "",
       kind: typeof scene.kind === "string" ? scene.kind : "concept",
+      imagePrompt:
+        typeof scene.imagePrompt === "string" && scene.imagePrompt.trim()
+          ? scene.imagePrompt.trim().slice(0, 500)
+          : undefined,
+      imageQuery:
+        typeof scene.imageQuery === "string" && scene.imageQuery.trim()
+          ? scene.imageQuery.trim().slice(0, 200)
+          : undefined,
     };
     const liveScenes = [...current.liveScenes, live].sort((a, b) => a.index - b.index);
     return {

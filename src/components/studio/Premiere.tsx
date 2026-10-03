@@ -4,6 +4,8 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { LoaderCircle, Pause, Play, RotateCcw, Volume2 } from "lucide-react";
 import type { LiveScene } from "./GenerationTimeline";
 import { SceneLoader3D } from "../three/SceneLoader3D";
+import { FigureZoom, SlideImageView } from "../player/SceneFigure";
+import type { Lesson } from "@/lib/lesson/types";
 import {
   alignSentences,
   decodeWordMarks,
@@ -40,6 +42,7 @@ export function PremierePlayer({
   running,
   done,
   progress,
+  lessonId,
   onSceneChange,
 }: {
   scenes: LiveScene[];
@@ -50,6 +53,8 @@ export function PremierePlayer({
   done: boolean;
   /** 0..100 deck progress, for the loader bar while waiting. */
   progress: number;
+  /** Stable deck id — seeds the slide pictures, same as the saved lesson. */
+  lessonId: string;
   /**
    * Fires with the scene whose voice starts, and with null when nothing is
    * speaking — the classroom's bottom narration bar listens to this.
@@ -244,6 +249,24 @@ export function PremierePlayer({
     phase.name === "playing" || phase.name === "loading-audio"
       ? (scenes.find((scene) => scene.index === phase.index) ?? null)
       : null;
+  // A full LessonScene for the picture view, with the same stable id the
+  // saved lesson will carry (`ai-<n>`) so seeds and hide-keys match it.
+  const currentFigure: Lesson["scenes"][number] | null =
+    current && (current.imagePrompt || current.imageQuery)
+      ? {
+          id: `ai-${current.index + 1}`,
+          kind: "concept",
+          accent: "brand",
+          title: current.title,
+          subtitle: current.subtitle,
+          bullets: current.bullets,
+          narration: current.narration,
+          imagePrompt: current.imagePrompt,
+          imageQuery: current.imageQuery,
+          start: 0,
+          duration: 0,
+        }
+      : null;
   const activeSentence = [...sentences]
     .reverse()
     .find((sentence) => sentence.start !== null && sentence.start <= now);
@@ -298,6 +321,11 @@ export function PremierePlayer({
               Cảnh {current.index + 1}
             </p>
             <h3 className="text-lg font-semibold text-mist-50">{current.title}</h3>
+            {currentFigure ? (
+              <FigureZoom label={`Phóng to ảnh cảnh ${current.index + 1}`}>
+                <SlideImageView lessonId={lessonId} scene={currentFigure} />
+              </FigureZoom>
+            ) : null}
             {sentences.length > 0 ? (
               <div className="space-y-1.5" aria-live="polite">
                 {sentences.map((sentence, i) => {

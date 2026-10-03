@@ -604,6 +604,7 @@ export function StudioPanel() {
             running={busy}
             done={stream.progress.done}
             progress={stream.progress.percent}
+            lessonId={stream.progress.lessonId ?? ""}
           />
         ) : null}
         {!lesson && stream.progress.log.length > 0 ? (

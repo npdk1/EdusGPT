@@ -236,6 +236,7 @@ export default function ClassroomClient({ sessionId }: { sessionId: string | nul
               running={running}
               done={progress.done}
               progress={progress.percent}
+              lessonId={sessionId ?? ""}
               onSceneChange={handleSceneChange}
             />
           ) : waiting ? (

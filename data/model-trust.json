@@ -3,10 +3,10 @@
     {
       "provider": "nvidia",
       "model": "openai/gpt-oss-20b",
-      "lessonId": "lesson-murqfedb-1hjkoc",
+      "lessonId": "lesson-murrea67-gozy5i",
       "scenes": 6,
-      "words": 362,
-      "verifiedAt": "2026-10-03T01:50:07.247Z"
+      "words": 319,
+      "verifiedAt": "2026-10-03T02:18:38.695Z"
     },
     {
       "provider": "nvidia",

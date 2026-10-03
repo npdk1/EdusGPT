@@ -1,0 +1,387 @@
+{
+  "format": "eduai-studio/course@1",
+  "updatedAt": "2026-10-03T02:18:38.708Z",
+  "lesson": {
+    "id": "lesson-murrea67-gozy5i",
+    "title": "Định luật bảo toàn năng lượng",
+    "subject": "Chung",
+    "grade": "Phổ thông",
+    "language": "vi",
+    "fps": 30,
+    "duration": 144,
+    "scenes": [
+      {
+        "id": "ai-1",
+        "kind": "cover",
+        "accent": "brand",
+        "title": "Bạn muốn biết năng lượng không bao giờ mất đi?",
+        "subtitle": "Khám phá quyền năng của định luật bảo toàn năng lượng",
+        "bullets": [
+          "Năng lượng chuyển thành nhiệt hoặc công mà tổng không thay đổi.",
+          "Ví dụ: Khi bạn đẩy một viên bóng, năng lượng đầu vào bằng năng lượng cuối cùng, dù bóng chuyển động hay dừng lại."
+        ],
+        "narration": "Học sinh đang thắc mắc gì ở đây? Bạn có biết năng lượng có thể thay đổi dạng mà không bị mất? Chúng ta sẽ thực hiện một minh hoạ đơn giản: khi bạn đẩy một viên bóng, năng lượng đầu vào bằng năng lượng cuối cùng, dù bóng chuyển động hay dừng lại.",
+        "pointer": [
+          {
+            "target": "title",
+            "label": "câu hỏi mở"
+          },
+          {
+            "target": "bullet-0",
+            "label": "giải thích chuyển đổi"
+          }
+        ],
+        "start": 0,
+        "duration": 24
+      },
+      {
+        "id": "ai-2",
+        "kind": "concept",
+        "accent": "brand",
+        "title": "Năng lượng là gì?",
+        "subtitle": "Định nghĩa năng lượng trong vật lý",
+        "bullets": [
+          "Năng lượng là tài nguyên duy trì hoạt động trong hệ thống",
+          "Năng lượng có thể chuyển đổi dạng mà không mất đi",
+          "Năng lượng bảo toàn qua các quy luật tự nhiên"
+        ],
+        "narration": "Nhớ từ trước, năng lượng không trôi mất, mà chuyển dạng. Ví dụ, khi một con rắn kéo thả sàn, năng lượng động trở thành nhiệt. Bạn có nhớ từ nào khác cho năng lượng không? Đó chính là “công suất” trong công việc tiêu thụ.",
+        "pointer": [
+          {
+            "target": "title",
+            "label": "đề cập chủ đề"
+          },
+          {
+            "target": "subtitle",
+            "label": "kí tự mở rộng"
+          },
+          {
+            "target": "bullet-0",
+            "label": "giới thiệu dạng"
+          },
+          {
+            "target": "bullet-1",
+            "label": "chuyển đổi"
+          },
+          {
+            "target": "bullet-2",
+            "label": "bảo toàn"
+          }
+        ],
+        "start": 24,
+        "duration": 24
+      },
+      {
+        "id": "ai-3",
+        "kind": "formula",
+        "accent": "brand",
+        "title": "Công thức bảo toàn năng lượng",
+        "subtitle": "E = K + U",
+        "bullets": [
+          "Tổng năng lượng bất đổi khi không có công tác ngoài",
+          "K = ½mv² biểu diễn động năng",
+          "U = mgh biểu diễn thế trọng lực"
+        ],
+        "formula": "E = K + U",
+        "narration": "Chúng ta đã biết năng lượng là gì, giờ nhìn vào công thức mà chúng ta dùng để tính tổng. Ví dụ, một quả bóng rơi có K tăng lên khi U giảm. Bạn có nhớ công thức này không? Xem ví dụ dưới để tự tính.",
+        "pointer": [
+          {
+            "target": "title",
+            "label": "giới thiệu"
+          },
+          {
+            "target": "bullet-0",
+            "label": "định nghĩa"
+          },
+          {
+            "target": "bullet-1",
+            "label": "động năng"
+          },
+          {
+            "target": "bullet-2",
+            "label": "năng lượng thế"
+          },
+          {
+            "target": "formula",
+            "label": "công thức"
+          },
+          {
+            "target": "subtitle",
+            "label": "giải thích"
+          }
+        ],
+        "start": 48,
+        "duration": 24
+      },
+      {
+        "id": "ai-4",
+        "kind": "example",
+        "accent": "brand",
+        "title": "Ví dụ: Xe đua trên đường cong",
+        "subtitle": "Tính năng lượng động và thế trong một trò chơi xe đua",
+        "bullets": [
+          "Khối 1500 kg, vận tốc 30 m/s, độ dốc 5 %",
+          "Công thức: E = KE + PE"
+        ],
+        "steps": [
+          "Giả sử xe có khối 1500 kg, vận tốc 30 m/s và độ dốc 5 %",
+          "Tính năng lượng động khi bắt đầu: KE₀ = ½·1500·30²",
+          "Tính năng lượng thế khi lên đỉnh: PE₀ = 1500·9.8·h (h = 5 %·đường)",
+          "Tổng năng lượng bảo toàn: E = KE₀ + PE₀",
+          "Khi hạ xuống, PE = 0, KE = E"
+        ],
+        "formula": "E=\\tfrac{1}{2}mv^2+mg h",
+        "narration": "Bây giờ ta áp dụng công thức năng lượng bảo toàn vào trò chơi xe đua. Giả sử xe có khối 1500 kg, vận tốc 30 m/s và độ dốc 5 %. Tính năng lượng động lúc bắt đầu, năng lượng thế khi lên đỉnh, và năng lượng còn lại khi hạ xuống. Bạn thấy sự cân bằng? Công thức: E = KE + PE.",
+        "pointer": [
+          {
+            "target": "title",
+            "label": "Giới thiệu ví dụ"
+          },
+          {
+            "target": "bullet-0",
+            "label": "Thông số xe"
+          },
+          {
+            "target": "bullet-1",
+            "label": "Công thức năng lượng"
+          },
+          {
+            "target": "step-4",
+            "label": "Kết luận năng lượng"
+          }
+        ],
+        "start": 72,
+        "duration": 24
+      },
+      {
+        "id": "ai-5",
+        "kind": "quiz",
+        "accent": "gold",
+        "title": "Kiểm tra lại xem bạn đã hiểu chưa",
+        "subtitle": "Chọn đáp án đúng về nội dung vừa học.",
+        "bullets": [
+          "Đọc lại tóm tắt ở slide trước nếu chưa nhớ.",
+          "Chọn một đáp án, bạn sẽ được giải thích ngay."
+        ],
+        "narration": "Mình cùng kiểm tra lại xem bạn đã nắm được chưa. Đọc câu hỏi và chọn đáp án mình nghĩ là đúng. Chọn sai cũng không sao, mình sẽ giải thích lại ngay tại đây, và đó là cách nhanh nhất để biết mình cần xem lại phần nào.",
+        "quiz": {
+          "question": "Bạn đã nắm được nội dung chính của bài học này chưa?",
+          "options": [
+            {
+              "id": "opt-1",
+              "text": "Rồi, mình hiểu và tự giải thích lại được cho bạn nghe",
+              "isCorrect": true,
+              "explanation": "Đó là đúng. Tự kể lại bằng lời mình mới thật sự nắm."
+            },
+            {
+              "id": "opt-2",
+              "text": "Mình hiểu phần đầu, phần sau hơi mơ hồ",
+              "isCorrect": false,
+              "explanation": "Không sao. Xem lại phần cuối, đó là phần hay quên nhất."
+            },
+            {
+              "id": "opt-3",
+              "text": "Chưa, mình thấy hơi nhiều thông tin",
+              "isCorrect": false,
+              "explanation": "Bài dài là chủ ý. Xem lại dàn ý theo thứ tự, từng phần một sẽ dễ hơn."
+            },
+            {
+              "id": "opt-4",
+              "text": "Chưa, mình muốn xem ví dụ thực tế thêm",
+              "isCorrect": false,
+              "explanation": "Phần ví dụ gần cuối bài. Đọc nó sẽ giúp bạn thấy bài học dùng được thế nào."
+            }
+          ]
+        },
+        "start": 96,
+        "duration": 24
+      },
+      {
+        "id": "ai-6",
+        "kind": "summary",
+        "accent": "brand",
+        "title": "Nội dung chính trong 2 phút",
+        "subtitle": "Tóm tắt nhanh về định luật bảo toàn năng lượng",
+        "bullets": [
+          "1. Tổng năng lượng trong hệ kín không thay đổi.",
+          "2. Năng lượng chuyển đổi giữa động học và thế năng.",
+          "3. Ví dụ: đĩa quay trên trục không có ma sát, tốc độ không giảm."
+        ],
+        "narration": "Bạn nhớ khi đĩa xuôi quanh trục mà không bị trượt? Đó là minh chứng cho việc năng lượng chuyển từ động học sang thế năng, nhưng tổng vẫn giữ nguyên. Khi băng lăn vào thùng, động năng giảm, nhưng thế năng tăng, ta thấy công thức E=mc^2 không cần. Đây là định luật bảo toàn năng lượng.",
+        "pointer": [
+          {
+            "target": "title",
+            "label": "Giới thiệu slide"
+          }
+        ],
+        "start": 120,
+        "duration": 24
+      }
+    ],
+    "chapters": [
+      {
+        "id": "ch-1",
+        "title": "Bạn muốn biết năng lượng không bao giờ mất đi?",
+        "start": 0,
+        "end": 24,
+        "sceneIds": [
+          "ai-1"
+        ]
+      },
+      {
+        "id": "ch-2",
+        "title": "Năng lượng là gì?",
+        "start": 24,
+        "end": 48,
+        "sceneIds": [
+          "ai-2"
+        ]
+      },
+      {
+        "id": "ch-3",
+        "title": "Công thức bảo toàn năng lượng",
+        "start": 48,
+        "end": 72,
+        "sceneIds": [
+          "ai-3"
+        ]
+      },
+      {
+        "id": "ch-4",
+        "title": "Ví dụ: Xe đua trên đường cong",
+        "start": 72,
+        "end": 96,
+        "sceneIds": [
+          "ai-4"
+        ]
+      },
+      {
+        "id": "ch-5",
+        "title": "Kiểm tra lại xem bạn đã hiểu chưa",
+        "start": 96,
+        "end": 120,
+        "sceneIds": [
+          "ai-5"
+        ]
+      },
+      {
+        "id": "ch-6",
+        "title": "Nội dung chính trong 2 phút",
+        "start": 120,
+        "end": 144,
+        "sceneIds": [
+          "ai-6"
+        ]
+      }
+    ],
+    "source": "gemini",
+    "theme": "paper",
+    "voice": "vi-VN-HoaiMyNeural",
+    "showPointer": true,
+    "pointerColor": "#f59e0b",
+    "model": "openai/gpt-oss-20b",
+    "createdAt": "2026-10-03T02:18:38.692Z"
+  },
+  "log": [
+    {
+      "message": "Đang lên dàn ý bài học…",
+      "kind": "stage",
+      "at": "09:14:42",
+      "stage": "outline",
+      "provider": "nvidia",
+      "model": "openai/gpt-oss-20b"
+    },
+    {
+      "message": "Dàn ý: 5 cảnh: \"Định luật bảo toàn năng lượng\"",
+      "kind": "stage",
+      "at": "09:15:13",
+      "stage": "outline-done",
+      "provider": "nvidia",
+      "model": "openai/gpt-oss-20b",
+      "elapsedMs": 30150
+    },
+    {
+      "message": "Đang viết cảnh 1/5",
+      "kind": "stage",
+      "at": "09:15:13",
+      "stage": "scene"
+    },
+    {
+      "message": "Xong cảnh 1: Bạn muốn biết năng lượng không bao giờ mất đi?",
+      "kind": "scene",
+      "at": "09:15:51",
+      "stage": "scene",
+      "provider": "nvidia",
+      "model": "openai/gpt-oss-20b",
+      "elapsedMs": 38811
+    },
+    {
+      "message": "Đang viết cảnh 2/5",
+      "kind": "stage",
+      "at": "09:15:51",
+      "stage": "scene"
+    },
+    {
+      "message": "Xong cảnh 2: Năng lượng là gì?",
+      "kind": "scene",
+      "at": "09:16:13",
+      "stage": "scene",
+      "provider": "nvidia",
+      "model": "openai/gpt-oss-20b",
+      "elapsedMs": 21217
+    },
+    {
+      "message": "Đang viết cảnh 3/5",
+      "kind": "stage",
+      "at": "09:16:13",
+      "stage": "scene"
+    },
+    {
+      "message": "Xong cảnh 3: Công thức bảo toàn năng lượng",
+      "kind": "scene",
+      "at": "09:16:29",
+      "stage": "scene",
+      "provider": "nvidia",
+      "model": "openai/gpt-oss-20b",
+      "elapsedMs": 16756
+    },
+    {
+      "message": "Đang viết cảnh 4/5",
+      "kind": "stage",
+      "at": "09:16:29",
+      "stage": "scene"
+    },
+    {
+      "message": "Xong cảnh 4: Ví dụ: Xe đua trên đường cong",
+      "kind": "scene",
+      "at": "09:18:01",
+      "stage": "scene",
+      "provider": "nvidia",
+      "model": "openai/gpt-oss-20b",
+      "elapsedMs": 91996
+    },
+    {
+      "message": "Đang viết cảnh 5/5",
+      "kind": "stage",
+      "at": "09:18:01",
+      "stage": "scene"
+    },
+    {
+      "message": "Xong cảnh 5: Nội dung chính trong 2 phút",
+      "kind": "scene",
+      "at": "09:18:38",
+      "stage": "scene",
+      "provider": "nvidia",
+      "model": "openai/gpt-oss-20b",
+      "elapsedMs": 36814
+    },
+    {
+      "message": "6 cảnh, 144s.",
+      "kind": "done",
+      "at": "09:18:38",
+      "provider": "nvidia",
+      "model": "openai/gpt-oss-20b",
+      "elapsedMs": 235754
+    }
+  ]
+}
