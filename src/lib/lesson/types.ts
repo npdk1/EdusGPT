@@ -125,6 +125,10 @@ export type SceneKind = (typeof SCENE_KINDS)[number];
  */
 export const SLIDE_LAYOUTS = [
   "cover",
+  "spotlight",
+  "quote",
+  "flow",
+  "compare",
   "statement",
   "two-col",
   "cards",
@@ -144,6 +148,7 @@ export function defaultSlideLayout(
   scene: {
     kind?: string;
     bullets?: unknown;
+    steps?: unknown;
     imagePrompt?: unknown;
     imageQuery?: unknown;
     formula?: unknown;
@@ -154,6 +159,7 @@ export function defaultSlideLayout(
   },
 ): SlideLayout {
   const bullets = Array.isArray(scene.bullets) ? scene.bullets.length : 0;
+  const steps = Array.isArray(scene.steps) ? scene.steps.length : 0;
   const hasFigure = Boolean(
     scene.formula || scene.data || scene.table || scene.graph || scene.simulation3d,
   );
@@ -163,9 +169,17 @@ export function defaultSlideLayout(
   );
   if (scene.kind === "cover" && bullets <= 1) return "cover";
   if (hasFigure) return "full-figure";
+  // A worked sequence reads as a journey, not a list: the steps become stations
+  // on a line, which is friendlier to follow than a numbered column.
+  if (steps >= 2) return "flow";
+  // Pairs of ideas side by side want the dividing line that says "these are
+  // rivals", not the equal cards that say "these are the same kind of thing".
+  if (bullets >= 4) return "compare";
   if (hasPicture && bullets >= 2) return "image-right";
   if (bullets >= 5) return "cards";
   if (bullets >= 3) return "two-col";
+  // One idea and nothing to support it: give the idea the whole slide.
+  if (bullets <= 1) return "spotlight";
   return "statement";
 }
 

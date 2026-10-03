@@ -386,9 +386,18 @@ const SLIDE_DESIGN_RULES = `QUY TẮC BỐ CỤC SLIDE (bắt buộc — đây l
 0. NGUYÊN TẮC: slide là TRO GIÚP HÌNH ẢNH, KHÔNG phải bản ghi bài giảng. Người xem
    đang NGHE giọng đọc và nhìn slide, không đọc tài liệu. Mọi câu chỉ có nghĩa khi
    đọc lên thì BỎ khỏi slide — lời giảng đã nói rồi.
-   - Mỗi gạch đầu dòng dưới 20 TỪ. Gạch nào cắt bằng dấu "…" để dài hơn thì nó
+   - Mỗi gạch đầu dòng dưới 14 TỪ. Gạch nào cắt bằng dấu "…" để dài hơn thì nó
      đã dài quá.
    - Mỗi slide CHỈ nói một điều. Hai ý trên một slide là hai slide.
+ 0b. GIỌNG VĂN ẤM ÁP, THÂN THIỆN — slide phải như một người kể chuyện đứng cạnh bên:
+     - Viết như đang nói với học sinh, không như đang ghi đề mục. Dùng từ nối ("vì sao?",
+       "thử nghĩ xem", "chuyện nhỏ thế này…") thay cho danh từ khô khan.
+     - Ví dụ cụ thể và gần gũi, đừng để khái niệm trừu tượng đứng một mình. Một ví dụ đời
+       thường đáng giá hơn ba định nghĩa.
+     - Khi nói đến con số hay định luật, luôn kèm một câu "nghĩa là …" để người xem biết nó
+       liên quan gì tới mình.
+     - Tránh giọng lạnh; tránh tiếng Anh khi tiếng Việt nói được (trừ thuật ngữ chuyên ngành
+       không có từ Việt).
 1. LỀ TRANG: mọi khối nằm trong 86% chiều rộng, cách mép trên 3%, cách mép dưới
    chừa dải phụ đề. Không có khối nào chạm mép.
 2. CHỮ KHÔNG ĐƯỢC TRÀN DÒNG: một dòng chữ vừa khít cột, nghĩa là
@@ -410,6 +419,15 @@ const SLIDE_DESIGN_RULES = `QUY TẮC BỐ CỤC SLIDE (bắt buộc — đây l
    khối cùng cấp — lệch một chút cũng thấy.
 8. CHỌN "layout" ĐÚNG NGHĨA CỦA CẢNH, đừng để mặc định:
    - "cover": cảnh mở đầu / kết bài. Một câu khẳng định, căn giữa, tối đa 1 gạch.
+   - "spotlight": MỘT ý quan trọng nhất của cảnh, slide gần như trống, tiêu đề cỡ
+     rất lớn, tối đa 1 gạch đỡ. Dùng cho "ý cốt lõi", "điều dễ sai", "kết luận".
+   - "quote": một câu nói hay định luật/định nghĩa đáng nhớ, căn giữa, câu đó là
+     tiêu đề, phụ đề là nguồn hoặc tác giả. Ít nhất 1 trong 8-10 cảnh nên có một
+     slide kiểu này cho khí.
+   - "flow": các ý là THỨ TỰ (bước 1-2-3, giai đoạn, quy trình) — cảnh có
+     "steps", hoặc 3-4 gạch nối tiếp nhau. Các bước thành các thẻ nối nhau.
+   - "compare": hai ý đối lập hoặc so sánh (đúng/sai, trước/sau, A với B) — 4 gạch
+     trở lên, chia hai bên, có đường phân cách giữa hai bên.
    - "statement": một khẳng định + tối đa 2 gạch, một cột, chữ lệch trái.
    - "two-col": 3-4 gạch ngắn, hai cột bằng nhau.
    - "cards": 5 gạch trở lên, hoặc các ý là "thứ tự" (bước 1, bước 2, bước 3).
@@ -419,6 +437,9 @@ const SLIDE_DESIGN_RULES = `QUY TẮC BỐ CỤC SLIDE (bắt buộc — đây l
    - "full-figure": cảnh có bảng, biểu đồ, công thức hoặc đồ thị — hình chiếm
      phần lớn diện tích, chữ thu gọn lại.
    Bài đẹp là bài CÓ LẬT layout, không phải bài 12 slide cùng một khuôn.
+    - Trong một bài, hãy phân bố: 1 "cover", vài "spotlight"/"quote" cho ý cốt lõi,
+      1-2 "flow" cho quy trình, phần còn lại "statement"/"two-col"/"cards"/
+      "image-right" tuỳ nội dung. Đừng để 3 slide liền nhau cùng một layout.
 9. "blocks" — TỰ DO ĐẶT KHỐI, dùng khi layout không vừa:
     Đây là lưới 1000 x 562.5 (rộng 1000, cao 562.5). Mỗi khối có "kind", "x", "y"
     (góc trên-trái), "w", "h" (kích thước) — tất cả tính trên lưới đó, KHÔNG phải

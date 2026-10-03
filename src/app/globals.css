@@ -877,6 +877,43 @@
   }
 
   /*
+   * The warm layouts get the strongest wash of all: these are the slides where
+   * there is only one idea on the page, so the paper itself can carry some of
+   * the colour.
+   */
+  .scene-on-spotlight .scene-wash {
+    background: radial-gradient(
+      100% 80% at 50% 6%,
+      color-mix(in srgb, var(--slide-accent-soft) 26%, transparent) 0%,
+      transparent 66%
+    );
+  }
+
+  .scene-on-quote .scene-wash {
+    background: radial-gradient(
+      90% 70% at 50% 0%,
+      color-mix(in srgb, var(--slide-accent-soft) 20%, transparent) 0%,
+      transparent 70%
+    );
+  }
+
+  .scene-on-flow .scene-wash {
+    background: radial-gradient(
+      70% 60% at 0% 0%,
+      color-mix(in srgb, var(--slide-accent-soft) 16%, transparent) 0%,
+      transparent 64%
+    );
+  }
+
+  .scene-on-compare .scene-wash {
+    background: radial-gradient(
+      70% 60% at 100% 100%,
+      color-mix(in srgb, var(--slide-accent-soft) 16%, transparent) 0%,
+      transparent 64%
+    );
+  }
+
+  /*
    * A hairline frame. The slide sits inside the room, and this is the edge of
    * the paper itself — one pixel of the theme's own rule colour, so a dark
    * theme gets a light edge and a paper theme a dark one.
@@ -911,6 +948,202 @@
   .scene-layout-full-figure .scene-image img {
     box-shadow: 0 0.8cqw 2cqw
       color-mix(in srgb, var(--slide-ink) 16%, transparent);
+  }
+
+  /*
+   * A warm register.
+   *
+   * The layouts above are a geometry: rules, columns, cards. These are the
+   * touches that stop a slide reading like a form — the kicker becomes a chip
+   * rather than a label, the corner gets a soft ring instead of a hard border,
+   * and the shapes that hold text round off further. Everything is drawn from
+   * the slide's own palette, so the warm register follows the theme instead of
+   * fighting it.
+   */
+  .slide-fitted .scene-kicker {
+    padding: 0.45cqw 1.15cqw;
+    border-radius: 999px;
+    background: color-mix(in srgb, var(--slide-accent) 11%, transparent);
+  }
+
+  /*
+   * Spotlight: one idea, and the slide gets out of its way. The claim is set
+   * much larger than any other title, the supports underneath it stay small,
+   * and the ring behind is pure decoration — aria-hidden, never content.
+   */
+  .scene-layout-spotlight .scene-fit {
+    gap: 1.2cqw;
+  }
+
+  .scene-layout-spotlight .scene-head,
+  .scene-layout-spotlight .scene-body {
+    margin-inline: auto;
+    text-align: center;
+  }
+
+  .scene-layout-spotlight .scene-head {
+    max-width: 92%;
+  }
+
+  .scene-layout-spotlight .scene-title {
+    font-size: calc(6.6cqw * var(--slide-fit, 1));
+    line-height: 1.02;
+  }
+
+  .scene-layout-spotlight .scene-rule {
+    margin-inline: auto;
+    width: 9%;
+  }
+
+  .scene-layout-spotlight .scene-body {
+    grid-template-columns: 1fr;
+    max-width: 72%;
+    gap: 0.9cqw;
+  }
+
+  /*
+   * Quote: the slide lends its middle to a sentence someone said. The words are
+   * set large and centred with the source underneath in the accent, which is how
+   * a pull-quote is set in print.
+   */
+  .scene-layout-quote .scene-fit {
+    gap: 1cqw;
+  }
+
+  .scene-layout-quote .scene-head,
+  .scene-layout-quote .scene-body {
+    margin-inline: auto;
+    text-align: center;
+  }
+
+  .scene-layout-quote .scene-head {
+    max-width: 88%;
+  }
+
+  .scene-layout-quote .scene-title {
+    font-size: calc(4.4cqw * var(--slide-fit, 1));
+    line-height: 1.12;
+    font-weight: 600;
+  }
+
+  .scene-layout-quote .scene-sub {
+    font-size: calc(1.5cqw * var(--slide-fit, 1));
+    color: var(--slide-accent);
+  }
+
+  .scene-layout-quote .scene-rule {
+    margin-inline: auto;
+    width: 12%;
+  }
+
+  .scene-layout-quote .scene-body {
+    grid-template-columns: 1fr;
+    max-width: 68%;
+  }
+
+  /*
+   * Flow: the steps become stations on a line. The connector is drawn by the
+   * list itself so the arrow always sits between two real steps, whatever
+   * height the type settles at.
+   */
+  .scene-layout-flow .scene-body,
+  .scene-layout-flow .scene-steps {
+    grid-template-columns: repeat(auto-fit, minmax(0, 1fr));
+    gap: 1.4cqw;
+    max-width: 92%;
+  }
+
+  .scene-layout-flow .scene-bullet,
+  .scene-layout-flow .scene-step {
+    position: relative;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.5cqw;
+    padding: 1.4cqw 1.5cqw;
+    border-top: 0;
+    border-radius: 1.4cqw;
+    background: var(--slide-bg-sunk);
+    color: var(--slide-ink);
+  }
+
+  .scene-layout-flow .scene-bullet::after,
+  .scene-layout-flow .scene-step::after {
+    content: "";
+    position: absolute;
+    top: 50%;
+    right: -1.4cqw;
+    width: 1.4cqw;
+    height: 1px;
+    background: color-mix(in srgb, var(--slide-rule) 90%, transparent);
+  }
+
+  .scene-layout-flow .scene-bullet:last-child::after,
+  .scene-layout-flow .scene-step:last-child::after {
+    display: none;
+  }
+
+  /* The number leads the card here, so it needs its own row, not a baseline. */
+  .scene-layout-flow .scene-bullet-index,
+  .scene-layout-flow .scene-step-index {
+    font-size: calc(1.15cqw * var(--slide-fit, 1));
+    letter-spacing: 0.08em;
+  }
+
+  /*
+   * Compare: two sides and the line between them. The rule is drawn by the
+   * list's own column gap, so it stays put when the bullets change length.
+   */
+  .scene-layout-compare .scene-body {
+    column-gap: 7%;
+    max-width: 88%;
+  }
+
+  .scene-layout-compare .scene-bullet {
+    padding: 1.2cqw 1.4cqw;
+    border-top: 0;
+    border-radius: 1.2cqw;
+    background: color-mix(in srgb, var(--slide-bg-sunk) 70%, transparent);
+  }
+
+  .scene-layout-compare .scene-body > :nth-child(even) {
+    box-shadow: inset 0 0 0 1px
+      color-mix(in srgb, var(--slide-rule) 70%, transparent);
+  }
+
+  /*
+   * The ornament: a ring behind the claim, or the opening quote mark. Position
+   * from the corner the layout's wash already uses, so the two read as one
+   * gesture instead of two.
+   */
+  .scene-ornament {
+    position: absolute;
+    z-index: 0;
+    pointer-events: none;
+    border-radius: 999px;
+  }
+
+  .scene-ornament-spotlight {
+    top: -6cqw;
+    left: 50%;
+    width: 30cqw;
+    height: 30cqw;
+    transform: translateX(-50%);
+    border: 1.4cqw solid
+      color-mix(in srgb, var(--slide-accent-soft) 22%, transparent);
+  }
+
+  .scene-ornament-quote {
+    top: -2cqw;
+    left: 50%;
+    width: 13cqw;
+    height: 13cqw;
+    transform: translateX(-50%);
+    background: color-mix(in srgb, var(--slide-accent-soft) 16%, transparent);
+  }
+
+  .scene-layout-spotlight,
+  .scene-layout-quote {
+    position: relative;
   }
 
   /*

@@ -363,6 +363,14 @@ export function SlideSurface({
               </div>
             ) : (
               <>
+            {layout === "spotlight" || layout === "quote" ? (
+              // Pure decoration behind the claim: a ring for one big idea, a
+              // soft disc for a quotation. Drawn, not content.
+              <div
+                aria-hidden="true"
+                className={`scene-ornament scene-ornament-${layout}`}
+              />
+            ) : null}
             {head}
             {split ? (
               <div className="scene-split relative z-10 grid w-full max-w-[86%] items-start gap-x-[5%] sm:grid-cols-2">
