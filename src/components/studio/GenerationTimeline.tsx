@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { CircleCheck, Circle, LoaderCircle } from "lucide-react";
 import type { Lesson } from "@/lib/lesson/types";
 
@@ -68,167 +68,311 @@ const EMPTY: GenerationProgress = {
  * The point is honesty about latency: one opaque 30-180s call looks broken, so
  * every stage boundary is reported and the finished outline appears within a
  * few seconds instead of after everything.
+ *
+ * The reader lives in a module-level singleton, not in the component: leaving
+ * /studio for another page unmounts the panel, and the old code aborted the
+ * fetch on unmount — so a 10-minute lesson died silently whenever the teacher
+ * looked elsewhere. Now navigation only detaches the view; the run continues,
+ * every event is snapshotted to localStorage, and remounting reattaches to the
+ * live run (or to the snapshot after a full reload). Only an explicit reset, a
+ * new run, or closing the tab itself stops the stream.
  */
+const SNAPSHOT_KEY = "edusgpt.generation.v1";
+
+function readSnapshot(): { progress: GenerationProgress; running: boolean } | null {
+  try {
+    const raw = localStorage.getItem(SNAPSHOT_KEY);
+    if (!raw) return null;
+    const parsed = JSON.parse(raw) as {
+      progress?: GenerationProgress;
+      running?: boolean;
+    };
+    if (!parsed || typeof parsed !== "object" || !parsed.progress) return null;
+    return { progress: parsed.progress, running: parsed.running === true };
+  } catch {
+    return null;
+  }
+}
+
+function writeSnapshot(progress: GenerationProgress, running: boolean): void {
+  try {
+    localStorage.setItem(SNAPSHOT_KEY, JSON.stringify({ progress, running }));
+  } catch {
+    // A long deck can outgrow localStorage; keep the timeline without the
+    // finished lesson rather than losing the whole snapshot.
+    try {
+      const { lesson: _dropped, ...rest } = progress;
+      localStorage.setItem(SNAPSHOT_KEY, JSON.stringify({ progress: rest, running }));
+    } catch {
+      /* leave the previous snapshot alone */
+    }
+  }
+}
+
+function clearSnapshot(): void {
+  try {
+    localStorage.removeItem(SNAPSHOT_KEY);
+  } catch {
+    /* ignore */
+  }
+}
+
+interface ActiveRun {
+  controller: AbortController;
+  steps: OutlineStep[];
+  progress: GenerationProgress;
+  running: boolean;
+  saveAttempted: boolean;
+}
+
+let activeRun: ActiveRun | null = null;
+
+type RunListener = (progress: GenerationProgress, running: boolean) => void;
+const runListeners = new Set<RunListener>();
+
+function broadcast(): void {
+  if (!activeRun) return;
+  writeSnapshot(activeRun.progress, activeRun.running);
+  for (const listener of runListeners) {
+    listener(activeRun.progress, activeRun.running);
+  }
+}
+
+/** The finished lesson must reach the server library even if nobody is
+ * watching: without this, a run that completes while the user is on another
+ * page would vanish — the exact loss this singleton exists to prevent. The
+ * POST is idempotent per lesson id, so the panel saving again on reattach is
+ * harmless. */
+function saveRunToLibrary(lesson: Lesson): void {
+  void fetch("/api/courses", {
+    method: "POST",
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify({ lesson }),
+  }).catch(() => {
+    /* the panel retries on reattach; a silent run keeps its snapshot */
+  });
+}
+
+function reduceProgress(
+  current: GenerationProgress,
+  steps: OutlineStep[],
+  event: StreamEvent,
+): { progress: GenerationProgress; steps: OutlineStep[] } {
+  // One row per SSE event, stamped with the client clock. The log is the
+  // honest answer to "where is the model call": every row is one finished
+  // call (or one wait), with the model that answered and how long it took.
+  const entry: RunLogEntry = {
+    at: new Date().toLocaleTimeString("vi-VN", { hour12: false }),
+    stage: event.stage,
+    message: event.type === "error" ? (event.error ?? event.message) : event.message,
+    provider: event.provider,
+    model: event.model,
+    elapsedMs: event.elapsedMs,
+    kind: event.type,
+  };
+  const percent = Math.max(current.percent, event.progress ?? current.percent);
+  const log = [...current.log, entry];
+
+  if (event.type === "error") {
+    return {
+      progress: {
+        ...current,
+        percent,
+        message: event.message,
+        error: event.error ?? event.message,
+        log,
+      },
+      steps,
+    };
+  }
+
+  if (event.type === "done") {
+    const doneSteps = steps.map((step) => ({ ...step, state: "done" as const }));
+    return {
+      progress: {
+        percent: 100,
+        message: event.message,
+        outlineReady: true,
+        steps: doneSteps,
+        done: true,
+        lesson: (event.lesson as Lesson) ?? null,
+        error: null,
+        log,
+      },
+      steps: doneSteps,
+    };
+  }
+
+  // The outline arrives once, with the full scene list.
+  if (event.outline?.scenes) {
+    return {
+      progress: {
+        ...current,
+        percent,
+        message: event.message,
+        outlineReady: true,
+        steps: event.outline.scenes,
+        log,
+      },
+      steps: event.outline.scenes,
+    };
+  }
+
+  if (event.type === "scene" && event.scene) {
+    const scene = event.scene as { title?: string; bullets?: unknown[] };
+    const next = steps.map((step) =>
+      step.state === "active"
+        ? {
+            ...step,
+            state: "done" as const,
+            bullets: Array.isArray(scene.bullets) ? scene.bullets.length : step.bullets,
+          }
+        : step,
+    );
+    // Promote the next pending scene so the list shows work moving.
+    const nextPending = next.findIndex((step) => step.state === "pending");
+    if (nextPending >= 0) {
+      next[nextPending] = { ...next[nextPending], state: "active" };
+    }
+    return {
+      progress: { ...current, percent, message: event.message, outlineReady: true, steps: next, log },
+      steps: next,
+    };
+  }
+
+  return { progress: { ...current, percent, message: event.message, log }, steps };
+}
+
+async function pumpRun(run: ActiveRun, body: Record<string, unknown>): Promise<void> {
+  const controller = run.controller;
+  try {
+    const response = await fetch("/api/gemini/lesson", {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify(body),
+      signal: controller.signal,
+    });
+
+    if (!response.ok || !response.body) {
+      const payload = (await response.json().catch(() => null)) as {
+        error?: string;
+      } | null;
+      throw new Error(payload?.error ?? `Máy chủ trả lỗi ${response.status}.`);
+    }
+
+    const reader = response.body.getReader();
+    const decoder = new TextDecoder();
+    let buffer = "";
+
+    for (;;) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      buffer += decoder.decode(value, { stream: true });
+
+      // SSE frames end with a blank line; the tail may be partial.
+      const frames = buffer.split("\n\n");
+      buffer = frames.pop() ?? "";
+
+      for (const frame of frames) {
+        const line = frame.split("\n").find((item) => item.startsWith("data:"));
+        if (!line) continue;
+        try {
+          const event = JSON.parse(line.slice(5).trim()) as StreamEvent;
+          if (activeRun !== run) return;
+          if (event.stage === "outline") {
+            run.steps = [];
+          }
+          const reduced = reduceProgress(run.progress, run.steps, event);
+          run.progress = reduced.progress;
+          run.steps = reduced.steps;
+          if (event.type === "done" && reduced.progress.lesson && !run.saveAttempted) {
+            run.saveAttempted = true;
+            saveRunToLibrary(reduced.progress.lesson);
+          }
+          broadcast();
+        } catch {
+          // A truncated frame is not worth failing the run over.
+        }
+      }
+    }
+  } catch (error) {
+    if (controller.signal.aborted || activeRun !== run) return;
+    const message = error instanceof Error ? error.message : "Lỗi mạng.";
+    run.progress = { ...run.progress, message, error: message };
+    broadcast();
+  } finally {
+    if (activeRun === run && !controller.signal.aborted) {
+      run.running = false;
+      broadcast();
+    }
+  }
+}
+
 export function useGenerationStream() {
+  // Initial state is always EMPTY so the first client render matches the
+  // server HTML: reading localStorage or the singleton here renders
+  // different output than SSR and breaks hydration. The effect below
+  // reattaches to the live run or the snapshot right after mount.
   const [progress, setProgress] = useState<GenerationProgress>(EMPTY);
   const [running, setRunning] = useState(false);
-  const abortRef = useRef<AbortController | null>(null);
-  const stepsRef = useRef<OutlineStep[]>([]);
 
-  useEffect(() => () => abortRef.current?.abort(), []);
-
-  const reset = useCallback(() => {
-    abortRef.current?.abort();
-    abortRef.current = null;
-    stepsRef.current = [];
-    setRunning(false);
-    setProgress(EMPTY);
+  useEffect(() => {
+    const listener: RunListener = (next, isRunning) => {
+      setProgress(next);
+      setRunning(isRunning);
+    };
+    runListeners.add(listener);
+    // Pick up whatever the singleton holds — a live run keeps streaming into
+    // this view; a finished one shows its result straight away.
+    if (activeRun) {
+      setProgress(activeRun.progress);
+      setRunning(activeRun.running);
+    } else {
+      const snapshot = readSnapshot();
+      if (snapshot && snapshot.running && !snapshot.progress.done && !snapshot.progress.error) {
+        const interrupted: GenerationProgress = {
+          ...snapshot.progress,
+          error: "Trang đã tải lại nên luồng tạo bài bị dừng. Bấm tạo lại để chạy tiếp.",
+        };
+        setProgress(interrupted);
+        writeSnapshot(interrupted, false);
+      }
+    }
+    // Detaching only unsubscribes. The run keeps going without its viewer —
+    // that is the whole point of the singleton.
+    return () => {
+      runListeners.delete(listener);
+    };
   }, []);
 
-  const applyEvent = useCallback((event: StreamEvent) => {
-    // One row per SSE event, stamped with the client clock. The log is the
-    // honest answer to "where is the model call": every row is one finished
-    // call (or one wait), with the model that answered and how long it took.
-    const entry: RunLogEntry = {
-      at: new Date().toLocaleTimeString("vi-VN", { hour12: false }),
-      stage: event.stage,
-      message: event.type === "error" ? (event.error ?? event.message) : event.message,
-      provider: event.provider,
-      model: event.model,
-      elapsedMs: event.elapsedMs,
-      kind: event.type,
-    };
-    setProgress((current) => {
-      const percent = Math.max(current.percent, event.progress ?? current.percent);
-      const log = [...current.log, entry];
-
-      if (event.type === "error") {
-        return {
-          ...current,
-          percent,
-          message: event.message,
-          error: event.error ?? event.message,
-          log,
-        };
-      }
-
-      if (event.type === "done") {
-        stepsRef.current = stepsRef.current.map((step) => ({ ...step, state: "done" }));
-        return {
-          percent: 100,
-          message: event.message,
-          outlineReady: true,
-          steps: stepsRef.current,
-          done: true,
-          lesson: (event.lesson as Lesson) ?? null,
-          error: null,
-          log,
-        };
-      }
-
-      // The outline arrives once, with the full scene list.
-      if (event.outline?.scenes) {
-        stepsRef.current = event.outline.scenes;
-        return {
-          ...current,
-          percent,
-          message: event.message,
-          outlineReady: true,
-          steps: event.outline.scenes,
-          log,
-        };
-      }
-
-      if (event.type === "scene" && event.scene) {
-        const scene = event.scene as { title?: string; bullets?: unknown[] };
-        const steps = stepsRef.current.map((step) =>
-          step.state === "active"
-            ? {
-                ...step,
-                state: "done" as const,
-                bullets: Array.isArray(scene.bullets) ? scene.bullets.length : step.bullets,
-              }
-            : step,
-        );
-        // Promote the next pending scene so the list shows work moving.
-        const nextPending = steps.findIndex((step) => step.state === "pending");
-        if (nextPending >= 0) {
-          steps[nextPending] = { ...steps[nextPending], state: "active" };
-        }
-        stepsRef.current = steps;
-        return { ...current, percent, message: event.message, outlineReady: true, steps, log };
-      }
-
-      return { ...current, percent, message: event.message, log };
-    });
+  const reset = useCallback(() => {
+    activeRun?.controller.abort();
+    activeRun = null;
+    clearSnapshot();
+    setRunning(false);
+    setProgress(EMPTY);
+    for (const listener of runListeners) {
+      listener(EMPTY, false);
+    }
   }, []);
 
   // __PART2__
 
   const start = useCallback(
     async (body: Record<string, unknown>) => {
-      abortRef.current?.abort();
-      stepsRef.current = [];
-      setRunning(true);
-      setProgress(EMPTY);
-
-      const controller = new AbortController();
-      abortRef.current = controller;
-
-      try {
-        const response = await fetch("/api/gemini/lesson", {
-          method: "POST",
-          headers: { "content-type": "application/json" },
-          body: JSON.stringify(body),
-          signal: controller.signal,
-        });
-
-        if (!response.ok || !response.body) {
-          const payload = (await response.json().catch(() => null)) as {
-            error?: string;
-          } | null;
-          throw new Error(payload?.error ?? `Máy chủ trả lỗi ${response.status}.`);
-        }
-
-        const reader = response.body.getReader();
-        const decoder = new TextDecoder();
-        let buffer = "";
-
-        for (;;) {
-          const { done, value } = await reader.read();
-          if (done) break;
-          buffer += decoder.decode(value, { stream: true });
-
-          // SSE frames end with a blank line; the tail may be partial.
-          const frames = buffer.split("\n\n");
-          buffer = frames.pop() ?? "";
-
-          for (const frame of frames) {
-            const line = frame.split("\n").find((item) => item.startsWith("data:"));
-            if (!line) continue;
-            try {
-              const event = JSON.parse(line.slice(5).trim()) as StreamEvent;
-              if (event.stage === "outline") {
-                stepsRef.current = [];
-              }
-              applyEvent(event);
-            } catch {
-              // A truncated frame is not worth failing the run over.
-            }
-          }
-        }
-      } catch (error) {
-        if (controller.signal.aborted) return;
-        setProgress((current) => ({
-          ...current,
-          message: error instanceof Error ? error.message : "Lỗi mạng.",
-          error: error instanceof Error ? error.message : "Lỗi mạng.",
-        }));
-      } finally {
-        if (!controller.signal.aborted) setRunning(false);
-      }
+      activeRun?.controller.abort();
+      const run: ActiveRun = {
+        controller: new AbortController(),
+        steps: [],
+        progress: EMPTY,
+        running: true,
+        saveAttempted: false,
+      };
+      activeRun = run;
+      broadcast();
+      await pumpRun(run, body);
     },
-    [applyEvent],
+    [],
   );
 
   return { progress, running, start, reset };

@@ -1,0 +1,266 @@
+{
+  "format": "eduai-studio/course@1",
+  "updatedAt": "2026-10-03T00:29:25.291Z",
+  "lesson": {
+    "id": "lesson-murnm5ud-i2ynnm",
+    "title": "Định Luật Bảo Toàn Năng Lượng",
+    "subject": "Chung",
+    "grade": "Phổ thông",
+    "language": "vi",
+    "fps": 30,
+    "duration": 144,
+    "scenes": [
+      {
+        "id": "ai-1",
+        "kind": "cover",
+        "accent": "brand",
+        "title": "Bạn có biết năng lượng không mất đi",
+        "subtitle": "Khám phá quy luật quan trọng nhất trong tự nhiên",
+        "bullets": [
+          "Năng lượng tổng của hệ kín không đổi",
+          "Chỉ chuyển đổi giữa các dạng năng lượng"
+        ],
+        "narration": "Chào các em, hôm nay chúng ta sẽ khám phá định luật bảo toàn năng lượng. Năng lượng không thể tự sinh ra hay biến mất, nó chỉ chuyển đổi từ dạng này sang dạng khác. Ví dụ, khi quả bóng rơi xuống đất, năng lượng vị trí chuyển thành năng lượng động.",
+        "pointer": [
+          {
+            "target": "title",
+            "label": "Mở đầu bài giảng"
+          },
+          {
+            "target": "bullet-0",
+            "label": "Nêu định luật bảo toàn"
+          },
+          {
+            "target": "bullet-1",
+            "label": "Minh hoạ bằng ví dụ quả bóng"
+          }
+        ],
+        "start": 0,
+        "duration": 24
+      },
+      {
+        "id": "ai-2",
+        "kind": "concept",
+        "accent": "gold",
+        "title": "Năng lượng là khả năng thực hiện công việc",
+        "subtitle": "Năng lượng là khả năng thực hiện công việc",
+        "bullets": [
+          "Năng lượng chuyển đổi giữa các dạng khi thực hiện công việc.",
+          "Ví dụ: khi vật rơi, thế năng → động năng, nhiệt năng phát xả."
+        ],
+        "narration": "Học sinh đang thắc mắc gì ở đây? Năng lượng là khả năng thực hiện công việc, có nhiều dạng như cơ học, nhiệt, điện, hạt nhân. Ví dụ, khi bóng rơi, năng lượng chuyển từ thế năng thành động năng. Bạn có thể liệt kê ba dạng năng lượng khác? Thời gian 24s.",
+        "pointer": [
+          {
+            "target": "title",
+            "label": "Intro"
+          },
+          {
+            "target": "bullet-0",
+            "label": "Define forms"
+          },
+          {
+            "target": "bullet-1",
+            "label": "Example"
+          },
+          {
+            "target": "bullet-0",
+            "label": "Recall"
+          },
+          {
+            "target": "title",
+            "label": "Closure"
+          }
+        ],
+        "start": 24,
+        "duration": 24
+      },
+      {
+        "id": "ai-3",
+        "kind": "formula",
+        "accent": "ember",
+        "title": "Công thức bảo toàn năng lượng",
+        "subtitle": "E = E0 + W - Q",
+        "bullets": [
+          "E0 là năng lượng ban đầu",
+          "W là công thực hiện",
+          "Q là nhiệt giết"
+        ],
+        "formula": "E = E0 + W - Q",
+        "narration": "Bạn có thể tính năng lượng cuối bằng cách lấy năng lượng ban đầu E0, cộng công thực hiện W và trừ nhiệt giết Q. Ví dụ: một bánh xe được đẩy 10 J và thải 2 J nhiệt, ta có E = 0 + 10 – 2 = 8 J. Thắc mắc gì?",
+        "pointer": [
+          {
+            "target": "title",
+            "label": "giới thiệu"
+          },
+          {
+            "target": "formula",
+            "label": "công thức"
+          }
+        ],
+        "start": 48,
+        "duration": 24
+      },
+      {
+        "id": "ai-4",
+        "kind": "example",
+        "accent": "brand",
+        "title": "Ví dụ thực tế",
+        "subtitle": "Một chiếc xe đạp chuyển năng lượng từ cơ thể người sang chuyển động",
+        "bullets": [
+          "Mỗi bước đạp sinh ra công suất 100 W",
+          "Quy tắc bảo toàn: Eₙₑrgₜₒₙ = Wₑₙₑrgₜₒₙ",
+          "Số điện năng lưu trữ 200 J",
+          "Động năng cuối 200 J"
+        ],
+        "steps": [
+          "Bước 1: Đặt công suất 100 W trong 2 s → 200 J",
+          "Bước 2: Năng lượng cơ thể 200 J chuyển thành động năng"
+        ],
+        "narration": "Học sinh, hãy tính công suất khi đạp 100 W trong 2 s. Bước 1 cho 200 J. Bước 2 xác nhận năng lượng chuyển từ cơ thể sang chuyển động. Câu hỏi: nếu công suất giảm, động năng cuối sẽ giảm bao nhiêu?",
+        "pointer": [
+          {
+            "target": "title",
+            "label": "giới thiệu"
+          }
+        ],
+        "start": 72,
+        "duration": 24
+      },
+      {
+        "id": "ai-5",
+        "kind": "quiz",
+        "accent": "gold",
+        "title": "Kiểm tra lại xem bạn đã hiểu chưa",
+        "subtitle": "Chọn đáp án đúng về nội dung vừa học.",
+        "bullets": [
+          "Đọc lại tóm tắt ở slide trước nếu chưa nhớ.",
+          "Chọn một đáp án, bạn sẽ được giải thích ngay."
+        ],
+        "narration": "Mình cùng kiểm tra lại xem bạn đã nắm được chưa. Đọc câu hỏi và chọn đáp án mình nghĩ là đúng. Chọn sai cũng không sao, mình sẽ giải thích lại ngay tại đây, và đó là cách nhanh nhất để biết mình cần xem lại phần nào.",
+        "quiz": {
+          "question": "Bạn đã nắm được nội dung chính của bài học này chưa?",
+          "options": [
+            {
+              "id": "opt-1",
+              "text": "Rồi, mình hiểu và tự giải thích lại được cho bạn nghe",
+              "isCorrect": true,
+              "explanation": "Đó là đúng. Tự kể lại bằng lời mình mới thật sự nắm."
+            },
+            {
+              "id": "opt-2",
+              "text": "Mình hiểu phần đầu, phần sau hơi mơ hồ",
+              "isCorrect": false,
+              "explanation": "Không sao. Xem lại phần cuối, đó là phần hay quên nhất."
+            },
+            {
+              "id": "opt-3",
+              "text": "Chưa, mình thấy hơi nhiều thông tin",
+              "isCorrect": false,
+              "explanation": "Bài dài là chủ ý. Xem lại dàn ý theo thứ tự, từng phần một sẽ dễ hơn."
+            },
+            {
+              "id": "opt-4",
+              "text": "Chưa, mình muốn xem ví dụ thực tế thêm",
+              "isCorrect": false,
+              "explanation": "Phần ví dụ gần cuối bài. Đọc nó sẽ giúp bạn thấy bài học dùng được thế nào."
+            }
+          ]
+        },
+        "start": 96,
+        "duration": 24
+      },
+      {
+        "id": "ai-6",
+        "kind": "summary",
+        "accent": "gold",
+        "title": "Tóm tắt nhanh",
+        "subtitle": "Năng lượng không mất, chỉ chuyển dạng",
+        "bullets": [
+          "Tổng năng lượng hệ kín không đổi",
+          "Năng lượng động + thế + nhiệt = hằng số",
+          "Con lắc đơn: đỉnh cao năng lượng thế lớn, đáy năng lượng động lớn, tổng bất biến"
+        ],
+        "narration": "Đây là tóm tắt bài: năng lượng không bị mất đi, nó chỉ chuyển từ dạng này sang dạng khác. Trong hệ kín, tổng năng lượng động, thế và nhiệt luôn giữ nguyên giá trị. Ví dụ con lắc đơn: ở đỉnh cao năng lượng thế lớn nhất, ở đáy năng lượng động lớn nhất, tổng không đổi.",
+        "pointer": [
+          {
+            "target": "title",
+            "label": "Mở đầu tóm tắt"
+          },
+          {
+            "target": "bullet-0",
+            "label": "Nêu quy tắc bảo toàn"
+          },
+          {
+            "target": "bullet-2",
+            "label": "Minh hoạ bằng con lắc đơn"
+          }
+        ],
+        "start": 120,
+        "duration": 24
+      }
+    ],
+    "chapters": [
+      {
+        "id": "ch-1",
+        "title": "Bạn có biết năng lượng không mất đi",
+        "start": 0,
+        "end": 24,
+        "sceneIds": [
+          "ai-1"
+        ]
+      },
+      {
+        "id": "ch-2",
+        "title": "Năng lượng là khả năng thực hiện công việc",
+        "start": 24,
+        "end": 48,
+        "sceneIds": [
+          "ai-2"
+        ]
+      },
+      {
+        "id": "ch-3",
+        "title": "Công thức bảo toàn năng lượng",
+        "start": 48,
+        "end": 72,
+        "sceneIds": [
+          "ai-3"
+        ]
+      },
+      {
+        "id": "ch-4",
+        "title": "Ví dụ thực tế",
+        "start": 72,
+        "end": 96,
+        "sceneIds": [
+          "ai-4"
+        ]
+      },
+      {
+        "id": "ch-5",
+        "title": "Kiểm tra lại xem bạn đã hiểu chưa",
+        "start": 96,
+        "end": 120,
+        "sceneIds": [
+          "ai-5"
+        ]
+      },
+      {
+        "id": "ch-6",
+        "title": "Tóm tắt nhanh",
+        "start": 120,
+        "end": 144,
+        "sceneIds": [
+          "ai-6"
+        ]
+      }
+    ],
+    "source": "gemini",
+    "theme": "paper",
+    "voice": "vi-VN-HoaiMyNeural",
+    "showPointer": true,
+    "pointerColor": "#f59e0b",
+    "model": "openai/gpt-oss-20b",
+    "createdAt": "2026-10-03T00:28:52.118Z"
+  }
+}
