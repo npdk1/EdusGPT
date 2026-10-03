@@ -419,7 +419,48 @@
 
   .slide-fitted[data-theme] {
     background-color: var(--slide-bg);
+    /*
+     * Paper depth.
+     *
+     * A slide on one flat colour looks like a screenshot of a slide; a real
+     * sheet has a gradient down it. All three stops are theme roles — paper,
+     * its sunk step, and the faint tone between them — so a dark palette gets a
+     * sheet that settles into its own deeper ink and a paper palette one that
+     * settles into its own warmer tone. The same picture in thirty-six
+     * palettes, with no colour named here.
+     */
+    background-image: linear-gradient(
+      180deg,
+      color-mix(in srgb, var(--slide-bg) 88%, var(--slide-ink-faint)) 0%,
+      var(--slide-bg) 38%,
+      var(--slide-bg-sunk) 100%
+    );
     color: var(--slide-ink);
+  }
+
+  /*
+   * The slide arriving.
+   *
+   * Opacity and a translate, never a scale. The fit pass and the pointer both
+   * measure this card's boxes the moment it mounts, and a scale in flight would
+   * have the fit pass read a short column and step the type *up* until the last
+   * bullet ran off the bottom — the one measurement on the page that a
+   * transform cannot be allowed to touch. Opacity and translation change no
+   * box at all, so they are free to animate.
+   */
+  .scene-card.scene-enter {
+    animation: scene-enter 420ms cubic-bezier(0.22, 0.61, 0.36, 1) both;
+  }
+
+  @keyframes scene-enter {
+    from {
+      opacity: 0;
+      transform: translateY(1.6cqw);
+    }
+    to {
+      opacity: 1;
+      transform: none;
+    }
   }
 
   /* A dark slide inside a light app needs to read as ink, not as a hole. Keyed
@@ -454,6 +495,21 @@
   .scene-sub {
     font-size: 1.7cqw;
     color: var(--slide-ink-soft);
+  }
+
+  /*
+   * Inline code, written the way the model writes it: `E = m·c²` inside a
+   * sentence. Monospaced and a shade smaller so a formula sits inside the line
+   * rather than breaking it, on a faint wash of the slide's own ink — a symbol
+   * that reads as part of the sentence instead of as a sticker on top of it.
+   */
+  .scene-inline-code {
+    font-family: var(--font-mono);
+    font-size: 0.92em;
+    padding: 0.05em 0.35em;
+    border-radius: 0.35em;
+    background: color-mix(in srgb, var(--slide-ink) 8%, transparent);
+    color: var(--slide-ink);
   }
 
   /* The kicker: small caps, wide tracking, the one place the accent appears in

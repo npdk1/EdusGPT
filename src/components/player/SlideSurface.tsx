@@ -26,6 +26,7 @@ import {
 } from "./SceneFigure";
 import { InteractiveQuiz } from "./InteractiveQuiz";
 import { InteractiveSimulation } from "./InteractiveSimulation";
+import { InlineText } from "./InlineText";
 import { ScenePointer } from "./ScenePointer";
 import { pointerColorToRgb } from "@/lib/lesson/pollinations";
 import {
@@ -232,7 +233,7 @@ export function SlideSurface({
               <span className="scene-bullet-index tabular-nums">
                 {pad2(bulletIndex + 1)}
               </span>
-              <span>{bullet}</span>
+              <InlineText text={bullet} />
             </li>
           ))}
         </ul>
@@ -248,7 +249,7 @@ export function SlideSurface({
               <span className="scene-step-index tabular-nums">
                 B{stepIndex + 1}
               </span>
-              <span>{step}</span>
+              <InlineText text={step} />
             </li>
           ))}
         </ol>
@@ -303,10 +304,12 @@ export function SlideSurface({
         {SCENE_KIND_LABEL[scene.kind]}
       </span>
       <h3 className="scene-title mt-[2.5%] text-balance font-bold tracking-tight">
-        {scene.title}
+        <InlineText text={scene.title} />
       </h3>
       {scene.subtitle ? (
-        <p className="scene-sub mt-[2%]">{scene.subtitle}</p>
+        <p className="scene-sub mt-[2%]">
+          <InlineText text={scene.subtitle} />
+        </p>
       ) : null}
       <hr className="scene-rule mt-[3%]" />
     </header>
@@ -315,16 +318,16 @@ export function SlideSurface({
   const renderBlock = (block: SlideBlock, blockIndex: number): ReactNode => {
     switch (block.kind) {
       case "title":
-        return <h3 className="scene-block-title">{block.text}</h3>;
+        return <h3 className="scene-block-title"><InlineText text={block.text ?? ""} /></h3>;
       case "subtitle":
-        return <p className="scene-block-sub">{block.text}</p>;
+        return <p className="scene-block-sub"><InlineText text={block.text ?? ""} /></p>;
       case "card":
         return (
           <>
             {block.label ? (
               <span className="scene-block-label">{block.label}</span>
             ) : null}
-            <span className="scene-block-text">{block.text}</span>
+            <InlineText text={block.text ?? ""} className="scene-block-text" />
           </>
         );
       case "formula":
@@ -351,7 +354,7 @@ export function SlideSurface({
           />
         );
       default:
-        return <p className="scene-block-text">{block.text}</p>;
+        return <p className="scene-block-text"><InlineText text={block.text ?? ""} /></p>;
     }
   };
 
@@ -364,9 +367,16 @@ export function SlideSurface({
     >
       {/* Fills the paper, which owns the 16:9 box the cqw units measure. */}
       <div ref={stageRef} className="absolute inset-0">
+        {/*
+         * `key={scene.id}` is what makes the room feel like it turned a page:
+         * React remounts the card when the scene changes, so the entrance
+         * animation runs once per slide instead of only on the first one. A
+         * class on the card would have run exactly once and never again.
+         */}
         <div
+          key={scene.id}
           data-scene="0"
-          className={`scene-card scene-on-${layout} relative flex h-full flex-col overflow-hidden`}
+          className={`scene-card scene-enter scene-on-${layout} relative flex h-full flex-col overflow-hidden`}
         >
           {/* The tinted corner behind the content. Empty on purpose: it is
               paint, not content, and the layout class on the card picks its

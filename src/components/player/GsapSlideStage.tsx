@@ -8,6 +8,7 @@ import { slideIcon } from "@/lib/lesson/slide-icons";
 import { DEFAULT_SLIDE_THEME, isDarkTheme, paletteStyle } from "@/lib/lesson/themes";
 import { InteractiveSimulation } from "./InteractiveSimulation";
 import { InteractiveQuiz } from "./InteractiveQuiz";
+import { InlineText } from "./InlineText";
 import { SceneDataChart, SceneFormula, SceneTable, SlideImageView, SlideImagePreload, FunctionGraph, FigureZoom } from "./SceneFigure";
 import { KaraokeSubtitle } from "./KaraokeSubtitle";
 import { ScenePointer } from "./ScenePointer";
@@ -439,9 +440,13 @@ export function GsapSlideStage({
                   {SCENE_KIND_LABEL[scene.kind]}
                 </span>
                 <h3 className="scene-title mt-[2.5%] text-balance font-bold tracking-tight">
-                  {scene.title}
+                  <InlineText text={scene.title} />
                 </h3>
-                {scene.subtitle ? <p className="scene-sub mt-[2%]">{scene.subtitle}</p> : null}
+                {scene.subtitle ? (
+                  <p className="scene-sub mt-[2%]">
+                    <InlineText text={scene.subtitle} />
+                  </p>
+                ) : null}
                 <hr className="scene-rule mt-[3%]" />
               </header>
 
@@ -459,7 +464,7 @@ export function GsapSlideStage({
                     <span className="scene-bullet-index tabular-nums">
                       {String(bulletIndex + 1).padStart(2, "0")}
                     </span>
-                    <span>{bullet}</span>
+                    <InlineText text={bullet} />
                   </li>
                 ))}
               </ul>
@@ -476,7 +481,7 @@ export function GsapSlideStage({
                       <span className="scene-step-index tabular-nums">
                         B{stepIndex + 1}
                       </span>
-                      <span>{step}</span>
+                      <InlineText text={step} />
                     </li>
                   ))}
                 </ol>

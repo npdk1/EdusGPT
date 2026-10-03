@@ -70,12 +70,28 @@ export function textHeight(lines: number, fontPx: number): number {
 /** Lines this text needs in a box this wide, with the 0.8-line allowance. */
 export function linesNeeded(text: string, boxWidth: number, fontPx: number): number {
   const perLine = charactersPerLine(boxWidth, fontPx);
-  const paragraphs = text.split(/\n+/).filter(Boolean);
+  // Emphasis markers are not read, so they must not be counted: what wraps on
+  // screen is the words, and the strip below is exactly what the renderer shows.
+  const paragraphs = stripInline(text).split(/\n+/).filter(Boolean);
   const counted = paragraphs.reduce(
     (sum, paragraph) => sum + Math.ceil(paragraph.length / perLine),
     0,
   );
   return Math.ceil(counted + 0.8);
+}
+
+/**
+ * The words with the emphasis markup taken out.
+ *
+ * Slides write emphasis as `**like this**`, the way a writer types it. The
+ * renderer turns it into real bold and italic; this is the same text without
+ * the marks, which is what has to fit in the box.
+ */
+export function stripInline(text: string): string {
+  return text
+    .replace(/\*\*([^*]+)\*\*/g, "$1")
+    .replace(/(^|[^*])\*([^*\n]+)\*/g, "$1$2")
+    .replace(/`([^`]+)`/g, "$1");
 }
 
 /** How many lines this box has room for, at this size. */
@@ -106,9 +122,10 @@ export function fitBlockText(
   if (allowed < 1) return undefined;
   if (linesNeeded(text, boxWidth, size) <= allowed) return text;
   const perLine = charactersPerLine(boxWidth, size);
+  const plain = stripInline(text);
   const budget = perLine * allowed;
-  if (text.length <= budget) return text;
-  const slice = text.slice(0, budget);
+  if (plain.length <= budget) return text;
+  const slice = plain.slice(0, budget);
   const lastSpace = slice.lastIndexOf(" ");
   const kept = lastSpace > perLine * 0.5 ? slice.slice(0, lastSpace) : slice;
   return `${kept.trimEnd()}…`;
