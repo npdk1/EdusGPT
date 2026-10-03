@@ -41,7 +41,7 @@ export function ScenePointer({
   /**
    * The classroom and the premiere draw one slide at a time and have no deck to
    * look up. Handing the scene straight in lets the same pointer, the same
-   * spotlight and the same highlight run there instead of a second, lesser
+   * halo and the same highlight run there instead of a second, lesser
    * implementation.
    */
   scene?: Lesson["scenes"][number];
@@ -55,12 +55,6 @@ export function ScenePointer({
 }) {
   const dotRef = useRef<HTMLDivElement>(null);
   const ringRef = useRef<HTMLDivElement>(null);
-  /**
-   * The spotlight: a hole in a dimmed page, cut around whatever the pointer is
-   * on. A ring alone marks a word; dimming everything else says "read this one
-   * now", which is what a teacher does with their hand.
-   */
-  const veilRef = useRef<HTMLDivElement>(null);
   const stateRef = useRef("");
   /** Last resolved anchor, so a sentence that matches nothing holds position. */
   const heldRef = useRef<{ scene: number; target: string } | null>(null);
@@ -112,7 +106,6 @@ export function ScenePointer({
       const stage = stageRef.current;
       const dot = dotRef.current;
       const ring = ringRef.current;
-      const veil = veilRef.current;
       if (!stage || !dot || !ring) return;
 
       const live = channel.live;
@@ -121,7 +114,6 @@ export function ScenePointer({
           stateRef.current = "hidden";
           dot.style.opacity = "0";
           ring.style.opacity = "0";
-          if (veil) veil.style.opacity = "0";
           stage.querySelectorAll('[data-pointer="on"]').forEach((node) => {
             node.removeAttribute("data-pointer");
           });
@@ -241,14 +233,6 @@ export function ScenePointer({
       ring.style.transform = `translate(${x - 8}px, ${y - 8}px)`;
       ring.style.width = `${box.width + 16}px`;
       ring.style.height = `${box.height + 16}px`;
-      // The spotlight sits under the ring and the dot but over the slide: same
-      // box, one giant shadow that dims everything the pointer is not on.
-      if (veil) {
-        veil.style.opacity = "1";
-        veil.style.transform = `translate(${x - 8}px, ${y - 8}px)`;
-        veil.style.width = `${box.width + 16}px`;
-        veil.style.height = `${box.height + 16}px`;
-      }
 
       const key = `${live.sceneIndex}:${sentence}:${targetKey}`;
       if (stateRef.current !== key) {
@@ -267,11 +251,6 @@ export function ScenePointer({
 
   return (
     <>
-      <div
-        ref={veilRef}
-        aria-hidden="true"
-        className="scene-spotlight-veil"
-      />
       <div
         ref={ringRef}
         aria-hidden="true"

@@ -1228,32 +1228,6 @@
   }
 
   /*
-   * The spotlight.
-   *
-   * One box the size of whatever the pointer is on, with a shadow large enough
-   * to reach the edge of the slide. The shadow is the dimming: everything
-   * outside the box goes quiet while the pointed-at part stays lit, which is
-   * what a teacher's hand does over a page.
-   */
-  .scene-spotlight-veil {
-    position: absolute;
-    left: 0;
-    top: 0;
-    z-index: 9;
-    pointer-events: none;
-    border-radius: 0.9cqw;
-    opacity: 0;
-    transition: opacity 300ms ease;
-    /*
-     * The dimming colour comes from the same `--pointer-rgb` triple the ring
-     * and the dot read, written the way the rest of the file writes it: `rgba`
-     * with the triple inside. A `color-mix` here would be wrong — substituting
-     * "245, 158, 11" into a two-argument mix reads as three arguments.
-     */
-    box-shadow: 0 0 0 9999px rgba(var(--pointer-rgb, 245, 158, 11), 0.4);
-  }
-
-  /*
    * The function graph: same hairline rhythm as bullets and steps, with the
    * curve in the slide accent and asymptotes dashed in the soft accent — the
    * dash is what says "not part of the curve".
@@ -1465,6 +1439,20 @@
    * background wash only repaints. The wash is deliberately faint — the dot is
    * the pointer, the wash is where it points.
    */
+  /*
+   * The pointer.
+   *
+   * One amber dot that rests on the line being read, a soft halo so the eye can
+   * find it again after it moves, and the faintest warm wash on the words
+   * themselves.
+   *
+   * There was a spotlight here: a hole cut in a dimmed page around whatever the
+   * pointer was on. It read as a search-result highlight — a hard-edged bright
+   * box on a coloured field — which is exactly the wrong register for a lesson.
+   * The pointer is meant to feel like a hand resting on a line, not like a
+   * marker pen on a printout, so the page stays at full strength and only the
+   * line under the voice warms up.
+   */
   .scene-pointer-dot span {
     background: radial-gradient(circle, rgba(var(--pointer-rgb, 245, 158, 11), 0.95) 0%, rgba(var(--pointer-rgb, 245, 158, 11), 0.8) 55%, rgba(var(--pointer-rgb, 245, 158, 11), 0) 72%);
     box-shadow: 0 0 12px 3px rgba(var(--pointer-rgb, 245, 158, 11), 0.55);
@@ -1476,15 +1464,17 @@
     50% { scale: 1.25; opacity: 0.85; }
   }
 
+  /* A halo, not a frame: no border, just the pointer colour blurred outward, so
+     a two-line target reads as one warm shape rather than a rectangle taped over
+     the text. */
   .scene-pointer-ring {
-    border: 2px solid rgba(var(--pointer-rgb, 245, 158, 11), 0.65);
-    border-radius: 12px;
-    box-shadow: 0 0 0 4px rgba(var(--pointer-rgb, 245, 158, 11), 0.12);
+    border-radius: 1cqw;
+    box-shadow: 0 0 1.8cqw 0.4cqw rgba(var(--pointer-rgb, 245, 158, 11), 0.16);
   }
 
   [data-pointer="on"] {
-    background-color: rgba(var(--pointer-rgb, 245, 158, 11), 0.08);
-    border-radius: 8px;
+    background-color: rgba(var(--pointer-rgb, 245, 158, 11), 0.06);
+    border-radius: 10px;
   }
 
   /*

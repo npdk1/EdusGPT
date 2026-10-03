@@ -104,7 +104,7 @@ export function SlideSurface({
   caption?: ReactNode;
   /**
    * The shared voice channel. Given one, the slide points at the part it is
-   * reading and dims the rest — the same run the full player uses, so a slide
+   * reading and warming the line under it - the same run the full player uses, so a slide
    * behaves the same wherever it is shown.
    */
   channel?: NarrationChannel;
