@@ -111,6 +111,64 @@ export const SCENE_KINDS = [
 
 export type SceneKind = (typeof SCENE_KINDS)[number];
 
+/**
+ * How a slide arranges itself.
+ *
+ * One layout for the whole deck is what makes generated slides look generated:
+ * every scene is a title over a two-column bullet list, so a deck of twelve
+ * scenes reads as twelve variations of the same page. The model picks a layout
+ * per scene instead, and the renderer has a real arrangement for each — which is
+ * the cheapest way to make a deck look designed without free-form coordinates.
+ *
+ * The names say what the slide *is*, not where things sit; the renderer owns
+ * the geometry.
+ */
+export const SLIDE_LAYOUTS = [
+  "cover",
+  "statement",
+  "two-col",
+  "cards",
+  "image-left",
+  "image-right",
+  "full-figure",
+] as const;
+
+export type SlideLayout = (typeof SLIDE_LAYOUTS)[number];
+
+/**
+ * The layout a scene gets when the model did not choose one, inferred from what
+ * the scene already contains — a scene with a picture wants it beside the text, a
+ * scene with only a claim wants the claim large.
+ */
+export function defaultSlideLayout(
+  scene: {
+    kind?: string;
+    bullets?: unknown;
+    imagePrompt?: unknown;
+    imageQuery?: unknown;
+    formula?: unknown;
+    data?: unknown;
+    table?: unknown;
+    graph?: unknown;
+    simulation3d?: unknown;
+  },
+): SlideLayout {
+  const bullets = Array.isArray(scene.bullets) ? scene.bullets.length : 0;
+  const hasFigure = Boolean(
+    scene.formula || scene.data || scene.table || scene.graph || scene.simulation3d,
+  );
+  const hasPicture = Boolean(
+    (typeof scene.imagePrompt === "string" && scene.imagePrompt.trim()) ||
+      (typeof scene.imageQuery === "string" && scene.imageQuery.trim()),
+  );
+  if (scene.kind === "cover" && bullets <= 1) return "cover";
+  if (hasFigure) return "full-figure";
+  if (hasPicture && bullets >= 2) return "image-right";
+  if (bullets >= 5) return "cards";
+  if (bullets >= 3) return "two-col";
+  return "statement";
+}
+
 export const SCENE_ACCENTS = ["brand", "gold", "ember"] as const;
 export type SceneAccent = (typeof SCENE_ACCENTS)[number];
 
@@ -294,6 +352,11 @@ export interface LessonScene {
   icon?: string;
   /** Short caption describing the visual content of this slide. */
   visualNote?: string;
+  /**
+   * How the slide arranges itself. See `SLIDE_LAYOUTS`; when absent the
+   * renderer infers one from what the scene contains.
+   */
+  layout?: SlideLayout;
   narration?: string;
   /**
    * The pointer script, synced to the narration sentence by sentence.

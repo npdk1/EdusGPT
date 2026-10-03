@@ -502,6 +502,7 @@ function liveSceneToSlide(scene: LiveScene): Lesson["scenes"][number] {
     narration: scene.narration,
     imagePrompt: scene.imagePrompt,
     imageQuery: scene.imageQuery,
+    layout: scene.layout as Lesson["scenes"][number]["layout"],
     start: 0,
     duration: 0,
   };

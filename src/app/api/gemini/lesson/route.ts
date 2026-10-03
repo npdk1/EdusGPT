@@ -4,7 +4,7 @@ import { credentialGate } from "@/lib/ai/readiness";
 import { AiError, generateJson } from "@/lib/ai/llm";
 import { isQuotaExhausted } from "@/lib/ai/shared";
 import { recordModelTrust } from "@/lib/ai/model-trust";
-import { SCENE_ACCENTS, SCENE_KINDS, POINTER_TARGETS, iconSetFor, newLessonId, type SlideTheme } from "@/lib/lesson/types";
+import { SCENE_ACCENTS, SCENE_KINDS, SLIDE_LAYOUTS, POINTER_TARGETS, iconSetFor, newLessonId, type SlideTheme } from "@/lib/lesson/types";
 import { DEFAULT_SLIDE_THEME } from "@/lib/lesson/themes";
 import {
   resolveLessonLength,
@@ -240,6 +240,7 @@ const SCENE_SCHEMA: Record<string, unknown> = {
     imageQuery: { type: "string" },
     imagePrompt: { type: "string" },
     icon: { type: "string" },
+    layout: { type: "string", enum: [...SLIDE_LAYOUTS] },
     visualNote: { type: "string" },
     narration: { type: "string" },
     pointer: pointerSchema,
@@ -348,6 +349,58 @@ const SLIDE_QUALITY_RULES = `YÊU CẦU CHẤT LƯỢNG SLIDE (bắt buộc):
    Nếu bài vốn không có số liệu cụ thể, hãy đưa vào các con số ĐỊNH LƯỢNG có thật
    trong môn học (hằng số vật lý, tỉ lệ, số liệu thống kê quen thuộc) — trừ khi
    không chắc thì bỏ trường, TUYỆT ĐỐI không bịa.`;
+
+/**
+ * Slide design rules — the layout half of "write a good slide".
+ *
+ * The quality rules above say what a slide must *contain*; these say how it has
+ * to sit on the paper, and they are the part a text-only model cannot infer.
+ * They are the rules a designer applies by hand — how much text fits a line,
+ * how far apart two blocks sit, which arrangement suits which kind of slide —
+ * written out as numbers because "make it look good" is not an instruction a
+ * model can follow and "keep each bullet under twenty words" is.
+ *
+ * Every slide is laid out at 16:9, and 1% of the slide's width is the unit the
+ * renderer measures type in, so the sizes below are percentages of the slide
+ * width: a title is about 5%, a bullet about 1.4%.
+ */
+const SLIDE_DESIGN_RULES = `QUY TẮC BỐ CỤC SLIDE (bắt buộc — đây là phần quyết định slide có đẹp không):
+0. NGUYÊN TẮC: slide là TRO GIÚP HÌNH ẢNH, KHÔNG phải bản ghi bài giảng. Người xem
+   đang NGHE giọng đọc và nhìn slide, không đọc tài liệu. Mọi câu chỉ có nghĩa khi
+   đọc lên thì BỎ khỏi slide — lời giảng đã nói rồi.
+   - Mỗi gạch đầu dòng dưới 20 TỪ. Gạch nào cắt bằng dấu "…" để dài hơn thì nó
+     đã dài quá.
+   - Mỗi slide CHỈ nói một điều. Hai ý trên một slide là hai slide.
+1. LỀ TRANG: mọi khối nằm trong 86% chiều rộng, cách mép trên 3%, cách mép dưới
+   chừa dải phụ đề. Không có khối nào chạm mép.
+2. CHỮ KHÔNG ĐƯỢC TRÀN DÒNG: một dòng chữ vừa khít cột, nghĩa là
+   "số ký tự trên một dòng = (chiều rộng cột - 20) / cỡ chữ". Với cỡ chữ gạch
+   đầu dòng, mỗi dòng chỉ chứa được khoảng 60-70 ký tự — vượt ngưỡng đó dòng sẽ
+   xuống hàng và chiếm chỗ của gạch bên dưới.
+3. CÂN GIỮA THEO TRỤC GIỮA: khối tiêu đề và khối nội dung phải cùng nằm trên một
+   trục giữa, lệch nhau dưới 2% chiều cao là coi như bằng nhau.
+4. HAI CỘT PHẢI CÂN NHAU: khi dùng hai cột, hai cột phải rộng BẰNG NHAU tuyệt đối,
+   khe hở giữa hai cột bằng khe hở hai bên. Cột tự co giãn theo nội dung là
+   cột bị lệch, và lệch một chút cũng thấy.
+5. THỐNG KÊ VÀ SO SÁNH thì dùng "cards": mỗi gạch thành một thẻ có nền nhạt, bo
+   góc, các thẻ bằng nhau. KHÔNG dùng cards cho câu văn dài — thẻ dành cho ý ngắn.
+6. THANG CỠ CHỮ (giữ đúng, mỗi bậc cách nhau 2-4%):
+   tiêu đề 5.2% · phụ đề 1.7% · gạch đầu dòng 1.4% · chú thích nhỏ 1.05%.
+   Cỡ chữ là tỉ lệ của bề rộng slide, KHÔNG phải số pixel cố định.
+7. THANG KHOẢNG CÁCH: tiêu đề → phụ đề 0.8%; phụ đề → gạch 1.2%; hai gạch liền nhau
+   1%; chữ ↔ hình 1.4%; khe giữa hai cột 5%. Khoảng cách bằng nhau giữa các
+   khối cùng cấp — lệch một chút cũng thấy.
+8. CHỌN "layout" ĐÚNG NGHĨA CỦA CẢNH, đừng để mặc định:
+   - "cover": cảnh mở đầu / kết bài. Một câu khẳng định, căn giữa, tối đa 1 gạch.
+   - "statement": một khẳng định + tối đa 2 gạch, một cột, chữ lệch trái.
+   - "two-col": 3-4 gạch ngắn, hai cột bằng nhau.
+   - "cards": 5 gạch trở lên, hoặc các ý là "thứ tự" (bước 1, bước 2, bước 3).
+   - "image-left" / "image-right": cảnh CÓ "imagePrompt" và 2-4 gạch; ảnh bên
+     cạnh chữ, chọn bên theo hướng nhìn của nội dung (ví dụ quy trình đọc từ
+     trái sang phải thì đặt ảnh bên trái).
+   - "full-figure": cảnh có bảng, biểu đồ, công thức hoặc đồ thị — hình chiếm
+     phần lớn diện tích, chữ thu gọn lại.
+   Bài đẹp là bài CÓ LẬT layout, không phải bài 12 slide cùng một khuôn.`;
 
 const OUTLINE_SYSTEM = `Bạn là giáo viên KINH NGHIỆM lâu năm, tự thiết kế bài giảng cho học sinh phổ thông Việt Nam.
 Trả về DUY NHẤT một JSON đúng schema, không kèm giải thích, không markdown.
@@ -967,6 +1020,8 @@ export async function POST(request: NextRequest) {
     grade ? `Trình độ/khối: ${grade}` : "",
     `Ngôn ngữ: ${language}`,
     languageRule,
+    "",
+    SLIDE_DESIGN_RULES,
     body.notes?.trim() ? `Yêu cầu thêm: ${body.notes.trim()}` : "",
     reference
       ? `\n--- TÀI LIỆU THAM KHẢO (markdown, giữ tiêu đề/bảng/mốc trang) ---\n${skimReference(reference)}\n--- HẾT TÀI LIỆU ---`

@@ -346,6 +346,7 @@ export function PremierePlayer({
         narration: current.narration,
         imagePrompt: current.imagePrompt,
         imageQuery: current.imageQuery,
+        layout: current.layout as Lesson["scenes"][number]["layout"],
         start: 0,
         duration: 0,
       }

@@ -465,7 +465,7 @@
     display: inline-flex;
     align-items: center;
     gap: 0.6cqw;
-    font-size: 1.05cqw;
+    font-size: calc(1.05cqw * var(--slide-fit, 1));
     font-weight: 700;
     letter-spacing: 0.18em;
     text-transform: uppercase;
@@ -545,6 +545,32 @@
    */
   .slide-fitted {
     --slide-caption-track: 9cqw;
+    /*
+     * The fit pass steps this, not a `transform: scale()`.
+     *
+     * Scaling the whole column shrinks everything inside it by the same factor,
+     * including the hairline under the title, the card borders and the letter
+     * spacing — so a crowded slide ended up looking squeezed rather than
+     * smaller. Stepping one multiplier that only the type ladder reads keeps
+     * every line and border at its own size, and picking the first step that
+     * fits is the same lookup a designer does with a type scale.
+     */
+    --slide-fit: 1;
+  }
+
+  /* Every size in the ladder is one ratio of the slide width, times the fit
+     step. `.scene-narration` is deliberately not in it: the caption is read at a
+     distance and never shrinks with the slide it belongs to. */
+  .scene-title {
+    font-size: calc(5.2cqw * var(--slide-fit, 1));
+    line-height: 1.04;
+    letter-spacing: -0.03em;
+    color: var(--slide-ink);
+  }
+
+  .scene-sub {
+    font-size: calc(1.7cqw * var(--slide-fit, 1));
+    color: var(--slide-ink-soft);
   }
 
   /*
@@ -569,7 +595,7 @@
      an unbounded bullet on a short slide pushes the ones below it off the
      bottom — which is silent content loss, the one failure a slide cannot have. */
   .scene-bullet {
-    font-size: 1.4cqw;
+    font-size: calc(1.4cqw * var(--slide-fit, 1));
     padding: 0.75cqw 0;
     border-top: 1px solid var(--slide-rule);
     color: var(--slide-ink-soft);
@@ -592,7 +618,7 @@
   }
 
   .scene-step {
-    font-size: 1.4cqw;
+    font-size: calc(1.4cqw * var(--slide-fit, 1));
     padding: 0.75cqw 0;
     border-top: 1px solid var(--slide-rule);
     color: var(--slide-ink-soft);
@@ -611,6 +637,94 @@
     -webkit-line-clamp: 3;
     line-clamp: 3;
     overflow: hidden;
+  }
+
+  /*
+   * Layouts.
+   *
+   * The renderer reads one `layout` per scene and switches the arrangement
+   * between these rules. They exist because a deck of twelve slides that all use
+   * the same arrangement reads as a template with the content swapped, which is
+   * the difference everyone notices between "generated" and "designed".
+   *
+   * The geometry rules the layouts follow are the ones a designer applies by
+   * hand: symmetric columns of equal width, a fixed spacing ladder, and a type
+   * scale whose steps are close enough to read as one system.
+   */
+
+  /* Cover: one claim, centred, nothing competing with it. */
+  .scene-layout-cover .scene-fit {
+    gap: 1.6cqw;
+  }
+
+  .scene-layout-cover .scene-head {
+    margin-inline: auto;
+    text-align: center;
+  }
+
+  .scene-layout-cover .scene-rule {
+    margin-inline: auto;
+    width: 14%;
+  }
+
+  .scene-layout-cover .scene-body {
+    margin-inline: auto;
+    width: 100%;
+    max-width: 76%;
+  }
+
+  /* Statement: the claim plus at most two supports, one column, left aligned. */
+  .scene-layout-statement .scene-body {
+    grid-template-columns: 1fr;
+    max-width: 78%;
+  }
+
+  /*
+   * Two columns of exactly equal width.
+   *
+   * `1fr 1fr` with the same gap on both sides of the middle is the symmetry
+   * rule: an earlier version let each column size itself, and two bullets of
+   * different length left the right column visibly narrower than the left.
+   */
+  .scene-layout-two-col .scene-body,
+  .scene-layout-cards .scene-body {
+    grid-template-columns: 1fr 1fr;
+    column-gap: 6%;
+    max-width: 86%;
+  }
+
+  .scene-layout-cards .scene-body {
+    gap: 2.2cqw 4%;
+  }
+
+  .scene-layout-cards .scene-bullet {
+    padding: 1.6cqw 1.8cqw;
+    border-top: 0;
+    border-radius: 0.9cqw;
+    background: var(--slide-bg-sunk);
+    color: var(--slide-ink);
+    align-items: flex-start;
+  }
+
+  /* Picture beside the text: the picture owns one column of a two-column grid. */
+  .scene-layout-image-left .scene-fit,
+  .scene-layout-image-right .scene-fit {
+    gap: 1.4cqw;
+  }
+
+  .scene-layout-image-left .scene-image,
+  .scene-layout-image-right .scene-image,
+  .scene-layout-full-figure .scene-image {
+    width: 100%;
+    max-width: 100%;
+  }
+
+  .scene-layout-full-figure .scene-head {
+    max-width: 70%;
+  }
+
+  .scene-layout-full-figure .scene-body {
+    max-width: 70%;
   }
 
   /*

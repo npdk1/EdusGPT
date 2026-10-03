@@ -1,7 +1,12 @@
 "use client";
 
 import { useEffect, useRef, type ReactNode } from "react";
-import { SCENE_KIND_LABEL, type Lesson } from "@/lib/lesson/types";
+import {
+  SCENE_KIND_LABEL,
+  defaultSlideLayout,
+  type Lesson,
+  type SlideLayout,
+} from "@/lib/lesson/types";
 import { slideIcon } from "@/lib/lesson/slide-icons";
 import {
   DEFAULT_SLIDE_THEME,
@@ -40,16 +45,32 @@ function pad2(value: number): string {
 }
 
 /**
+ * The type ladder, walked from the top.
+ *
+ * The old fit pass multiplied the whole slide by a factor and let it be, which
+ * shrank the hairlines and the letter spacing along with the words — a crowded
+ * slide looked squeezed rather than smaller. Stepping one multiplier that only
+ * the type sizes read keeps every rule and border at its own size, and choosing
+ * the first step that fits is a lookup over a type scale, which is what a
+ * designer does by hand.
+ *
+ * The steps are close enough (about a tenth apart) to read as one system, and
+ * the floor is where a slide stops being legible at classroom distance rather
+ * than where the arithmetic runs out.
+ */
+const FIT_STEPS = [1, 0.94, 0.88, 0.82, 0.76, 0.7] as const;
+
+/**
  * One slide, drawn the way the full player draws it.
  *
  * The classroom used to show a wall of text where a slide should be: the
  * title, the subtitle and one line per sentence of the narration. That is a
  * transcript, not a slide — no paper, no kicker, no page number, no picture
  * column. This is the same markup, the same container-query sizing and the same
- * "shrink to fit" pass the player runs, lifted out of the GSAP timeline so both
- * places can show a slide and stay in step. The full player still owns its own
- * copy inside `GsapSlideStage`, because that one is driven by a timeline rather
- * than by React; when a slide's markup changes, this is the file to change.
+ * fit pass the player runs, lifted out of the GSAP timeline so both places can
+ * show a slide and stay in step. The full player still owns its own copy inside
+ * `GsapSlideStage`, because that one is driven by a timeline rather than by
+ * React; when a slide's markup changes, this is the file to change.
  */
 export function SlideSurface({
   scene,
@@ -74,35 +95,151 @@ export function SlideSurface({
   const stageRef = useRef<HTMLDivElement | null>(null);
   const KickerIcon = slideIcon(scene.icon);
 
-  // The player's fit pass: a slide with more text than its paper can hold is
-  // scaled down to fit rather than allowed to run off the bottom, which is what
-  // happened before a caption bar was added under every slide.
+  const hasFigure = Boolean(
+    scene.formula ||
+      scene.table ||
+      scene.data?.length ||
+      scene.graph ||
+      scene.simulation3d ||
+      (scene.kind === "quiz" && scene.quiz) ||
+      (scene.imagePrompt ?? "").trim() ||
+      (scene.imageQuery ?? "").trim(),
+  );
+  // A scene with no picture cannot be an "image beside the text" slide; asking
+  // for one would leave the room the renderer reserved empty.
+  const requested: SlideLayout =
+    scene.layout && typeof scene.layout === "string"
+      ? (scene.layout as SlideLayout)
+      : defaultSlideLayout(scene);
+  const layout: SlideLayout =
+    (requested === "image-left" || requested === "image-right") && !hasFigure
+      ? "statement"
+      : requested;
+  const split = layout === "image-left" || layout === "image-right";
+
+  /**
+   * The fit pass: a slide with more text than its paper can hold steps the type
+   * ladder down until it fits, rather than letting the last bullet run off the
+   * bottom.
+   */
   useEffect(() => {
     const stage = stageRef.current;
     if (!stage) return;
+    const card = stage.querySelector<HTMLElement>(".scene-card");
+    const content = card?.querySelector<HTMLElement>(".scene-fit");
+    if (!card || !content) return;
     const fit = () => {
-      stage.querySelectorAll<HTMLElement>(".scene-card").forEach((card) => {
-        const content = card.querySelector<HTMLElement>(".scene-fit");
-        if (!content) return;
-        content.style.transform = "none";
-        content.style.width = "";
-        const style = getComputedStyle(card);
-        const available =
-          card.clientHeight -
-          parseFloat(style.paddingTop) -
-          parseFloat(style.paddingBottom);
-        const natural = content.getBoundingClientRect().height;
-        if (natural <= available || available <= 0) return;
-        const scale = Math.max(0.6, (available * 0.98) / natural);
-        content.style.transformOrigin = "top center";
-        content.style.transform = `scale(${scale})`;
-      });
+      card.style.setProperty("--slide-fit", "1");
+      const style = getComputedStyle(card);
+      const available =
+        card.clientHeight -
+        parseFloat(style.paddingTop) -
+        parseFloat(style.paddingBottom);
+      if (available <= 0) return;
+      for (const step of FIT_STEPS) {
+        card.style.setProperty("--slide-fit", String(step));
+        if (content.getBoundingClientRect().height <= available) return;
+      }
     };
     fit();
     const observer = new ResizeObserver(fit);
     observer.observe(stage);
     return () => observer.disconnect();
-  }, [scene]);
+  }, [scene, layout]);
+
+  // The words. Kept apart from the figures so a layout can put them side by
+  // side instead of stacked, which is the difference between a slide and a page.
+  const text = (
+    <>
+      {scene.bullets.length > 0 ? (
+        <ul className="scene-body relative z-10 grid w-full max-w-[86%] gap-x-[6%] sm:grid-cols-2">
+          {scene.bullets.map((bullet, bulletIndex) => (
+            <li
+              key={bullet}
+              className="scene-bullet flex items-baseline gap-[1.5cqw] leading-relaxed"
+            >
+              <span className="scene-bullet-index tabular-nums">
+                {pad2(bulletIndex + 1)}
+              </span>
+              <span>{bullet}</span>
+            </li>
+          ))}
+        </ul>
+      ) : null}
+
+      {scene.steps?.length ? (
+        <ol className="scene-steps relative z-10 grid w-full max-w-[86%] gap-x-[6%] sm:grid-cols-2">
+          {scene.steps.map((step, stepIndex) => (
+            <li
+              key={step}
+              className="scene-step flex items-baseline gap-[1.5cqw] leading-relaxed"
+            >
+              <span className="scene-step-index tabular-nums">
+                B{stepIndex + 1}
+              </span>
+              <span>{step}</span>
+            </li>
+          ))}
+        </ol>
+      ) : null}
+    </>
+  );
+
+  // The evidence: a formula, a table, a chart, a graph, a quiz, a simulation —
+  // or the picture the scene asked for.
+  const figure = (
+    <>
+      {scene.kind === "simulation3d" || scene.simulation3d ? (
+        <div className="relative z-10 my-2 max-w-xl">
+          <InteractiveSimulation config={scene.simulation3d} />
+        </div>
+      ) : null}
+
+      {scene.kind === "quiz" && scene.quiz ? (
+        <div className="relative z-10 my-2 max-w-2xl">
+          <InteractiveQuiz
+            question={scene.quiz.question}
+            options={scene.quiz.options}
+          />
+        </div>
+      ) : null}
+
+      {scene.formula ? (
+        <FigureZoom label={t.zoomFormula}>
+          <SceneFormula formula={scene.formula} />
+        </FigureZoom>
+      ) : null}
+      {scene.table ? <SceneTable table={scene.table} /> : null}
+      {scene.data?.length ? (
+        <SceneDataChart data={scene.data} title={t.dataTitle} />
+      ) : null}
+      {scene.graph ? (
+        <FigureZoom label={`${t.zoom} ${scene.graph.title ?? t.graphFallback}`}>
+          <FunctionGraph graph={scene.graph} />
+        </FigureZoom>
+      ) : null}
+
+      <SlideImageView lessonId={lessonId} scene={scene} />
+    </>
+  );
+
+  const head = (
+    <header className="scene-head relative z-10 w-full max-w-[86%]">
+      <span className="scene-kicker">
+        {KickerIcon ? (
+          <KickerIcon className="scene-kicker-icon" aria-hidden="true" />
+        ) : null}
+        {SCENE_KIND_LABEL[scene.kind]}
+      </span>
+      <h3 className="scene-title mt-[2.5%] text-balance font-bold tracking-tight">
+        {scene.title}
+      </h3>
+      {scene.subtitle ? (
+        <p className="scene-sub mt-[2%]">{scene.subtitle}</p>
+      ) : null}
+      <hr className="scene-rule mt-[3%]" />
+    </header>
+  );
 
   return (
     <div
@@ -114,92 +251,38 @@ export function SlideSurface({
       {/* Fills the paper, which owns the 16:9 box the cqw units measure. */}
       <div ref={stageRef} className="absolute inset-0">
         <div className="scene-card relative flex h-full flex-col overflow-hidden">
-          <div className="scene-fit">
-            <header className="relative z-10 w-full max-w-[86%]">
-              <span className="scene-kicker">
-                {KickerIcon ? (
-                  <KickerIcon className="scene-kicker-icon" aria-hidden="true" />
-                ) : null}
-                {SCENE_KIND_LABEL[scene.kind]}
-              </span>
-              <h3 className="scene-title mt-[2.5%] text-balance font-bold tracking-tight">
-                {scene.title}
-              </h3>
-              {scene.subtitle ? (
-                <p className="scene-sub mt-[2%]">{scene.subtitle}</p>
-              ) : null}
-              <hr className="scene-rule mt-[3%]" />
-            </header>
-
-            {scene.bullets.length > 0 ? (
-              <ul className="scene-body relative z-10 grid w-full max-w-[86%] gap-x-[6%] sm:grid-cols-2">
-                {scene.bullets.map((bullet, bulletIndex) => (
-                  <li
-                    key={bullet}
-                    className="scene-bullet flex items-baseline gap-[1.5cqw] leading-relaxed"
-                  >
-                    <span className="scene-bullet-index tabular-nums">
-                      {pad2(bulletIndex + 1)}
-                    </span>
-                    <span>{bullet}</span>
-                  </li>
-                ))}
-              </ul>
-            ) : null}
-
-            {scene.steps?.length ? (
-              <ol className="scene-steps relative z-10 grid w-full max-w-[86%] gap-x-[6%] sm:grid-cols-2">
-                {scene.steps.map((step, stepIndex) => (
-                  <li
-                    key={step}
-                    className="scene-step flex items-baseline gap-[1.5cqw] leading-relaxed"
-                  >
-                    <span className="scene-step-index tabular-nums">
-                      B{stepIndex + 1}
-                    </span>
-                    <span>{step}</span>
-                  </li>
-                ))}
-              </ol>
-            ) : null}
-
-            {scene.kind === "simulation3d" || scene.simulation3d ? (
-              <div className="relative z-10 my-2 max-w-xl">
-                <InteractiveSimulation config={scene.simulation3d} />
+          <div className={`scene-fit scene-layout-${layout}`}>
+            {head}
+            {split ? (
+              <div className="scene-split relative z-10 grid w-full max-w-[86%] items-start gap-x-[5%] sm:grid-cols-2">
+                {layout === "image-left" ? (
+                  <>
+                    <figure className="scene-split-figure">{figure}</figure>
+                    <div className="scene-split-text">{text}</div>
+                  </>
+                ) : (
+                  <>
+                    <div className="scene-split-text">{text}</div>
+                    <figure className="scene-split-figure">{figure}</figure>
+                  </>
+                )}
               </div>
-            ) : null}
-
-            {scene.kind === "quiz" && scene.quiz ? (
-              <div className="relative z-10 my-2 max-w-2xl">
-                <InteractiveQuiz
-                  question={scene.quiz.question}
-                  options={scene.quiz.options}
-                />
-              </div>
-            ) : null}
-
-            {scene.formula ? (
-              <FigureZoom label={t.zoomFormula}>
-                <SceneFormula formula={scene.formula} />
-              </FigureZoom>
-            ) : null}
-            {scene.table ? <SceneTable table={scene.table} /> : null}
-            {scene.data?.length ? (
-              <SceneDataChart data={scene.data} title={t.dataTitle} />
-            ) : null}
-            {scene.graph ? (
-              <FigureZoom
-                label={`${t.zoom} ${scene.graph.title ?? t.graphFallback}`}
-              >
-                <FunctionGraph graph={scene.graph} />
-              </FigureZoom>
-            ) : null}
-
-            <SlideImageView lessonId={lessonId} scene={scene} />
+            ) : layout === "full-figure" ? (
+              <>
+                {figure}
+                {text}
+              </>
+            ) : (
+              <>
+                {text}
+                {figure}
+              </>
+            )}
           </div>
 
-          {/* Outside .scene-fit: the fit pass scales that block, and a page
-              number that shrank with the text would stop being a page number. */}
+          {/* Outside .scene-fit: the fit pass sizes that block's type, and a
+              page number that shrank with the text would stop being a page
+              number. */}
           <span
             aria-hidden
             className="scene-watermark pointer-events-none absolute bottom-[4%] right-[6%] font-mono tabular-nums"

@@ -135,6 +135,8 @@ export interface LiveScene {
   kind: string;
   imagePrompt?: string;
   imageQuery?: string;
+  /** How the slide arranges itself; see `SLIDE_LAYOUTS`. */
+  layout?: string;
 }
 
 export interface StreamEvent {
@@ -334,6 +336,7 @@ function reduceProgress(
       kind?: unknown;
       imagePrompt?: unknown;
       imageQuery?: unknown;
+      layout?: unknown;
     };
     const next = steps.map((step) =>
       step.state === "active"
@@ -372,6 +375,7 @@ function reduceProgress(
         typeof scene.imageQuery === "string" && scene.imageQuery.trim()
           ? scene.imageQuery.trim().slice(0, 200)
           : undefined,
+      layout: typeof scene.layout === "string" ? scene.layout.slice(0, 20) : undefined,
     };
     const liveScenes = [...current.liveScenes, live].sort((a, b) => a.index - b.index);
     return {
