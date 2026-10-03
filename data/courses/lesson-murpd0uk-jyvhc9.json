@@ -1,0 +1,274 @@
+{
+  "format": "eduai-studio/course@1",
+  "updatedAt": "2026-10-03T01:18:15.984Z",
+  "lesson": {
+    "id": "lesson-murpd0uk-jyvhc9",
+    "title": "Định luật bảo toàn năng lượng",
+    "subject": "Chung",
+    "grade": "Tốt nghiệp phổ thông",
+    "language": "vi",
+    "fps": 30,
+    "duration": 150,
+    "scenes": [
+      {
+        "id": "ai-1",
+        "kind": "cover",
+        "accent": "brand",
+        "title": "Định luật bảo toàn năng lượng",
+        "subtitle": "Khám phá nguyên tắc không thể phá vỡ",
+        "bullets": [
+          "Năng lượng không bao giờ mất đi",
+          "Khoảng 90% năng lượng trong thế giới vẫn duy trì"
+        ],
+        "narration": "Có biết năng lượng không bao giờ mất đi? Khoảng 90% năng lượng trong thế giới vẫn duy trì. Ví dụ, nước sôi vẫn giữ nhiệt của ngọn lửa. Bạn sẽ phản ánh: làm sao năng lượng biến chuyển? Câu hỏi: khi thương tài bị cháy, năng lượng vẫn tồn tại?",
+        "start": 0,
+        "duration": 30
+      },
+      {
+        "id": "ai-2",
+        "kind": "concept",
+        "accent": "gold",
+        "title": "Năng lượng chuyển đổi giữa các hình thức",
+        "subtitle": "Ví dụ: Cuốn sách rơi chuyển thành động năng",
+        "bullets": [
+          "Về vật thẳng đứng, khi rơi thực hiện chuyển động, động năng tăng, động năng vị trí giảm",
+          "Khung phía trên, vật chuyển động chuyển thành năng lượng chuyển động, anh ta thu lại năng lượng từ chuyển động"
+        ],
+        "narration": "Học sinh đang thắc mắc gì ở đây? Khi một cuốn sách rơi từ tay người, năng lượng vị trí (tiềm năng) biến thành năng lượng động của vật chuyển động. Bạn có thể tính công suất… You sẽ nhớ, năng lượng luôn chuyển mà không mất đi",
+        "pointer": [
+          {
+            "target": "title",
+            "label": "giới thiệu"
+          },
+          {
+            "target": "bullet-0",
+            "label": "động năng tăng"
+          },
+          {
+            "target": "bullet-1",
+            "label": "động năng vị trí giảm"
+          }
+        ],
+        "start": 30,
+        "duration": 30
+      },
+      {
+        "id": "ai-3",
+        "kind": "formula",
+        "accent": "ember",
+        "title": "Phương trình bảo toàn năng lượng",
+        "subtitle": "E₁ + K₁ = E₂ + K₂",
+        "bullets": [
+          "1. Khi chuyển động, năng lượng thế thay thành động hoặc ngược lại",
+          "2. Ví dụ: đai xe rơi từ 10m tăng 0→98 J"
+        ],
+        "formula": "E₁ + K₁ = E₂ + K₂",
+        "narration": "Phương trình bảo toàn năng lượng là công thức E₁ + K₁ = E₂ + K₂. Khi một vật chuyển động, năng lượng chuyển từ dạng thế sang động hoặc ngược lại. Ví dụ, một đai xe rơi từ 10m làm tăng động lực từ 0 lên 98 J. Câu hỏi: nếu đai xe rơi từ 5m, động lực là bao nhiêu?",
+        "pointer": [
+          {
+            "target": "title",
+            "label": "định nghĩa"
+          },
+          {
+            "target": "subtitle",
+            "label": "định nghĩa"
+          },
+          {
+            "target": "bullet-0",
+            "label": "ứng dụng"
+          },
+          {
+            "target": "bullet-1",
+            "label": "ví dụ"
+          },
+          {
+            "target": "formula",
+            "label": "công thức"
+          }
+        ],
+        "start": 60,
+        "duration": 30
+      },
+      {
+        "id": "ai-4",
+        "kind": "quiz",
+        "accent": "gold",
+        "title": "Kiểm tra lại xem bạn đã hiểu chưa",
+        "subtitle": "Chọn đáp án đúng về nội dung vừa học.",
+        "bullets": [
+          "Đọc lại tóm tắt ở slide trước nếu chưa nhớ.",
+          "Chọn một đáp án, bạn sẽ được giải thích ngay."
+        ],
+        "narration": "Mình cùng kiểm tra lại xem bạn đã nắm được chưa. Đọc câu hỏi và chọn đáp án mình nghĩ là đúng. Chọn sai cũng không sao, mình sẽ giải thích lại ngay tại đây, và đó là cách nhanh nhất để biết mình cần xem lại phần nào.",
+        "quiz": {
+          "question": "Bạn đã nắm được nội dung chính của bài học này chưa?",
+          "options": [
+            {
+              "id": "opt-1",
+              "text": "Rồi, mình hiểu và tự giải thích lại được cho bạn nghe",
+              "isCorrect": true,
+              "explanation": "Đó là đúng. Tự kể lại bằng lời mình mới thật sự nắm."
+            },
+            {
+              "id": "opt-2",
+              "text": "Mình hiểu phần đầu, phần sau hơi mơ hồ",
+              "isCorrect": false,
+              "explanation": "Không sao. Xem lại phần cuối, đó là phần hay quên nhất."
+            },
+            {
+              "id": "opt-3",
+              "text": "Chưa, mình thấy hơi nhiều thông tin",
+              "isCorrect": false,
+              "explanation": "Bài dài là chủ ý. Xem lại dàn ý theo thứ tự, từng phần một sẽ dễ hơn."
+            },
+            {
+              "id": "opt-4",
+              "text": "Chưa, mình muốn xem ví dụ thực tế thêm",
+              "isCorrect": false,
+              "explanation": "Phần ví dụ gần cuối bài. Đọc nó sẽ giúp bạn thấy bài học dùng được thế nào."
+            }
+          ]
+        },
+        "start": 90,
+        "duration": 30
+      },
+      {
+        "id": "ai-5",
+        "kind": "summary",
+        "accent": "brand",
+        "title": "Tóm tắt định luật bảo toàn năng lượng",
+        "subtitle": "Đừng để năng lượng “không có nơi”",
+        "bullets": [
+          "Năng lượng không tạo ra hay hủy hoại, chỉ chuyển đổi",
+          "Trong mọi quá trình, tổng năng lượng dự trữ cố định"
+        ],
+        "narration": "Bạn đã thấy năng lượng gia tốc khi xe đua lên dốc, nhưng qua kế hoạch, năng lượng ấy vẫn tồn tại, chỉ có thành dạng chuyển sang động chuyển động hoặc nhiệt. Ví dụ: khi động cơ đốt cháy, nhiệt năng chuyển thành công suất quay. Phản ánh thực tế, chúng ta luôn giữ tổng năng lượng, không mất mát vô hình.",
+        "start": 120,
+        "duration": 30
+      }
+    ],
+    "chapters": [
+      {
+        "id": "ch-1",
+        "title": "Định luật bảo toàn năng lượng",
+        "start": 0,
+        "end": 30,
+        "sceneIds": [
+          "ai-1"
+        ]
+      },
+      {
+        "id": "ch-2",
+        "title": "Năng lượng chuyển đổi giữa các hình thức",
+        "start": 30,
+        "end": 60,
+        "sceneIds": [
+          "ai-2"
+        ]
+      },
+      {
+        "id": "ch-3",
+        "title": "Phương trình bảo toàn năng lượng",
+        "start": 60,
+        "end": 90,
+        "sceneIds": [
+          "ai-3"
+        ]
+      },
+      {
+        "id": "ch-4",
+        "title": "Kiểm tra lại xem bạn đã hiểu chưa",
+        "start": 90,
+        "end": 120,
+        "sceneIds": [
+          "ai-4"
+        ]
+      },
+      {
+        "id": "ch-5",
+        "title": "Tóm tắt định luật bảo toàn năng lượng",
+        "start": 120,
+        "end": 150,
+        "sceneIds": [
+          "ai-5"
+        ]
+      }
+    ],
+    "source": "gemini",
+    "theme": "paper",
+    "voice": "vi-VN-HoaiMyNeural",
+    "showPointer": true,
+    "pointerColor": "#f59e0b",
+    "model": "openai/gpt-oss-20b",
+    "createdAt": "2026-10-03T01:18:15.951Z"
+  },
+  "log": [
+    {
+      "message": "Đang lên dàn ý bài học…",
+      "kind": "stage",
+      "at": "08:17:44",
+      "stage": "outline",
+      "provider": "nvidia",
+      "model": "openai/gpt-oss-20b"
+    },
+    {
+      "message": "Dàn ý: 4 cảnh: \"Định luật bảo toàn năng lượng\"",
+      "kind": "stage",
+      "at": "08:17:52",
+      "stage": "outline-done",
+      "provider": "nvidia",
+      "model": "openai/gpt-oss-20b",
+      "elapsedMs": 7204
+    },
+    {
+      "message": "Đang viết cảnh 1–4/4",
+      "kind": "stage",
+      "at": "08:17:52",
+      "stage": "scene"
+    },
+    {
+      "message": "Xong cảnh 2: Năng lượng chuyển đổi giữa các hình thức",
+      "kind": "scene",
+      "at": "08:17:58",
+      "stage": "scene",
+      "provider": "nvidia",
+      "model": "openai/gpt-oss-20b",
+      "elapsedMs": 6326
+    },
+    {
+      "message": "Xong cảnh 4: Tóm tắt định luật bảo toàn năng lượng",
+      "kind": "scene",
+      "at": "08:17:59",
+      "stage": "scene",
+      "provider": "nvidia",
+      "model": "openai/gpt-oss-20b",
+      "elapsedMs": 7519
+    },
+    {
+      "message": "Xong cảnh 3: Phương trình bảo toàn năng lượng",
+      "kind": "scene",
+      "at": "08:18:03",
+      "stage": "scene",
+      "provider": "nvidia",
+      "model": "openai/gpt-oss-20b",
+      "elapsedMs": 11713
+    },
+    {
+      "message": "Xong cảnh 1: Định luật bảo toàn năng lượng",
+      "kind": "scene",
+      "at": "08:18:15",
+      "stage": "scene",
+      "provider": "nvidia",
+      "model": "openai/gpt-oss-20b",
+      "elapsedMs": 23771
+    },
+    {
+      "message": "5 cảnh, 150s.",
+      "kind": "done",
+      "at": "08:18:15",
+      "provider": "nvidia",
+      "model": "openai/gpt-oss-20b",
+      "elapsedMs": 30983
+    }
+  ]
+}

@@ -1,0 +1,892 @@
+{
+  "format": "eduai-studio/course@1",
+  "updatedAt": "2026-10-03T01:13:31.205Z",
+  "lesson": {
+    "id": "lesson-murp3jhl-0ngf7m",
+    "title": "Thì Hiện Tại Hoàn Thành Trong Tiếng Việt",
+    "subject": "Chung",
+    "grade": "Lớp 10",
+    "language": "vi",
+    "fps": 30,
+    "duration": 604,
+    "scenes": [
+      {
+        "id": "ai-1",
+        "kind": "cover",
+        "accent": "brand",
+        "title": "Bạn biết Thì Hiện Tại Hoàn Thành không?",
+        "subtitle": "Học xong sẽ nói chuyện trôi chảy về thời gian đã qua",
+        "bullets": [
+          "Định nghĩa: làm việc đã hoàn thành vào hiện tại",
+          "Ví dụ: Tôi đã viết bài báo hôm qua"
+        ],
+        "narration": "Bạn có thật sự hiểu Thì Hiện Tại Hoàn Thành chưa? Đây là hình thức diễn tả những hành động đã bắt đầu và vẫn còn tiếp diễn tại thời điểm hiện tại. Ví dụ, câu \"Tôi đã học tiếng Anh\" thể hiện việc học đã bắt đầu trước đó và vẫn đang diễn ra. Một ví dụ thực tế: \"Mẹ đã nấu bữa ăn\" – hành động đã hoàn thành và ảnh hưởng đến tình hình hiện tại. Khi học sinh lặp lại câu này, họ vừa nhận dạng thời gian vừa thực hành ngữ pháp. Nhắc lại rằng Thì Hiện Tại Hoàn Thành luôn kết hợp Past Participle với Have/Has. Việc luyện tập qua câu hỏi: \"Bạn đã ăn sáng chưa?\" sẽ giúp ghi nhớ cấu trúc.",
+        "pointer": [
+          {
+            "target": "title",
+            "label": "khái quát"
+          },
+          {
+            "target": "bullet-0",
+            "label": "định nghĩa"
+          },
+          {
+            "target": "bullet-1",
+            "label": "ví dụ thực tế"
+          }
+        ],
+        "start": 0,
+        "duration": 45
+      },
+      {
+        "id": "ai-2",
+        "kind": "concept",
+        "accent": "gold",
+        "title": "Có Vị Trợ Động Bắt Đầu Trước Khi Nói",
+        "subtitle": "Cấu trúc Ngữ pháp Cơ Bản",
+        "bullets": [
+          "1. Động từ dạng V‑ing kèm have/has.",
+          "2. Hành động đã diễn ra trước thời điểm hiện tại.",
+          "3. Kết quả vẫn tồn tại trong hiện tại."
+        ],
+        "narration": "Khi tác động xảy ra trước thời gian nói, ta dùng cấu trúc có dạng have/has + V‑ing. Ví dụ: She has been studying all night. Câu này cho biết hành động bắt đầu trước thời điểm hiện tại và vẫn còn tiếp diễn. Bạn có thể thử: I have been reading. Đặt câu hỏi: What have you been doing? Thì hiện tại hoàn thành cho thấy kết quả tồn tại trong hiện tại.",
+        "pointer": [
+          {
+            "target": "title",
+            "label": "giới thiệu cấu trúc"
+          },
+          {
+            "target": "bullet-0",
+            "label": "động từ"
+          },
+          {
+            "target": "bullet-1",
+            "label": "thời gian"
+          },
+          {
+            "target": "bullet-2",
+            "label": "kết quả"
+          },
+          {
+            "target": "step-0",
+            "label": "ví dụ"
+          },
+          {
+            "target": "step-1",
+            "label": "giải thích"
+          },
+          {
+            "target": "step-2",
+            "label": "đề nghị thực hành"
+          },
+          {
+            "target": "step-3",
+            "label": "đặt câu hỏi"
+          },
+          {
+            "target": "step-4",
+            "label": "kết luận"
+          }
+        ],
+        "start": 45,
+        "duration": 43
+      },
+      {
+        "id": "ai-3",
+        "kind": "concept",
+        "accent": "gold",
+        "title": "Cấu trúc của Thì Hiện Tại Hoàn Thành",
+        "subtitle": "Phần động từ và trạng từ",
+        "bullets": [
+          "động từ + đã + 3‑định trạng",
+          "tân ngữ là đối tượng thực hiện hành động",
+          "trạng từ chỉ nơi chỗ/định nghĩa cho hành động"
+        ],
+        "narration": "Hãy xem mẫu câu: “Tôi đã viết thư cho bạn”. Phần “đã viết” là động từ hoàn thành, “thư” là tân ngữ, “cho bạn” là trạng từ chỉ đối tượng. Khi chúng ta thêm tính trạng “đã xong” vào giữa, câu vẫn giữ nghĩa hoàn thành: “Tôi đã xong viết thư cho bạn”. Nếu chúng ta bỏ “đã”, câu chuyển sang quá khứ đơn: “Tôi viết thư cho bạn”. Hãy nhớ rằng, trong Thì Hiện Tại Hoàn Thành, mọi công việc đã kết thúc.",
+        "pointer": [
+          {
+            "target": "title",
+            "label": "title"
+          },
+          {
+            "target": "bullet-0",
+            "label": "động từ"
+          },
+          {
+            "target": "bullet-1",
+            "label": "tân ngữ"
+          },
+          {
+            "target": "bullet-2",
+            "label": "trạng từ"
+          },
+          {
+            "target": "bullet-0",
+            "label": "động từ"
+          }
+        ],
+        "start": 88,
+        "duration": 43
+      },
+      {
+        "id": "ai-4",
+        "kind": "concept",
+        "accent": "gold",
+        "title": "Thì Hiện Tại Hoàn Thành ở Tiếng Việt",
+        "subtitle": "So sánh với Thì Hiện Tại Đơn",
+        "bullets": [
+          "Thì hiện tại hoàn thành dùng khi hành động đã xong nhưng có liên quan tới hiện tại",
+          "Thì hiện tại đơn chỉ mô tả hành động đang diễn ra",
+          "Ví dụ: Tôi đã ăn rồi – hành động đã hoàn thành",
+          "Ví dụ: Tôi ăn – hành động đang xảy ra"
+        ],
+        "narration": "Trong tiếng Việt, thì hiện tại hoàn thành cho biết một hành động đã hoàn thành nhưng vẫn ảnh hưởng tới thời điểm nói, như \"tôi đã học\". Khi so sánh với thì hiện tại đơn, ta thấy \"tôi học\" chỉ diễn ra ngay lúc nào, không nói về kết quả. Hãy nhớ rằng \"đã\" xác định thời gian hoàn thành, còn \"đang\" chỉ ở quá trình. Ví dụ: \"cô ấy đã gói quà\" – quà đã được gói, còn \"cô ấy gói quà\" đang làm.",
+        "pointer": [
+          {
+            "target": "title",
+            "label": "đưa tiêu đề"
+          }
+        ],
+        "start": 131,
+        "duration": 43
+      },
+      {
+        "id": "ai-5",
+        "kind": "concept",
+        "accent": "gold",
+        "title": "Thì Hiện Tại Hoàn Thành Là Thông Báo",
+        "subtitle": "Hành Động Đã Xong trong Quá Khứ Gần Đây",
+        "bullets": [
+          "Giải pháp Riêng: Chỉ dùng khi hành động đã xảy ra và liên quan tới hiện tại",
+          "Vần Nguyên Câu: Đã + V3, ví dụ: \"Tôi đã ăn\"",
+          "Mối Liên Kết: Dùng khi nêu mùa vụ, công việc hoàn thành, hoặc kết quả kéo dài tới hiện tại"
+        ],
+        "narration": "Học sinh, hãy cùng suy nghĩ: Khi nào chúng ta sử dụng câu \"Tôi đã ăn\" thay vì \"Tôi ăn\"? Khi hành động đã hoàn thành ngay trước thời điểm nói. Ví dụ, vào buổi sáng hôm nay, bạn có thể nói \"Tôi đã xong bài tập\" để nhắc thấy công việc đã hoàn thành. Nếu hỏi bạn, \"Bạn đã ăn sáng chưa?\" bạn sẽ trả lời \"Đã, tôi đã ăn sáng\". Điều này cho thấy thời gian hiện tại được liên kết với quá khứ.",
+        "pointer": [
+          {
+            "target": "title",
+            "label": "giới thiệu"
+          },
+          {
+            "target": "subtitle",
+            "label": "giải thích câu hỏi"
+          },
+          {
+            "target": "bullet-0",
+            "label": "định nghĩa"
+          },
+          {
+            "target": "bullet-1",
+            "label": "cấu trúc"
+          },
+          {
+            "target": "bullet-2",
+            "label": "kết nối"
+          }
+        ],
+        "start": 174,
+        "duration": 43
+      },
+      {
+        "id": "ai-6",
+        "kind": "formula",
+        "accent": "ember",
+        "title": "Công Thức Tạo Thì Hiện Tại Hoàn Thành",
+        "subtitle": "Định dạng: have/has + V‑ing",
+        "bullets": [
+          "1. 'have' hoặc 'has' phù hợp với số chủ ngữ.",
+          "2. Động từ dạng V‑ing biểu thị hành động liên tục đã bắt đầu trước đó."
+        ],
+        "formula": "have/has + V‑ing",
+        "narration": "Công thức tạo thì hiện tại hoàn thành rất đơn giản: có hai thành phần chính, 'have / has' và động từ dạng V‑ing. Khi ta muốn nói rằng một hành động đã xảy ra và vẫn còn tác động, ta đặt 'have' theo chủ ngữ rồi tiếp theo là động từ với '‑ing'. Ví dụ: 'She has been studying for two hours', nghĩa là cô ấy đã học liên tục và vẫn đang học. Bạn có thể thử viết câu cho mình ngay bây giờ?",
+        "pointer": [
+          {
+            "target": "title",
+            "label": "đề xuất khái niệm"
+          },
+          {
+            "target": "bullet-0",
+            "label": "định dạng having"
+          },
+          {
+            "target": "bullet-1",
+            "label": "chỉ hành động liên tục"
+          },
+          {
+            "target": "formula",
+            "label": "công thức chính"
+          },
+          {
+            "target": "step-0",
+            "label": "ví dụ thực tế"
+          }
+        ],
+        "start": 217,
+        "duration": 43
+      },
+      {
+        "id": "ai-7",
+        "kind": "example",
+        "accent": "brand",
+        "title": "Ví dụ 1: Tôi đã ăn sáng",
+        "subtitle": "Sử dụng have + eaten",
+        "bullets": [
+          "Cấu trúc: S + have/has + V3",
+          "Ví dụ: I have eaten breakfast",
+          "Dịch: Tôi đã ăn sáng"
+        ],
+        "steps": [
+          "Xác định chủ ngữ: I → Tôi",
+          "Chọn trợ động từ: have → đã",
+          "Dùng dạng quá khứ phân từ: eaten → ăn",
+          "Thêm cụm thời gian: breakfast → sáng"
+        ],
+        "icon": "BookOpen",
+        "visualNote": "Sơ đồ so sánh cấu trúc tiếng Anh – tiếng Việt",
+        "narration": "Đây là ví dụ đầu tiên cho thì hiện tại hoàn thành. Câu tiếng Anh I have eaten breakfast dùng cấu trúc chủ ngữ I, trợ động từ have và dạng quá khứ phân từ eaten. Khi dịch sang tiếng Việt ta giữ chủ ngữ Tôi, thay have bằng đã và dùng động từ ăn. Kết quả là Tôi đã ăn sáng, biểu thị hành động đã xong trước thời điểm nói. Hãy thử tự tạo câu tương tự với chủ ngữ khác.",
+        "pointer": [
+          {
+            "target": "title",
+            "label": "Mở đầu ví dụ"
+          },
+          {
+            "target": "bullet-0",
+            "label": "Cấu trúc tiếng Anh"
+          },
+          {
+            "target": "step-0",
+            "label": "Chủ ngữ"
+          },
+          {
+            "target": "step-1",
+            "label": "Trợ động từ"
+          },
+          {
+            "target": "step-2",
+            "label": "Động từ quá khứ phân từ"
+          }
+        ],
+        "start": 260,
+        "duration": 43
+      },
+      {
+        "id": "ai-8",
+        "kind": "example",
+        "accent": "brand",
+        "title": "Ví dụ 2: Bạn đã học bài chưa?",
+        "subtitle": "Sử dụng have/has + V‑ing",
+        "bullets": [
+          "Chủ ngữ \"bạn\" → dùng have",
+          "Cấu trúc: have + been + V‑ing",
+          "Câu hỏi: Have you been learning the lesson?"
+        ],
+        "steps": [
+          "Xác định chủ ngữ \"bạn\" → chọn trợ động từ have",
+          "Thêm been sau have",
+          "Chuyển động từ \"học\" thành V‑ing \"learning\"",
+          "Ghép thành câu hỏi: Have you been learning the lesson?",
+          "Dịch sang Việt: Bạn đã đang học bài?",
+          "So sánh với khẳng định I have been learning the lesson"
+        ],
+        "icon": "BookOpen",
+        "visualNote": "Sơ đồ cấu trúc have + been + V‑ing với mũi tên chỉ thứ tự",
+        "narration": "Xét ví dụ hai, câu hỏi Bạn đã học bài chưa dùng cấu trúc have has thêm been và V ing. Trước hết xác định chủ ngữ là bạn nên dùng have. Sau đó thêm been rồi biến động từ học thành learning. Kết quả câu hỏi tiếng Anh là Have you been learning the lesson? Học sinh hãy thử đọc to và so sánh với câu khẳng định I have been learning the lesson để nắm chắc vị trí của have been.",
+        "pointer": [
+          {
+            "target": "title",
+            "label": "Mở đầu ví dụ"
+          },
+          {
+            "target": "bullet-0",
+            "label": "Chủ ngữ quyết định have"
+          },
+          {
+            "target": "bullet-1",
+            "label": "Cấu trúc have been V-ing"
+          },
+          {
+            "target": "bullet-2",
+            "label": "Câu hỏi hoàn chỉnh"
+          },
+          {
+            "target": "step-3",
+            "label": "Thực hành đọc và so sánh"
+          }
+        ],
+        "start": 303,
+        "duration": 43
+      },
+      {
+        "id": "ai-9",
+        "kind": "example",
+        "accent": "brand",
+        "title": "Ví dụ 3: Cô ấy đã viết thư",
+        "subtitle": "Sử dụng has + V‑ing",
+        "bullets": [
+          "Ngôi thứ ba số ít",
+          "Câu hoàn thành với has + V‑ing",
+          "Câu thể hiện hành động đã xong",
+          "Định dạng: has + V‑ing"
+        ],
+        "steps": [
+          "Bước 1: Đặt ngôi Cô ấy",
+          "Bước 2: Thêm has",
+          "Bước 3: Thêm động từ viết dạng V‑ing",
+          "Bước 4: Thêm danh từ thư",
+          "Bước 5: Hoàn thành câu",
+          "Bước 6: Kiểm tra ngữ pháp"
+        ],
+        "narration": "Học sinh đang thắc mắc gì ở đây? Hôm nay chúng ta sẽ xem một câu hoàn thành: Cô ấy has written a letter. Bước đầu là xác định ngôi thứ ba số ít. Tiếp theo, ta đặt has, rồi thêm động từ viết ở dạng V‑ing. Thêm danh từ cuối cùng, và câu đã hoàn chỉnh. Bạn có thể nhớ ngôi nào được dùng trong ví dụ này?",
+        "pointer": [
+          {
+            "target": "title",
+            "label": "Giới thiệu"
+          },
+          {
+            "target": "bullet-0",
+            "label": "Ngôi"
+          },
+          {
+            "target": "bullet-1",
+            "label": "Has"
+          },
+          {
+            "target": "bullet-2",
+            "label": "V‑ing"
+          },
+          {
+            "target": "bullet-3",
+            "label": "Định dạng"
+          },
+          {
+            "target": "step-0",
+            "label": "Ngôi"
+          },
+          {
+            "target": "step-1",
+            "label": "Has"
+          },
+          {
+            "target": "step-2",
+            "label": "V‑ing"
+          },
+          {
+            "target": "step-3",
+            "label": "Danh từ"
+          },
+          {
+            "target": "step-4",
+            "label": "Hoàn chỉnh"
+          }
+        ],
+        "start": 346,
+        "duration": 43
+      },
+      {
+        "id": "ai-10",
+        "kind": "diagram",
+        "accent": "gold",
+        "title": "Sơ đồ Tạo Câu Thì Hiện Tại Hoàn Thành",
+        "subtitle": "Cấu trúc câu theo từng phần",
+        "bullets": [
+          "Động từ chính + have/has + V-đã + hoàn thành",
+          "Điền chủ ngữ vào vị trí thuận ngữ",
+          "Có thể thêm trạng từ đoạn để nhấn mạnh thời gian"
+        ],
+        "visualNote": "Cung cấp sơ đồ chặt chẽ của các thành phần: chủ ngữ, động từ trợ, V-đã, và bổ sung trạng từ",
+        "narration": "Học sinh thường lúng túng khi phủ hợp các phần của câu Thì hiện tại hoàn thành. Trước tiên, ta xác định chủ ngữ, sau đó chọn dạng động từ trợ have hoặc has phù hợp với chủ ngữ số ít/đôi. Tiếp, chúng ta đặt V-đã để biểu thị việc đã hoàn thành một hành động. Cuối cùng, nếu muốn nhấn mạnh thời gian, ta thêm trạng từ như “right now” hay “recently”. Ví dụ: \"She has finished her homework\". Qua sơ đồ, học sinh có thể thấy từng bước tiến trình rõ ràng.",
+        "pointer": [
+          {
+            "target": "title",
+            "label": "đề cập tiêu đề"
+          },
+          {
+            "target": "subtitle",
+            "label": "giới thiệu mục tiêu"
+          },
+          {
+            "target": "bullet-0",
+            "label": "động từ chính"
+          },
+          {
+            "target": "bullet-1",
+            "label": "động từ trợ"
+          },
+          {
+            "target": "bullet-2",
+            "label": "trạng từ"
+          }
+        ],
+        "start": 389,
+        "duration": 43
+      },
+      {
+        "id": "ai-11",
+        "kind": "concept",
+        "accent": "gold",
+        "title": "Cạm bẫy thường gặp",
+        "subtitle": "Sai dùng have instead of has",
+        "bullets": [
+          "Chủ ngữ số ít (he, she, it) → dùng has",
+          "Chủ ngữ số nhiều (I, you, we, they) → dùng have",
+          "Ví dụ sai: She have finished → đúng: She has finished"
+        ],
+        "icon": "Zap",
+        "visualNote": "Bảng so sánh have/has",
+        "narration": "Khi dùng thì hiện tại hoàn thành, nhiều bạn nhầm dùng have cho chủ ngữ số ít. Ví dụ: She have finished thành sai, phải là She has finished. Quy tắc đơn giản: chủ ngữ là he, she, it hoặc danh từ số ít thì dùng has; còn I, you, we, they hoặc danh từ số nhiều thì dùng have. Hãy thử nói câu: My brother have done homework – bạn nghe thấy lạ không? Đúng, phải sửa thành has.",
+        "pointer": [
+          {
+            "target": "title",
+            "label": "Mở đầu cảnh báo cạm bẫy"
+          },
+          {
+            "target": "bullet-2",
+            "label": "Ví dụ lỗi have/has"
+          },
+          {
+            "target": "bullet-0",
+            "label": "Quy tắc chủ ngữ số ít"
+          },
+          {
+            "target": "bullet-2",
+            "label": "Câu tập luyện nghe lạ"
+          },
+          {
+            "target": "bullet-0",
+            "label": "Khẳng định sửa thành has"
+          }
+        ],
+        "start": 432,
+        "duration": 43
+      },
+      {
+        "id": "ai-12",
+        "kind": "concept",
+        "accent": "gold",
+        "title": "Khi nào không dùng Thì Hiện Tại Hoàn Thành?",
+        "subtitle": "Đối với hành động chưa hoàn thành",
+        "bullets": [
+          "Chỉ dùng cho hành động đã kết thúc trước lúc nói.",
+          "Không dùng khi hành động đang diễn ra hoặc chưa xong.",
+          "Ví dụ: “Tôi đã ăn” vs “Tôi đang ăn”."
+        ],
+        "icon": "BookOpen",
+        "visualNote": "Sơ đồ so sánh hai câu ví dụ",
+        "narration": "Thì hiện tại hoàn thành chỉ dùng cho hành động đã kết thúc trước thời điểm nói. Nếu hành động vẫn đang diễn ra hoặc chưa kết thúc, ta không dùng thì này. Ví dụ, câu “Tôi đã ăn cơm” đúng khi bữa ăn đã xong, nhưng “Tôi đang ăn cơm” mới phù hợp khi vẫn còn ăn. Vì vậy, hãy kiểm tra xem hành động đã hoàn tất hay chưa trước khi chọn thì.",
+        "pointer": [
+          {
+            "target": "title",
+            "label": "Mở đầu khái niệm thì"
+          },
+          {
+            "target": "bullet-1",
+            "label": "Giải thích trường hợp không dùng"
+          },
+          {
+            "target": "bullet-2",
+            "label": "Minh hoạ bằng cặp ví dụ"
+          },
+          {
+            "target": "bullet-0",
+            "label": "Tóm tắt quy tắc chọn thì"
+          }
+        ],
+        "start": 475,
+        "duration": 43
+      },
+      {
+        "id": "ai-13",
+        "kind": "quiz",
+        "accent": "ember",
+        "title": "Bài kiểm tra nhanh",
+        "subtitle": "Xác định đúng dạng câu",
+        "bullets": [
+          "Câu chia động từ “đã” phản ánh hoàn thành hành động gần đây",
+          "Câu sử dụng “đang” thể hiện hành động chưa kết thúc"
+        ],
+        "narration": "Học sinh, hãy nhớ rằng thì hiện tại hoàn thành dùng “đã” kèm động từ chia, ví dụ: “Mình đã ăn cơm”. Nếu muốn nhấn mạnh hành động chưa xong, dùng “đang” với động từ chia, ví dụ: “Mình đang học”. Bây giờ, thử xem câu nào là đúng dạng thì hiện tại hoàn thành?",
+        "pointer": [
+          {
+            "target": "title",
+            "label": "giới thiệu"
+          }
+        ],
+        "quiz": {
+          "question": "Câu nào dùng đúng thì hiện tại hoàn thành?",
+          "options": [
+            {
+              "id": "A",
+              "text": "Mình đã đi học",
+              "isCorrect": true,
+              "explanation": "Chỉ ra hành động đã hoàn thành trong quá khứ gần"
+            },
+            {
+              "id": "B",
+              "text": "Mình đang đi học",
+              "isCorrect": false,
+              "explanation": "Sử dụng thể hiện hiện tại tiếp diễn"
+            },
+            {
+              "id": "C",
+              "text": "Mình sẽ đi học",
+              "isCorrect": false,
+              "explanation": "Tương lai, không phải hiện tại hoàn thành"
+            },
+            {
+              "id": "D",
+              "text": "Mình đã học rồi",
+              "isCorrect": false,
+              "explanation": "Câu đúng nhưng không phải dạng hoàn thành; thay vì “đã” cho hành động đã hoàn thành"
+            }
+          ]
+        },
+        "start": 518,
+        "duration": 43
+      },
+      {
+        "id": "ai-14",
+        "kind": "summary",
+        "accent": "brand",
+        "title": "Tóm tắt Thì Hiện Tại Hoàn Thành",
+        "subtitle": "Nhắc lại các điểm chính",
+        "bullets": [
+          "Cấu trúc: have + been + V‑ing",
+          "Ví dụ thực tiễn trong cuộc sống",
+          "Hỏi đáp “Bạn đã làm gì hôm qua?”",
+          "Cách trả lời đúng và tự nhiên"
+        ],
+        "narration": "Những gì đã học: thì hiện tại hoàn thành diễn tả hành động đã hoàn thành trong thời gian gần đây. Cấu trúc: have + been + V‑ing, ví dụ “Ta đã đang học” có nghĩa là học đã được bắt đầu và chưa kết thúc. Ví dụ: “Cô ấy đã đang ăn cơm” cho thấy hành động bắt đầu trước giờ nói và vẫn đang diễn ra. Hãy nhớ, khi câu hỏi “Bạn đã làm gì hôm qua?” trả lời thường dùng thì hiện tại hoàn thành. Nếu còn lưỡng: đặt câu hỏi “Cô ấy đã ăn gì?” và trả lời: “Cô ấy đã ăn bánh.”",
+        "pointer": [
+          {
+            "target": "subtitle",
+            "label": "Bắt đầu với tóm tắt"
+          },
+          {
+            "target": "bullet-0",
+            "label": "Giải thích cấu trúc"
+          },
+          {
+            "target": "bullet-1",
+            "label": "Đưa ví dụ thực tế"
+          },
+          {
+            "target": "bullet-2",
+            "label": "Áp dụng vào câu hỏi"
+          },
+          {
+            "target": "bullet-3",
+            "label": "Kết luận và nhớ lại"
+          }
+        ],
+        "start": 561,
+        "duration": 43
+      }
+    ],
+    "chapters": [
+      {
+        "id": "ch-1",
+        "title": "Bạn biết Thì Hiện Tại Hoàn Thành không?",
+        "start": 0,
+        "end": 45,
+        "sceneIds": [
+          "ai-1"
+        ]
+      },
+      {
+        "id": "ch-2",
+        "title": "Có Vị Trợ Động Bắt Đầu Trước Khi Nói",
+        "start": 45,
+        "end": 88,
+        "sceneIds": [
+          "ai-2"
+        ]
+      },
+      {
+        "id": "ch-3",
+        "title": "Cấu trúc của Thì Hiện Tại Hoàn Thành",
+        "start": 88,
+        "end": 131,
+        "sceneIds": [
+          "ai-3"
+        ]
+      },
+      {
+        "id": "ch-4",
+        "title": "Thì Hiện Tại Hoàn Thành ở Tiếng Việt",
+        "start": 131,
+        "end": 174,
+        "sceneIds": [
+          "ai-4"
+        ]
+      },
+      {
+        "id": "ch-5",
+        "title": "Thì Hiện Tại Hoàn Thành Là Thông Báo",
+        "start": 174,
+        "end": 217,
+        "sceneIds": [
+          "ai-5"
+        ]
+      },
+      {
+        "id": "ch-6",
+        "title": "Công Thức Tạo Thì Hiện Tại Hoàn Thành",
+        "start": 217,
+        "end": 260,
+        "sceneIds": [
+          "ai-6"
+        ]
+      },
+      {
+        "id": "ch-7",
+        "title": "Ví dụ 1: Tôi đã ăn sáng",
+        "start": 260,
+        "end": 303,
+        "sceneIds": [
+          "ai-7"
+        ]
+      },
+      {
+        "id": "ch-8",
+        "title": "Ví dụ 2: Bạn đã học bài chưa?",
+        "start": 303,
+        "end": 346,
+        "sceneIds": [
+          "ai-8"
+        ]
+      },
+      {
+        "id": "ch-9",
+        "title": "Ví dụ 3: Cô ấy đã viết thư",
+        "start": 346,
+        "end": 389,
+        "sceneIds": [
+          "ai-9"
+        ]
+      },
+      {
+        "id": "ch-10",
+        "title": "Sơ đồ Tạo Câu Thì Hiện Tại Hoàn Thành",
+        "start": 389,
+        "end": 432,
+        "sceneIds": [
+          "ai-10"
+        ]
+      },
+      {
+        "id": "ch-11",
+        "title": "Cạm bẫy thường gặp",
+        "start": 432,
+        "end": 475,
+        "sceneIds": [
+          "ai-11"
+        ]
+      },
+      {
+        "id": "ch-12",
+        "title": "Khi nào không dùng Thì Hiện Tại Hoàn Thành?",
+        "start": 475,
+        "end": 518,
+        "sceneIds": [
+          "ai-12"
+        ]
+      },
+      {
+        "id": "ch-13",
+        "title": "Bài kiểm tra nhanh",
+        "start": 518,
+        "end": 561,
+        "sceneIds": [
+          "ai-13"
+        ]
+      },
+      {
+        "id": "ch-14",
+        "title": "Tóm tắt Thì Hiện Tại Hoàn Thành",
+        "start": 561,
+        "end": 604,
+        "sceneIds": [
+          "ai-14"
+        ]
+      }
+    ],
+    "source": "gemini",
+    "theme": "chalk",
+    "voice": "vi-VN-HoaiMyNeural",
+    "showPointer": true,
+    "pointerColor": "#f59e0b",
+    "model": "openai/gpt-oss-20b",
+    "createdAt": "2026-10-03T01:13:31.168Z"
+  },
+  "log": [
+    {
+      "message": "Đang lên dàn ý bài học…",
+      "kind": "stage",
+      "at": "08:10:22",
+      "stage": "outline",
+      "provider": "nvidia",
+      "model": "openai/gpt-oss-20b"
+    },
+    {
+      "message": "Dàn ý: 14 cảnh: \"Thì Hiện Tại Hoàn Thành Trong Tiếng Việt\"",
+      "kind": "stage",
+      "at": "08:11:05",
+      "stage": "outline-done",
+      "provider": "nvidia",
+      "model": "openai/gpt-oss-20b",
+      "elapsedMs": 42872
+    },
+    {
+      "message": "Đang viết cảnh 1–6/14",
+      "kind": "stage",
+      "at": "08:11:05",
+      "stage": "scene"
+    },
+    {
+      "message": "Xong cảnh 5: Thì Hiện Tại Hoàn Thành Là Thông Báo",
+      "kind": "scene",
+      "at": "08:11:18",
+      "stage": "scene",
+      "provider": "nvidia",
+      "model": "openai/gpt-oss-20b",
+      "elapsedMs": 13098
+    },
+    {
+      "message": "Xong cảnh 4: Thì Hiện Tại Hoàn Thành ở Tiếng Việt",
+      "kind": "scene",
+      "at": "08:11:22",
+      "stage": "scene",
+      "provider": "nvidia",
+      "model": "openai/gpt-oss-20b",
+      "elapsedMs": 17213
+    },
+    {
+      "message": "Xong cảnh 1: Bạn biết Thì Hiện Tại Hoàn Thành không?",
+      "kind": "scene",
+      "at": "08:11:23",
+      "stage": "scene",
+      "provider": "nvidia",
+      "model": "openai/gpt-oss-20b",
+      "elapsedMs": 17865
+    },
+    {
+      "message": "Xong cảnh 2: Có Vị Trợ Động Bắt Đầu Trước Khi Nói",
+      "kind": "scene",
+      "at": "08:11:31",
+      "stage": "scene",
+      "provider": "nvidia",
+      "model": "openai/gpt-oss-20b",
+      "elapsedMs": 26358
+    },
+    {
+      "message": "Xong cảnh 6: Công Thức Tạo Thì Hiện Tại Hoàn Thành",
+      "kind": "scene",
+      "at": "08:11:37",
+      "stage": "scene",
+      "provider": "nvidia",
+      "model": "openai/gpt-oss-20b",
+      "elapsedMs": 31965
+    },
+    {
+      "message": "Xong cảnh 3: Cấu trúc của Thì Hiện Tại Hoàn Thành",
+      "kind": "scene",
+      "at": "08:11:46",
+      "stage": "scene",
+      "provider": "nvidia",
+      "model": "openai/gpt-oss-20b",
+      "elapsedMs": 41486
+    },
+    {
+      "message": "Đang viết cảnh 7–12/14",
+      "kind": "stage",
+      "at": "08:11:46",
+      "stage": "scene"
+    },
+    {
+      "message": "Xong cảnh 9: Ví dụ 3: Cô ấy đã viết thư",
+      "kind": "scene",
+      "at": "08:12:03",
+      "stage": "scene",
+      "provider": "nvidia",
+      "model": "openai/gpt-oss-20b",
+      "elapsedMs": 16886
+    },
+    {
+      "message": "Xong cảnh 10: Sơ đồ Tạo Câu Thì Hiện Tại Hoàn Thành",
+      "kind": "scene",
+      "at": "08:12:12",
+      "stage": "scene",
+      "provider": "nvidia",
+      "model": "openai/gpt-oss-20b",
+      "elapsedMs": 25539
+    },
+    {
+      "message": "Xong cảnh 12: Khi nào không dùng Thì Hiện Tại Hoàn Thành?",
+      "kind": "scene",
+      "at": "08:12:28",
+      "stage": "scene",
+      "provider": "nvidia",
+      "model": "nvidia/nemotron-3-ultra-550b-a55b",
+      "elapsedMs": 41249
+    },
+    {
+      "message": "Xong cảnh 8: Ví dụ 2: Bạn đã học bài chưa?",
+      "kind": "scene",
+      "at": "08:12:32",
+      "stage": "scene",
+      "provider": "nvidia",
+      "model": "nvidia/nemotron-3-ultra-550b-a55b",
+      "elapsedMs": 45229
+    },
+    {
+      "message": "Xong cảnh 11: Cạm bẫy thường gặp",
+      "kind": "scene",
+      "at": "08:12:37",
+      "stage": "scene",
+      "provider": "nvidia",
+      "model": "nvidia/nemotron-3-ultra-550b-a55b",
+      "elapsedMs": 50651
+    },
+    {
+      "message": "Xong cảnh 7: Ví dụ 1: Tôi đã ăn sáng",
+      "kind": "scene",
+      "at": "08:12:56",
+      "stage": "scene",
+      "provider": "nvidia",
+      "model": "nvidia/nemotron-3-ultra-550b-a55b",
+      "elapsedMs": 69477
+    },
+    {
+      "message": "Đang viết cảnh 13–14/14",
+      "kind": "stage",
+      "at": "08:12:56",
+      "stage": "scene"
+    },
+    {
+      "message": "Xong cảnh 13: Bài kiểm tra nhanh",
+      "kind": "scene",
+      "at": "08:13:11",
+      "stage": "scene",
+      "provider": "nvidia",
+      "model": "openai/gpt-oss-20b",
+      "elapsedMs": 15307
+    },
+    {
+      "message": "Xong cảnh 14: Tóm tắt Thì Hiện Tại Hoàn Thành",
+      "kind": "scene",
+      "at": "08:13:31",
+      "stage": "scene",
+      "provider": "nvidia",
+      "model": "openai/gpt-oss-20b",
+      "elapsedMs": 34757
+    },
+    {
+      "message": "14 cảnh, 604s.",
+      "kind": "done",
+      "at": "08:13:31",
+      "provider": "nvidia",
+      "model": "openai/gpt-oss-20b",
+      "elapsedMs": 188602
+    }
+  ]
+}

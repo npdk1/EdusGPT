@@ -1,0 +1,943 @@
+{
+  "format": "eduai-studio/course@1",
+  "updatedAt": "2026-10-03T01:22:38.268Z",
+  "lesson": {
+    "id": "lesson-murph0oy-2p1k21",
+    "title": "Định Luật Bảo Tồn Năng Lượng",
+    "subject": "Chung",
+    "grade": "Phổ thông",
+    "language": "vi",
+    "fps": 30,
+    "duration": 600,
+    "scenes": [
+      {
+        "id": "ai-1",
+        "kind": "cover",
+        "accent": "brand",
+        "title": "Bạn đã bao giờ nghĩ gì về năng lượng?",
+        "subtitle": "Khám phá bảo toàn năng lượng",
+        "bullets": [
+          "Năng lượng không mất đi, chỉ chuyển đổi",
+          "Mọi hệ kín tổng năng lượng không đổi",
+          "Ví dụ: quả bóng rơi, lò xo nén"
+        ],
+        "visualNote": "Slide mở đầu, nền trắng, chữ lớn, không có hình ảnh",
+        "narration": "Chào các em, hôm nay chúng ta sẽ cùng tìm hiểu định luật bảo toàn năng lượng, một nguyên lý cốt lõi của vật lý. Năng lượng không tự sinh ra cũng không tự mất đi, nó chỉ chuyển đổi từ dạng này sang dạng khác. Ví dụ, khi quả bóng rơi xuống đất, năng lượng vị biến thành năng lượng động. Hãy cùng quan sát những hiện tượng quanh ta để thấy quy luật này hoạt động như thế nào.",
+        "pointer": [
+          {
+            "target": "title",
+            "label": "Mở đầu chào hỏi và giới thiệu chủ đề"
+          },
+          {
+            "target": "subtitle",
+            "label": "Nhấn mạnh khái niệm bảo toàn"
+          },
+          {
+            "target": "bullet-0",
+            "label": "Minh hoạ chuyển đổi năng lượng"
+          },
+          {
+            "target": "bullet-1",
+            "label": "Tóm gọn quy luật cho hệ kín"
+          }
+        ],
+        "start": 0,
+        "duration": 40
+      },
+      {
+        "id": "ai-2",
+        "kind": "concept",
+        "accent": "gold",
+        "title": "Năng lượng là gì?",
+        "subtitle": "Định nghĩa đơn giản",
+        "bullets": [
+          "Năng lượng là khả năng thực hiện công việc, chuyển đổi giữa dạng.",
+          "Ví dụ: xe điện 100 kWh chạy 400 km, giảm 10 kWh giảm phạm vi."
+        ],
+        "narration": "Học sinh đang thắc mắc gì ở đây? Nếu có một chiếc bánh pizza, năng lượng là công việc mà bánh có thể thực hiện khi chuyển thành nhiệt. Năng lượng là khả năng làm việc: hoán đổi giữa dạng nhiệt, động, điện… Đơn giản, năng lượng là khả năng thực hiện công việc. Ví dụ, một chiếc xe điện có 100 kWh, có thể chạy 400 km. Câu hỏi: nếu xe giảm 10 kWh, phạm vi đi lại giảm bao nhiêu? Thời gian 40s.",
+        "pointer": [
+          {
+            "target": "title",
+            "label": "giới thiệu"
+          },
+          {
+            "target": "subtitle",
+            "label": "định nghĩa"
+          },
+          {
+            "target": "bullet-0",
+            "label": "định nghĩa năng lượng"
+          },
+          {
+            "target": "bullet-1",
+            "label": "ví dụ xe điện"
+          },
+          {
+            "target": "quiz",
+            "label": "câu hỏi"
+          }
+        ],
+        "start": 40,
+        "duration": 40
+      },
+      {
+        "id": "ai-3",
+        "kind": "concept",
+        "accent": "gold",
+        "title": "Năng lượng dạng gì tồn tại?",
+        "subtitle": "Năng lượng động và tĩnh",
+        "bullets": [
+          "Năng lượng động: làm cho vật chuyển động, ví dụ tốc độ 10 m/s tạo năng lượng chuyển động ½mv².",
+          "Năng lượng tĩnh: khiến vật có trạng thái, như vật nặng 9.8 N giữ vác nặng mà không di chuyển."
+        ],
+        "narration": "Học sinh đang thắc mắc gì ở đây? Hỏi: “Chúng ta có thể nhận diện năng lượng mô hình nào là động và nào là tĩnh?” Bạn nhận xét: khi vật chuyển động, năng lượng đó là năng lượng động; khi vật đứng yên nhưng có lực, thì đó là năng lượng tĩnh. Ví dụ, bóng rơi có năng lượng động khi chạm mặt đất, nhưng trước đó có năng lượng tĩnh – năng lượng thế. Bây giờ hãy thử nhận biết cho một quả bóng đặt trên bàn: nó là năng lượng tĩnh, vì không di chuyển.",
+        "pointer": [
+          {
+            "target": "title",
+            "label": "trích dẫn câu hỏi"
+          },
+          {
+            "target": "subtitle",
+            "label": "giới thiệu nội dung"
+          },
+          {
+            "target": "bullet-0",
+            "label": "giải thích năng lượng động"
+          },
+          {
+            "target": "bullet-1",
+            "label": "giải thích năng lượng tĩnh"
+          },
+          {
+            "target": "step-0",
+            "label": "đưa ví dụ"
+          }
+        ],
+        "start": 80,
+        "duration": 40
+      },
+      {
+        "id": "ai-4",
+        "kind": "concept",
+        "accent": "gold",
+        "title": "Định luật bảo toàn năng lượng",
+        "subtitle": "Công thức tổng quát",
+        "bullets": [
+          "E₁ + W = E₂ : năng lượng nội tại cộng công bên ngoài bằng năng lượng cuối",
+          "Trong chuyển động kén, công làm việc bằng tích lực và quãng đường",
+          "Nếu không có công bên ngoài, E₁ = E₂, năng lượng nội tại không thay đổi"
+        ],
+        "formula": "E_1 + W = E_2",
+        "narration": "Học sinh đang thắc mắc gì ở đây? Định luật bảo toàn năng lượng quy định rằng tổng năng lượng hệ thống, cộng công tác bên ngoài, không thay đổi. Ví dụ, một cầu thủ chuyển động lên cung đẩy, công bằng lực xung quanh quãng đường, năng lượng chuyển từ vị trí cao sang động lượng. Bạn hãy nhớ rằng công thực hiện mà không mất đi năng lượng, chỉ chuyển dạng. Khi dây căng, công là tích lực thế và độ duỗi. Điều này giúp ta dự đoán năng lượng cuối cùng khi mọi công làm việc xong.",
+        "pointer": [
+          {
+            "target": "title",
+            "label": "Giới thiệu định luật"
+          },
+          {
+            "target": "formula",
+            "label": "Hiển thị công thức"
+          }
+        ],
+        "start": 120,
+        "duration": 40
+      },
+      {
+        "id": "ai-5",
+        "kind": "concept",
+        "accent": "gold",
+        "title": "Nguyên tắc quan trọng nhất trong tự nhiên",
+        "subtitle": "Tại sao cần bảo toàn năng lượng?",
+        "bullets": [
+          "Năng lượng không tự sinh hay tiêu diệt, chỉ chuyển đổi giữa các hình thức.",
+          "Thế giới xảy ra rất nhiều hiện tượng – chuyển động, nhiệt, ánh sáng – tất cả đều tuân theo quy luật này."
+        ],
+        "narration": "Bạn có nhận thấy khi một quả bóng rơi, nó bị tăng vận tốc nhưng không sớm dừng lại? Điều đó chỉ có thể giải thích nếu năng lượng chuyển từ thế năng lên động năng, không mất mát. Định luật bảo toàn năng lượng giúp chúng ta dự đoán làn sóng nhiệt thêm, năng lượng điện sớm tràn vào mạng lưới. Trước khi tiếp tục, hãy suy nghĩ: nếu năng lượng có thể biến mất, cuộc sống vẫn tồn tại được không?",
+        "pointer": [
+          {
+            "target": "title",
+            "label": "định nghĩa"
+          },
+          {
+            "target": "subtitle",
+            "label": "mở đầu"
+          },
+          {
+            "target": "bullet-0",
+            "label": "mô tả"
+          },
+          {
+            "target": "bullet-1",
+            "label": "mô tả"
+          }
+        ],
+        "start": 160,
+        "duration": 40
+      },
+      {
+        "id": "ai-6",
+        "kind": "formula",
+        "accent": "ember",
+        "title": "Công thức năng lượng động",
+        "subtitle": "E = ½ m v²",
+        "bullets": [
+          "Giá trị năng lượng động phụ thuộc vào khối lượng và vận tốc",
+          "Số ½ nhấn mạnh năng lượng tăng theo bình phương vận tốc",
+          "Đơn vị J (đon N·m) cho năng lượng quy đổi tích phân",
+          "Định luật bảo toàn năng lượng giữ tổng năng lượng không thay đổi"
+        ],
+        "formula": "E = \\frac{1}{2} m v^2",
+        "narration": "Học sinh, công thức năng lượng động là E = ½ m v². Khi một vật với khối lượng 2 kg chuyển động 3 m/s, năng lượng động là ½ × 2 × 3² = 9 J. Đây là ví dụ cụ thể giúp nhớ lớp 1. Nếu vận tốc tăng gấp đôi, năng lượng tăng bốn lần vì bình phương vận tốc. Khi tính năng lượng, chúng ta luôn nhớ đặt đúng đơn vị J và công thức đúng. Nhớ rằng năng lượng là một trạng thái.",
+        "pointer": [
+          {
+            "target": "title",
+            "label": "Bắt đầu"
+          },
+          {
+            "target": "formula",
+            "label": "Công thức"
+          }
+        ],
+        "start": 200,
+        "duration": 40
+      },
+      {
+        "id": "ai-7",
+        "kind": "formula",
+        "accent": "ember",
+        "title": "Công thức năng lượng thế",
+        "subtitle": "Truyền đạt cách tính năng lượng thế của vật trên đỉnh",
+        "bullets": [
+          "khoảng cách 5 m, khối 2 kg → 100 J",
+          "định luật: E = mgh"
+        ],
+        "formula": "E = mgh",
+        "narration": "Bạn có thể tính năng lượng thế khi đặt một vật lên mốc cao. Trong ví dụ, một quả bóng khối 2 kg được đặt lên đỉnh 5 m. Vật lên được tránh mất công sức, vì năng lượng thế 100 J được lưu trữ. Khi vật thả xuống, năng lượng này chuyển thành động năng, minh chứng thực tế cho định luật bảo toàn năng lượng. Nếu thay khối thành 4 kg, năng lượng thế sẽ tăng gấp đôi, 200 J.",
+        "pointer": [
+          {
+            "target": "title",
+            "label": "giới thiệu chủ đề"
+          },
+          {
+            "target": "bullet-0",
+            "label": "giá trị ví dụ"
+          },
+          {
+            "target": "bullet-1",
+            "label": "định nghĩa công thức"
+          },
+          {
+            "target": "formula",
+            "label": "công thức năng lượng thế"
+          }
+        ],
+        "start": 240,
+        "duration": 40
+      },
+      {
+        "id": "ai-8",
+        "kind": "example",
+        "accent": "brand",
+        "title": "Ví dụ 1: Thuyền trượt băng",
+        "subtitle": "Tính năng lượng động",
+        "bullets": [
+          "Định luật bảo toàn năng lượng: E₁ = E₂",
+          "Năng lượng động = ½mv²",
+          "Khối lượng thuyền 10 kg",
+          "Tốc độ ban đầu 3 m/s"
+        ],
+        "steps": [
+          "Bước 1: Xác định E₁ = ½·10·3² = 45 J",
+          "Bước 2: Giả sử không mất năng lượng, E₂ = 45 J",
+          "Bước 3: Đặt v = √(2E₂/m) = √(2·45/10) = 3 m/s"
+        ],
+        "narration": "Học sinh, ta tính năng lượng động của thuyền trượt băng khi tốc độ ban đầu 3 m/s. Định luật bảo toàn năng lượng cho rằng năng lượng toàn phần không thay đổi nếu không có lực làm việc ngoài. Bước đầu, ta tính năng lượng động ban đầu bằng công thức ½mv². Giả sử không mất năng lượng, năng lượng động cuối cùng bằng đầu. Thế là tốc độ cuối cùng vẫn là 3 m/s, chứng minh nguyên tắc bảo toàn năng lượng.",
+        "pointer": [
+          {
+            "target": "title",
+            "label": "Giới thiệu ví dụ"
+          },
+          {
+            "target": "bullet-0",
+            "label": "Định luật"
+          },
+          {
+            "target": "bullet-1",
+            "label": "Công thức năng lượng động"
+          },
+          {
+            "target": "bullet-2",
+            "label": "Khối lượng"
+          },
+          {
+            "target": "bullet-3",
+            "label": "Tốc độ"
+          },
+          {
+            "target": "step-0",
+            "label": "Tính E₁"
+          },
+          {
+            "target": "step-1",
+            "label": "Giả thiết E₂"
+          },
+          {
+            "target": "step-2",
+            "label": "Tính v cuối"
+          }
+        ],
+        "start": 280,
+        "duration": 40
+      },
+      {
+        "id": "ai-9",
+        "kind": "example",
+        "accent": "brand",
+        "title": "Ví dụ 2: Cầu thang",
+        "subtitle": "Tính năng lượng thế",
+        "bullets": [
+          "Khối lượng 70 kg, chiều cao 3 m",
+          "Eₚ = m g h = 2058 J"
+        ],
+        "steps": [
+          "Giả sử người có khối lượng 70 kg và leo lên 3 m.",
+          "Áp dụng công thức Eₚ = m g h với g = 9,8 m/s².",
+          "Tính Eₚ = 70 × 9,8 × 3 = 2058 J."
+        ],
+        "narration": "Trong ví dụ này, học sinh tính năng lượng thế của người leo lên cầu thang. Giả sử người có khối lượng 70 kg và leo lên 3 m. Công thức năng lượng thế là Eₚ = m g h. Đặt g = 9,8 m/s², ta tính Eₚ = 70 × 9,8 × 3 = 2058 J. Kết quả cho thấy năng lượng thế tăng 2058 J khi người lên 3 m. Hãy nhớ rằng năng lượng thế phụ thuộc vào khối lượng, độ cao và trọng lực.",
+        "pointer": [
+          {
+            "target": "title",
+            "label": "Giới thiệu ví dụ"
+          },
+          {
+            "target": "bullet-0",
+            "label": "Thông tin khối lượng và chiều cao"
+          },
+          {
+            "target": "bullet-1",
+            "label": "Kết quả năng lượng thế"
+          },
+          {
+            "target": "step-2",
+            "label": "Bước tính năng lượng"
+          }
+        ],
+        "start": 320,
+        "duration": 40
+      },
+      {
+        "id": "ai-10",
+        "kind": "example",
+        "accent": "brand",
+        "title": "Ví dụ 3: Bóng ném lên cao",
+        "subtitle": "Bảo toàn năng lượng",
+        "bullets": [
+          "Bóng bắt đầu với vận tốc 10 m/s",
+          "Tại điểm cao nhất vận tốc 0 m/s",
+          "Năng lượng động chuyển thành năng lượng thế"
+        ],
+        "steps": [
+          "step-0: Giả thiết: h = 0 m, v₀ = 10 m/s",
+          "step-1: Tính năng lượng động: ½mv₀² = 5m J",
+          "step-2: Tính năng lượng thế tại điểm cao nhất: mgh = 5m J",
+          "step-3: Giải cho h: h = 5 J/(mg) ≈ 5 m",
+          "step-4: Kiểm tra: ½mv² + mgh = 5m J + 5m J = 10m J"
+        ],
+        "narration": "Học sinh, hãy tưởng tượng bóng được ném lên với vận tốc 10 m/s. Khi bóng đạt đỉnh, vận tốc trở thành 0 m/s, nên năng lượng động biến thành năng lượng thế. Nếu ta lấy khối lượng 1 kg, năng lượng động ban đầu là 5 J. Khi bóng đứng yên tại đỉnh, năng lượng thế cũng là 5 J. Tổng năng lượng không thay đổi, minh chứng cho định luật bảo toàn năng lượng.",
+        "pointer": [
+          {
+            "target": "title",
+            "label": "giới thiệu ví dụ"
+          },
+          {
+            "target": "subtitle",
+            "label": "định nghĩa bảo toàn"
+          },
+          {
+            "target": "bullet-0",
+            "label": "động chuyển thành thế"
+          },
+          {
+            "target": "step-0",
+            "label": "giả thiết"
+          },
+          {
+            "target": "step-1",
+            "label": "động"
+          },
+          {
+            "target": "step-2",
+            "label": "thế"
+          },
+          {
+            "target": "step-3",
+            "label": "tính h"
+          },
+          {
+            "target": "step-4",
+            "label": "đánh giá"
+          }
+        ],
+        "start": 360,
+        "duration": 40
+      },
+      {
+        "id": "ai-11",
+        "kind": "diagram",
+        "accent": "gold",
+        "title": "Đồ thị năng lượng chuyển đổi",
+        "subtitle": "Vẽ đồ thị năng lượng động vs thời gian",
+        "bullets": [
+          "Đồ thị thể hiện năng lượng động tăng dần khi vật chuyển động",
+          "Điểm 0: năng lượng tĩnh, điểm 5: năng lượng tối đa",
+          "Đường cong cho thấy nguyên tắc bảo toàn năng lượng"
+        ],
+        "narration": "Học sinh đang thắc mắc gì ở đây? Khi vật chuyển đổi năng lượng, ta thấy đường cong năng lượng động liên tục thay đổi. Trên đồ thị, trục x là thời gian, trục y là năng lượng động. Ví dụ, khi bóng rơi từ độ cao, năng lượng động tăng theo ½ g v². Đồ thị thể hiện chuyển từ trạng thái tĩnh sang động. Các điểm trên đường cong biểu thị mức năng lượng động tại từng thời điểm. Hãy suy nghĩ, có mối liên hệ nào giữa năng lượng động và năng lượng thế?",
+        "pointer": [
+          {
+            "target": "title"
+          },
+          {
+            "target": "subtitle"
+          },
+          {
+            "target": "bullet-0"
+          },
+          {
+            "target": "bullet-1"
+          },
+          {
+            "target": "bullet-2"
+          },
+          {
+            "target": "graph"
+          }
+        ],
+        "start": 400,
+        "duration": 40
+      },
+      {
+        "id": "ai-12",
+        "kind": "simulation3d",
+        "accent": "gold",
+        "title": "Mô phỏng chuyển đổi năng lượng",
+        "subtitle": "Bóng rơi và bật lên",
+        "bullets": [
+          "Năng lượng thế chuyển thành năng lượng động khi rơi",
+          "Năng lượng động chuyển ngược thành năng lượng thế khi nảy lên"
+        ],
+        "formula": "E_{\\text{pot}}+E_{\\text{kin}}=C",
+        "visualNote": "Mô phỏng 3D quả bóng rơi tự do và nảy lên, hiển thị quỹ đạo và biểu đồ năng lượng",
+        "narration": "Chúng ta quan sát một quả bóng rơi từ độ cao nhất định. Khi rơi, năng lượng thế biến thành năng lượng động, tốc độ tăng dần. Khi chạm đất, năng lượng động chuyển ngược thành năng lượng thế, bóng nảy lên. Tổng năng lượng cơ học giữ nguyên nếu bỏ qua ma sát. Mô phỏng cho thấy quỹ đạo và biểu đồ năng lượng thay đổi theo thời gian. Hãy quan sát điểm cao nhất và điểm thấp nhất để nhận biết sự chuyển hóa.",
+        "pointer": [
+          {
+            "target": "title",
+            "label": "Mở đầu mô phỏng"
+          },
+          {
+            "target": "bullet-0",
+            "label": "Chuyển đổi khi rơi"
+          },
+          {
+            "target": "bullet-1",
+            "label": "Chuyển đổi khi nảy"
+          },
+          {
+            "target": "formula",
+            "label": "Bảo toàn tổng năng lượng"
+          },
+          {
+            "target": "subtitle",
+            "label": "Quan sát quỹ đạo và biểu đồ"
+          },
+          {
+            "target": "subtitle",
+            "label": "Nhận biết điểm cao thấp"
+          }
+        ],
+        "simulation3d": {
+          "type": "physics-pendulum"
+        },
+        "start": 440,
+        "duration": 40
+      },
+      {
+        "id": "ai-13",
+        "kind": "example",
+        "accent": "brand",
+        "title": "Cạm bẫy thường gặp",
+        "subtitle": "Sử dụng công thức sai khi có ma lực",
+        "bullets": [
+          "Công thức E=½mv² không tính ma lực",
+          "Khi ma lực làm tăng năng lượng, cần cộng năng lượng ma lực"
+        ],
+        "steps": [
+          "Bước 1: Xác định có ma lực trong hệ thống",
+          "Bước 2: Tính công suất ma lực và tích hợp theo thời gian",
+          "Bước 3: Thêm năng lượng ma lực vào năng lượng động"
+        ],
+        "narration": "Học sinh thường nhầm khi có ma lực. Ví dụ, một chiếc bóng rơi, có ma lực làm tăng năng lượng trong hệ thống. Nếu áp dụng E=½mv², ta bỏ qua ma lực, dẫn tới kết quả sai. Câu hỏi: Khi nào ta không dùng công thức này? Khi có ma lực hoặc lực bảo toàn khác. Bước giải: tính công suất ma lực, cộng vào năng lượng động, rồi so sánh. Nhớ rằng năng lượng tổng vẫn bảo toàn.",
+        "pointer": [
+          {
+            "target": "title",
+            "label": "giới thiệu vấn đề"
+          },
+          {
+            "target": "bullet-0",
+            "label": "công thức sai"
+          },
+          {
+            "target": "bullet-1",
+            "label": "cần cộng ma lực"
+          },
+          {
+            "target": "step-0",
+            "label": "định nghĩa ma lực"
+          },
+          {
+            "target": "step-1",
+            "label": "tính công suất"
+          },
+          {
+            "target": "step-2",
+            "label": "cộng vào năng lượng"
+          }
+        ],
+        "start": 480,
+        "duration": 40
+      },
+      {
+        "id": "ai-14",
+        "kind": "quiz",
+        "accent": "ember",
+        "title": "Bài kiểm tra nhanh",
+        "subtitle": "Đánh giá hiểu biết",
+        "bullets": [
+          "Điểm A: năng lượng động học",
+          "Điểm B: mức năng lượng bảo toàn",
+          "Điểm C: công tác động",
+          "Điểm D: chuyển đổi năng lượng"
+        ],
+        "narration": "Bạn đã hình dung được khi một vật chuyển đổi năng lượng từ dạng này sang dạng khác mà tổng năng lượng không thay đổi chưa? Hãy nhớ ví dụ chiếc xe đạp khi người đạp lên bánh xe, năng lượng cơ học chuyển thành nhiệt do ma sát. Câu hỏi ngay sau đây sẽ kiểm tra khả năng liên kết các khái niệm đó. Nên trả lời nhanh nhưng kĩ càng, vì điều này sẽ giúp bạn tự tin khi giải các bài toán liên quan. Đừng quên so sánh với định luật bảo toàn năng lượng đã học. Lời khuyên: chọn đáp án phản ánh tính chất không thay đổi tổng năng lượng.",
+        "pointer": [
+          {
+            "target": "title",
+            "label": "giới thiệu"
+          },
+          {
+            "target": "bullet-0",
+            "label": "điểm 1"
+          },
+          {
+            "target": "bullet-1",
+            "label": "điểm 2"
+          },
+          {
+            "target": "bullet-2",
+            "label": "điểm 3"
+          },
+          {
+            "target": "bullet-3",
+            "label": "điểm 4"
+          },
+          {
+            "target": "quiz",
+            "label": "câu hỏi"
+          }
+        ],
+        "quiz": {
+          "question": "Trong một hệ kín, khi một vật chuyển đổi năng lượng từ động học sang nhiệt, tổng năng lượng của hệ sẽ:",
+          "options": [
+            {
+              "id": "A",
+              "text": "Tăng",
+              "isCorrect": false,
+              "explanation": "Năng lượng được thu lại thành dạng khác."
+            },
+            {
+              "id": "B",
+              "text": "Giảm",
+              "isCorrect": false,
+              "explanation": "Năng lượng không bị mất trong hệ kín."
+            },
+            {
+              "id": "C",
+              "text": "Bảo toàn",
+              "isCorrect": true,
+              "explanation": "Điều này là định luật bảo toàn năng lượng."
+            },
+            {
+              "id": "D",
+              "text": "Không xác định",
+              "isCorrect": false,
+              "explanation": "Mỗi trường hợp cụ thể có thể khác nhau."
+            }
+          ]
+        },
+        "start": 520,
+        "duration": 40
+      },
+      {
+        "id": "ai-15",
+        "kind": "summary",
+        "accent": "brand",
+        "title": "Tổng kết và thực hành",
+        "subtitle": "Những điểm chính cần nhớ",
+        "bullets": [
+          "E = K + U",
+          "Ví dụ bánh xe trượt: động → nhiệt"
+        ],
+        "narration": "Bạn đã nhớ công thức năng lượng tổng: E = K + U? Năng lượng bảo toàn trong hệ bị chi phối bởi chuyển đổi giữa động học và tiềm năng. Khi một quả bóng thả ra, năng lượng động học biến thành tiềm năng khi lên đỉnh, rồi trở lại. Ví dụ, bánh xe trượt trên dốc: năng lượng động chuyển thành nhiệt. Câu hỏi: nếu không có ma sát, tốc độ cuối cùng bằng tốc độ đầu vào? Đáp là 1. Đây là kiệt năng lượng không mất.",
+        "pointer": [
+          {
+            "target": "title",
+            "label": "giới thiệu"
+          },
+          {
+            "target": "bullet-0",
+            "label": "định luật"
+          },
+          {
+            "target": "bullet-0",
+            "label": "động biết"
+          },
+          {
+            "target": "bullet-1",
+            "label": "điểm ví dụ"
+          },
+          {
+            "target": "bullet-1",
+            "label": "điều kiện"
+          }
+        ],
+        "start": 560,
+        "duration": 40
+      }
+    ],
+    "chapters": [
+      {
+        "id": "ch-1",
+        "title": "Bạn đã bao giờ nghĩ gì về năng lượng?",
+        "start": 0,
+        "end": 40,
+        "sceneIds": [
+          "ai-1"
+        ]
+      },
+      {
+        "id": "ch-2",
+        "title": "Năng lượng là gì?",
+        "start": 40,
+        "end": 80,
+        "sceneIds": [
+          "ai-2"
+        ]
+      },
+      {
+        "id": "ch-3",
+        "title": "Năng lượng dạng gì tồn tại?",
+        "start": 80,
+        "end": 120,
+        "sceneIds": [
+          "ai-3"
+        ]
+      },
+      {
+        "id": "ch-4",
+        "title": "Định luật bảo toàn năng lượng",
+        "start": 120,
+        "end": 160,
+        "sceneIds": [
+          "ai-4"
+        ]
+      },
+      {
+        "id": "ch-5",
+        "title": "Nguyên tắc quan trọng nhất trong tự nhiên",
+        "start": 160,
+        "end": 200,
+        "sceneIds": [
+          "ai-5"
+        ]
+      },
+      {
+        "id": "ch-6",
+        "title": "Công thức năng lượng động",
+        "start": 200,
+        "end": 240,
+        "sceneIds": [
+          "ai-6"
+        ]
+      },
+      {
+        "id": "ch-7",
+        "title": "Công thức năng lượng thế",
+        "start": 240,
+        "end": 280,
+        "sceneIds": [
+          "ai-7"
+        ]
+      },
+      {
+        "id": "ch-8",
+        "title": "Ví dụ 1: Thuyền trượt băng",
+        "start": 280,
+        "end": 320,
+        "sceneIds": [
+          "ai-8"
+        ]
+      },
+      {
+        "id": "ch-9",
+        "title": "Ví dụ 2: Cầu thang",
+        "start": 320,
+        "end": 360,
+        "sceneIds": [
+          "ai-9"
+        ]
+      },
+      {
+        "id": "ch-10",
+        "title": "Ví dụ 3: Bóng ném lên cao",
+        "start": 360,
+        "end": 400,
+        "sceneIds": [
+          "ai-10"
+        ]
+      },
+      {
+        "id": "ch-11",
+        "title": "Đồ thị năng lượng chuyển đổi",
+        "start": 400,
+        "end": 440,
+        "sceneIds": [
+          "ai-11"
+        ]
+      },
+      {
+        "id": "ch-12",
+        "title": "Mô phỏng chuyển đổi năng lượng",
+        "start": 440,
+        "end": 480,
+        "sceneIds": [
+          "ai-12"
+        ]
+      },
+      {
+        "id": "ch-13",
+        "title": "Cạm bẫy thường gặp",
+        "start": 480,
+        "end": 520,
+        "sceneIds": [
+          "ai-13"
+        ]
+      },
+      {
+        "id": "ch-14",
+        "title": "Bài kiểm tra nhanh",
+        "start": 520,
+        "end": 560,
+        "sceneIds": [
+          "ai-14"
+        ]
+      },
+      {
+        "id": "ch-15",
+        "title": "Tổng kết và thực hành",
+        "start": 560,
+        "end": 600,
+        "sceneIds": [
+          "ai-15"
+        ]
+      }
+    ],
+    "source": "gemini",
+    "theme": "paper",
+    "voice": "vi-VN-HoaiMyNeural",
+    "showPointer": true,
+    "pointerColor": "#f59e0b",
+    "model": "openai/gpt-oss-20b",
+    "createdAt": "2026-10-03T01:22:38.207Z"
+  },
+  "log": [
+    {
+      "message": "Đang lên dàn ý bài học…",
+      "kind": "stage",
+      "at": "08:20:51",
+      "stage": "outline",
+      "provider": "nvidia",
+      "model": "openai/gpt-oss-20b"
+    },
+    {
+      "message": "Dàn ý: 15 cảnh: \"Định Luật Bảo Tồn Năng Lượng\"",
+      "kind": "stage",
+      "at": "08:21:16",
+      "stage": "outline-done",
+      "provider": "nvidia",
+      "model": "openai/gpt-oss-20b",
+      "elapsedMs": 25077
+    },
+    {
+      "message": "Đang viết cảnh 1–6/15",
+      "kind": "stage",
+      "at": "08:21:16",
+      "stage": "scene"
+    },
+    {
+      "message": "Xong cảnh 4: Định luật bảo toàn năng lượng",
+      "kind": "scene",
+      "at": "08:21:24",
+      "stage": "scene",
+      "provider": "nvidia",
+      "model": "openai/gpt-oss-20b",
+      "elapsedMs": 7940
+    },
+    {
+      "message": "Xong cảnh 5: Nguyên tắc quan trọng nhất trong tự nhiên",
+      "kind": "scene",
+      "at": "08:21:24",
+      "stage": "scene",
+      "provider": "nvidia",
+      "model": "openai/gpt-oss-20b",
+      "elapsedMs": 8273
+    },
+    {
+      "message": "Xong cảnh 6: Công thức năng lượng động",
+      "kind": "scene",
+      "at": "08:21:26",
+      "stage": "scene",
+      "provider": "nvidia",
+      "model": "openai/gpt-oss-20b",
+      "elapsedMs": 10250
+    },
+    {
+      "message": "Xong cảnh 3: Năng lượng dạng gì tồn tại?",
+      "kind": "scene",
+      "at": "08:21:27",
+      "stage": "scene",
+      "provider": "nvidia",
+      "model": "openai/gpt-oss-20b",
+      "elapsedMs": 11164
+    },
+    {
+      "message": "Xong cảnh 1: Bạn đã bao giờ nghĩ gì về năng lượng?",
+      "kind": "scene",
+      "at": "08:21:36",
+      "stage": "scene",
+      "provider": "nvidia",
+      "model": "nvidia/nemotron-3-ultra-550b-a55b",
+      "elapsedMs": 20493
+    },
+    {
+      "message": "Xong cảnh 2: Năng lượng là gì?",
+      "kind": "scene",
+      "at": "08:21:39",
+      "stage": "scene",
+      "provider": "nvidia",
+      "model": "openai/gpt-oss-20b",
+      "elapsedMs": 23252
+    },
+    {
+      "message": "Đang viết cảnh 7–12/15",
+      "kind": "stage",
+      "at": "08:21:39",
+      "stage": "scene"
+    },
+    {
+      "message": "Xong cảnh 7: Công thức năng lượng thế",
+      "kind": "scene",
+      "at": "08:21:48",
+      "stage": "scene",
+      "provider": "nvidia",
+      "model": "openai/gpt-oss-20b",
+      "elapsedMs": 9171
+    },
+    {
+      "message": "Xong cảnh 8: Ví dụ 1: Thuyền trượt băng",
+      "kind": "scene",
+      "at": "08:21:50",
+      "stage": "scene",
+      "provider": "nvidia",
+      "model": "openai/gpt-oss-20b",
+      "elapsedMs": 11230
+    },
+    {
+      "message": "Xong cảnh 10: Ví dụ 3: Bóng ném lên cao",
+      "kind": "scene",
+      "at": "08:21:56",
+      "stage": "scene",
+      "provider": "nvidia",
+      "model": "openai/gpt-oss-20b",
+      "elapsedMs": 17018
+    },
+    {
+      "message": "Xong cảnh 11: Đồ thị năng lượng chuyển đổi",
+      "kind": "scene",
+      "at": "08:22:00",
+      "stage": "scene",
+      "provider": "nvidia",
+      "model": "openai/gpt-oss-20b",
+      "elapsedMs": 20803
+    },
+    {
+      "message": "Xong cảnh 12: Mô phỏng chuyển đổi năng lượng",
+      "kind": "scene",
+      "at": "08:22:08",
+      "stage": "scene",
+      "provider": "nvidia",
+      "model": "nvidia/nemotron-3-ultra-550b-a55b",
+      "elapsedMs": 28889
+    },
+    {
+      "message": "Xong cảnh 9: Ví dụ 2: Cầu thang",
+      "kind": "scene",
+      "at": "08:22:12",
+      "stage": "scene",
+      "provider": "nvidia",
+      "model": "openai/gpt-oss-20b",
+      "elapsedMs": 32885
+    },
+    {
+      "message": "Đang viết cảnh 13–15/15",
+      "kind": "stage",
+      "at": "08:22:12",
+      "stage": "scene"
+    },
+    {
+      "message": "Xong cảnh 14: Bài kiểm tra nhanh",
+      "kind": "scene",
+      "at": "08:22:27",
+      "stage": "scene",
+      "provider": "nvidia",
+      "model": "openai/gpt-oss-20b",
+      "elapsedMs": 15017
+    },
+    {
+      "message": "Xong cảnh 13: Cạm bẫy thường gặp",
+      "kind": "scene",
+      "at": "08:22:28",
+      "stage": "scene",
+      "provider": "nvidia",
+      "model": "openai/gpt-oss-20b",
+      "elapsedMs": 15861
+    },
+    {
+      "message": "Xong cảnh 15: Tổng kết và thực hành",
+      "kind": "scene",
+      "at": "08:22:38",
+      "stage": "scene",
+      "provider": "nvidia",
+      "model": "openai/gpt-oss-20b",
+      "elapsedMs": 25591
+    },
+    {
+      "message": "15 cảnh, 600s.",
+      "kind": "done",
+      "at": "08:22:38",
+      "provider": "nvidia",
+      "model": "openai/gpt-oss-20b",
+      "elapsedMs": 106817
+    }
+  ]
+}

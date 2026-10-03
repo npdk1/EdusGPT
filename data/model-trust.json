@@ -2,19 +2,19 @@
   "entries": [
     {
       "provider": "nvidia",
+      "model": "openai/gpt-oss-20b",
+      "lessonId": "lesson-murph0oy-2p1k21",
+      "scenes": 15,
+      "words": 1333,
+      "verifiedAt": "2026-10-03T01:22:38.209Z"
+    },
+    {
+      "provider": "nvidia",
       "model": "nvidia/nemotron-3-super-120b-a12b",
       "lessonId": "lesson-muropw51-r8j8e5",
       "scenes": 6,
       "words": 348,
       "verifiedAt": "2026-10-03T01:05:05.420Z"
-    },
-    {
-      "provider": "nvidia",
-      "model": "openai/gpt-oss-20b",
-      "lessonId": "lesson-murok2yu-fm0s53",
-      "scenes": 6,
-      "words": 310,
-      "verifiedAt": "2026-10-03T00:57:54.782Z"
     },
     {
       "provider": "nvidia",

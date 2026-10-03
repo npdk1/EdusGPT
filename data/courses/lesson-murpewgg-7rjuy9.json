@@ -1,0 +1,360 @@
+{
+  "format": "eduai-studio/course@1",
+  "updatedAt": "2026-10-03T01:20:08.713Z",
+  "lesson": {
+    "id": "lesson-murpewgg-7rjuy9",
+    "title": "Định Luật Bảo Tồn Năng Lượng",
+    "subject": "Chung",
+    "grade": "Phổ thông",
+    "language": "vi",
+    "fps": 30,
+    "duration": 144,
+    "scenes": [
+      {
+        "id": "ai-1",
+        "kind": "cover",
+        "accent": "brand",
+        "title": "Bạn đã bao giờ tự hỏi năng lượng có thể biến mất không?",
+        "subtitle": "Khám phá điều kỳ diệu trong thế giới vật lý",
+        "bullets": [
+          "Năng lượng không biến mất, chỉ chuyển dạng"
+        ],
+        "narration": "Bạn đã bao giờ tự hỏi năng lượng có thể biến mất không? Thế giới vật lý cho thấy mọi thứ đều được bảo toàn. Ví dụ, khi một bóng đổ lên mặt đất, năng lượng chuyển từ động đứng sang nhiệt. Bạn có nhận thấy sự chuyển đổi này không?",
+        "pointer": [
+          {
+            "target": "title",
+            "label": "Giới thiệu câu hỏi"
+          },
+          {
+            "target": "subtitle",
+            "label": "Bối cảnh"
+          },
+          {
+            "target": "bullet-0",
+            "label": "Ý tưởng chính"
+          }
+        ],
+        "start": 0,
+        "duration": 24
+      },
+      {
+        "id": "ai-2",
+        "kind": "concept",
+        "accent": "gold",
+        "title": "Định nghĩa năng lượng chuyển đổi",
+        "subtitle": "Năng lượng là gì khi chuyển từ dạng này sang dạng khác?",
+        "bullets": [
+          "Năng lượng động chuyển thành vị trí khi làm việc",
+          "Năng lượng nhiệt chuyển thành cơ học khi ấm lên",
+          "Năng lượng điện chuyển thành nhiệt trong điện trở"
+        ],
+        "narration": "Học sinh đang thắc mắc gì ở đây? Khi một chiếc bóng bị đẩy lên, năng lượng động chuyển thành vị trí; khi bóng rơi, vị trí trở thành động; khi nhiệt độ tăng, năng lượng nhiệt chuyển thành cơ học. Nhiệt lượng không biến mất, chỉ đổi dạng. Bạn có thể ví dụ: dây điện dẫn dòng, năng lượng điện thành nhiệt trong điện trở?",
+        "pointer": [
+          {
+            "target": "title",
+            "label": "đầu đề"
+          },
+          {
+            "target": "subtitle",
+            "label": "phụ đề"
+          },
+          {
+            "target": "bullet-0",
+            "label": "động"
+          },
+          {
+            "target": "bullet-1",
+            "label": "nhiệt"
+          },
+          {
+            "target": "bullet-2",
+            "label": "điện"
+          }
+        ],
+        "start": 24,
+        "duration": 24
+      },
+      {
+        "id": "ai-3",
+        "kind": "concept",
+        "accent": "ember",
+        "title": "Năng lượng không mất đi",
+        "subtitle": "Xe đạp, máy tính, nhiệt độ phòng",
+        "bullets": [
+          "Nhà nước tính năng lượng tiêu thụ",
+          "Điện năng vẫn chuyển thành công việc",
+          "Nhiệt độ phòng duy trì nhịp độ",
+          "Từng hiện tượng giữ nguyên tổng năng lượng"
+        ],
+        "narration": "Bạn có thấy khi người đạp xe giảm tốc độ năng lượng chuyển thành nhiệt? Khi máy tính tắt, điện năng vẫn được chuyển thành hơi nước trong bộ lạnh. Đó là minh hoạ thực tế cho nguyên tắc bảo toàn năng lượng: tổng năng lượng không thay đổi.",
+        "pointer": [
+          {
+            "target": "title",
+            "label": "giới thiệu"
+          }
+        ],
+        "start": 48,
+        "duration": 24
+      },
+      {
+        "id": "ai-4",
+        "kind": "concept",
+        "accent": "gold",
+        "title": "Cạm bẫy thường gặp khi tính năng lượng",
+        "subtitle": "Sai lầm phổ biến: bỏ qua năng lượng tiêu hao qua ma sát",
+        "bullets": [
+          "Khi ma sát hoạt động, năng lượng chuyển thành nhiệt",
+          "Không tính ma sát làm sai kết quả",
+          "Ví dụ: chạm cầu tiết lộ lỗi 30%"
+        ],
+        "narration": "Bạn có thể thấy khi một xe đạp va chạm, phần năng lượng chuyển thành nhiệt qua ma sát. Nếu bỏ qua, bạn tính sai 50% công việc. Bạn thử tính năng lượng tiêu hao khi cầm thang? Đó là lý thuyết. Hãy ghi chú. Trong bài tập sẽ có ví dụ.",
+        "pointer": [
+          {
+            "target": "title",
+            "label": "Giới thiệu"
+          },
+          {
+            "target": "bullet-0",
+            "label": "Ma sát biến năng"
+          },
+          {
+            "target": "bullet-1",
+            "label": "Lỗi khi bỏ qua"
+          },
+          {
+            "target": "bullet-2",
+            "label": "Ví dụ cụ thể"
+          },
+          {
+            "target": "subtitle",
+            "label": "Nhắc lại vấn đề"
+          }
+        ],
+        "start": 72,
+        "duration": 24
+      },
+      {
+        "id": "ai-5",
+        "kind": "quiz",
+        "accent": "gold",
+        "title": "Kiểm tra lại xem bạn đã hiểu chưa",
+        "subtitle": "Chọn đáp án đúng về nội dung vừa học.",
+        "bullets": [
+          "Đọc lại tóm tắt ở slide trước nếu chưa nhớ.",
+          "Chọn một đáp án, bạn sẽ được giải thích ngay."
+        ],
+        "narration": "Mình cùng kiểm tra lại xem bạn đã nắm được chưa. Đọc câu hỏi và chọn đáp án mình nghĩ là đúng. Chọn sai cũng không sao, mình sẽ giải thích lại ngay tại đây, và đó là cách nhanh nhất để biết mình cần xem lại phần nào.",
+        "quiz": {
+          "question": "Bạn đã nắm được nội dung chính của bài học này chưa?",
+          "options": [
+            {
+              "id": "opt-1",
+              "text": "Rồi, mình hiểu và tự giải thích lại được cho bạn nghe",
+              "isCorrect": true,
+              "explanation": "Đó là đúng. Tự kể lại bằng lời mình mới thật sự nắm."
+            },
+            {
+              "id": "opt-2",
+              "text": "Mình hiểu phần đầu, phần sau hơi mơ hồ",
+              "isCorrect": false,
+              "explanation": "Không sao. Xem lại phần cuối, đó là phần hay quên nhất."
+            },
+            {
+              "id": "opt-3",
+              "text": "Chưa, mình thấy hơi nhiều thông tin",
+              "isCorrect": false,
+              "explanation": "Bài dài là chủ ý. Xem lại dàn ý theo thứ tự, từng phần một sẽ dễ hơn."
+            },
+            {
+              "id": "opt-4",
+              "text": "Chưa, mình muốn xem ví dụ thực tế thêm",
+              "isCorrect": false,
+              "explanation": "Phần ví dụ gần cuối bài. Đọc nó sẽ giúp bạn thấy bài học dùng được thế nào."
+            }
+          ]
+        },
+        "start": 96,
+        "duration": 24
+      },
+      {
+        "id": "ai-6",
+        "kind": "summary",
+        "accent": "brand",
+        "title": "Tổng kết nhanh",
+        "subtitle": "Những điểm chính cần ghi nhớ về định luật bảo toàn năng lượng",
+        "bullets": [
+          "Trong mọi quá trình, tổng năng lượng không biến đổi",
+          "Năng lượng chuyển đổi giữa dạng động học, nhiệt, điện",
+          "Ví dụ: quả bóng rơi, năng lượng chuyển từ tiềm năng sang động học",
+          "Liên hệ: công suất máy biến đổi năng lượng từ điện sang cơ học"
+        ],
+        "narration": "Học sinh hãy nhớ rằng năng lượng không bao giờ biến mất, chỉ chuyển dạng. Ví dụ, khi một quả bóng rơi, năng lượng tiềm năng giảm và năng lượng động tăng, tính bằng công thức một m² giá trị. Khi tới kết thúc, bạn có thể áp dụng định luật này để thiết kế máy chuyển đổi hiệu quả.",
+        "pointer": [
+          {
+            "target": "title",
+            "label": "Giới thiệu"
+          },
+          {
+            "target": "bullet-0",
+            "label": "Khái niệm chính"
+          },
+          {
+            "target": "bullet-1",
+            "label": "Chuyển đổi dạng"
+          },
+          {
+            "target": "bullet-2",
+            "label": "Ví dụ bóng"
+          },
+          {
+            "target": "bullet-3",
+            "label": "Liên hệ ứng dụng"
+          }
+        ],
+        "start": 120,
+        "duration": 24
+      }
+    ],
+    "chapters": [
+      {
+        "id": "ch-1",
+        "title": "Bạn đã bao giờ tự hỏi năng lượng có thể biến mất không?",
+        "start": 0,
+        "end": 24,
+        "sceneIds": [
+          "ai-1"
+        ]
+      },
+      {
+        "id": "ch-2",
+        "title": "Định nghĩa năng lượng chuyển đổi",
+        "start": 24,
+        "end": 48,
+        "sceneIds": [
+          "ai-2"
+        ]
+      },
+      {
+        "id": "ch-3",
+        "title": "Năng lượng không mất đi",
+        "start": 48,
+        "end": 72,
+        "sceneIds": [
+          "ai-3"
+        ]
+      },
+      {
+        "id": "ch-4",
+        "title": "Cạm bẫy thường gặp khi tính năng lượng",
+        "start": 72,
+        "end": 96,
+        "sceneIds": [
+          "ai-4"
+        ]
+      },
+      {
+        "id": "ch-5",
+        "title": "Kiểm tra lại xem bạn đã hiểu chưa",
+        "start": 96,
+        "end": 120,
+        "sceneIds": [
+          "ai-5"
+        ]
+      },
+      {
+        "id": "ch-6",
+        "title": "Tổng kết nhanh",
+        "start": 120,
+        "end": 144,
+        "sceneIds": [
+          "ai-6"
+        ]
+      }
+    ],
+    "source": "gemini",
+    "theme": "paper",
+    "voice": "vi-VN-HoaiMyNeural",
+    "showPointer": true,
+    "pointerColor": "#f59e0b",
+    "model": "openai/gpt-oss-20b",
+    "createdAt": "2026-10-03T01:20:08.655Z"
+  },
+  "log": [
+    {
+      "message": "Đang lên dàn ý bài học…",
+      "kind": "stage",
+      "at": "08:19:12",
+      "stage": "outline",
+      "provider": "nvidia",
+      "model": "openai/gpt-oss-20b"
+    },
+    {
+      "message": "Dàn ý: 5 cảnh: \"Định Luật Bảo Tồn Năng Lượng\"",
+      "kind": "stage",
+      "at": "08:19:24",
+      "stage": "outline-done",
+      "provider": "nvidia",
+      "model": "openai/gpt-oss-20b",
+      "elapsedMs": 11455
+    },
+    {
+      "message": "Đang viết cảnh 1–5/5",
+      "kind": "stage",
+      "at": "08:19:24",
+      "stage": "scene"
+    },
+    {
+      "message": "Xong cảnh 3: Năng lượng không mất đi",
+      "kind": "scene",
+      "at": "08:19:28",
+      "stage": "scene",
+      "provider": "nvidia",
+      "model": "openai/gpt-oss-20b",
+      "elapsedMs": 4072
+    },
+    {
+      "message": "Xong cảnh 5: Tổng kết nhanh",
+      "kind": "scene",
+      "at": "08:19:39",
+      "stage": "scene",
+      "provider": "nvidia",
+      "model": "openai/gpt-oss-20b",
+      "elapsedMs": 15473
+    },
+    {
+      "message": "Xong cảnh 1: Bạn đã bao giờ tự hỏi năng lượng có thể biến mất không?",
+      "kind": "scene",
+      "at": "08:19:41",
+      "stage": "scene",
+      "provider": "nvidia",
+      "model": "openai/gpt-oss-20b",
+      "elapsedMs": 16982
+    },
+    {
+      "message": "Xong cảnh 2: Định nghĩa năng lượng chuyển đổi",
+      "kind": "scene",
+      "at": "08:19:43",
+      "stage": "scene",
+      "provider": "nvidia",
+      "model": "openai/gpt-oss-20b",
+      "elapsedMs": 19350
+    },
+    {
+      "message": "Xong cảnh 4: Cạm bẫy thường gặp khi tính năng lượng",
+      "kind": "scene",
+      "at": "08:20:08",
+      "stage": "scene",
+      "provider": "nvidia",
+      "model": "openai/gpt-oss-20b",
+      "elapsedMs": 44601
+    },
+    {
+      "message": "6 cảnh, 144s.",
+      "kind": "done",
+      "at": "08:20:08",
+      "provider": "nvidia",
+      "model": "openai/gpt-oss-20b",
+      "elapsedMs": 56066
+    }
+  ]
+}
