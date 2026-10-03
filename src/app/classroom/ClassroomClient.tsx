@@ -107,7 +107,7 @@ export default function ClassroomClient({ sessionId }: { sessionId: string | nul
   if (progress.done && progress.lesson) {
     return (
       <Shell title={progress.lesson.title} counter={`${progress.lesson.scenes.length} cảnh`}>
-        <div className="mx-auto max-w-xl rounded-2xl border border-ink-700 bg-ink-900/70 p-8 text-center">
+        <div className="mx-auto w-full max-w-2xl rounded-2xl border border-ink-700 bg-ink-900/70 p-8 text-center">
           <CircleCheck className="mx-auto h-10 w-10 text-brand-300" />
           <p className="mt-3 text-lg font-semibold text-mist-50">
             Bài đã viết xong — vào lớp học đầy đủ
@@ -177,9 +177,9 @@ export default function ClassroomClient({ sessionId }: { sessionId: string | nul
         </span>
       </header>
 
-      <div className="mx-auto flex max-w-7xl flex-col gap-4 px-4 py-4 sm:px-6 lg:flex-row">
+      <div className="flex w-full flex-col gap-4 px-4 py-4 sm:px-6 lg:flex-row lg:px-8">
         {/* Left rail: the deck list, with unwritten scenes marked. */}
-        <aside className="w-full shrink-0 space-y-2 lg:w-64">
+        <aside className="w-full shrink-0 space-y-2 lg:w-72 xl:w-80">
           <p className="font-mono text-[11px] uppercase tracking-widest text-mist-500">
             Cảnh hiện tại
           </p>
@@ -258,7 +258,7 @@ export default function ClassroomClient({ sessionId }: { sessionId: string | nul
               log={progress.log}
             />
           ) : (
-            <div className="mx-auto max-w-md rounded-2xl border border-white/10 bg-white/[0.02] p-8 text-center">
+            <div className="mx-auto w-full max-w-lg rounded-2xl border border-white/10 bg-white/[0.02] p-8 text-center">
               <p className="text-sm text-mist-300">
                 Không thấy buổi tạo bài này — có thể trang đã tải lại sau khi
                 luồng tạo dừng. Bấm tạo lại ở studio để vào lớp mới.
@@ -323,7 +323,7 @@ function WaitingHero({
   const model = [...log].reverse().find((entry) => entry.model)?.model ?? null;
   const feed = log.slice(-3).reverse();
   return (
-    <div className="mx-auto max-w-xl">
+    <div className="mx-auto w-full max-w-2xl">
       <div className="relative">
         <div
           aria-hidden="true"
@@ -413,7 +413,7 @@ function Shell({
           {counter ?? ""}
         </span>
       </header>
-      <div className="mx-auto max-w-7xl px-4 py-10 sm:px-6">{children}</div>
+      <div className="px-4 py-10 sm:px-6 lg:px-8">{children}</div>
     </div>
   );
 }
