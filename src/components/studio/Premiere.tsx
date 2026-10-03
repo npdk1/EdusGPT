@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import { Pause, RotateCcw, Volume2 } from "lucide-react";
+import { Pause, Play, RotateCcw, Volume2, VolumeX } from "lucide-react";
 import type { LiveScene } from "./GenerationTimeline";
 import { SceneLoader3D } from "../three/SceneLoader3D";
 import { KaraokeSubtitle } from "../player/KaraokeSubtitle";
@@ -33,6 +33,11 @@ const COPY = {
     voicePlayFailedLead: "Could not play the voice-over for scene",
     voiceMakeFailedLead: "Could not generate the voice-over for scene",
     skipped: "— skipping.",
+    enableSound: "Turn sound on",
+    muteSound: "Turn sound off",
+    resume: "Resume",
+    stateMuted: "· sound off",
+    mutedHint: "The slides play silently. Turn the sound on to hear the teacher read them.",
   },
   vi: {
     premiereTitle: "Chiếu ngay",
@@ -51,6 +56,11 @@ const COPY = {
     voicePlayFailedLead: "Không phát được giọng cảnh",
     voiceMakeFailedLead: "Không tạo được giọng cảnh",
     skipped: "— bỏ qua.",
+    enableSound: "Bật tiếng",
+    muteSound: "Tắt tiếng",
+    resume: "Chiếu tiếp",
+    stateMuted: "· đang tắt tiếng",
+    mutedHint: "Slide hiện im lặng. Bật tiếng để nghe giọng đọc.",
   },
 };
 
@@ -62,6 +72,11 @@ type Phase =
   | { name: "idle" }
   | { name: "loading-audio"; index: number }
   | { name: "playing"; index: number }
+  /**
+   * The slide is on screen but nothing is being read: the room starts muted, and
+   * this is where it waits after the teacher stops it.
+   */
+  | { name: "silent"; index: number }
   | { name: "waiting-scene"; index: number }
   | { name: "finished" }
   | { name: "error"; message: string };
@@ -114,6 +129,14 @@ export function PremierePlayer({
 }) {
   const t = useCopy(COPY);
   const [auto, setAuto] = useState(true);
+  /**
+   * Sound is off until the teacher turns it on.
+   *
+   * A classroom demo should never start making noise on its own — and the
+   * voice-over costs a synthesis call per slide, which nobody asked for yet.
+   * The slides still play, silently, until the room is switched on.
+   */
+  const [audible, setAudible] = useState(false);
   const [phase, setPhase] = useState<Phase>({ name: "idle" });
   const [note, setNote] = useState<string | null>(null);
   /**
@@ -132,6 +155,13 @@ export function PremierePlayer({
   const failedRef = useRef(new Set<number>());
   const atRef = useRef<number | null>(null);
   const busyRef = useRef(false);
+  /**
+   * The teacher stopped the show. While this is on, the driver stays quiet: a
+   * stop that only paused the audio would still be "playing" as far as the
+   * player is concerned, and the next slide would either never come or come on
+   * its own — both read as a broken button.
+   */
+  const [held, setHeld] = useState(false);
 
   const stopAudio = useCallback(() => {
     audioRef.current?.pause();
@@ -268,8 +298,10 @@ export function PremierePlayer({
   // The driver: whenever idle, play the earliest unplayed ready scene; when
   // the next scene is missing and the run continues, wait on the loader.
   useEffect(() => {
-    if (!auto || busyRef.current || phase.name === "error") return;
+    if (!auto || !audible || busyRef.current || phase.name === "error") return;
     if (phase.name === "playing" || phase.name === "loading-audio") return;
+    // Held by the teacher: the slide stays, the show waits for "resume".
+    if (held || phase.name === "silent") return;
     const playable = scenes
       .filter(
         (scene) =>
@@ -292,7 +324,57 @@ export function PremierePlayer({
     } else if (done && playedRef.current.size > 0) {
       if (phase.name !== "finished") setPhase({ name: "finished" });
     }
-  }, [scenes, auto, phase, running, done, playAt]);
+  }, [scenes, auto, audible, held, phase, running, done, playAt]);
+
+  /**
+   * Muted: park on the first slide that exists so the room still shows the
+   * lesson instead of a spinner, and follow it as more slides land.
+   */
+  useEffect(() => {
+    if (audible) return;
+    if (phase.name === "playing" || phase.name === "loading-audio") return;
+    const ready = scenes.find(
+      (scene) => scene.narration.trim() || scene.bullets.length > 0,
+    );
+    if (!ready) return;
+    if (phase.name === "silent" && phase.index === ready.index) return;
+    setPhase({ name: "silent", index: ready.index });
+  }, [audible, scenes, phase]);
+
+  /**
+   * Stop: silence the voice-over and hold the show on the slide that was up.
+   * Everything the player needs to resume is left in place — the cache, the
+   * word timings and which slides have already been heard.
+   */
+  const stopHere = useCallback(
+    (index: number) => {
+      stopAudio();
+      atRef.current = null;
+      busyRef.current = false;
+      setHeld(true);
+      onSceneChange?.(null);
+      setPhase({ name: "silent", index });
+    },
+    [onSceneChange, stopAudio],
+  );
+
+  /** Back to the show: the driver picks the next unheard slide by itself. */
+  const resume = useCallback(() => {
+    setHeld(false);
+    setAudible(true);
+    setPhase({ name: "idle" });
+  }, []);
+
+  const toggleSound = useCallback(() => {
+    if (audible) {
+      const held =
+        phase.name === "silent" ? phase.index : (scenes[0]?.index ?? 0);
+      stopHere(held);
+      setAudible(false);
+    } else {
+      resume();
+    }
+  }, [audible, phase, scenes, resume, stopHere]);
 
   const jump = useCallback(
     (index: number) => {
@@ -330,7 +412,9 @@ export function PremierePlayer({
   if (scenes.length === 0) return null;
 
   const current =
-    phase.name === "playing" || phase.name === "loading-audio"
+    phase.name === "playing" ||
+    phase.name === "loading-audio" ||
+    phase.name === "silent"
       ? (scenes.find((scene) => scene.index === phase.index) ?? null)
       : null;
   // A full LessonScene for the slide view, with the same stable id the
@@ -362,7 +446,11 @@ export function PremierePlayer({
             {current ? (
               <span className="font-mono text-[11px] font-normal text-mist-400">
                 {t.sceneWord} {current.index + 1}/{scenes.length}
-                {phase.name === "playing" ? t.stateReading : t.stateLoadingVoice}
+                {phase.name === "playing"
+                  ? t.stateReading
+                  : phase.name === "silent"
+                    ? t.stateMuted
+                    : t.stateLoadingVoice}
               </span>
             ) : null}
           </p>
@@ -375,15 +463,39 @@ export function PremierePlayer({
               >
                 <RotateCcw className="h-3.5 w-3.5" /> {t.replay}
               </button>
-            ) : phase.name === "playing" ? (
+            ) : phase.name === "playing" || phase.name === "loading-audio" ? (
               <button
                 type="button"
-                onClick={stopAudio}
+                onClick={() => stopHere(current?.index ?? 0)}
                 className="btn-ghost px-3 py-1 text-xs"
               >
                 <Pause className="h-3.5 w-3.5" /> {t.stopVoice}
               </button>
+            ) : held ? (
+              <button
+                type="button"
+                onClick={resume}
+                className="btn-primary px-3 py-1 text-xs"
+              >
+                <Play className="h-3.5 w-3.5" /> {t.resume}
+              </button>
             ) : null}
+            <button
+              type="button"
+              onClick={toggleSound}
+              aria-pressed={audible}
+              className={`btn-ghost px-3 py-1 text-xs ${audible ? "" : "text-brand-200"}`}
+            >
+              {audible ? (
+                <>
+                  <Volume2 className="h-3.5 w-3.5" /> {t.muteSound}
+                </>
+              ) : (
+                <>
+                  <VolumeX className="h-3.5 w-3.5" /> {t.enableSound}
+                </>
+              )}
+            </button>
             <label className="flex cursor-pointer items-center gap-1.5 text-xs text-mist-300">
               <input
                 type="checkbox"
@@ -405,7 +517,9 @@ export function PremierePlayer({
               index={current.index}
               lessonId={lessonId}
               caption={
-                current.narration.trim() ? (
+                // Karaoke needs a playhead: with the sound off there is
+                // nothing to highlight against, so the slide sits plain.
+                phase.name === "playing" && current.narration.trim() ? (
                   <KaraokeSubtitle
                     key={`ai-${current.index + 1}`}
                     text={current.narration}
@@ -437,6 +551,9 @@ export function PremierePlayer({
       </div>
 
       {note ? <p className="text-xs text-gold-200">{note}</p> : null}
+      {!audible && !held ? (
+        <p className="text-xs text-mist-400">{t.mutedHint}</p>
+      ) : null}
 
       {/* The room draws its own index down the side, with slide pictures. */}
       {showIndex ? (
