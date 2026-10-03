@@ -2,9 +2,9 @@ import type { Metadata } from "next";
 import ClassroomClient from "./ClassroomClient";
 
 export const metadata: Metadata = {
-  title: "Lớp học đang diễn ra",
+  title: "Classroom in session",
   description:
-    "Vào thẳng buổi học: slide hiện dần từng cảnh kèm giọng đọc trong lúc AI viết tiếp.",
+    "Straight into the lesson: slides appear scene by scene with their voice-over while the AI keeps writing.",
 };
 
 interface ClassroomPageProps {

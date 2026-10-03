@@ -20,6 +20,91 @@ import { SlideSurface } from "@/components/player/SlideSurface";
 import { pollinationsImageUrl } from "@/lib/lesson/pollinations";
 import type { Lesson } from "@/lib/lesson/types";
 import { SceneLoader3D } from "@/components/three/SceneLoader3D";
+import { useCopy } from "@/i18n/provider";
+
+/**
+ * The room's own sentences, in both languages.
+ *
+ * The outline titles, the status message and the model log come from the server
+ * stream, so they are passed through untouched — only the words this file owns
+ * are translated here.
+ */
+const COPY = {
+  en: {
+    classroomMissingSession: "No lesson",
+    classroomMissingSessionHint:
+      "This page needs the id of the lesson being generated — press “Create lesson” in the studio and it will take you here.",
+    classroomBackToStudio: "Back to the studio",
+    classroomFailedTitle: "The session hit a problem",
+    classroomRetryStudio: "Back to the studio to try again",
+    classroomScenes: "scenes",
+    classroomDeckDone: "The lesson is written — open the full classroom",
+    classroomDeckDoneHint:
+      "The player seeks second by second, has captions that follow the narration and holds all",
+    classroomOpenPlayer: "Open the player",
+    classroomWritingScene: "Writing scene",
+    classroomOutline: "Building the lesson outline",
+    classroomWritingScenes: "Writing the scenes",
+    classroomOutlineHint: "Laying out the learning path…",
+    classroomWritingHint:
+      "Each scene goes on screen with its narration as soon as it is ready.",
+    classroomBackHome: "Back to home",
+    classroomScene: "Scene",
+    classroomPreparing: "The classroom is getting ready…",
+    classroomSlideList: "Slide list",
+    classroomPreviewOf: "Preview: {title}",
+    classroomCreating: "Creating",
+    classroomWaitingOutline: "Waiting for the outline…",
+    classroomNoRunHint:
+      "This generation session is not found — the page may have reloaded after the stream stopped. Start another one in the studio to open a new classroom.",
+    classroomStatus: "Status",
+    classroomStatusPending: "Getting ready…",
+    classroomProgress: "Progress",
+    classroomScenesLabel: "Scenes",
+    classroomDone: "done",
+    previewHeading: "Preview · slide",
+    previewPlay: "Play this slide",
+    previewClose: "Close",
+    previewAriaLabel: "Preview slide {n}",
+  },
+  vi: {
+    classroomMissingSession: "Thiếu buổi học",
+    classroomMissingSessionHint:
+      "Trang này cần id của bài đang tạo — hãy bấm “Tạo bài giảng” ở studio, trang sẽ tự đưa bạn vào đây.",
+    classroomBackToStudio: "Về studio",
+    classroomFailedTitle: "Buổi học gặp sự cố",
+    classroomRetryStudio: "Về studio tạo lại",
+    classroomScenes: "cảnh",
+    classroomDeckDone: "Bài đã viết xong — vào lớp học đầy đủ",
+    classroomDeckDoneHint:
+      "Trình phát có tua từng giây, phụ đề theo giọng và đầy đủ",
+    classroomOpenPlayer: "Mở trình phát",
+    classroomWritingScene: "Đang viết cảnh",
+    classroomOutline: "Đang dựng đề cương bài học",
+    classroomWritingScenes: "Đang viết từng cảnh",
+    classroomOutlineHint: "Đang sắp xếp lộ trình học…",
+    classroomWritingHint:
+      "Xong cảnh nào, lớp học chiếu ngay cảnh đó kèm giọng đọc.",
+    classroomBackHome: "Về trang chủ",
+    classroomScene: "Cảnh",
+    classroomPreparing: "Lớp học đang chuẩn bị…",
+    classroomSlideList: "Mục lục slide",
+    classroomPreviewOf: "Xem trước: {title}",
+    classroomCreating: "Đang tạo",
+    classroomWaitingOutline: "Đang chờ dàn ý…",
+    classroomNoRunHint:
+      "Không thấy buổi tạo bài này — có thể trang đã tải lại sau khi luồng tạo dừng. Bấm tạo lại ở studio để vào lớp mới.",
+    classroomStatus: "Trạng thái",
+    classroomStatusPending: "Đang chuẩn bị…",
+    classroomProgress: "Tiến độ",
+    classroomScenesLabel: "Cảnh",
+    classroomDone: "đã xong",
+    previewHeading: "Xem trước · slide",
+    previewPlay: "Phát slide này",
+    previewClose: "Đóng",
+    previewAriaLabel: "Xem trước slide {n}",
+  },
+} satisfies Record<string, Record<string, string>>;
 
 interface DraftInfo {
   id: string;
@@ -44,6 +129,7 @@ interface DraftInfo {
  * finished deck offers the full player instead.
  */
 export default function ClassroomClient({ sessionId }: { sessionId: string | null }) {
+  const t = useCopy(COPY);
   const { progress, running } = useGenerationStream();
   const [voice, setVoice] = useState("");
   const [speaking, setSpeaking] = useState<LiveScene | null>(null);
@@ -118,13 +204,12 @@ export default function ClassroomClient({ sessionId }: { sessionId: string | nul
 
   if (!sessionId) {
     return (
-      <Shell title="Thiếu buổi học">
+      <Shell title={t.classroomMissingSession}>
         <p className="text-sm text-mist-300">
-          Trang này cần id của bài đang tạo — hãy bấm “Tạo bài giảng” ở studio,
-          trang sẽ tự đưa bạn vào đây.
+          {t.classroomMissingSessionHint}
         </p>
         <Link href="/studio" className="btn-primary mt-4">
-          Về studio
+          {t.classroomBackToStudio}
         </Link>
       </Shell>
     );
@@ -133,20 +218,24 @@ export default function ClassroomClient({ sessionId }: { sessionId: string | nul
   // Finished deck: hand over to the full player with seeking and karaoke.
   if (progress.done && progress.lesson) {
     return (
-      <Shell title={progress.lesson.title} counter={`${progress.lesson.scenes.length} cảnh`}>
+      <Shell
+        title={progress.lesson.title}
+        counter={`${progress.lesson.scenes.length} ${t.classroomScenes}`}
+      >
         <div className="mx-auto w-full max-w-2xl rounded-2xl border border-ink-700 bg-ink-900/70 p-8 text-center">
           <CircleCheck className="mx-auto h-10 w-10 text-brand-300" />
           <p className="mt-3 text-lg font-semibold text-mist-50">
-            Bài đã viết xong — vào lớp học đầy đủ
+            {t.classroomDeckDone}
           </p>
           <p className="mt-1 text-sm text-mist-400">
-            Trình phát có tua từng giây, phụ đề theo giọng và đầy đủ {progress.lesson.scenes.length} cảnh.
+            {t.classroomDeckDoneHint} {progress.lesson.scenes.length}{" "}
+            {t.classroomScenes}.
           </p>
           <Link
             href={`/lesson?c=${encodeURIComponent(progress.lesson.id)}`}
             className="btn-primary mt-5"
           >
-            <Play className="h-4 w-4" /> Mở trình phát
+            <Play className="h-4 w-4" /> {t.classroomOpenPlayer}
           </Link>
         </div>
       </Shell>
@@ -155,12 +244,12 @@ export default function ClassroomClient({ sessionId }: { sessionId: string | nul
 
   if (progress.error && !mine && !draft) {
     return (
-      <Shell title="Buổi học gặp sự cố">
+      <Shell title={t.classroomFailedTitle}>
         <div className="mx-auto max-w-xl rounded-2xl border border-ember-500/50 bg-ember-500/10 p-6 text-center">
           <TriangleAlert className="mx-auto h-8 w-8 text-ember-400" />
           <p className="mt-2 text-sm text-mist-100">{progress.error}</p>
           <Link href="/studio" className="btn-primary mt-4">
-            Về studio tạo lại
+            {t.classroomRetryStudio}
           </Link>
         </div>
       </Shell>
@@ -172,9 +261,9 @@ export default function ClassroomClient({ sessionId }: { sessionId: string | nul
     scenes.length === 0 && (mine ? running && !progress.error : !!draft || needDraft);
   const waitLabel = mine
     ? progress.outlineReady
-      ? `Đang viết cảnh ${scenes.length + 1}…`
-      : "Đang dựng đề cương bài học"
-    : (draft?.message ?? "Đang dựng đề cương bài học");
+      ? `${t.classroomWritingScene} ${scenes.length + 1}…`
+      : t.classroomOutline
+    : (draft?.message ?? t.classroomOutline);
 
   return (
     <div className="min-h-screen text-mist-50">
@@ -183,7 +272,7 @@ export default function ClassroomClient({ sessionId }: { sessionId: string | nul
           href="/"
           className="flex shrink-0 items-center gap-1.5 text-sm text-mist-400 hover:text-mist-50"
         >
-          <ArrowLeft className="h-4 w-4" /> Về trang chủ
+          <ArrowLeft className="h-4 w-4" /> {t.classroomBackHome}
         </Link>
         <span aria-hidden="true" className="h-4 w-px shrink-0 bg-ink-600" />
         {/* What is playing, read from the left of the room beside the list. */}
@@ -191,13 +280,13 @@ export default function ClassroomClient({ sessionId }: { sessionId: string | nul
           {speaking ? (
             <>
               <span className="mr-2 font-mono text-[11px] font-normal uppercase tracking-widest text-brand-400">
-                Cảnh {String(speaking.index + 1).padStart(2, "0")}
+                {t.classroomScene} {String(speaking.index + 1).padStart(2, "0")}
               </span>
               {speaking.title}
             </>
           ) : (
             <span className="font-normal text-mist-400">
-              Lớp học đang chuẩn bị…
+              {t.classroomPreparing}
             </span>
           )}
         </p>
@@ -208,7 +297,7 @@ export default function ClassroomClient({ sessionId }: { sessionId: string | nul
             that has landed is a button — one click opens it, picture and all. */}
         <aside className="w-full shrink-0 space-y-2 lg:w-72 xl:w-80">
           <p className="font-mono text-[11px] uppercase tracking-widest text-mist-500">
-            Mục lục slide
+            {t.classroomSlideList}
           </p>
           {progress.steps.length > 0 ? (
             <ol className="max-h-[64vh] space-y-1.5 overflow-y-auto pr-1">
@@ -229,7 +318,7 @@ export default function ClassroomClient({ sessionId }: { sessionId: string | nul
                         type="button"
                         onClick={() => setPreview(scene)}
                         className={`${row} cursor-pointer`}
-                        title={`Xem trước: ${step.title}`}
+                        title={t.classroomPreviewOf.replace("{title}", step.title)}
                       >
                         <SceneThumb lessonId={sessionId ?? ""} scene={scene} />
                         <span className="flex min-w-0 flex-1 items-center gap-2">
@@ -260,7 +349,7 @@ export default function ClassroomClient({ sessionId }: { sessionId: string | nul
                           )}
                           <span className="min-w-0 flex-1 truncate">{step.title}</span>
                         </span>
-                        <span className="shrink-0 text-[11px]">Đang tạo…</span>
+                        <span className="shrink-0 text-[11px]">{t.classroomCreating}…</span>
                       </div>
                     )}
                   </li>
@@ -270,8 +359,8 @@ export default function ClassroomClient({ sessionId }: { sessionId: string | nul
           ) : (
             <p className="rounded-xl border border-ink-700 bg-ink-900 px-3 py-2 text-xs text-mist-500">
               {draft
-                ? `Đang tạo ${draft.done}/${draft.total} cảnh`
-                : "Đang chờ dàn ý…"}
+                ? `${t.classroomCreating} ${draft.done}/${draft.total} ${t.classroomScenes}`
+                : t.classroomWaitingOutline}
             </p>
           )}
         </aside>
@@ -295,13 +384,13 @@ export default function ClassroomClient({ sessionId }: { sessionId: string | nul
               loaderLabel={waitLabel}
               title={
                 mine && !progress.outlineReady
-                  ? "Đang dựng đề cương bài học"
-                  : "Đang viết từng cảnh"
+                  ? t.classroomOutline
+                  : t.classroomWritingScenes
               }
               subtitle={
                 mine && !progress.outlineReady
-                  ? "Đang sắp xếp lộ trình học…"
-                  : "Xong cảnh nào, lớp học chiếu ngay cảnh đó kèm giọng đọc."
+                  ? t.classroomOutlineHint
+                  : t.classroomWritingHint
               }
               message={mine ? progress.message : (draft?.message ?? progress.message)}
               percent={progress.percent}
@@ -312,11 +401,10 @@ export default function ClassroomClient({ sessionId }: { sessionId: string | nul
           ) : (
             <div className="mx-auto w-full max-w-lg rounded-2xl border border-ink-700 bg-ink-950 p-8 text-center">
               <p className="text-sm text-mist-300">
-                Không thấy buổi tạo bài này — có thể trang đã tải lại sau khi
-                luồng tạo dừng. Bấm tạo lại ở studio để vào lớp mới.
+                {t.classroomNoRunHint}
               </p>
               <Link href="/studio" className="btn-primary mt-4">
-                Về studio
+                {t.classroomBackToStudio}
               </Link>
             </div>
           )}
@@ -360,12 +448,13 @@ function SlidePreview({
   onClose: () => void;
   onPlay: () => void;
 }) {
+  const t = useCopy(COPY);
   return (
     <div
       className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 p-4 backdrop-blur-[2px]"
       role="dialog"
       aria-modal="true"
-      aria-label={`Xem trước slide ${scene.index + 1}`}
+      aria-label={t.previewAriaLabel.replace("{n}", String(scene.index + 1))}
       onClick={onClose}
     >
       <div
@@ -374,16 +463,16 @@ function SlidePreview({
       >
         <div className="mb-3 flex items-center justify-between gap-3">
           <p className="font-mono text-[11px] uppercase tracking-widest text-brand-400">
-            Xem trước · slide {String(scene.index + 1).padStart(2, "0")}
+            {t.previewHeading} {String(scene.index + 1).padStart(2, "0")}
           </p>
           <div className="flex items-center gap-2">
             <button type="button" onClick={onPlay} className="btn-primary px-3 py-1.5 text-xs">
-              <Play className="h-3.5 w-3.5" /> Phát slide này
+              <Play className="h-3.5 w-3.5" /> {t.previewPlay}
             </button>
             <button
               type="button"
               onClick={onClose}
-              aria-label="Đóng"
+              aria-label={t.previewClose}
               className="rounded-full border border-ink-600 p-1.5 text-mist-400 hover:border-brand-500 hover:text-mist-50"
             >
               <X className="h-4 w-4" />
@@ -482,6 +571,7 @@ function WaitingHero({
   total: number;
   log: RunLogEntry[];
 }) {
+  const t = useCopy(COPY);
   const clamped = Math.max(0, Math.min(100, Math.round(percent)));
   const model = [...log].reverse().find((entry) => entry.model)?.model ?? null;
   const feed = log.slice(-3).reverse();
@@ -498,13 +588,13 @@ function WaitingHero({
       <p className="mt-1 text-center text-sm text-mist-400">{subtitle}</p>
       <div className="mt-4 space-y-2 rounded-2xl border border-ink-700 bg-ink-950 p-4 text-sm">
         <div className="flex items-center justify-between gap-3">
-          <span className="text-mist-500">Trạng thái</span>
+          <span className="text-mist-500">{t.classroomStatus}</span>
           <span className="min-w-0 flex-1 truncate text-right text-mist-100">
-            {message || "Đang chuẩn bị…"}
+            {message || t.classroomStatusPending}
           </span>
         </div>
         <div className="flex items-center gap-3">
-          <span className="shrink-0 text-mist-500">Tiến độ</span>
+          <span className="shrink-0 text-mist-500">{t.classroomProgress}</span>
           <div className="h-1.5 min-w-0 flex-1 overflow-hidden rounded-full bg-ink-800">
             <div
               className="h-full rounded-full bg-gradient-to-r from-brand-400 to-gold-400 transition-[width] duration-500"
@@ -516,9 +606,11 @@ function WaitingHero({
           </span>
         </div>
         <div className="flex items-center justify-between gap-3">
-          <span className="text-mist-500">Cảnh</span>
+          <span className="text-mist-500">{t.classroomScenesLabel}</span>
           <span className="font-mono text-xs tabular-nums text-mist-100">
-            {total > 0 ? `${done}/${total} đã xong` : "đang chờ dàn ý…"}
+            {total > 0
+              ? `${done}/${total} ${t.classroomDone}`
+              : t.classroomWaitingOutline}
           </span>
         </div>
         {model ? (
@@ -560,6 +652,7 @@ function Shell({
   counter?: string;
   children: React.ReactNode;
 }) {
+  const t = useCopy(COPY);
   return (
     <div className="min-h-screen text-mist-50">
       <header className="flex items-center justify-between gap-3 border-b border-ink-700 px-4 py-3 sm:px-6 lg:px-8">
@@ -567,7 +660,7 @@ function Shell({
           href="/"
           className="flex items-center gap-1.5 text-sm text-mist-300 hover:text-mist-50"
         >
-          <ArrowLeft className="h-4 w-4" /> Về trang chủ
+          <ArrowLeft className="h-4 w-4" /> {t.classroomBackHome}
         </Link>
         <p className="min-w-0 flex-1 truncate text-center text-sm font-semibold">
           {title}

@@ -50,6 +50,213 @@ import {
 import { useGenerationStream, GenerationTimeline, RunLog } from "./GenerationTimeline";
 import { PremierePlayer } from "./Premiere";
 import { formatClock, slugify } from "@/lib/format";
+import { useCopy, useLang } from "@/i18n/provider";
+
+const COPY = {
+  en: {
+    createLesson: "Create lesson",
+    introLead:
+      "Write what you want to teach and drop in any documents. The lesson is built scene by scene with narration, then opens in the",
+    introPlayer: "player",
+    setupCli: "Install agent CLI",
+    setupKey: "Install AI key",
+    warnCliLead: "Building a lesson needs the agent CLI running on your machine. Click",
+    warnCliTail:
+      "in the top corner — sign in once after installing, no API key needed. You can still watch the sample lesson in the player.",
+    warnKeyLead: "Creating a lesson needs an AI API key. Click",
+    warnKeyTail:
+      "in the top corner — it takes about a minute. You can still watch the sample lesson in the player.",
+    topicLabel: "What do you want to teach?",
+    topicPlaceholder:
+      "e.g. Explain the law of conservation of energy to grade 10 students, with one everyday example",
+    contextLabel: "Context:",
+    contextDrop: "drop documents here, or",
+    contextPick: "choose files",
+    contextReading: "Reading…",
+    contextChars: "characters",
+    creating: "Writing…",
+    createHint: "Press Enter to generate. The outline appears first, then each scene.",
+    draftBefore: "The draft is being saved in the",
+    draftLibrary: "Library",
+    draftAfter: "— where you can still see it being created.",
+    noticeLocal: "Could not save to the server. The lesson still opens in this session.",
+    noticeSaved: "Saved to the on-device library (data/courses).",
+    noticeSaveFailed: "Could not save to the server. The lesson is still in this browser.",
+    noticeServerDown: "Could not reach the server. The lesson is still in this browser.",
+    clipboardBlocked: "The browser blocked the clipboard. Download the JSON file instead.",
+    extractFailed: "Could not read the documents",
+    extractTruncated: "only the first part was read because the file is too long",
+    extractOldFont: "PDF uses an old font, so Vietnamese diacritics may be wrong",
+    extractExamplePrefix: "e.g.:",
+    extractRecheck: "Check this passage.",
+    extractServerDown: "Could not reach the server to read the documents.",
+    exportFailed: "Could not export the JSON.",
+    sceneUnit: "scenes",
+    saving: "Saving…",
+    saved: "Saved",
+    saveToLibrary: "Save to library",
+    openInPlayer: "Open in the player",
+    copied: "Copied",
+    downloadJson: "Download JSON",
+    discardResult: "Discard this result",
+    libraryTitle: "On-device library",
+    libraryStorage: "stored in localStorage",
+    libraryEmpty: "No AI lessons yet. Two sample lessons are ready in the player.",
+    open: "Open",
+    deleteItem: "Delete",
+    voiceLabel: "Narration voice",
+    voiceLoading: "Loading voices…",
+    voiceLoadFailed: "Could not load the list of voices.",
+    voicePreviewFailed:
+      "Could not preview this voice. You can still use it when the lesson plays.",
+    voicePreview: "Preview voice",
+    imageLegend: "Illustrations",
+    imageOn: "AI draws an illustration for each slide",
+    imageOff: "Text only, no images",
+    imageOnHint:
+      "The model writes an English description and the system asks an AI to draw it, crediting every picture. Turn it on for subjects that need pictures — biology, geography, history.",
+    imageOffHint:
+      "The lesson uses text, formulas, tables and charts only. Best for problem-solving lessons, where an illustration often adds nothing.",
+    pointerLegend: "Presenter pointer",
+    pointerOn: "Show the pointer dot along with the narration",
+    pointerOff: "No pointer",
+    pointerOnHint:
+      "The dot follows each sentence as it is read, keeping the viewer's eye where the teaching is.",
+    pointerOffHint:
+      "The slide still reads the narration and highlights the words; only the dot is hidden.",
+    pointerColor: "Pointer colour",
+    colorAmber: "Amber",
+    colorRed: "Red",
+    colorGreen: "Green",
+    colorBlue: "Blue",
+    colorOrange: "Orange",
+    colorPink: "Pink",
+    lengthLabel: "Lesson length",
+    slideUnit: "slides",
+    wordsPerSlide: "words/slide",
+    lengthLongNote:
+      "A long deck builds a whole teaching session, so it takes longer to generate and costs a lot of agent turns — a 95-slide lesson can exhaust the CLI quota.",
+    styleLegend: "Presentation style",
+    styleWithImages: "with images",
+    styleTextOnly: "text only",
+    paperDark: "dark background",
+    paperLight: "light background",
+    themeLegend: "Slide background",
+    groupLight: "Light",
+    groupDark: "Dark",
+    groupTint: "Tinted",
+    sampleKicker: "Scene",
+    sampleTitle: "Title",
+    sampleSub: "Supporting line",
+    sampleGridKicker: "Sample scene",
+    sampleGridTitle: "Slide title",
+    sampleBody: "Body text · 01",
+    presetUnit: "presets",
+    themeExpanding: "expanding",
+    themeTap: "tap to view",
+  },
+  vi: {
+    createLesson: "Tạo bài giảng",
+    introLead:
+      "Viết ý bạn muốn dạy, thả tài liệu vào nếu có. Bài giảng được dựng thành từng cảnh kèm lời giảng, rồi mở ngay trong",
+    introPlayer: "trình phát",
+    setupCli: "Cài agent CLI",
+    setupKey: "Cài key AI",
+    warnCliLead: "Cần agent CLI chạy trên máy bạn để dựng bài. Bấm",
+    warnCliTail:
+      "ở góc trên — cài xong đăng nhập một lần, không cần API key. Bạn vẫn xem được bài mẫu ở trang trình phát.",
+    warnKeyLead: "Cần một API key AI để tạo bài. Bấm",
+    warnKeyTail:
+      "ở góc trên, mất khoảng một phút. Bạn vẫn xem được bài mẫu ở trang trình phát.",
+    topicLabel: "Bạn muốn dạy bài gì?",
+    topicPlaceholder:
+      "Ví dụ: Giải thích định luật bảo toàn năng lượng cho học sinh lớp 10, có một ví dụ đời thường",
+    contextLabel: "Ngữ cảnh:",
+    contextDrop: "thả tài liệu vào đây, hoặc",
+    contextPick: "chọn tệp",
+    contextReading: "Đang đọc…",
+    contextChars: "ký tự",
+    creating: "Đang viết…",
+    createHint: "Enter để tạo nhanh. Dàn ý hiện trước, rồi viết từng cảnh.",
+    draftBefore: "Bài đang được lưu nháp trong",
+    draftLibrary: "Thư viện",
+    draftAfter: "— qua đó vẫn thấy trạng thái đang tạo.",
+    noticeLocal: "Chưa lưu được lên máy chủ. Bài vẫn mở được trong phiên này.",
+    noticeSaved: "Đã lưu vào thư viện trên máy (data/courses).",
+    noticeSaveFailed: "Không lưu được lên máy chủ. Bài vẫn nằm trong trình duyệt.",
+    noticeServerDown: "Không gọi được máy chủ. Bài vẫn nằm trong trình duyệt.",
+    clipboardBlocked: "Trình duyệt chặn clipboard. Tải file JSON thay thế.",
+    extractFailed: "Tải tài liệu thất bại",
+    extractTruncated: "đã lấy phần đầu do tệp quá dài",
+    extractOldFont: "PDF dùng font cũ nên dấu tiếng Việt có thể sai",
+    extractExamplePrefix: "ví dụ:",
+    extractRecheck: "Kiểm tra lại đoạn này.",
+    extractServerDown: "Không gọi được máy chủ để đọc tài liệu.",
+    exportFailed: "Không xuất được JSON.",
+    sceneUnit: "cảnh",
+    saving: "Đang lưu…",
+    saved: "Đã lưu",
+    saveToLibrary: "Lưu vào thư viện",
+    openInPlayer: "Mở trong trình phát",
+    copied: "Đã copy",
+    downloadJson: "Tải JSON",
+    discardResult: "Bỏ kết quả này",
+    libraryTitle: "Thư viện trên máy",
+    libraryStorage: "lưu trong localStorage",
+    libraryEmpty: "Chưa có bài giảng nào do AI tạo. Hai bài mẫu đã có sẵn trong trang trình phát.",
+    open: "Mở",
+    deleteItem: "Xoá",
+    voiceLabel: "Giọng đọc",
+    voiceLoading: "Đang tải giọng đọc…",
+    voiceLoadFailed: "Không tải được danh sách giọng đọc.",
+    voicePreviewFailed: "Không nghe thử được giọng này. Bạn vẫn có thể dùng nó khi phát bài.",
+    voicePreview: "Nghe thử giọng",
+    imageLegend: "Ảnh minh hoạ",
+    imageOn: "AI vẽ ảnh minh hoạ cho mỗi slide",
+    imageOff: "Chỉ chữ, không dùng ảnh",
+    imageOnHint:
+      "Model tự viết mô tả tiếng Anh, hệ thống nhờ AI vẽ và ghi nguồn dưới mỗi tấm. Bật cho bài cần hình như sinh học, địa lí, lịch sử.",
+    imageOffHint:
+      "Bài giảng chỉ dùng chữ, công thức, bảng và biểu đồ. Hợp với bài toán–tính toán, nơi ảnh minh hoạ thường không liên quan.",
+    pointerLegend: "Con trỏ giảng",
+    pointerOn: "Hiện chấm con trỏ theo lời giảng",
+    pointerOff: "Tắt con trỏ",
+    pointerOnHint: "Chấm tròn đi theo từng câu đọc, giữ mắt người xem đúng chỗ đang giảng.",
+    pointerOffHint: "Slide vẫn đọc lời giảng và tô chữ, chỉ không hiện chấm tròn.",
+    pointerColor: "Con trỏ màu",
+    colorAmber: "Vàng",
+    colorRed: "Đỏ",
+    colorGreen: "Xanh lá",
+    colorBlue: "Xanh dương",
+    colorOrange: "Cam",
+    colorPink: "Hồng",
+    lengthLabel: "Độ dài bài giảng",
+    slideUnit: "slide",
+    wordsPerSlide: "từ/slide",
+    lengthLongNote:
+      "Bản dài dựng cả một buổi giảng nên thời gian chờ sẽ lâu hơn bài ngắn, và tốn rất nhiều lượt agent — một bài 95 slide có thể hết hạn mức của CLI.",
+    styleLegend: "Kiểu thuyết trình",
+    styleWithImages: "có ảnh thật",
+    styleTextOnly: "chỉ chữ",
+    paperDark: "nền tối",
+    paperLight: "nền sáng",
+    themeLegend: "Nền slide",
+    groupLight: "Nền sáng",
+    groupDark: "Nền tối",
+    groupTint: "Nền màu",
+    sampleKicker: "Cảnh",
+    sampleTitle: "Tiêu đề",
+    sampleSub: "Dòng phụ đệm",
+    sampleGridKicker: "Cảnh mẫu",
+    sampleGridTitle: "Tiêu đề slide",
+    sampleBody: "Chữ chân dung · 01",
+    presetUnit: "mẫu",
+    themeExpanding: "đang mở",
+    themeTap: "chạm để xem",
+  },
+};
+
+type CopyKey = keyof typeof COPY.en;
 
 const PRESETS = [
   "Định luật bảo toàn năng lượng",
@@ -94,6 +301,8 @@ function PreviewFormula({ formula }: { formula: string }) {
 
 
 export function StudioPanel() {
+  const t = useCopy(COPY);
+  const lang = useLang();
   const [status, setStatus] = useState<PublicAiStatus | null>(null);
   const [topic, setTopic] = useState(PRESETS[0]);
   // How long the lesson should run. Kept beside the style rather than folded into
@@ -208,10 +417,10 @@ export function StudioPanel() {
         setSavedId(payload.id ?? finishedLesson.id);
       } catch {
         // Kept in the browser all the same; the player can still open it.
-        setNotice("Chưa lưu được lên máy chủ. Bài vẫn mở được trong phiên này.");
+        setNotice(t.noticeLocal);
       }
     })();
-  }, [finishedLesson]);
+  }, [finishedLesson, t]);
   const streamError = stream.progress.error;
 
   useEffect(() => {
@@ -264,12 +473,12 @@ export function StudioPanel() {
         if (payload.id) {
           setLesson((current) => (current ? { ...current, id: payload.id as string } : current));
         }
-        setNotice("Đã lưu vào thư viện trên máy (data/courses).");
+        setNotice(t.noticeSaved);
       } else {
-        setNotice("Không lưu được lên máy chủ. Bài vẫn nằm trong trình duyệt.");
+        setNotice(t.noticeSaveFailed);
       }
     } catch {
-      setNotice("Không gọi được máy chủ. Bài vẫn nằm trong trình duyệt.");
+      setNotice(t.noticeServerDown);
     } finally {
       const merged = loadStoredLessons();
       setStored(merged);
@@ -277,7 +486,7 @@ export function StudioPanel() {
       setActiveLessonId(lesson.id);
       setSaving(false);
     }
-  }, [lesson]);
+  }, [lesson, t]);
 
   const openInPlayer = useCallback((target: Lesson) => {
     setActiveLessonId(target.id);
@@ -295,9 +504,9 @@ export function StudioPanel() {
       setCopied(true);
       window.setTimeout(() => setCopied(false), 2000);
     } catch {
-      setError("Trình duyệt chặn clipboard. Tải file JSON thay thế.");
+      setError(t.clipboardBlocked);
     }
-  }, [lesson]);
+  }, [lesson, t]);
 
   /**
    * Real files go through /api/extract, which understands PDF, DOCX and XLSX
@@ -331,20 +540,20 @@ export function StudioPanel() {
       };
 
       if (!response.ok) {
-        setExtractError(payload.error ?? `Tải tài liệu thất bại (${response.status}).`);
+        setExtractError(`${t.extractFailed} (${response.status}).`);
         return;
       }
 
       for (const doc of payload.docs ?? []) {
         if (doc.note) notes.push(`${doc.name}: ${doc.note}`);
-        if (doc.truncated) notes.push(`${doc.name}: đã lấy phần đầu do quá dài.`);
+        if (doc.truncated) notes.push(`${doc.name}: ${t.extractTruncated}.`);
         if (doc.vietnamese.suspect) {
           notes.push(
-            `${doc.name}: PDF dùng font cũ nên dấu tiếng Việt có thể sai` +
+            `${doc.name}: ${t.extractOldFont}` +
               (doc.vietnamese.examples.length
-                ? ` (ví dụ: ${doc.vietnamese.examples.join(", ")})`
+                ? ` (${t.extractExamplePrefix} ${doc.vietnamese.examples.join(", ")})`
                 : "") +
-              ". Kiểm tra lại đoạn này.",
+              `. ${t.extractRecheck}`,
           );
           if (doc.vietnamese.severe) severeNotes.push(doc.name);
         }
@@ -354,11 +563,11 @@ export function StudioPanel() {
       setExtractError(notes.length ? notes.join(" ") : null);
       setSevereDocs(severeNotes);
     } catch {
-      setExtractError("Không gọi được máy chủ để đọc tài liệu.");
+      setExtractError(t.extractServerDown);
     } finally {
       setExtracting(false);
     }
-  }, []);
+  }, [t]);
 
   const handleFilePick = (event: React.ChangeEvent<HTMLInputElement>) => {
     const picked = Array.from(event.target.files ?? []);
@@ -374,7 +583,7 @@ export function StudioPanel() {
       body: JSON.stringify({ lesson }),
     });
     if (!response.ok) {
-      setError("Không xuất được JSON.");
+      setError(t.exportFailed);
       return;
     }
     const blob = await response.blob();
@@ -393,13 +602,12 @@ export function StudioPanel() {
       <header className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
         <div>
           <h1 className="text-3xl font-bold tracking-tight text-mist-50 sm:text-4xl">
-            Tạo bài giảng
+            {t.createLesson}
           </h1>
           <p className="mt-2 max-w-2xl text-sm leading-relaxed text-mist-300 sm:text-base">
-            Viết ý bạn muốn dạy, thả tài liệu vào nếu có. Bài giảng được dựng
-            thành từng cảnh kèm lời giảng, rồi mở ngay trong{" "}
+            {t.introLead}{" "}
             <Link href="/lesson" className="text-brand-200 underline">
-              trình phát
+              {t.introPlayer}
             </Link>
             .
           </p>
@@ -417,7 +625,7 @@ export function StudioPanel() {
           ) : (
             <Link href="/setup" className="btn-gold">
               <KeyRound className="h-4 w-4" />{" "}
-              {status?.providerKind === "cli" ? "Cài agent CLI" : "Cài key AI"}
+              {status?.providerKind === "cli" ? t.setupCli : t.setupKey}
             </Link>
           )}
         </div>
@@ -428,16 +636,13 @@ export function StudioPanel() {
           <TriangleAlert className="mt-0.5 h-4 w-4 shrink-0 text-gold-300" />
           {status?.providerKind === "cli" ? (
             <>
-              Cần agent CLI chạy trên máy bạn để dựng bài. Bấm{" "}
-              <strong className="mx-1">Cài agent CLI</strong> ở góc trên — cài xong
-              đăng nhập một lần, không cần API key. Bạn vẫn xem được bài mẫu ở
-              trang trình phát.
+              {t.warnCliLead}{" "}
+              <strong className="mx-1">{t.setupCli}</strong> {t.warnCliTail}
             </>
           ) : (
             <>
-              Cần một API key AI để tạo bài. Bấm{" "}
-              <strong className="mx-1">Cài key AI</strong> ở góc trên, mất khoảng
-              một phút. Bạn vẫn xem được bài mẫu ở trang trình phát.
+              {t.warnKeyLead}{" "}
+              <strong className="mx-1">{t.setupKey}</strong> {t.warnKeyTail}
             </>
           )}
         </p>
@@ -452,7 +657,7 @@ export function StudioPanel() {
       <section className="panel space-y-4 p-5">
         <div>
           <label className="label" htmlFor="topic">
-            Bạn muốn dạy bài gì?
+            {t.topicLabel}
           </label>
           <textarea
             id="topic"
@@ -466,7 +671,7 @@ export function StudioPanel() {
             }}
             rows={3}
             className="field resize-y font-sans text-base"
-            placeholder="Ví dụ: Giải thích định luật bảo toàn năng lượng cho học sinh lớp 10, có một ví dụ đời thường"
+            placeholder={t.topicPlaceholder}
           />
           <div className="mt-2 flex flex-wrap gap-1.5">
             {PRESETS.map((preset) => (
@@ -521,23 +726,24 @@ export function StudioPanel() {
         >
           <div className="flex flex-wrap items-center justify-between gap-2">
             <p className="text-sm text-mist-300">
-              <span className="font-medium text-mist-100">Ngữ cảnh:</span> thả tài
-              liệu vào đây, hoặc{" "}
+              <span className="font-medium text-mist-100">{t.contextLabel}</span>{" "}
+              {t.contextDrop}{" "}
               <label
                 htmlFor="material"
                 className="cursor-pointer text-brand-200 underline underline-offset-2"
               >
-                chọn tệp
+                {t.contextPick}
               </label>
             </p>
             <span className="text-xs text-mist-400">
               {extracting ? (
                 <span className="inline-flex items-center gap-1.5 text-brand-300">
-                  <LoaderCircle className="h-3.5 w-3.5 animate-spin" /> Đang đọc…
+                  <LoaderCircle className="h-3.5 w-3.5 animate-spin" /> {t.contextReading}
                 </span>
               ) : referenceText ? (
                 <span className="font-mono text-brand-300">
-                  {referenceText.length.toLocaleString("vi-VN")} ký tự
+                  {referenceText.length.toLocaleString(lang === "vi" ? "vi-VN" : "en-US")}{" "}
+                  {t.contextChars}
                 </span>
               ) : (
                 "PDF · Word · Excel · TXT"
@@ -578,11 +784,9 @@ export function StudioPanel() {
             ) : (
               <WandSparkles className="h-4 w-4" />
             )}
-            {busy ? "Đang viết…" : "Tạo bài giảng"}
+            {busy ? t.creating : t.createLesson}
           </button>
-          <span className="text-xs text-mist-500">
-            Enter để tạo nhanh. Dàn ý hiện trước, rồi viết từng cảnh.
-          </span>
+          <span className="text-xs text-mist-500">{t.createHint}</span>
         </div>
 
         {busy || stream.progress.steps.length > 0 || streamError ? (
@@ -590,11 +794,11 @@ export function StudioPanel() {
         ) : null}
         {busy ? (
           <p className="mt-3 text-xs text-mist-400">
-            Bài đang được lưu nháp trong{" "}
+            {t.draftBefore}{" "}
             <Link href="/library" className="text-brand-200 underline underline-offset-2">
-              Thư viện
+              {t.draftLibrary}
             </Link>{" "}
-            — qua đó vẫn thấy trạng thái đang tạo.
+            {t.draftAfter}
           </p>
         ) : null}
         {!lesson && stream.progress.liveScenes.length > 0 ? (
@@ -628,7 +832,8 @@ export function StudioPanel() {
                 <span className="chip">{lesson.subject}</span>
                 {lesson.grade ? <span className="chip">{lesson.grade}</span> : null}
                 <span className="chip">
-                  {formatClock(lesson.duration, false)} · {lesson.scenes.length} cảnh
+                  {formatClock(lesson.duration, false)} · {lesson.scenes.length}{" "}
+                  {t.sceneUnit}
                 </span>
                 {lesson.model ? <span className="chip">{lesson.model}</span> : null}
               </p>
@@ -648,17 +853,17 @@ export function StudioPanel() {
                   <Save className="h-4 w-4" />
                 )}
                 {saving
-                  ? "Đang lưu…"
+                  ? t.saving
                   : savedId === lesson.id
-                    ? "Đã lưu"
-                    : "Lưu vào thư viện"}
+                    ? t.saved
+                    : t.saveToLibrary}
               </button>
               <button
                 type="button"
                 onClick={() => openInPlayer(lesson)}
                 className="btn-gold"
               >
-                <Play className="h-4 w-4" /> Mở trong trình phát
+                <Play className="h-4 w-4" /> {t.openInPlayer}
               </button>
             </div>
           </div>
@@ -705,21 +910,21 @@ export function StudioPanel() {
 
           <div className="mt-4 flex flex-wrap gap-2">
             <button type="button" onClick={() => void copyJson()} className="btn-ghost">
-              <Copy className="h-4 w-4" /> {copied ? "Đã copy" : "Copy JSON"}
+              <Copy className="h-4 w-4" /> {copied ? t.copied : "Copy JSON"}
             </button>
             <button
               type="button"
               onClick={() => void downloadJson()}
               className="btn-ghost"
             >
-              <Download className="h-4 w-4" /> Tải JSON
+              <Download className="h-4 w-4" /> {t.downloadJson}
             </button>
             <button
               type="button"
               onClick={() => setLesson(null)}
               className="btn-ghost ml-auto text-mist-400"
             >
-              Bỏ kết quả này
+              {t.discardResult}
             </button>
           </div>
 
@@ -730,16 +935,13 @@ export function StudioPanel() {
       <section className="panel p-5">
         <div className="flex items-center justify-between gap-3">
           <h2 className="text-sm font-semibold text-mist-100">
-            Thư viện trên máy ({stored.length})
+            {t.libraryTitle} ({stored.length})
           </h2>
-          <span className="text-xs text-mist-500">lưu trong localStorage</span>
+          <span className="text-xs text-mist-500">{t.libraryStorage}</span>
         </div>
 
         {stored.length === 0 ? (
-          <p className="mt-3 text-sm text-mist-400">
-            Chưa có bài giảng nào do AI tạo. Hai bài mẫu đã có sẵn trong trang trình
-            phát.
-          </p>
+          <p className="mt-3 text-sm text-mist-400">{t.libraryEmpty}</p>
         ) : (
           <ul className="mt-3 space-y-2">
             {stored.map((item) => (
@@ -753,7 +955,7 @@ export function StudioPanel() {
                   </span>
                   <span className="mt-0.5 block font-mono text-[11px] text-mist-500">
                     {item.subject} · {formatClock(item.duration, false)} ·{" "}
-                    {item.scenes.length} cảnh
+                    {item.scenes.length} {t.sceneUnit}
                   </span>
                 </span>
                 <button
@@ -761,13 +963,13 @@ export function StudioPanel() {
                   onClick={() => openInPlayer(item)}
                   className="btn-ghost px-3 py-1.5 text-xs"
                 >
-                  <Play className="h-3.5 w-3.5" /> Mở
+                  <Play className="h-3.5 w-3.5" /> {t.open}
                 </button>
                 <button
                   type="button"
                   onClick={() => remove(item.id)}
                   className="btn-icon h-8 w-8"
-                  aria-label={`Xoá ${item.title}`}
+                  aria-label={`${t.deleteItem} ${item.title}`}
                 >
                   <Trash2 className="h-3.5 w-3.5" />
                 </button>
@@ -802,6 +1004,7 @@ function VoiceChooser({
   onChange: (id: string) => void;
   topic: string;
 }) {
+  const t = useCopy(COPY);
   const [voices, setVoices] = useState<{ id: string; label: string }[]>([]);
   const [playing, setPlaying] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -818,7 +1021,7 @@ function VoiceChooser({
         // that will actually be used.
         if (!value && typeof data.default === "string") onChange(data.default);
       })
-      .catch(() => setError("Không tải được danh sách giọng đọc."));
+      .catch(() => setError(t.voiceLoadFailed));
     return () => {
       cancelled = true;
     };
@@ -858,13 +1061,13 @@ function VoiceChooser({
       await audio.play();
     } catch {
       setPlaying(null);
-      setError("Không nghe thử được giọng này. Bạn vẫn có thể dùng nó khi phát bài.");
+      setError(t.voicePreviewFailed);
     }
   };
 
   return (
     <fieldset className="mt-3">
-      <legend className="label">Giọng đọc</legend>
+      <legend className="label">{t.voiceLabel}</legend>
       <div className="flex flex-wrap gap-2">
         {voices.map((option) => {
           const selected = value === option.id;
@@ -889,8 +1092,8 @@ function VoiceChooser({
               <button
                 type="button"
                 onClick={() => void preview(option.id)}
-                title={`Nghe thử giọng ${option.label}`}
-                aria-label={`Nghe thử giọng ${option.label}`}
+                title={`${t.voicePreview} ${option.label}`}
+                aria-label={`${t.voicePreview} ${option.label}`}
                 className="flex h-7 w-7 items-center justify-center rounded-lg text-mist-400 transition-colors hover:bg-ink-700 hover:text-mist-100"
               >
                 {isPlaying ? (
@@ -903,7 +1106,7 @@ function VoiceChooser({
           );
         })}
         {voices.length === 0 && !error ? (
-          <span className="text-xs text-mist-500">Đang tải giọng đọc…</span>
+          <span className="text-xs text-mist-500">{t.voiceLoading}</span>
         ) : null}
       </div>
       {error ? <p className="mt-1.5 text-xs text-ember-300">{error}</p> : null}
@@ -931,10 +1134,11 @@ function ImageModeToggle({
   value: boolean;
   onChange: (value: boolean) => void;
 }) {
+  const t = useCopy(COPY);
   return (
     <fieldset className="rounded-xl border border-ink-700 bg-ink-900/60 p-3">
       <legend className="px-1 text-[10px] font-semibold uppercase tracking-[0.14em] text-mist-500">
-        Ảnh minh hoạ
+        {t.imageLegend}
       </legend>
       <label className="mt-1 flex cursor-pointer items-start gap-3">
         <input
@@ -954,12 +1158,10 @@ function ImageModeToggle({
         </span>
         <span className="min-w-0 flex-1">
           <span className="block text-sm font-semibold text-mist-100">
-            {value ? "AI vẽ ảnh minh hoạ cho mỗi slide" : "Chỉ chữ, không dùng ảnh"}
+            {value ? t.imageOn : t.imageOff}
           </span>
           <span className="mt-0.5 block text-xs leading-relaxed text-mist-400">
-            {value
-              ? "Model tự viết mô tả tiếng Anh, hệ thống nhờ AI vẽ và ghi nguồn dưới mỗi tấm. Bật cho bài cần hình như sinh học, địa lí, lịch sử."
-              : "Bài giảng chỉ dùng chữ, công thức, bảng và biểu đồ. Hợp với bài toán–tính toán, nơi ảnh minh hoạ thường không liên quan."}
+            {value ? t.imageOnHint : t.imageOffHint}
           </span>
         </span>
       </label>
@@ -976,13 +1178,13 @@ function ImageModeToggle({
  * swatches appear only while the pointer is on, because picking a colour for
  * something switched off is a question nobody asked.
  */
-const POINTER_COLORS = [
-  { id: "amber", hex: "#f59e0b", label: "Vàng" },
-  { id: "red", hex: "#ef4444", label: "Đỏ" },
-  { id: "green", hex: "#22c55e", label: "Xanh lá" },
-  { id: "blue", hex: "#3b82f6", label: "Xanh dương" },
-  { id: "orange", hex: "#f97316", label: "Cam" },
-  { id: "pink", hex: "#ec4899", label: "Hồng" },
+const POINTER_COLORS: { id: string; hex: string; label: CopyKey }[] = [
+  { id: "amber", hex: "#f59e0b", label: "colorAmber" },
+  { id: "red", hex: "#ef4444", label: "colorRed" },
+  { id: "green", hex: "#22c55e", label: "colorGreen" },
+  { id: "blue", hex: "#3b82f6", label: "colorBlue" },
+  { id: "orange", hex: "#f97316", label: "colorOrange" },
+  { id: "pink", hex: "#ec4899", label: "colorPink" },
 ];
 
 function PointerModeToggle({
@@ -996,10 +1198,11 @@ function PointerModeToggle({
   color: string;
   onColor: (hex: string) => void;
 }) {
+  const t = useCopy(COPY);
   return (
     <fieldset className="rounded-xl border border-ink-700 bg-ink-900/60 p-3">
       <legend className="px-1 text-[10px] font-semibold uppercase tracking-[0.14em] text-mist-500">
-        Con trỏ giảng
+        {t.pointerLegend}
       </legend>
       <label className="mt-1 flex cursor-pointer items-start gap-3">
         <input
@@ -1016,12 +1219,10 @@ function PointerModeToggle({
         </span>
         <span className="min-w-0 flex-1">
           <span className="block text-sm font-semibold text-mist-100">
-            {visible ? "Hiện chấm con trỏ theo lời giảng" : "Tắt con trỏ"}
+            {visible ? t.pointerOn : t.pointerOff}
           </span>
           <span className="mt-0.5 block text-xs leading-relaxed text-mist-400">
-            {visible
-              ? "Chấm tròn đi theo từng câu đọc, giữ mắt người xem đúng chỗ đang giảng."
-              : "Slide vẫn đọc lời giảng và tô chữ, chỉ không hiện chấm tròn."}
+            {visible ? t.pointerOnHint : t.pointerOffHint}
           </span>
         </span>
       </label>
@@ -1034,8 +1235,8 @@ function PointerModeToggle({
                 key={option.id}
                 type="button"
                 onClick={() => onColor(option.hex)}
-                title={option.label}
-                aria-label={`Con trỏ màu ${option.label}`}
+                title={t[option.label]}
+                aria-label={`${t.pointerColor} ${t[option.label]}`}
                 aria-pressed={active}
                 style={{ backgroundColor: option.hex }}
                 className={`h-6 w-6 rounded-full border-2 transition-transform ${
@@ -1083,9 +1284,10 @@ function LengthPicker({
   value: LessonLengthId;
   onChange: (next: LessonLengthId) => void;
 }) {
+  const t = useCopy(COPY);
   return (
     <div>
-      <p className="label">Độ dài bài giảng</p>
+      <p className="label">{t.lengthLabel}</p>
       <div className="grid grid-cols-1 gap-2 sm:grid-cols-3">
         {LESSON_LENGTHS.map((preset) => {
           const active = preset.id === value;
@@ -1108,13 +1310,12 @@ function LengthPicker({
                 <span className="ml-1.5 font-normal text-mist-400">{preset.caption}</span>
               </span>
               <span className="mt-0.5 block text-xs text-mist-400">
-                {preset.scenes[0]}–{preset.scenes[1]} slide · {preset.wordsPerScene[0]}–
-                {preset.wordsPerScene[1]} từ/slide
+                {preset.scenes[0]}–{preset.scenes[1]} {t.slideUnit} ·{" "}
+                {preset.wordsPerScene[0]}–{preset.wordsPerScene[1]} {t.wordsPerSlide}
               </span>
               {preset.id === "long" ? (
                 <span className="mt-1 block text-[11px] leading-snug text-amber-300/80">
-                  Bản dài dựng cả một buổi giảng nên thời gian chờ sẽ lâu hơn bài ngắn, và tốn
-                  rất nhiều lượt agent — một bài 95 slide có thể hết hạn mức của CLI.
+                  {t.lengthLongNote}
                 </span>
               ) : null}
             </button>
@@ -1132,10 +1333,11 @@ function StylePicker({
   value: string;
   onChange: (style: PresentationStyle) => void;
 }) {
+  const t = useCopy(COPY);
   return (
     <fieldset className="rounded-xl border border-ink-700 bg-ink-900/60 p-3">
       <legend className="px-1 text-[10px] font-semibold uppercase tracking-[0.14em] text-mist-500">
-        Kiểu thuyết trình
+        {t.styleLegend}
       </legend>
       <div className="mt-1.5 grid gap-1.5 sm:grid-cols-2">
         {PRESENTATION_STYLES.map((style) => {
@@ -1182,8 +1384,8 @@ function StylePicker({
                 {style.hint}
               </span>
               <span className="mt-1 block text-[10px] text-mist-500">
-                {style.images ? "có ảnh thật" : "chỉ chữ"} ·{" "}
-                {style.theme === "midnight" ? "nền tối" : "nền sáng"}
+                {style.images ? t.styleWithImages : t.styleTextOnly} ·{" "}
+                {style.theme === "midnight" ? t.paperDark : t.paperLight}
               </span>
             </button>
           );
@@ -1217,17 +1419,18 @@ function ThemePicker({
   open: boolean;
   setOpen: (next: boolean) => void;
 }) {
+  const t = useCopy(COPY);
   const current = resolveSlideTheme(value);
 
   const groups: { id: SlideThemePreset["group"]; label: string }[] = [
-    { id: "paper", label: "Nền sáng" },
-    { id: "ink", label: "Nền tối" },
-    { id: "tint", label: "Nền màu" },
+    { id: "paper", label: t.groupLight },
+    { id: "ink", label: t.groupDark },
+    { id: "tint", label: t.groupTint },
   ];
 
   return (
     <fieldset className="mt-3">
-      <legend className="label">Nền slide</legend>
+      <legend className="label">{t.themeLegend}</legend>
 
       <button
         type="button"
@@ -1246,19 +1449,19 @@ function ThemePicker({
             className="block truncate text-[7px] font-bold uppercase tracking-[0.1em]"
             style={{ color: current.palette.accent }}
           >
-            Cảnh
+            {t.sampleKicker}
           </span>
           <span
             className="block truncate text-[9px] font-semibold leading-tight"
             style={{ color: current.palette.ink }}
           >
-            Tiêu đề
+            {t.sampleTitle}
           </span>
           <span
             className="block truncate text-[7px] leading-tight"
             style={{ color: current.palette.inkSoft }}
           >
-            Dòng phụ đệm
+            {t.sampleSub}
           </span>
         </span>
         <span className="min-w-0 flex-1">
@@ -1266,7 +1469,8 @@ function ThemePicker({
             {current.label}
           </span>
           <span className="block text-[11px] text-mist-500">
-            {SLIDE_PRESETS.length} mẫu · {open ? "đang mở" : "chạm để xem"}
+            {SLIDE_PRESETS.length} {t.presetUnit} ·{" "}
+            {open ? t.themeExpanding : t.themeTap}
           </span>
         </span>
         <ChevronDown
@@ -1317,19 +1521,19 @@ function ThemePicker({
                             className="block truncate text-[9px] font-bold uppercase tracking-[0.12em]"
                             style={{ color: preset.palette.accent }}
                           >
-                            Cảnh mẫu
+                            {t.sampleGridKicker}
                           </span>
                           <span
                             className="block line-clamp-2 text-[11px] font-semibold leading-tight"
                             style={{ color: preset.palette.ink }}
                           >
-                            Tiêu đề slide
+                            {t.sampleGridTitle}
                           </span>
                           <span
                             className="block line-clamp-2 text-[9px] leading-tight"
                             style={{ color: preset.palette.inkSoft }}
                           >
-                            Dòng phụ đệm
+                            {t.sampleSub}
                           </span>
                           <span
                             className="block h-px w-full"
@@ -1339,7 +1543,7 @@ function ThemePicker({
                             className="block line-clamp-1 text-[9px]"
                             style={{ color: preset.palette.inkFaint }}
                           >
-                            Chữ chân dung · 01
+                            {t.sampleBody}
                           </span>
                         </span>
                         <span

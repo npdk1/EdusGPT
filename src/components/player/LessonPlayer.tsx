@@ -22,6 +22,47 @@ import { ShortcutsDialog } from "./ShortcutsDialog";
 import { TeacherVoice, type VoiceState } from "./TeacherVoice";
 import { createNarrationChannel } from "@/lib/karaoke";
 import { ClassroomAgentChat } from "./ClassroomAgentChat";
+import { useCopy } from "@/i18n/provider";
+
+const COPY = {
+  en: {
+    playerLessonLabel: "Choose a lesson",
+    playerVoicePreparing: "Building voice",
+    playerVoiceSpeaking: "Reading",
+    playerExportHtml: "Export HTML",
+    playerExportJson: "JSON",
+    playerExportHtmlTitle: "Export one self-contained HTML file, no server needed",
+    playerExportJsonTitle: "Download the lesson content as JSON",
+    playerFrameStep: "frame step",
+    exportHtmlKind: "Standalone HTML page",
+    exportJsonKind: "Lesson data",
+    exportSaved: 'Saved "{file}" to the folder you picked.',
+    exportDownloaded:
+      'The browser would not ask where to save — "{file}" is in your Downloads folder.',
+    exportFailed: "Export failed",
+  },
+  vi: {
+    playerLessonLabel: "Chọn bài giảng",
+    playerVoicePreparing: "Đang tạo giọng",
+    playerVoiceSpeaking: "Đang đọc",
+    playerExportHtml: "Xuất HTML",
+    playerExportJson: "JSON",
+    playerExportHtmlTitle: "Xuất một file HTML tự chạy được, không cần server",
+    playerExportJsonTitle: "Tải nội dung bài giảng dạng JSON",
+    playerFrameStep: "bước khung hình",
+    exportHtmlKind: "Trang HTML tự chạy",
+    exportJsonKind: "Dữ liệu bài giảng",
+    exportSaved: 'Đã lưu "{file}" vào nơi bạn chọn.',
+    exportDownloaded:
+      'Trình duyệt không cho chọn nơi lưu — file "{file}" nằm trong thư mục Tải xuống.',
+    exportFailed: "Không xuất được file",
+  },
+};
+
+/** Fills the one `{file}` slot in an export message. */
+function withFile(copy: string, filename: string): string {
+  return copy.replace("{file}", filename);
+}
 
 interface LessonPlayerProps {
   initialLesson: Lesson;
@@ -29,6 +70,7 @@ interface LessonPlayerProps {
 }
 
 export function LessonPlayer({ initialLesson, samples }: LessonPlayerProps) {
+  const t = useCopy(COPY);
   const [lesson, setLesson] = useState<Lesson>(initialLesson);
   const [stored, setStored] = useState<Lesson[]>([]);
   const [loop, setLoop] = useState<LoopRange>({ enabled: false, a: 0, b: 0 });
@@ -288,8 +330,7 @@ export function LessonPlayer({ initialLesson, samples }: LessonPlayerProps) {
             suggestedName: filename,
             types: [
               {
-                description:
-                  kind === "html" ? "Trang HTML tự chạy" : "Dữ liệu bài giảng",
+                description: kind === "html" ? t.exportHtmlKind : t.exportJsonKind,
                 accept: {
                   [kind === "html" ? "text/html" : "application/json"]: [
                     kind === "html" ? ".html" : ".json",
@@ -326,7 +367,7 @@ export function LessonPlayer({ initialLesson, samples }: LessonPlayerProps) {
         if (writable) {
           await writable.write(blob);
           await writable.close();
-          setExportNotice(`Đã lưu "${filename}" vào nơi bạn chọn.`);
+          setExportNotice(withFile(t.exportSaved, filename));
         } else {
           const url = URL.createObjectURL(blob);
           const anchor = document.createElement("a");
@@ -338,20 +379,18 @@ export function LessonPlayer({ initialLesson, samples }: LessonPlayerProps) {
           // Revoking in the same tick cancels the download on some browsers:
           // give it a moment to start before the URL dies.
           window.setTimeout(() => URL.revokeObjectURL(url), 30_000);
-          setExportNotice(
-            `Trình duyệt không cho chọn nơi lưu — file "${filename}" nằm trong thư mục Tải xuống.`,
-          );
+          setExportNotice(withFile(t.exportDownloaded, filename));
         }
       } catch (error) {
         if (writable) await writable.abort().catch(() => null);
         setExportError(
-          error instanceof Error ? error.message : "Không xuất được file",
+          error instanceof Error ? error.message : t.exportFailed,
         );
       } finally {
         setExporting(null);
       }
     },
-    [lesson],
+    [lesson, t],
   );
 
   return (
@@ -364,7 +403,7 @@ export function LessonPlayer({ initialLesson, samples }: LessonPlayerProps) {
           {/* toolbar */}
           <div className="panel flex flex-wrap items-center gap-2.5 p-3">
             <label className="flex items-center gap-2">
-              <span className="sr-only">Chọn bài giảng</span>
+              <span className="sr-only">{t.playerLessonLabel}</span>
               <select
                 value={lesson.id}
                 onChange={(event) => {
@@ -422,7 +461,8 @@ export function LessonPlayer({ initialLesson, samples }: LessonPlayerProps) {
                 ) : (
                   <Volume2 className="h-3.5 w-3.5" />
                 )}
-                {voiceState.status === "preparing" ? "Đang tạo giọng" : "Đang đọc"} slide{" "}
+                {voiceState.status === "preparing" ? t.playerVoicePreparing : t.playerVoiceSpeaking}{" "}
+                slide{" "}
                 {voiceState.sceneIndex + 1}/{lesson.scenes.length}
               </span>
             ) : null}
@@ -435,28 +475,28 @@ export function LessonPlayer({ initialLesson, samples }: LessonPlayerProps) {
                 onClick={() => exportLesson("html")}
                 disabled={exporting !== null}
                 className="btn-ghost"
-                title="Xuất một file HTML tự chạy được, không cần server"
+                title={t.playerExportHtmlTitle}
               >
                 {exporting === "html" ? (
                   <LoaderCircle className="h-4 w-4 animate-spin" />
                 ) : (
                   <Download className="h-4 w-4" />
                 )}
-                Xuất HTML
+                {t.playerExportHtml}
               </button>
               <button
                 type="button"
                 onClick={() => exportLesson("json")}
                 disabled={exporting !== null}
                 className="btn-ghost"
-                title="Tải nội dung bài giảng dạng JSON"
+                title={t.playerExportJsonTitle}
               >
                 {exporting === "json" ? (
                   <LoaderCircle className="h-4 w-4 animate-spin" />
                 ) : (
                   <FileJson className="h-4 w-4" />
                 )}
-                JSON
+                {t.playerExportJson}
               </button>
             </div>
           </div>
@@ -496,7 +536,7 @@ export function LessonPlayer({ initialLesson, samples }: LessonPlayerProps) {
 
           <div className="flex flex-wrap items-center gap-2">
             <span className="ml-auto font-mono text-[11px] text-mist-500">
-              {lesson.fps} fps · bước khung hình {(1 / lesson.fps).toFixed(3)}s
+              {lesson.fps} fps · {t.playerFrameStep} {(1 / lesson.fps).toFixed(3)}s
             </span>
           </div>
 

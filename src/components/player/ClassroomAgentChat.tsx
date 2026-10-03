@@ -4,6 +4,44 @@ import { useState, type ReactNode } from "react";
 import { Bot, Send, User, Sparkles, LoaderCircle } from "lucide-react";
 import katex from "katex";
 import type { LessonScene } from "@/lib/lesson/types";
+import { useCopy } from "@/i18n/provider";
+
+/**
+ * The panel's own sentences, in both languages.
+ *
+ * The seed questions further down stay Vietnamese on purpose: a clicked chip is
+ * sent to the model as the user's own question, so it is a prompt, not a label.
+ */
+const COPY = {
+  en: {
+    agentGreeting:
+      'AI tutor, you are on scene "{title}". If anything is unclear, just ask here.',
+    agentSceneFallback: "the lesson",
+    agentLessonFallback: "the lesson",
+    agentQuotaHint:
+      "You have used today's free Gemini calls (limit of 20 per day). Add billing in Google AI Studio, or wait for the limit to reset and ask again.",
+    agentErrorHint: "Something went wrong. Try asking again.",
+    agentOfflineHint: "The connection dropped or the server did not answer.",
+    agentTitle: "Online AI tutor",
+    agentSubtitle: "Questions about the current scene",
+    agentThinking: "The tutor is thinking...",
+    agentPlaceholder: 'Ask about "{title}"...',
+  },
+  vi: {
+    agentGreeting:
+      'Trợ giảng AI, đang ở cảnh "{title}". Có chỗ nào chưa hiểu, bạn cứ hỏi ở đây.',
+    agentSceneFallback: "Bài giảng",
+    agentLessonFallback: "bài học",
+    agentQuotaHint:
+      "Đã hết lượt gọi Gemini miễn phí hôm nay (hạn mức 20 lần/ngày). Bạn có thể thêm billing trong Google AI Studio, hoặc chờ hạn mức reset rồi hỏi lại.",
+    agentErrorHint: "Có lỗi xảy ra. Bạn thử hỏi lại.",
+    agentOfflineHint: "Mạng bị ngắt kết nối hoặc server chưa phản hồi.",
+    agentTitle: "Trợ giảng AI trực tuyến",
+    agentSubtitle: "Hỏi đáp theo cảnh học",
+    agentThinking: "Trợ giảng đang suy nghĩ câu trả lời...",
+    agentPlaceholder: 'Hỏi về "{title}"...',
+  },
+} satisfies Record<string, Record<string, string>>;
 
 interface Message {
   role: "user" | "assistant";
@@ -70,10 +108,14 @@ interface ClassroomAgentChatProps {
 }
 
 export function ClassroomAgentChat({ currentScene, lessonTitle }: ClassroomAgentChatProps) {
+  const t = useCopy(COPY);
   const [messages, setMessages] = useState<Message[]>([
     {
       role: "assistant",
-      content: `Trợ giảng AI, đang ở cảnh "${currentScene?.title ?? "Bài giảng"}". Có chỗ nào chưa hiểu, bạn cứ hỏi ở đây.`,
+      content: t.agentGreeting.replace(
+        "{title}",
+        currentScene?.title ?? t.agentSceneFallback,
+      ),
     },
   ]);
   const [input, setInput] = useState("");
@@ -124,15 +166,15 @@ export function ClassroomAgentChat({ currentScene, lessonTitle }: ClassroomAgent
           {
             role: "assistant",
             content: quota
-              ? "Đã hết lượt gọi Gemini miễn phí hôm nay (hạn mức 20 lần/ngày). Bạn có thể thêm billing trong Google AI Studio, hoặc chờ hạn mức reset rồi hỏi lại."
-              : data.error || "Có lỗi xảy ra. Bạn thử hỏi lại.",
+              ? t.agentQuotaHint
+              : data.error || t.agentErrorHint,
           },
         ]);
       }
     } catch {
       setMessages((prev) => [
         ...prev,
-        { role: "assistant", content: "Mạng bị ngắt kết nối hoặc server chưa phản hồi." },
+        { role: "assistant", content: t.agentOfflineHint },
       ]);
     } finally {
       setLoading(false);
@@ -148,9 +190,9 @@ export function ClassroomAgentChat({ currentScene, lessonTitle }: ClassroomAgent
           </span>
           <div>
             <h3 className="text-xs font-bold uppercase tracking-wider text-mist-100">
-              Trợ giảng AI trực tuyến
+              {t.agentTitle}
             </h3>
-            <p className="text-[10px] text-mist-400">Hỏi đáp theo cảnh học</p>
+            <p className="text-[10px] text-mist-400">{t.agentSubtitle}</p>
           </div>
         </div>
         <span className="chip border-brand-700/60 text-[10px]">Multi-Agent</span>
@@ -183,7 +225,7 @@ export function ClassroomAgentChat({ currentScene, lessonTitle }: ClassroomAgent
         {loading && (
           <div className="flex items-center gap-2 text-xs text-mist-400">
             <LoaderCircle className="h-4 w-4 animate-spin text-brand-300" />
-            <span>Trợ giảng đang suy nghĩ câu trả lời...</span>
+            <span>{t.agentThinking}</span>
           </div>
         )}
       </div>
@@ -215,7 +257,10 @@ export function ClassroomAgentChat({ currentScene, lessonTitle }: ClassroomAgent
           type="text"
           value={input}
           onChange={(e) => setInput(e.target.value)}
-          placeholder={`Hỏi về "${currentScene?.title ?? "bài học"}"...`}
+          placeholder={t.agentPlaceholder.replace(
+            "{title}",
+            currentScene?.title ?? t.agentLessonFallback,
+          )}
           className="field flex-1 text-xs py-2"
         />
         <button

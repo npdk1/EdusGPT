@@ -4,6 +4,18 @@ import { useEffect, useRef, useState } from "react";
 import * as THREE from "three";
 import { THREECOLORS } from "@/lib/three-palette";
 import type { Simulation3DConfig } from "@/lib/lesson/types";
+import { fill, useCopy } from "@/i18n/provider";
+
+const COPY = {
+  en: {
+    simLabel: "Interactive 3D model (drag to rotate, use the slider)",
+    simSpeed: "Speed: {value}×",
+  },
+  vi: {
+    simLabel: "Mô hình 3D tương tác (Cầm xoay/điều chỉnh)",
+    simSpeed: "Tốc độ: {value}x",
+  },
+};
 
 interface InteractiveSimulationProps {
   config?: Simulation3DConfig;
@@ -13,6 +25,7 @@ interface InteractiveSimulationProps {
 export function InteractiveSimulation({ config, className }: InteractiveSimulationProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const [param, setParam] = useState(config?.parameters?.speed ?? 1.5);
+  const t = useCopy(COPY);
 
   useEffect(() => {
     const container = containerRef.current;
@@ -137,13 +150,13 @@ export function InteractiveSimulation({ config, className }: InteractiveSimulati
     <div className={`relative flex flex-col items-center justify-center rounded-2xl border border-ink-700/80 bg-ink-950/80 p-4 ${className ?? ""}`}>
       <div className="absolute top-3 left-4 z-10 flex items-center gap-2 text-xs font-semibold text-brand-300">
         <span className="inline-block h-2 w-2 rounded-full bg-brand-400 animate-pulse" />
-        Mô hình 3D tương tác (Cầm xoay/điều chỉnh)
+        {t.simLabel}
       </div>
 
       <div ref={containerRef} className="h-56 w-full cursor-grab active:cursor-grabbing" />
 
       <div className="mt-2 flex w-full max-w-xs items-center gap-3 text-xs text-mist-300">
-        <span>Tốc độ: {param.toFixed(1)}x</span>
+        <span>{fill(t.simSpeed, { value: param.toFixed(1) })}</span>
         <input
           type="range"
           min={0.2}

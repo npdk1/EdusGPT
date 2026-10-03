@@ -18,6 +18,22 @@ import {
 } from "./SceneFigure";
 import { InteractiveQuiz } from "./InteractiveQuiz";
 import { InteractiveSimulation } from "./InteractiveSimulation";
+import { useCopy } from "@/i18n/provider";
+
+const COPY = {
+  en: {
+    zoom: "Zoom",
+    zoomFormula: "Zoom the formula",
+    graphFallback: "the graph",
+    dataTitle: "Data",
+  },
+  vi: {
+    zoom: "Phóng to",
+    zoomFormula: "Phóng to công thức",
+    graphFallback: "đồ thị",
+    dataTitle: "Số liệu",
+  },
+};
 
 function pad2(value: number): string {
   return String(value).padStart(2, "0");
@@ -54,6 +70,7 @@ export function SlideSurface({
   caption?: ReactNode;
   className?: string;
 }) {
+  const t = useCopy(COPY);
   const stageRef = useRef<HTMLDivElement | null>(null);
   const KickerIcon = slideIcon(scene.icon);
 
@@ -162,16 +179,18 @@ export function SlideSurface({
             ) : null}
 
             {scene.formula ? (
-              <FigureZoom label="Phóng to công thức">
+              <FigureZoom label={t.zoomFormula}>
                 <SceneFormula formula={scene.formula} />
               </FigureZoom>
             ) : null}
             {scene.table ? <SceneTable table={scene.table} /> : null}
             {scene.data?.length ? (
-              <SceneDataChart data={scene.data} title="Số liệu" />
+              <SceneDataChart data={scene.data} title={t.dataTitle} />
             ) : null}
             {scene.graph ? (
-              <FigureZoom label={`Phóng to ${scene.graph.title ?? "đồ thị"}`}>
+              <FigureZoom
+                label={`${t.zoom} ${scene.graph.title ?? t.graphFallback}`}
+              >
                 <FunctionGraph graph={scene.graph} />
               </FigureZoom>
             ) : null}

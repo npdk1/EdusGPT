@@ -12,6 +12,46 @@ import {
   decodeWordMarks,
   type NarrationChannel,
 } from "@/lib/karaoke";
+import { useCopy } from "@/i18n/provider";
+
+const COPY = {
+  en: {
+    premiereTitle: "Now playing",
+    sceneWord: "scene",
+    stateReading: "· narrating",
+    stateLoadingVoice: "· loading voice…",
+    replay: "Play again",
+    stopVoice: "Stop voice",
+    autoAdvance: "Play on automatically",
+    waitingSceneLead: "Writing scene",
+    waitingSceneTail: "…",
+    gettingReady: "Getting ready to play…",
+    playedLead: "Played all",
+    sceneUnit: "scenes",
+    playedTail: "The full lesson is in the script below.",
+    voicePlayFailedLead: "Could not play the voice-over for scene",
+    voiceMakeFailedLead: "Could not generate the voice-over for scene",
+    skipped: "— skipping.",
+  },
+  vi: {
+    premiereTitle: "Chiếu ngay",
+    sceneWord: "cảnh",
+    stateReading: "· đang đọc",
+    stateLoadingVoice: "· đang lấy giọng…",
+    replay: "Chiếu lại",
+    stopVoice: "Dừng giọng",
+    autoAdvance: "Tự chiếu tiếp",
+    waitingSceneLead: "Đang viết cảnh",
+    waitingSceneTail: "…",
+    gettingReady: "Chuẩn bị chiếu…",
+    playedLead: "Đã chiếu hết",
+    sceneUnit: "cảnh",
+    playedTail: "Bài đầy đủ nằm ở phần kịch bản bên dưới.",
+    voicePlayFailedLead: "Không phát được giọng cảnh",
+    voiceMakeFailedLead: "Không tạo được giọng cảnh",
+    skipped: "— bỏ qua.",
+  },
+};
 
 interface CachedAudio {
   url: string;
@@ -71,6 +111,7 @@ export function PremierePlayer({
    */
   onSceneChange?: (scene: LiveScene | null) => void;
 }) {
+  const t = useCopy(COPY);
   const [auto, setAuto] = useState(true);
   const [phase, setPhase] = useState<Phase>({ name: "idle" });
   const [note, setNote] = useState<string | null>(null);
@@ -137,7 +178,7 @@ export function PremierePlayer({
         headers: { "content-type": "application/json" },
         body: JSON.stringify({ text, voice }),
       });
-      if (!response.ok) throw new Error(`giọng đọc trả lỗi ${response.status}`);
+      if (!response.ok) throw new Error(`tts voice returned ${response.status}`);
       const [blob, marks] = await Promise.all([
         response.blob(),
         decodeWordMarks(response.headers.get("x-tts-words")),
@@ -196,7 +237,7 @@ export function PremierePlayer({
           failedRef.current.add(index);
           atRef.current = null;
           busyRef.current = false;
-          setNote(`Không phát được giọng cảnh ${index + 1}, bỏ qua.`);
+          setNote(`${t.voicePlayFailedLead} ${index + 1} ${t.skipped}`);
           onSceneChange?.(null);
           setPhase({ name: "idle" });
         };
@@ -214,13 +255,13 @@ export function PremierePlayer({
         failedRef.current.add(index);
         atRef.current = null;
         busyRef.current = false;
-        setNote(`Không tạo được giọng cảnh ${index + 1}, bỏ qua.`);
+        setNote(`${t.voiceMakeFailedLead} ${index + 1} ${t.skipped}`);
         setPhase({ name: "idle" });
       } finally {
         if (atRef.current !== index) busyRef.current = false;
       }
     },
-    [scenes, fetchAudio, stopAudio, evictBehind, onSceneChange],
+    [scenes, fetchAudio, stopAudio, evictBehind, onSceneChange, t],
   );
 
   // The driver: whenever idle, play the earliest unplayed ready scene; when
@@ -314,11 +355,11 @@ export function PremierePlayer({
         <div className="flex flex-wrap items-center justify-between gap-2 border-b border-ink-600 px-4 py-2.5">
           <p className="flex items-center gap-2 text-sm font-semibold text-mist-100">
             <span className="h-2 w-2 animate-pulse rounded-full bg-ember-500" />
-            Chiếu ngay
+            {t.premiereTitle}
             {current ? (
               <span className="font-mono text-[11px] font-normal text-mist-400">
-                cảnh {current.index + 1}/{scenes.length}
-                {phase.name === "playing" ? " · đang đọc" : " · đang lấy giọng…"}
+                {t.sceneWord} {current.index + 1}/{scenes.length}
+                {phase.name === "playing" ? t.stateReading : t.stateLoadingVoice}
               </span>
             ) : null}
           </p>
@@ -329,7 +370,7 @@ export function PremierePlayer({
                 onClick={replay}
                 className="btn-ghost px-3 py-1 text-xs"
               >
-                <RotateCcw className="h-3.5 w-3.5" /> Chiếu lại
+                <RotateCcw className="h-3.5 w-3.5" /> {t.replay}
               </button>
             ) : phase.name === "playing" ? (
               <button
@@ -337,7 +378,7 @@ export function PremierePlayer({
                 onClick={stopAudio}
                 className="btn-ghost px-3 py-1 text-xs"
               >
-                <Pause className="h-3.5 w-3.5" /> Dừng giọng
+                <Pause className="h-3.5 w-3.5" /> {t.stopVoice}
               </button>
             ) : null}
             <label className="flex cursor-pointer items-center gap-1.5 text-xs text-mist-300">
@@ -347,7 +388,7 @@ export function PremierePlayer({
                 onChange={(event) => setAuto(event.target.checked)}
                 className="h-3.5 w-3.5 accent-emerald-400"
               />
-              <Volume2 className="h-3.5 w-3.5" /> Tự chiếu tiếp
+              <Volume2 className="h-3.5 w-3.5" /> {t.autoAdvance}
             </label>
           </div>
         </div>
@@ -375,20 +416,19 @@ export function PremierePlayer({
         ) : phase.name === "waiting-scene" ? (
           <div className="p-4">
             <SceneLoader3D
-              label={`Đang viết cảnh ${phase.index + 1}…`}
+              label={`${t.waitingSceneLead} ${phase.index + 1}${t.waitingSceneTail}`}
               progress={progress}
             />
           </div>
         ) : phase.name === "finished" ? (
           <p className="px-4 py-6 text-center text-sm text-mist-300">
-            Đã chiếu hết {playedRef.current.size} cảnh. Bài đầy đủ nằm ở phần kịch
-            bản bên dưới.
+            {t.playedLead} {playedRef.current.size} {t.sceneUnit}. {t.playedTail}
           </p>
         ) : phase.name === "error" ? (
           <p className="px-4 py-6 text-center text-sm text-ember-400">{phase.message}</p>
         ) : (
           <div className="p-4">
-            <SceneLoader3D label="Chuẩn bị chiếu…" progress={progress} />
+            <SceneLoader3D label={t.gettingReady} progress={progress} />
           </div>
         )}
       </div>

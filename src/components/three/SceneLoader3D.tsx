@@ -22,7 +22,7 @@ export function SceneLoader3D({
   progress,
   height = 220,
 }: {
-  /** e.g. "Đang viết cảnh 4…" — what the wait is for. */
+  /** e.g. "Writing scene 4…" — what the wait is for, in the screen's language. */
   label: string;
   /** 0..100, deck progress for the bar under the label. */
   progress: number;

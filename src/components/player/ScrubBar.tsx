@@ -10,6 +10,7 @@ import {
 import type { Timebase, LoopRange } from "@/hooks/useTimebase";
 import type { Lesson } from "@/lib/lesson/types";
 import { clamp, formatClock } from "@/lib/format";
+import { useCopy } from "@/i18n/provider";
 
 interface ScrubBarProps {
   lesson: Lesson;
@@ -17,12 +18,42 @@ interface ScrubBarProps {
   loop: LoopRange;
 }
 
+const COPY = {
+  en: {
+    scrubOf: "of",
+    scrubTimeline: "Lesson timeline. Drag to scrub, arrow keys to step",
+    scrubZero: "0 seconds",
+    scrubLoopRegion: "Loop region",
+    scrubHandle: "Current position",
+    scrubScenes: "scenes",
+    scrubChapters: "chapters",
+    scrubDragging: "scrubbing… release to stop here",
+    scrubSeek5: "seek 5s",
+    scrubSeek1: "seek 1s",
+    scrubFrame: "frame step",
+  },
+  vi: {
+    scrubOf: "trên",
+    scrubTimeline: "Timeline bài giảng. Kéo để tua, phím mũi tên để tua từng bước",
+    scrubZero: "0 giây",
+    scrubLoopRegion: "Vùng lặp",
+    scrubHandle: "Vị trí hiện tại",
+    scrubScenes: "cảnh",
+    scrubChapters: "chương",
+    scrubDragging: "đang tua… thả chuột để dừng ở vị trí này",
+    scrubSeek5: "tua 5s",
+    scrubSeek1: "tua 1s",
+    scrubFrame: "từng khung hình",
+  },
+};
+
 /**
  * The scrub bar. Supports click-to-seek, press-and-drag scrubbing (pointer
  * capture), chapter bands, and the A→B loop region — i.e. every way a learner
  * expects to "tua đi tua lại".
  */
 export function ScrubBar({ lesson, timebase, loop }: ScrubBarProps) {
+  const t = useCopy(COPY);
   const trackRef = useRef<HTMLDivElement>(null);
   const progressRef = useRef<HTMLDivElement>(null);
   const handleRef = useRef<HTMLDivElement>(null);
@@ -75,7 +106,7 @@ export function ScrubBar({ lesson, timebase, loop }: ScrubBarProps) {
         trackRef.current.setAttribute("aria-valuenow", time.toFixed(2));
         trackRef.current.setAttribute(
           "aria-valuetext",
-          `${formatClock(time, false)} trên ${formatClock(total, false)}`,
+          `${formatClock(time, false)} ${t.scrubOf} ${formatClock(total, false)}`,
         );
       }
 
@@ -96,7 +127,9 @@ export function ScrubBar({ lesson, timebase, loop }: ScrubBarProps) {
         if (node.dataset.state !== state) node.dataset.state = state;
       }
     });
-  }, [subscribeScrub, duration, lesson.chapters]);
+    // `t` so the spoken aria-valuetext follows the language; `copy[lang]` is a
+    // constant object, so this only re-runs when the language actually changes.
+  }, [subscribeScrub, duration, lesson.chapters, t]);
 
   const onPointerDown = (event: ReactPointerEvent<HTMLDivElement>) => {
     const track = trackRef.current;
@@ -150,11 +183,11 @@ export function ScrubBar({ lesson, timebase, loop }: ScrubBarProps) {
           ref={trackRef}
           role="slider"
           tabIndex={0}
-          aria-label="Timeline bài giảng. Kéo để tua, phím mũi tên để tua từng bước"
+          aria-label={t.scrubTimeline}
           aria-valuemin={0}
           aria-valuemax={Math.round(duration)}
           aria-valuenow={0}
-          aria-valuetext="0 giây"
+          aria-valuetext={t.scrubZero}
           onPointerDown={onPointerDown}
           onPointerMove={onPointerMove}
           onPointerUp={endDrag}
@@ -218,7 +251,7 @@ export function ScrubBar({ lesson, timebase, loop }: ScrubBarProps) {
                   ? "border-gold-300 bg-gold-400/30"
                   : "border-mist-500 bg-mist-500/15"
               }`}
-              title={`Vùng lặp ${formatClock(loop.a, false)} → ${formatClock(loop.b, false)}`}
+              title={`${t.scrubLoopRegion} ${formatClock(loop.a, false)} → ${formatClock(loop.b, false)}`}
             />
           ) : null}
 
@@ -240,19 +273,19 @@ export function ScrubBar({ lesson, timebase, loop }: ScrubBarProps) {
               dragging ? "scale-125" : "group-hover:scale-110"
             }`}
           >
-            <span className="sr-only">Vị trí hiện tại</span>
+            <span className="sr-only">{t.scrubHandle}</span>
           </div>
         </div>
       </div>
 
       <div className="flex flex-wrap items-center justify-between gap-2 font-mono text-[11px] text-mist-500">
         <span>
-          {lesson.scenes.length} cảnh · {lesson.chapters.length} chương
+          {lesson.scenes.length} {t.scrubScenes} · {lesson.chapters.length} {t.scrubChapters}
         </span>
         <span aria-live="polite">
           {dragging
-            ? "đang tua… thả chuột để dừng ở vị trí này"
-            : "← / → tua 5s · Shift + ←/→ tua 1s · , / . từng khung hình"}
+            ? t.scrubDragging
+            : `← / → ${t.scrubSeek5} · Shift + ←/→ ${t.scrubSeek1} · , / . ${t.scrubFrame}`}
         </span>
       </div>
     </div>

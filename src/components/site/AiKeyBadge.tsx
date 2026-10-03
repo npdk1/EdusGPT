@@ -3,7 +3,45 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { TriangleAlert, CircleCheck, Cpu, Sparkles } from "lucide-react";
+import { useCopy } from "@/i18n/provider";
 import type { PublicAiStatus } from "@/lib/ai/config";
+
+const COPY = {
+  en: {
+    checkingAgent: "Checking agent…",
+    checkingKey: "Checking key…",
+    missingAgentShort: "No CLI agent",
+    missingAgent: "No CLI agent installed: open settings",
+    missingKeyShort: "No AI key",
+    missingKey: "No AI key yet: open settings",
+    agentLocal: "agent runs on your machine",
+    keyFromEnv: "from an environment variable",
+    keyFromFile: "from .env",
+    calloutTitle: "Turn on the AI assistant",
+    calloutAgentBody:
+      "Install the CLI agent on your machine, or paste an API key from another provider. The key only ever lives in .env — it is sent nowhere else.",
+    calloutKeyBody:
+      "Paste your API key on the settings page, which runs on your machine. The key only ever lives in .env — it is sent nowhere else.",
+    calloutButton: "Open settings",
+  },
+  vi: {
+    checkingAgent: "đang kiểm tra agent…",
+    checkingKey: "đang kiểm tra key…",
+    missingAgentShort: "Chưa có agent CLI",
+    missingAgent: "Chưa cài agent CLI: mở trang cài đặt",
+    missingKeyShort: "Thiếu AI key",
+    missingKey: "Chưa có AI key: mở trang cài đặt",
+    agentLocal: "agent chạy trên máy bạn",
+    keyFromEnv: "từ biến môi trường",
+    keyFromFile: "từ .env",
+    calloutTitle: "Bật trợ lý AI",
+    calloutAgentBody:
+      "Cài agent CLI trên máy bạn, hoặc dán API key của nhà cung cấp khác. Key chỉ nằm trong .env, không gửi tới đâu khác.",
+    calloutKeyBody:
+      "Dán API key của bạn vào trang cài đặt chạy trên máy bạn. Key chỉ nằm trong .env, không gửi tới đâu khác.",
+    calloutButton: "Mở trang cài đặt",
+  },
+};
 
 /**
  * The always-visible entry point to /setup. It polls nothing: it fetches once
@@ -35,13 +73,14 @@ export function useAiStatus() {
 }
 
 export function AiKeyBadge({ compact = false }: { compact?: boolean }) {
+  const t = useCopy(COPY);
   const { status, loading } = useAiStatus();
 
   if (loading) {
     return (
       <span className="chip animate-pulse-dot">
         <Cpu className="h-3.5 w-3.5" />
-        {status?.providerKind === "cli" ? "đang kiểm tra agent…" : "đang kiểm tra key…"}
+        {status?.providerKind === "cli" ? t.checkingAgent : t.checkingKey}
       </span>
     );
   }
@@ -59,18 +98,18 @@ export function AiKeyBadge({ compact = false }: { compact?: boolean }) {
         <TriangleAlert className="h-3.5 w-3.5" />
         {isCli
           ? compact
-            ? "Chưa có agent CLI"
-            : "Chưa cài agent CLI: mở trang cài đặt"
+            ? t.missingAgentShort
+            : t.missingAgent
           : compact
-            ? "Thiếu AI key"
-            : "Chưa có AI key: mở trang cài đặt"}
+            ? t.missingKeyShort
+            : t.missingKey}
       </Link>
     );
   }
 
   const title = isCli
-    ? `${status.providerLabel} ${status.cli?.version ?? ""} · agent chạy trên máy bạn`.trim()
-    : `${status.model} · ${status.keySource === "env" ? "từ biến môi trường" : "từ .env"}`;
+    ? `${status.providerLabel} ${status.cli?.version ?? ""} · ${t.agentLocal}`.trim()
+    : `${status.model} · ${status.keySource === "env" ? t.keyFromEnv : t.keyFromFile}`;
 
   // `keyHint` is null for a CLI provider — there is no secret — so appending it
   // would leave a dangling "·" on the chip.
@@ -94,6 +133,7 @@ export function AiKeyBadge({ compact = false }: { compact?: boolean }) {
 
 /** First-run banner shown on the landing page while no key is configured. */
 export function SetupCallout() {
+  const t = useCopy(COPY);
   const { status, loading } = useAiStatus();
   if (loading || status?.configured) return null;
 
@@ -102,16 +142,16 @@ export function SetupCallout() {
       <div className="flex items-start gap-3">
         <Sparkles className="mt-0.5 h-5 w-5 shrink-0 text-gold-300" />
         <div>
-          <p className="font-semibold text-mist-50">Bật trợ lý AI</p>
+          <p className="font-semibold text-mist-50">{t.calloutTitle}</p>
           <p className="mt-1 text-sm text-mist-300">
             {status?.providerKind === "cli"
-              ? "Cài agent CLI trên máy bạn, hoặc dán API key của nhà cung cấp khác. Key chỉ nằm trong .env, không gửi tới đâu khác."
-              : "Dán API key của bạn vào trang cài đặt chạy trên máy bạn. Key chỉ nằm trong .env, không gửi tới đâu khác."}
+              ? t.calloutAgentBody
+              : t.calloutKeyBody}
           </p>
         </div>
       </div>
       <Link href="/setup" className="btn-gold shrink-0">
-        Mở trang cài đặt
+        {t.calloutButton}
       </Link>
     </div>
   );

@@ -4,7 +4,7 @@ import { StudioPanel } from "@/components/studio/StudioPanel";
 export const metadata: Metadata = {
   title: "Studio AI",
   description:
-    "Soạn bài giảng từ chủ đề, dàn ý hay tài liệu của bạn rồi mở ngay trong trình phát có thể tua.",
+    "Write a lesson from a topic, an outline or your own material, then open it straight in a player you can scrub.",
 };
 
 export default function StudioPage() {

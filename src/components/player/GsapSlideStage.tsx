@@ -14,6 +14,34 @@ import { ScenePointer } from "./ScenePointer";
 import { pointerColorToRgb } from "@/lib/lesson/pollinations";
 import { formatClock } from "@/lib/format";
 import type { NarrationChannel } from "@/lib/karaoke";
+import { useCopy } from "@/i18n/provider";
+
+const COPY = {
+  en: {
+    stageTimeline: "Timeline",
+    stageScene: "Scene",
+    stagePlaying: "playing",
+    stageRewinding: "back",
+    stageForwarding: "forward",
+    stagePaused: "paused",
+    stageDataTitle: "Data",
+    zoomFormula: "Zoom the formula",
+    zoom: "Zoom",
+    zoomGraph: "the graph",
+  },
+  vi: {
+    stageTimeline: "Dòng thời gian",
+    stageScene: "cảnh",
+    stagePlaying: "đang phát",
+    stageRewinding: "tua lui",
+    stageForwarding: "tua tới",
+    stagePaused: "tạm dừng",
+    stageDataTitle: "Số liệu",
+    zoomFormula: "Phóng to công thức",
+    zoom: "Phóng to",
+    zoomGraph: "đồ thị",
+  },
+};
 
 
 interface GsapSlideStageProps {
@@ -41,11 +69,22 @@ export function GsapSlideStage({
   narration,
   playing,
 }: GsapSlideStageProps) {
+  const t = useCopy(COPY);
   const stageRef = useRef<HTMLDivElement>(null);
   const timelineRef = useRef<gsap.core.Timeline | null>(null);
   const fillRef = useRef<HTMLDivElement>(null);
   const clockRef = useRef<HTMLSpanElement>(null);
   const directionRef = useRef<HTMLSpanElement>(null);
+  /**
+   * The playhead writes its status word straight into `directionRef` from a
+   * subscription that is attached once and never re-attached. The dictionary
+   * therefore travels through a ref: a language switch has to change the word
+   * without re-running this effect and disturbing the timeline it follows.
+   */
+  const copyRef = useRef(t);
+  useEffect(() => {
+    copyRef.current = t;
+  }, [t]);
 
   const activeSceneData = lesson.scenes[activeScene];
 
@@ -237,13 +276,13 @@ export function GsapSlideStage({
         const delta = time - previous;
         previous = time;
         if (meta.playing) {
-          directionRef.current.textContent = `▶ đang phát ${meta.rate.toFixed(2)}×`;
+          directionRef.current.textContent = `▶ ${copyRef.current.stagePlaying} ${meta.rate.toFixed(2)}×`;
         } else if (delta < -0.004) {
-          directionRef.current.textContent = "◀◀ tua lui";
+          directionRef.current.textContent = `◀◀ ${copyRef.current.stageRewinding}`;
         } else if (delta > 0.004) {
-          directionRef.current.textContent = "▶▶ tua tới";
+          directionRef.current.textContent = `▶▶ ${copyRef.current.stageForwarding}`;
         } else {
-          directionRef.current.textContent = "⏸ tạm dừng";
+          directionRef.current.textContent = `⏸ ${copyRef.current.stagePaused}`;
         }
       }
     });
@@ -334,15 +373,15 @@ export function GsapSlideStage({
             <span
               className={`h-2 w-2 rounded-full ${timebase.playing ? "bg-ember-400" : "bg-mist-500"}`}
             />
-            <span className="text-xs font-semibold text-mist-200">Dòng thời gian</span>
+            <span className="text-xs font-semibold text-mist-200">{t.stageTimeline}</span>
           </span>
           <span className="text-xs text-mist-500">
-            cảnh {activeScene + 1}/{lesson.scenes.length} ·{" "}
+            {t.stageScene} {activeScene + 1}/{lesson.scenes.length} ·{" "}
             {SCENE_KIND_LABEL[lesson.scenes[activeScene]?.kind ?? "concept"]}
           </span>
         </div>
         <div className="flex items-center gap-3 font-mono text-xs text-mist-400">
-          <span ref={directionRef}>⏸ tạm dừng</span>
+          <span ref={directionRef}>⏸ {t.stagePaused}</span>
           <span ref={clockRef} className="tabular-nums text-brand-200">
             00:00.0 / 00:00.0
           </span>
@@ -459,7 +498,7 @@ export function GsapSlideStage({
               ) : null}
 
               {scene.formula ? (
-                <FigureZoom label="Phóng to công thức">
+                <FigureZoom label={t.zoomFormula}>
                   <SceneFormula formula={scene.formula} />
                 </FigureZoom>
               ) : null}
@@ -467,11 +506,11 @@ export function GsapSlideStage({
               {scene.table ? <SceneTable table={scene.table} /> : null}
 
               {scene.data && scene.data.length > 0 ? (
-                <SceneDataChart data={scene.data} title="Số liệu" />
+                <SceneDataChart data={scene.data} title={t.stageDataTitle} />
               ) : null}
 
               {scene.graph ? (
-                <FigureZoom label={`Phóng to ${scene.graph.title ?? "đồ thị"}`}>
+                <FigureZoom label={`${t.zoom} ${scene.graph.title ?? t.zoomGraph}`}>
                   <FunctionGraph graph={scene.graph} />
                 </FigureZoom>
               ) : null}

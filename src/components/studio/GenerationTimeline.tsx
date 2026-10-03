@@ -4,6 +4,90 @@ import { useCallback, useEffect, useState } from "react";
 import { CircleCheck, Circle, LoaderCircle } from "lucide-react";
 import type { Lesson } from "@/lib/lesson/types";
 import type { RunLogEntry } from "@/lib/lesson/run-log";
+import { DEFAULT_LANG, LANG_KEY, useCopy, useLang, type Lang } from "@/i18n/provider";
+
+const COPY = {
+  en: {
+    preparing: "Preparing…",
+    phaseOutline: "1. Outline (fast)",
+    phaseScenes: "2. Write out each scene",
+    sceneWord: "Scene",
+    stepPoints: "points",
+    minutesUnit: "m",
+    logTitle: "Model call log",
+    logNote:
+      "Each row is one finished model call: which model answered, and how long it took. Providers do not stream the thinking behind an answer, so that part cannot be watched live — this table says which step the current call is at.",
+    colTime: "Time",
+    colStep: "Step",
+    colDuration: "Duration",
+    colDetail: "Detail",
+    logCompleted: "Complete",
+    logError: "Error",
+    logRunning: "Running",
+    streamStopped: "The page reloaded, so the generation stream stopped. Press generate again to carry on.",
+    serverError: "The server returned an error",
+    networkError: "Network error.",
+    clockLocale: "en-GB",
+  },
+  vi: {
+    preparing: "Đang chuẩn bị…",
+    phaseOutline: "1. Lên dàn ý (nhanh)",
+    phaseScenes: "2. Viết chi tiết từng cảnh",
+    sceneWord: "Cảnh",
+    stepPoints: "ý",
+    minutesUnit: "p",
+    logTitle: "Nhật ký gọi model",
+    logNote:
+      "Mỗi dòng là một lần gọi model đã xong: model nào trả lời, mất bao lâu. Nhà cung cấp không gửi từng chữ đang nghĩ nên không xem trực tiếp được quá trình đó — bảng này cho biết cuộc gọi đang ở bước nào.",
+    colTime: "Giờ",
+    colStep: "Bước",
+    colDuration: "Thời gian",
+    colDetail: "Chi tiết",
+    logCompleted: "Hoàn tất",
+    logError: "Lỗi",
+    logRunning: "Đang chạy",
+    streamStopped:
+      "Trang đã tải lại nên luồng tạo bài bị dừng. Bấm tạo lại để chạy tiếp.",
+    serverError: "Máy chủ trả lời lỗi",
+    networkError: "Lỗi mạng.",
+    clockLocale: "vi-VN",
+  },
+};
+
+const STAGE_LABEL: Record<Lang, Record<string, string>> = {
+  en: {
+    outline: "Outline",
+    "outline-done": "Outline done",
+    scene: "Writing scene",
+    "scene-retry": "Retry",
+    "scene-fallback": "Placeholder",
+  },
+  vi: {
+    outline: "Lên dàn ý",
+    "outline-done": "Dàn ý xong",
+    scene: "Viết cảnh",
+    "scene-retry": "Thử lại",
+    "scene-fallback": "Tạm thay",
+  },
+};
+
+/**
+ * The dictionary for the code that runs outside React.
+ *
+ * `pumpRun` and `reduceProgress` are module-level functions, so they cannot call
+ * `useCopy`. They read the language from the one place the provider keeps it —
+ * `localStorage` — rather than from a second store that would have to be kept in
+ * step with the first.
+ */
+function copy(): typeof COPY.en {
+  let lang: Lang = DEFAULT_LANG;
+  try {
+    lang = localStorage.getItem(LANG_KEY) === "vi" ? "vi" : DEFAULT_LANG;
+  } catch {
+    /* storage blocked: the default language stands */
+  }
+  return COPY[lang];
+}
 
 export type { RunLogEntry };
 
@@ -182,7 +266,7 @@ function reduceProgress(
   // honest answer to "where is the model call": every row is one finished
   // call (or one wait), with the model that answered and how long it took.
   const entry: RunLogEntry = {
-    at: new Date().toLocaleTimeString("vi-VN", { hour12: false }),
+    at: new Date().toLocaleTimeString(copy().clockLocale, { hour12: false }),
     stage: event.stage,
     message: event.type === "error" ? (event.error ?? event.message) : event.message,
     provider: event.provider,
@@ -272,7 +356,7 @@ function reduceProgress(
       title:
         typeof scene.title === "string" && scene.title.trim()
           ? scene.title.trim().slice(0, 200)
-          : `Cảnh ${current.liveScenes.length + 1}`,
+          : `${copy().sceneWord} ${current.liveScenes.length + 1}`,
       subtitle: typeof scene.subtitle === "string" ? scene.subtitle.slice(0, 300) : "",
       bullets: Array.isArray(scene.bullets)
         ? scene.bullets.filter((b): b is string => typeof b === "string").slice(0, 12).map((b) => b.slice(0, 300))
@@ -313,7 +397,7 @@ async function pumpRun(run: ActiveRun, body: Record<string, unknown>): Promise<v
       const payload = (await response.json().catch(() => null)) as {
         error?: string;
       } | null;
-      throw new Error(payload?.error ?? `Máy chủ trả lỗi ${response.status}.`);
+      throw new Error(payload?.error ?? `${copy().serverError} ${response.status}.`);
     }
 
     const reader = response.body.getReader();
@@ -353,7 +437,7 @@ async function pumpRun(run: ActiveRun, body: Record<string, unknown>): Promise<v
     }
   } catch (error) {
     if (controller.signal.aborted || activeRun !== run) return;
-    const message = error instanceof Error ? error.message : "Lỗi mạng.";
+    const message = error instanceof Error ? error.message : copy().networkError;
     run.progress = { ...run.progress, message, error: message };
     broadcast();
   } finally {
@@ -365,6 +449,7 @@ async function pumpRun(run: ActiveRun, body: Record<string, unknown>): Promise<v
 }
 
 export function useGenerationStream() {
+  const t = useCopy(COPY);
   // Initial state is always EMPTY so the first client render matches the
   // server HTML: reading localStorage or the singleton here renders
   // different output than SSR and breaks hydration. The effect below
@@ -388,7 +473,7 @@ export function useGenerationStream() {
       if (snapshot && snapshot.running && !snapshot.progress.done && !snapshot.progress.error) {
         const interrupted: GenerationProgress = {
           ...snapshot.progress,
-          error: "Trang đã tải lại nên luồng tạo bài bị dừng. Bấm tạo lại để chạy tiếp.",
+          error: t.streamStopped,
         };
         setProgress(interrupted);
         writeSnapshot(interrupted, false);
@@ -399,7 +484,7 @@ export function useGenerationStream() {
     return () => {
       runListeners.delete(listener);
     };
-  }, []);
+  }, [t]);
 
   const reset = useCallback(() => {
     activeRun?.controller.abort();
@@ -436,6 +521,7 @@ export function useGenerationStream() {
 
 /** Checklist rendered under the form while a lesson is being generated. */
 export function GenerationTimeline({ progress }: { progress: GenerationProgress }) {
+  const t = useCopy(COPY);
   const busy = !progress.done && progress.message !== "";
 
   return (
@@ -449,7 +535,7 @@ export function GenerationTimeline({ progress }: { progress: GenerationProgress 
           ) : (
             <Circle className="h-4 w-4 text-mist-500" />
           )}
-          {progress.message || "Đang chuẩn bị…"}
+          {progress.message || t.preparing}
         </p>
         <span className="font-mono text-xs tabular-nums text-brand-200">
           {Math.round(progress.percent)}%
@@ -465,11 +551,11 @@ export function GenerationTimeline({ progress }: { progress: GenerationProgress 
 
       <ol className="grid gap-1.5 sm:grid-cols-2">
         <Phase
-          title="1. Lên dàn ý (nhanh)"
+          title={t.phaseOutline}
           state={progress.outlineReady ? "done" : "active"}
         />
         <Phase
-          title="2. Viết chi tiết từng cảnh"
+          title={t.phaseScenes}
           state={progress.done ? "done" : progress.outlineReady ? "active" : "pending"}
         />
       </ol>
@@ -491,7 +577,7 @@ export function GenerationTimeline({ progress }: { progress: GenerationProgress 
                 </span>{" "}
                 {step.title}
                 {step.bullets ? (
-                  <span className="ml-1 text-mist-400">({step.bullets} ý)</span>
+                  <span className="ml-1 text-mist-400">({step.bullets} {t.stepPoints})</span>
                 ) : null}
               </span>
             </li>
@@ -502,20 +588,13 @@ export function GenerationTimeline({ progress }: { progress: GenerationProgress 
   );
 }
 
-const STAGE_LABEL: Record<string, string> = {
-  outline: "Lên dàn ý",
-  "outline-done": "Dàn ý xong",
-  scene: "Viết cảnh",
-  "scene-retry": "Thử lại",
-  "scene-fallback": "Tạm thay",
-};
-
-function formatElapsed(ms: number): string {
+/** "5m03s" in English, "5p03s" in Vietnamese — the unit is part of the copy. */
+function formatElapsed(ms: number, minutesUnit: string): string {
   if (!Number.isFinite(ms) || ms < 0) return "—";
   const seconds = ms / 1000;
   if (seconds < 60) return `${seconds.toFixed(1)}s`;
   const minutes = Math.floor(seconds / 60);
-  return `${minutes}p${Math.round(seconds % 60)}s`;
+  return `${minutes}${minutesUnit}${Math.round(seconds % 60)}s`;
 }
 
 /**
@@ -525,26 +604,24 @@ function formatElapsed(ms: number): string {
  * model answered it, and how long it took, in order.
  */
 export function RunLog({ log }: { log: RunLogEntry[] }) {
+  const t = useCopy(COPY);
+  const lang = useLang();
   if (log.length === 0) return null;
   return (
     <div className="mt-4 rounded-xl border border-ink-700/70 bg-ink-950/50 p-3.5">
-      <p className="text-sm font-semibold text-mist-100">Nhật ký gọi model</p>
-      <p className="mt-0.5 text-[11px] leading-relaxed text-mist-500">
-        Mỗi dòng là một lần gọi model đã xong: model nào trả lời, mất bao lâu.
-        Nhà cung cấp không gửi từng chữ đang nghĩ nên không xem trực tiếp được
-        quá trình đó — bảng này cho biết cuộc gọi đang ở bước nào.
-      </p>
+      <p className="text-sm font-semibold text-mist-100">{t.logTitle}</p>
+      <p className="mt-0.5 text-[11px] leading-relaxed text-mist-500">{t.logNote}</p>
       <div className="mt-2 overflow-x-auto">
         <table className="w-full min-w-[520px] border-collapse text-xs">
           <thead>
             <tr className="text-left font-mono text-[11px] uppercase tracking-wide text-mist-500">
-              <th className="border-b border-ink-700 py-1.5 pr-3 font-medium">Giờ</th>
-              <th className="border-b border-ink-700 py-1.5 pr-3 font-medium">Bước</th>
+              <th className="border-b border-ink-700 py-1.5 pr-3 font-medium">{t.colTime}</th>
+              <th className="border-b border-ink-700 py-1.5 pr-3 font-medium">{t.colStep}</th>
               <th className="border-b border-ink-700 py-1.5 pr-3 font-medium">Model</th>
               <th className="border-b border-ink-700 py-1.5 pr-3 text-right font-medium">
-                Thời gian
+                {t.colDuration}
               </th>
-              <th className="border-b border-ink-700 py-1.5 font-medium">Chi tiết</th>
+              <th className="border-b border-ink-700 py-1.5 font-medium">{t.colDetail}</th>
             </tr>
           </thead>
           <tbody>
@@ -555,10 +632,10 @@ export function RunLog({ log }: { log: RunLogEntry[] }) {
                 </td>
                 <td className="whitespace-nowrap py-1.5 pr-3 text-mist-200">
                   {entry.kind === "done"
-                    ? "Hoàn tất"
+                    ? t.logCompleted
                     : entry.kind === "error"
-                      ? "Lỗi"
-                      : (entry.stage && STAGE_LABEL[entry.stage]) || "Đang chạy"}
+                      ? t.logError
+                      : (entry.stage && STAGE_LABEL[lang][entry.stage]) || t.logRunning}
                 </td>
                 <td
                   className="max-w-[220px] break-all py-1.5 pr-3 font-mono text-[11px] text-brand-200"
@@ -567,7 +644,7 @@ export function RunLog({ log }: { log: RunLogEntry[] }) {
                   {entry.model ?? entry.provider ?? "—"}
                 </td>
                 <td className="whitespace-nowrap py-1.5 pr-3 text-right font-mono text-[11px] tabular-nums text-mist-300">
-                  {entry.elapsedMs == null ? "—" : formatElapsed(entry.elapsedMs)}
+                  {entry.elapsedMs == null ? "—" : formatElapsed(entry.elapsedMs, t.minutesUnit)}
                 </td>
                 <td className="min-w-0 py-1.5 text-mist-300">{entry.message}</td>
               </tr>

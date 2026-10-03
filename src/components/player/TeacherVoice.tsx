@@ -5,6 +5,36 @@ import { Volume2, VolumeX, LoaderCircle } from "lucide-react";
 import type { Timebase } from "@/hooks/useTimebase";
 import type { Lesson } from "@/lib/lesson/types";
 import { approximateWords, decodeWordMarks, type WordMark } from "@/lib/karaoke";
+import { useCopy } from "@/i18n/provider";
+
+const COPY = {
+  en: {
+    voiceBlocked: "The browser blocked playback. Press again to listen.",
+    voiceServerFallback: "The server could not read this. Using the browser voice.",
+    voiceTurnOff: "Turn off the AI teacher voice",
+    voiceTurnOn: "Turn on the AI teacher voice (TTS)",
+    voiceChipLabel: "Vietnamese voice:",
+    voicePreparing: "preparing",
+    voiceTeaching: "Teaching",
+    voiceOn: "On",
+    voiceOff: "Off",
+    voiceSelectLabel: "Choose the Vietnamese voice",
+    voiceSelectTitle: "Vietnamese narration voice",
+  },
+  vi: {
+    voiceBlocked: "Trình duyệt chặn phát. Bấm lại để nghe.",
+    voiceServerFallback: "Máy chủ không đọc được. Dùng giọng trình duyệt.",
+    voiceTurnOff: "Tắt giọng đọc giáo viên AI",
+    voiceTurnOn: "Bật giọng đọc giáo viên AI (TTS)",
+    voiceChipLabel: "Giọng Việt:",
+    voicePreparing: "đang chuẩn bị",
+    voiceTeaching: "Đang giảng bài",
+    voiceOn: "Bật",
+    voiceOff: "Tắt",
+    voiceSelectLabel: "Chọn giọng đọc tiếng Việt",
+    voiceSelectTitle: "Giọng đọc tiếng Việt",
+  },
+};
 
 interface TeacherVoiceProps {
   lesson: Lesson;
@@ -113,6 +143,7 @@ export function TeacherVoice({
   onVoiceState,
   onNarration,
 }: TeacherVoiceProps) {
+  const t = useCopy(COPY);
   const [enabled, setEnabled] = useState(true);
   const [speaking, setSpeaking] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -298,7 +329,7 @@ export function TeacherVoice({
         stopTracking();
       };
       void audio.play().catch(() => {
-        setNotice("Trình duyệt chặn phát. Bấm lại để nghe.");
+        setNotice(t.voiceBlocked);
       });
       // Published even on a cache hit, so a slide that is revisited highlights
       // without waiting on a fetch.
@@ -324,7 +355,9 @@ export function TeacherVoice({
         );
       }
     },
-    [onVoiceState, stopTracking, track, voice],
+    // `t` is the active dictionary object itself, so its identity only changes
+    // with the language — naming it here cannot restart the reader per frame.
+    [onVoiceState, stopTracking, track, voice, t],
   );
 
   const speak = useCallback(
@@ -387,7 +420,7 @@ export function TeacherVoice({
         setLoading(false);
         if (error instanceof Error && error.name === "AbortError") return;
         // The server voice is a nicety; never let it silence the teacher.
-        setNotice("Máy chủ không đọc được. Dùng giọng trình duyệt.");
+        setNotice(t.voiceServerFallback);
         // The browser gives no timings and no duration, so the subtitle gets an
         // even sweep across the scene's own length. Approximate, but it still
         // moves with the reading instead of sitting frozen.
@@ -417,7 +450,7 @@ export function TeacherVoice({
         );
       }
     },
-    [play, stop, stopTracking, voice],
+    [play, stop, stopTracking, voice, t],
   );
 
   /**
@@ -647,7 +680,7 @@ export function TeacherVoice({
             ? "border-brand-500 bg-brand-500/15 text-brand-100"
             : "border-ink-700 bg-ink-900/60 text-mist-500 hover:text-mist-300"
         }`}
-        title={enabled ? "Tắt giọng đọc giáo viên AI" : "Bật giọng đọc giáo viên AI (TTS)"}
+        title={enabled ? t.voiceTurnOff : t.voiceTurnOn}
       >
         {loading ? (
           <LoaderCircle className="h-3.5 w-3.5 animate-spin" />
@@ -657,21 +690,21 @@ export function TeacherVoice({
           <VolumeX className="h-3.5 w-3.5" />
         )}
         <span>
-          Giọng Việt:{" "}
-          {loading ? "đang chuẩn bị" : speaking ? "Đang giảng bài" : enabled ? "Bật" : "Tắt"}
+          {t.voiceChipLabel}{" "}
+          {loading ? t.voicePreparing : speaking ? t.voiceTeaching : enabled ? t.voiceOn : t.voiceOff}
         </span>
       </button>
 
       {enabled && (
         <>
           <label className="sr-only" htmlFor="tts-voice">
-            Chọn giọng đọc tiếng Việt
+            {t.voiceSelectLabel}
           </label>
           <select
             id="tts-voice"
             value={voice}
             onChange={(e) => changeVoice(e.target.value)}
-            title={notice ?? "Giọng đọc tiếng Việt"}
+            title={notice ?? t.voiceSelectTitle}
             className="chip border-ink-700 bg-ink-900/60 text-mist-300 hover:text-mist-100"
           >
             {voices.map((v) => (

@@ -5,16 +5,44 @@ import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
 import { KeyRound, Menu, CirclePlay, Sparkles, X } from "lucide-react";
 import { AiKeyBadge } from "./AiKeyBadge";
+import { LocaleSwitcher } from "./LocaleSwitcher";
+import { useCopy } from "@/i18n/provider";
 
-const NAV = [
-  { href: "/", label: "Tổng quan" },
-  { href: "/lesson", label: "Trình phát" },
-  { href: "/studio", label: "Studio AI" },
-  { href: "/library", label: "Thư viện" },
-  { href: "/setup", label: "Cài đặt" },
+const COPY = {
+  en: {
+    tagline: "lesson player",
+    navOverview: "Overview",
+    navLesson: "Lesson player",
+    navStudio: "AI Studio",
+    navLibrary: "Library",
+    navSetup: "Settings",
+    ctaGenerate: "Generate a lesson",
+    openMenu: "Open menu",
+  },
+  vi: {
+    tagline: "trình phát bài giảng",
+    navOverview: "Tổng quan",
+    navLesson: "Trình phát",
+    navStudio: "Studio AI",
+    navLibrary: "Thư viện",
+    navSetup: "Cài đặt",
+    ctaGenerate: "Sinh bài giảng",
+    openMenu: "Mở menu",
+  },
+};
+
+type CopyKey = keyof typeof COPY.en;
+
+const NAV: { href: string; label: CopyKey }[] = [
+  { href: "/", label: "navOverview" },
+  { href: "/lesson", label: "navLesson" },
+  { href: "/studio", label: "navStudio" },
+  { href: "/library", label: "navLibrary" },
+  { href: "/setup", label: "navSetup" },
 ];
 
 export function SiteHeader() {
+  const t = useCopy(COPY);
   const pathname = usePathname();
   const [open, setOpen] = useState(false);
 
@@ -38,7 +66,7 @@ export function SiteHeader() {
               EdusGPT
             </span>
             <span className="block text-[11px] font-medium tracking-wide text-mist-400">
-              trình phát bài giảng
+              {t.tagline}
             </span>
           </span>
         </Link>
@@ -57,23 +85,26 @@ export function SiteHeader() {
                     : "text-mist-300 hover:bg-ink-850 hover:text-mist-100"
                 }`}
               >
-                {item.label}
+                {t[item.label]}
               </Link>
             );
           })}
         </nav>
 
         <div className="flex items-center gap-2">
+          <div className="hidden lg:block">
+            <LocaleSwitcher />
+          </div>
           <div className="hidden sm:block">
             <AiKeyBadge />
           </div>
           <Link href="/studio" className="btn-primary hidden lg:inline-flex">
-            <Sparkles className="h-4 w-4" /> Sinh bài giảng
+            <Sparkles className="h-4 w-4" /> {t.ctaGenerate}
           </Link>
           <button
             type="button"
             onClick={() => setOpen((value) => !value)}
-            aria-label="Mở menu"
+            aria-label={t.openMenu}
             aria-expanded={open}
             className="btn-icon md:hidden"
           >
@@ -91,7 +122,7 @@ export function SiteHeader() {
                 href={item.href}
                 className="flex items-center justify-between rounded-lg px-3 py-2.5 text-sm font-medium text-mist-200 hover:bg-ink-850"
               >
-                {item.label}
+                {t[item.label]}
                 {item.href === "/setup" ? (
                   <KeyRound className="h-4 w-4 text-gold-300" />
                 ) : (
@@ -100,7 +131,8 @@ export function SiteHeader() {
               </Link>
             ))}
           </div>
-          <div className="mt-3 sm:hidden">
+          <div className="mt-3 flex items-center justify-between gap-2 sm:hidden">
+            <LocaleSwitcher compact />
             <AiKeyBadge compact />
           </div>
         </div>

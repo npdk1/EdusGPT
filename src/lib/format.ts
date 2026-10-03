@@ -25,19 +25,31 @@ export function formatClock(seconds: number, withFrames = false, fps = 30): stri
   return `${String(minutes).padStart(2, "0")}:${String(secs).padStart(2, "0")}.${tenths}`;
 }
 
-export function formatRelativeTime(iso: string | null | undefined): string {
-  if (!iso) return "chưa có";
+/**
+ * "3 minutes ago", in the language on screen.
+ *
+ * Vietnamese counts the way it likes to and English does not need the
+ * distinction, so each language gets its own sentences rather than one set of
+ * fragments stitched together. Defaults to English — the primary language.
+ */
+export function formatRelativeTime(
+  iso: string | null | undefined,
+  lang: "en" | "vi" = "en",
+): string {
+  const vi = lang === "vi";
+  if (!iso) return vi ? "chưa có" : "never";
   const then = new Date(iso).getTime();
-  if (Number.isNaN(then)) return "chưa có";
+  if (Number.isNaN(then)) return vi ? "chưa có" : "never";
   const diffSeconds = Math.round((Date.now() - then) / 1000);
-  if (diffSeconds < 5) return "vừa xong";
-  if (diffSeconds < 60) return `${diffSeconds} giây trước`;
+  if (diffSeconds < 5) return vi ? "vừa xong" : "just now";
+  const seconds = vi ? `${diffSeconds} giây trước` : `${diffSeconds}s ago`;
+  if (diffSeconds < 60) return seconds;
   const minutes = Math.round(diffSeconds / 60);
-  if (minutes < 60) return `${minutes} phút trước`;
+  if (minutes < 60) return vi ? `${minutes} phút trước` : `${minutes}m ago`;
   const hours = Math.round(minutes / 60);
-  if (hours < 24) return `${hours} giờ trước`;
+  if (hours < 24) return vi ? `${hours} giờ trước` : `${hours}h ago`;
   const days = Math.round(hours / 24);
-  return `${days} ngày trước`;
+  return vi ? `${days} ngày trước` : `${days}d ago`;
 }
 
 export function formatBytes(bytes: number): string {

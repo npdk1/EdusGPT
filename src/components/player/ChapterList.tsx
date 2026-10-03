@@ -4,6 +4,18 @@ import { ListOrdered, Mic } from "lucide-react";
 import type { Timebase } from "@/hooks/useTimebase";
 import { SCENE_KIND_LABEL, type Lesson } from "@/lib/lesson/types";
 import { formatClock } from "@/lib/format";
+import { useCopy } from "@/i18n/provider";
+
+const COPY = {
+  en: {
+    chapterOutline: "Lesson outline",
+    chapterNarration: "Scene narration",
+  },
+  vi: {
+    chapterOutline: "Mục lục bài giảng",
+    chapterNarration: "Lời giảng cảnh",
+  },
+};
 
 interface ChapterListProps {
   lesson: Lesson;
@@ -19,13 +31,14 @@ export function ChapterList({
   activeScene,
   activeChapter,
 }: ChapterListProps) {
+  const t = useCopy(COPY);
   const activeNarration = lesson.scenes[activeScene]?.narration;
 
   return (
     <div className="panel flex flex-col overflow-hidden">
       <div className="flex items-center gap-2 border-b border-ink-700/70 px-4 py-3">
         <ListOrdered className="h-4 w-4 text-brand-300" />
-        <h3 className="text-sm font-semibold text-mist-100">Mục lục bài giảng</h3>
+        <h3 className="text-sm font-semibold text-mist-100">{t.chapterOutline}</h3>
         <span className="ml-auto font-mono text-[11px] text-mist-500">
           {formatClock(lesson.duration, false)}
         </span>
@@ -107,7 +120,7 @@ export function ChapterList({
                 narration — text that gets spoken — and `Quote` drew two curly
                 strokes that read as a citation, a claim this slide never makes.
                 `Mic` says what the thing actually is. */}
-            <Mic className="h-3.5 w-3.5 text-brand-300" /> Lời giảng cảnh{" "}
+            <Mic className="h-3.5 w-3.5 text-brand-300" /> {t.chapterNarration}{" "}
             {activeScene + 1}
           </p>
           <p className="mt-1.5 text-sm italic leading-relaxed text-mist-300">

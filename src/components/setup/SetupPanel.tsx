@@ -20,6 +20,7 @@ import {
 } from "lucide-react";
 import type { PublicAiStatus, ProviderId } from "@/lib/ai/config";
 import { formatRelativeTime } from "@/lib/format";
+import { useCopy, useLang } from "@/i18n/provider";
 
 interface LiveModel {
   id: string;
@@ -55,20 +56,242 @@ const PROVIDER_MARKS: Record<ProviderId, { src: string; alt: string }> = {
 };
 
 /**
+ * English first, Vietnamese second: both dictionaries hold the same keys, so a
+ * missing Vietnamese string is a type error rather than a stray English label.
+ *
+ * Keys carry the area they belong to (`provider`, `key`, `model`, `status`,
+ * `header`, `next`) because this file is the size of a small page. Values that
+ * wrap a variable keep the variable in JSX and split the sentence around it —
+ * provider labels, model ids, versions and env var names are never translated.
+ */
+const COPY = {
+  en: {
+    // provider cards
+    providerReady: "Ready",
+    providerNotInstalled: "Not installed",
+    providerNoKey: "No key",
+    noteGroq:
+      "The free tier needs no card and counts tokens per model per day, so a spent quota resets at 00:00 UTC. The real ceiling sits lower than that number: one lesson costs roughly 8,000 tokens per minute, so long lessons have to queue.",
+    noteNvidia:
+      "A free endpoint for trying things out, capped by requests per minute and sometimes asking for an API key on new endpoints.",
+    noteAntigravity:
+      "Runs the agent on your own machine and reads the slides in your library, so it spends no request quota — only your Google account limits apply.",
+    cloudGroup: "Cloud Provider",
+    cliGroup: "CLI Provider",
+    cliUnsupported:
+      "Not supported yet. For now only the cloud provider above can be used.",
+    getKey: "Get a key:",
+    cliInstalled: "Installed",
+    cliCommandMissing: "The `agy` command was not found",
+    cliReadyHint:
+      "The agent runs on your machine, no API key needed. Press “Save & test” to make it your main provider.",
+    cliInstallHint:
+      "Install it with PowerShell: powershell -ExecutionPolicy Bypass -File scripts/install-antigravity.ps1 — then run the `agy` command once to log in.",
+    // page header
+    headerChip: "Setup runs on your machine",
+    headerTitle: "AI provider",
+    headerCliLead: "The",
+    headerCliTail:
+      "provider runs the agent right on your machine. No key, no quota — pick it and the app asks the agent to read the slides in your library.",
+    headerKeyLead: "Paste a key, then press",
+    headerKeyAction: "Save & test",
+    headerKeyBeforeEnv:
+      "The key is called once to check it, then written to",
+    headerKeyAfterEnv: "on your machine.",
+    // status row
+    statusAgentReady: "CLI agent ready",
+    statusHasKey: "key saved",
+    statusCliMissing: "CLI not installed",
+    statusOk: "ok",
+    statusFailed: "failed",
+    statusNeverChecked: "never checked",
+    statusRefresh: "Refresh",
+    sourceLoggedIn: "logged in locally",
+    sourceNotLoggedIn: "not logged in",
+    sourceShellEnv: "shell environment variable",
+    sourceEnvFile: ".env file",
+    sourceNone: "none",
+    healthFailed: "Could not reach /api/health.",
+    // key box
+    selectHeading: "Choose a provider and paste a key",
+    keyHide: "Hide key",
+    keyShow: "Show key",
+    keyReading: "Reading the saved key…",
+    keyStored: "Saved key",
+    keyMissing: "No key yet. Paste one, then press Save & test.",
+    keyRequired: "Paste an API key into the box below first.",
+    keySaveTest: "Save & test",
+    keyTestOnly: "Test only",
+    keyDelete: "Delete key",
+    keyDeletedLead: "Deleted the key ",
+    keyDeletedTail: " from .env.",
+    keyDeleteFailed: "Could not delete the key.",
+    checkFailed: "The check failed.",
+    savedAsPrimary: "It is now your main provider.",
+    savedToEnv: "Written to .env, ready to use right away.",
+    dryRunNote: " (check only, nothing written to the file)",
+    unknownError: "Unknown error.",
+    // model box
+    modelDefault: "Default model",
+    modelSearch: "Type to search models…",
+    modelTrustedTitle:
+      "This model has already produced a complete lesson on your machine.",
+    modelTrustedBadge: "Has produced a lesson",
+    modelUnit: "models from",
+    modelTrustedNote:
+      " A ✓ mark means the model has already generated a lesson on this machine",
+    modelUntestedNote:
+      " No model from this provider has been tried for a lesson yet.",
+    modelsLoad: "Load model list",
+    modelsAskLead: "Ask",
+    modelsAskTail: "for its available model list",
+    modelsNeedKeyLead: "Save a key for",
+    modelsNeedKeyTail: " first",
+    modelsReturned: "returned",
+    modelUnitUsable: "usable models",
+    modelsFailed: "Could not load the model list.",
+    serverUnreachable: "Could not reach the server.",
+    advancedBaseUrl: "Advanced: base URL",
+    baseUrlHint:
+      "Change this only if you go through a compatible proxy or gateway. Unknown hosts are rejected on the server.",
+    // after saving
+    nextTitle: "After you save a key",
+    stepOneLead: "Go to",
+    stepOneTail: ", enter a topic, choose a length, then generate the lesson.",
+    stepTwo:
+      "The new lesson is saved to the library on your machine — click “Open in player”.",
+    stepThreeLead: "In",
+    stepThreeScrub: "try dragging the timeline to scrub,",
+    stepThreeFrame: "step frame by frame,",
+    stepThreeThen: "then use",
+    stepThreeLoop: "to repeat one awkward passage.",
+    securityLead: "The setup API only accepts requests from",
+    securityTail:
+      ". Opening the site over a LAN IP cannot save a key, unless you set",
+    gotoStudio: "Go to AI Studio",
+    tryLead: "Want to try it? Open",
+    tryTail: ". The sample lesson needs no key.",
+  },
+  vi: {
+    providerReady: "sẵn sàng",
+    providerNotInstalled: "chưa cài",
+    providerNoKey: "chưa có key",
+    noteGroq:
+      "Gói free không cần thẻ, tính theo token mỗi ngày cho từng model, nên hết hạn mức sẽ tự reset vào 0 giờ theo giờ UTC. Trần thấp hơn con số trên: một bài chỉ khoảng 8.000 token/phút, nên bài dài sẽ phải chờ xen kẽ.",
+    noteNvidia:
+      "Endpoint miễn phí để thử nghiệm, giới hạn theo số request mỗi phút và có thể yêu cầu khoá API cho endpoint mới.",
+    noteAntigravity:
+      "Chạy agent ngay trên máy bạn và đọc được slide trong thư viện, nên không tốn quota lượt nào — chỉ giới hạn theo tài khoản Google của bạn.",
+    cloudGroup: "Cloud Provider",
+    cliGroup: "CLI Provider",
+    cliUnsupported:
+      "Chưa hỗ trợ. Hiện chỉ chạy qua Cloud Provider ở trên.",
+    getKey: "Lấy key:",
+    cliInstalled: "Đã cài",
+    cliCommandMissing: "Chưa thấy lệnh `agy`",
+    cliReadyHint:
+      "Agent chạy trên máy bạn, không cần API key. Bấm “Kiểm tra & lưu” để dùng nó làm nhà cung cấp chính.",
+    cliInstallHint:
+      "Cài bằng PowerShell: powershell -ExecutionPolicy Bypass -File scripts/install-antigravity.ps1 — rồi chạy lệnh `agy` một lần để đăng nhập.",
+    headerChip: "cài đặt chạy trên máy bạn",
+    headerTitle: "Nhà cung cấp AI",
+    headerCliLead: "Nhà cung cấp",
+    headerCliTail:
+      "chạy agent ngay trên máy bạn. Không có key, không tốn quota — chọn nó thì app gọi agent đọc slide trong thư viện của bạn.",
+    headerKeyLead: "Dán key rồi bấm",
+    headerKeyAction: "Kiểm tra & lưu",
+    headerKeyBeforeEnv: "Key được gọi thử một lần rồi ghi vào",
+    headerKeyAfterEnv: "trên máy bạn.",
+    statusAgentReady: "agent CLI sẵn sàng",
+    statusHasKey: "đã có key",
+    statusCliMissing: "CLI chưa cài",
+    statusOk: "đạt",
+    statusFailed: "lỗi",
+    statusNeverChecked: "chưa kiểm tra",
+    statusRefresh: "Làm mới",
+    sourceLoggedIn: "đăng nhập local",
+    sourceNotLoggedIn: "chưa đăng nhập",
+    sourceShellEnv: "biến môi trường của shell",
+    sourceEnvFile: "file .env",
+    sourceNone: "chưa có",
+    healthFailed: "Không gọi được /api/health.",
+    selectHeading: "Chọn nhà cung cấp & dán key",
+    keyHide: "Ẩn key",
+    keyShow: "Hiện key",
+    keyReading: "Đang đọc key đã lưu…",
+    keyStored: "Đã lưu key",
+    keyMissing: "Chưa có key. Dán vào rồi bấm Kiểm tra & lưu.",
+    keyRequired: "Dán API key vào ô bên dưới trước.",
+    keySaveTest: "Kiểm tra & lưu",
+    keyTestOnly: "Chỉ kiểm tra",
+    keyDelete: "Xoá key",
+    keyDeletedLead: "Đã xoá key ",
+    keyDeletedTail: " khỏi .env.",
+    keyDeleteFailed: "Không xoá được key.",
+    checkFailed: "Kiểm tra thất bại.",
+    savedAsPrimary: "Đã chọn làm nhà cung cấp chính.",
+    savedToEnv: "Đã ghi vào .env, dùng được ngay.",
+    dryRunNote: " (chế độ chỉ kiểm tra, chưa ghi file)",
+    unknownError: "Lỗi không xác định.",
+    modelDefault: "Model mặc định",
+    modelSearch: "Gõ để tìm model…",
+    modelTrustedTitle:
+      "Model này đã tự sinh được một bài hoàn chỉnh trên máy bạn.",
+    modelTrustedBadge: "Đã tạo được bài",
+    modelUnit: "model của",
+    modelTrustedNote:
+      " Dấu ✓ là model đã tự sinh được bài trên máy này",
+    modelUntestedNote:
+      " Chưa model nào của hãng này được thử sinh bài.",
+    modelsLoad: "Nạp danh sách model",
+    modelsAskLead: "Hỏi",
+    modelsAskTail: "danh sách model khả dụng",
+    modelsNeedKeyLead: "Cần lưu key",
+    modelsNeedKeyTail: " trước",
+    modelsReturned: "trả về",
+    modelUnitUsable: "model dùng được",
+    modelsFailed: "Không lấy được model.",
+    serverUnreachable: "Không gọi được máy chủ.",
+    advancedBaseUrl: "Nâng cao: base URL",
+    baseUrlHint:
+      "Chỉ đổi khi bạn đi qua proxy/gateway tương thích. Host lạ sẽ bị từ chối ở server.",
+    nextTitle: "Sau khi lưu key",
+    stepOneLead: "Sang",
+    stepOneTail: ", nhập chủ đề, chọn độ dài rồi bấm sinh bài giảng.",
+    stepTwo:
+      "Bài mới lưu vào thư viện trên máy, bấm “Mở trong trình phát”.",
+    stepThreeLead: "Trong",
+    stepThreeScrub: "hãy thử: kéo timeline để tua,",
+    stepThreeFrame: "để bước từng khung hình,",
+    stepThreeThen: "rồi",
+    stepThreeLoop: "để lặp đúng một đoạn khó.",
+    securityLead: "API cài key chỉ nhận request từ",
+    securityTail:
+      ". Mở web qua IP LAN thì không lưu được key, trừ khi đặt",
+    gotoStudio: "Đi tới Studio AI",
+    tryLead: "Muốn xem thử? Mở",
+    tryTail: ". Bài mẫu không cần key.",
+  },
+};
+
+type CopyKey = keyof typeof COPY.en;
+
+/**
  * What each vendor's free tier actually is, in one sentence.
  *
  * Deliberately free of hard numbers: every vendor counts quota in a different
  * unit (requests per day, tokens per model per day, project credits) and the
  * published limits move, so a stale figure in the UI is worse than a pointer to
  * the vendor's own docs, which is what each sentence ends with.
+ *
+ * The sentences themselves live in `COPY` (`noteGroq`, `noteNvidia`,
+ * `noteAntigravity`) so they can be read in both languages side by side; this
+ * table is only the provider → key lookup.
  */
-const PROVIDER_NOTES: Record<ProviderId, string> = {
-  groq:
-    "Gói free không cần thẻ, tính theo token mỗi ngày cho từng model, nên hết hạn mức sẽ tự reset vào 0 giờ theo giờ UTC. Trần thấp hơn con số trên: một bài chỉ khoảng 8.000 token/phút, nên bài dài sẽ phải chờ xen kẽ.",
-  nvidia:
-    "Endpoint miễn phí để thử nghiệm, giới hạn theo số request mỗi phút và có thể yêu cầu khoá API cho endpoint mới.",
-  antigravity:
-    "Chạy agent ngay trên máy bạn và đọc được slide trong thư viện, nên không tốn quota lượt nào — chỉ giới hạn theo tài khoản Google của bạn.",
+const PROVIDER_NOTE_KEYS: Record<ProviderId, CopyKey> = {
+  groq: "noteGroq",
+  nvidia: "noteNvidia",
+  antigravity: "noteAntigravity",
 };
 
 /** Provider logos: official brand marks (Simple Icons CDN) + the CLI mark. */
@@ -95,6 +318,7 @@ function ProviderCard({
   active: boolean;
   onSelect: (id: ProviderId) => void;
 }) {
+  const t = useCopy(COPY);
   return (
     <button
       type="button"
@@ -116,11 +340,11 @@ function ProviderCard({
         {item.kind === "cli" ? (
           item.cli?.available ? (
             <span className="rounded-full border border-brand-700/60 bg-brand-500/10 px-2 py-0.5 font-mono text-[10px] text-brand-200">
-              sẵn sàng
+              {t.providerReady}
             </span>
           ) : (
             <span className="rounded-full border border-ink-600 px-2 py-0.5 text-[10px] text-mist-500">
-              chưa cài
+              {t.providerNotInstalled}
             </span>
           )
         ) : item.keyHint ? (
@@ -129,7 +353,7 @@ function ProviderCard({
           </span>
         ) : (
           <span className="rounded-full border border-ink-600 px-2 py-0.5 text-[10px] text-mist-500">
-            chưa có key
+            {t.providerNoKey}
           </span>
         )}
       </span>
@@ -148,6 +372,10 @@ function ProviderCard({
  * route. The browser only ever gets back a masked hint.
  */
 export function SetupPanel() {
+  const t = useCopy(COPY);
+  // The "checked 3 minutes ago" chip is time prose, not copy, so it takes the
+  // language straight from the switcher.
+  const lang = useLang();
   const [status, setStatus] = useState<PublicAiStatus | null>(null);
   const [provider, setProvider] = useState<ProviderId | "">("");
   /**
@@ -235,22 +463,22 @@ export function SetupPanel() {
           if (!quiet) {
             setMessage({
               tone: "ok",
-              text: `${payload.providerLabel ?? resolved} trả về ${payload.models.length} model dùng được.`,
+              text: `${payload.providerLabel ?? resolved} ${t.modelsReturned} ${payload.models.length} ${t.modelUnitUsable}.`,
             });
           }
         } else {
-          setMessage({ tone: "error", text: payload.error ?? "Không lấy được model." });
+          setMessage({ tone: "error", text: payload.error ?? t.modelsFailed });
         }
       } catch (error) {
         setMessage({
           tone: "error",
-          text: error instanceof Error ? error.message : "Không gọi được máy chủ.",
+          text: error instanceof Error ? error.message : t.serverUnreachable,
         });
       } finally {
         setBusy(null);
       }
     },
-    [provider],
+    [provider, t],
   );
 
   /**
@@ -323,7 +551,7 @@ export function SetupPanel() {
    * is, so the sentence under the cards always describes the vendor you just
    * clicked.
    */
-  const activeNote = PROVIDER_NOTES[activeProvider] ?? null;
+  const activeNote = t[PROVIDER_NOTE_KEYS[activeProvider]];
 
   /**
    * Whether the selected provider holds a secret at all. A CLI provider is
@@ -357,11 +585,11 @@ export function SetupPanel() {
       const payload = (await response.json()) as { ai: PublicAiStatus };
       applyStatus(payload.ai);
     } catch {
-      setMessage({ tone: "error", text: "Không gọi được /api/health." });
+      setMessage({ tone: "error", text: t.healthFailed });
     } finally {
       setBusy(null);
     }
-  }, [applyStatus]);
+  }, [applyStatus, t]);
 
   useEffect(() => {
     void refreshStatus();
@@ -374,7 +602,7 @@ export function SetupPanel() {
       // stores provider + model only.
       const wantsCli = activeIsCli;
       if (!apiKey && !wantsCli) {
-        setMessage({ tone: "error", text: "Dán API key vào ô bên dưới trước." });
+        setMessage({ tone: "error", text: t.keyRequired });
         return;
       }
       setBusy(dryRun ? "check" : "save");
@@ -404,7 +632,7 @@ export function SetupPanel() {
         if (!response.ok || !payload.validation?.ok) {
           setMessage({
             tone: "error",
-            text: payload.error ?? payload.validation?.message ?? "Kiểm tra thất bại.",
+            text: payload.error ?? payload.validation?.message ?? t.checkFailed,
           });
           return;
         }
@@ -414,9 +642,9 @@ export function SetupPanel() {
           tone: "ok",
           text: payload.saved
             ? wantsCli
-              ? `${payload.validation.message} Đã chọn làm nhà cung cấp chính.`
-              : `${payload.validation.message} Đã ghi vào .env, dùng được ngay.`
-            : `${payload.validation.message} (chế độ chỉ kiểm tra, chưa ghi file)`,
+              ? `${payload.validation.message} ${t.savedAsPrimary}`
+              : `${payload.validation.message} ${t.savedToEnv}`
+            : `${payload.validation.message}${t.dryRunNote}`,
         });
         // Nothing was written for a CLI provider, so there is no key to refill.
         if (payload.saved && !wantsCli) {
@@ -425,13 +653,13 @@ export function SetupPanel() {
       } catch (error) {
         setMessage({
           tone: "error",
-          text: error instanceof Error ? error.message : "Lỗi không xác định.",
+          text: error instanceof Error ? error.message : t.unknownError,
         });
       } finally {
         setBusy(null);
       }
     },
-    [activeIsCli, applyStatus, baseUrl, baseUrlDirty, keyDraft, loadStoredKey, model, provider],
+    [activeIsCli, applyStatus, baseUrl, baseUrlDirty, keyDraft, loadStoredKey, model, provider, t],
   );
 
   const deleteKey = useCallback(async () => {
@@ -452,13 +680,13 @@ export function SetupPanel() {
       setLiveModels((current) => ({ ...current, [activeProvider]: [] }));
       setMessage(
         response.ok
-          ? { tone: "info", text: `Đã xoá key ${activeProviderLabel} khỏi .env.` }
-          : { tone: "error", text: payload.error ?? "Không xoá được key." },
+          ? { tone: "info", text: `${t.keyDeletedLead}${activeProviderLabel}${t.keyDeletedTail}` }
+          : { tone: "error", text: payload.error ?? t.keyDeleteFailed },
       );
     } finally {
       setBusy(null);
     }
-  }, [activeProvider, activeProviderLabel, applyStatus, provider]);
+  }, [activeProvider, activeProviderLabel, applyStatus, provider, t]);
 
 
   // Keep the selected model in the dropdown even if the live list has not
@@ -526,37 +754,34 @@ export function SetupPanel() {
   const statusIsCli = status?.providerKind === "cli";
   const sourceLabel = statusIsCli
     ? status?.cli?.available
-      ? `đăng nhập local${status.cli.version ? ` · ${status.cli.version}` : ""}`
-      : "chưa đăng nhập"
+      ? `${t.sourceLoggedIn}${status.cli.version ? ` · ${status.cli.version}` : ""}`
+      : t.sourceNotLoggedIn
     : status?.keySource === "env"
-      ? "biến môi trường của shell"
+      ? t.sourceShellEnv
       : status?.keySource === "file"
-        ? "file .env"
-        : "chưa có";
+        ? t.sourceEnvFile
+        : t.sourceNone;
 
   return (
     <div className="space-y-5">
       <header>
         <span className="chip">
-          <KeyRound className="h-3.5 w-3.5 text-gold-300" /> cài đặt chạy trên máy bạn
+          <KeyRound className="h-3.5 w-3.5 text-gold-300" /> {t.headerChip}
         </span>
         <h1 className="mt-4 text-3xl font-bold tracking-tight text-mist-50 sm:text-4xl">
-          Nhà cung cấp AI
+          {t.headerTitle}
         </h1>
         <p className="mt-3 max-w-2xl text-sm leading-relaxed text-mist-300 sm:text-base">
           {statusIsCli ? (
             <>
-              Nhà cung cấp <strong className="text-mist-100">Antigravity CLI</strong>{" "}
-              chạy agent ngay trên máy bạn. Không có key, không tốn quota — chọn
-              nó thì app gọi agent đọc slide trong thư viện của bạn.
+              {t.headerCliLead} <strong className="text-mist-100">Antigravity CLI</strong>{" "}
+              {t.headerCliTail}
             </>
           ) : (
             <>
-              Dán key rồi bấm{" "}
-              <strong className="text-mist-100">Kiểm tra &amp; lưu</strong>. Key
-              được gọi thử một lần rồi ghi vào{" "}
-              <code className="font-mono text-gold-200">.env</code> trên máy
-              bạn.
+              {t.headerKeyLead} <strong className="text-mist-100">{t.headerKeyAction}</strong>.{" "}
+              {t.headerKeyBeforeEnv} <code className="font-mono text-gold-200">.env</code>{" "}
+              {t.headerKeyAfterEnv}
             </>
           )}
         </p>
@@ -576,11 +801,11 @@ export function SetupPanel() {
           <span className="chip">
             {status?.configured
               ? statusIsCli
-                ? "agent CLI sẵn sàng"
-                : "đã có key"
+                ? t.statusAgentReady
+                : t.statusHasKey
               : statusIsCli
-                ? "CLI chưa cài"
-                : "chưa có key"}
+                ? t.statusCliMissing
+                : t.providerNoKey}
           </span>
           {!statusIsCli && status?.keyHint ? (
             <span className="chip font-mono">{status.keyHint}</span>
@@ -589,10 +814,10 @@ export function SetupPanel() {
           {status?.model ? <span className="chip font-mono">{status.model}</span> : null}
           <span className="chip">
             {status?.lastValidatedAt
-              ? `${formatRelativeTime(status.lastValidatedAt)} · ${
-                  status.lastValidationOk ? "đạt" : "lỗi"
+              ? `${formatRelativeTime(status.lastValidatedAt, lang)} · ${
+                  status.lastValidationOk ? t.statusOk : t.statusFailed
                 }`
-              : "chưa kiểm tra"}
+              : t.statusNeverChecked}
           </span>
           <button
             type="button"
@@ -605,7 +830,7 @@ export function SetupPanel() {
             ) : (
               <RefreshCw className="h-4 w-4" />
             )}
-            Làm mới
+            {t.statusRefresh}
           </button>
         </div>
 
@@ -622,13 +847,13 @@ export function SetupPanel() {
           next section would paint over the open list and eat its clicks. */}
       <section className="panel relative z-10 space-y-4 p-5">
         <h2 className="text-sm font-semibold text-mist-100">
-          Chọn nhà cung cấp &amp; dán key
+          {t.selectHeading}
         </h2>
 
         {/* Cloud providers — key-based, one card each. */}
         <div>
           <span className="label flex items-center gap-1.5">
-            <Cloud className="h-3.5 w-3.5 text-brand-300" /> Cloud Provider
+            <Cloud className="h-3.5 w-3.5 text-brand-300" /> {t.cloudGroup}
           </span>
           <div className="grid gap-2 sm:grid-cols-2">
             {cloudProviders.map((item) => (
@@ -646,12 +871,12 @@ export function SetupPanel() {
             the absence reads as "not yet" instead of "you missed a setting". */}
         <div>
           <span className="label flex items-center gap-1.5">
-            <SquareTerminal className="h-3.5 w-3.5 text-mist-400" /> CLI Provider
+            <SquareTerminal className="h-3.5 w-3.5 text-mist-400" /> {t.cliGroup}
           </span>
           {cliProviders.length === 0 ? (
             <div className="rounded-xl border border-dashed border-ink-700 bg-ink-950/40 px-3.5 py-3">
               <p className="text-xs leading-relaxed text-mist-400">
-                Chưa hỗ trợ. Hiện chỉ chạy qua Cloud Provider ở trên.
+                {t.cliUnsupported}
               </p>
               <div className="mt-2 flex flex-wrap gap-1.5">
                 {plannedCli.map((item) => (
@@ -679,7 +904,7 @@ export function SetupPanel() {
           <p className="text-[11px] leading-relaxed text-mist-500">
             {activeNote} {activeSignupUrl ? (
               <>
-                Lấy key:{" "}
+                {t.getKey}{" "}
                 <a
                   href={activeSignupUrl}
                   target="_blank"
@@ -706,13 +931,11 @@ export function SetupPanel() {
                 <TriangleAlert className="h-4 w-4 shrink-0 text-gold-300" />
               )}
               {cliReady
-                ? `Đã cài${activeProviderInfo?.cli?.version ? ` · ${activeProviderInfo.cli.version}` : ""}`
-                : "Chưa thấy lệnh `agy`"}
+                ? `${t.cliInstalled}${activeProviderInfo?.cli?.version ? ` · ${activeProviderInfo.cli.version}` : ""}`
+                : t.cliCommandMissing}
             </p>
             <p className="mt-1.5 text-[11px] leading-relaxed text-mist-500">
-              {cliReady
-                ? "Agent chạy trên máy bạn, không cần API key. Bấm “Kiểm tra & lưu” để dùng nó làm nhà cung cấp chính."
-                : "Cài bằng PowerShell: powershell -ExecutionPolicy Bypass -File scripts/install-antigravity.ps1 — rồi chạy lệnh `agy` một lần để đăng nhập."}
+              {cliReady ? t.cliReadyHint : t.cliInstallHint}
             </p>
           </div>
         ) : (
@@ -738,17 +961,17 @@ export function SetupPanel() {
                 type="button"
                 onClick={() => setReveal((value) => !value)}
                 className="btn-icon h-auto w-11 shrink-0"
-                aria-label={reveal ? "Ẩn key" : "Hiện key"}
+                aria-label={reveal ? t.keyHide : t.keyShow}
               >
                 {reveal ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
               </button>
             </div>
             <p className="mt-1.5 text-[11px] text-mist-500">
               {!keyReady
-                ? "Đang đọc key đã lưu…"
+                ? t.keyReading
                 : storedHintForActive
-                  ? `Đã lưu key ${storedHintForActive}.`
-                  : "Chưa có key. Dán vào rồi bấm Kiểm tra & lưu."}
+                  ? `${t.keyStored} ${storedHintForActive}.`
+                  : t.keyMissing}
             </p>
           </div>
         )}
@@ -756,7 +979,7 @@ export function SetupPanel() {
         <div className="grid gap-3 sm:grid-cols-[2fr_1fr]">
           <div>
             <label className="label" htmlFor="provider-model">
-              Model mặc định
+              {t.modelDefault}
             </label>
             <div
               className="relative"
@@ -788,7 +1011,7 @@ export function SetupPanel() {
                       commitModelBox();
                     }
                   }}
-                  placeholder="Gõ để tìm model…"
+                  placeholder={t.modelSearch}
                   autoComplete="off"
                   spellCheck={false}
                   className="field pl-9 pr-9"
@@ -804,7 +1027,7 @@ export function SetupPanel() {
                         onClick={() => pickModel(option)}
                         title={
                           trustedModels.has(option)
-                            ? "Model này đã tự sinh được một bài hoàn chỉnh trên máy bạn."
+                            ? t.modelTrustedTitle
                             : undefined
                         }
                         className={`flex w-full items-center gap-2 px-3 py-2 text-left font-mono text-xs ${
@@ -816,8 +1039,8 @@ export function SetupPanel() {
                         <span className="min-w-0 flex-1 truncate">{option}</span>
                         {trustedModels.has(option) ? (
                           <span
-                            aria-label="Đã tạo được bài"
-                            title="Đã tạo được bài"
+                            aria-label={t.modelTrustedBadge}
+                            title={t.modelTrustedBadge}
                             className="shrink-0 text-brand-300"
                           >
                             &#10003;
@@ -831,10 +1054,10 @@ export function SetupPanel() {
             </div>
             {liveCount > 0 || trustedModels.size > 0 ? (
               <p className="mt-1.5 text-[11px] text-mist-500">
-                {liveCount > 0 ? `${liveCount} model của ${activeProviderLabel}.` : null}
+                {liveCount > 0 ? `${liveCount} ${t.modelUnit} ${activeProviderLabel}.` : null}
                 {trustedModels.size > 0
-                  ? ` Dấu ✓ là model đã tự sinh được bài trên máy này (${trustedModels.size}).`
-                  : " Chưa model nào của hãng này được thử sinh bài."}
+                  ? `${t.modelTrustedNote} (${trustedModels.size}).`
+                  : t.modelUntestedNote}
               </p>
             ) : null}
           </div>
@@ -846,8 +1069,8 @@ export function SetupPanel() {
               disabled={busy !== null || !canFetchModels}
               title={
                 canFetchModels
-                  ? `Hỏi ${activeProviderLabel} danh sách model khả dụng`
-                  : `Cần lưu key ${activeProviderLabel} trước`
+                  ? `${t.modelsAskLead} ${activeProviderLabel} ${t.modelsAskTail}`
+                  : `${t.modelsNeedKeyLead} ${activeProviderLabel}${t.modelsNeedKeyTail}`
               }
             >
               {busy === "models" ? (
@@ -855,7 +1078,7 @@ export function SetupPanel() {
               ) : (
                 <RefreshCw className="h-4 w-4" />
               )}
-              Nạp danh sách model
+              {t.modelsLoad}
             </button>
           </div>
         </div>
@@ -865,7 +1088,7 @@ export function SetupPanel() {
         {!activeIsCli ? (
           <details className="rounded-xl border border-ink-700/70 bg-ink-950/50 px-3.5 py-3">
             <summary className="cursor-pointer text-xs font-semibold uppercase tracking-wide text-mist-400">
-              Nâng cao: base URL
+              {t.advancedBaseUrl}
             </summary>
             <div className="mt-3">
               <label className="label" htmlFor="provider-base">
@@ -882,8 +1105,7 @@ export function SetupPanel() {
                 className="field"
               />
               <p className="mt-1.5 text-[11px] text-mist-500">
-                Chỉ đổi khi bạn đi qua proxy/gateway tương thích. Host lạ sẽ bị từ chối
-                ở server.
+                {t.baseUrlHint}
               </p>
             </div>
           </details>
@@ -902,7 +1124,7 @@ export function SetupPanel() {
             ) : (
               <ShieldCheck className="h-4 w-4" />
             )}
-            Kiểm tra &amp; lưu
+            {t.keySaveTest}
           </button>
           <button
             type="button"
@@ -915,7 +1137,7 @@ export function SetupPanel() {
             ) : (
               <RefreshCw className="h-4 w-4" />
             )}
-            Chỉ kiểm tra
+            {t.keyTestOnly}
           </button>
           {storedHintForActive && !activeIsCli ? (
             <button
@@ -929,7 +1151,7 @@ export function SetupPanel() {
               ) : (
                 <Trash2 className="h-4 w-4" />
               )}
-              Xoá key {activeProviderLabel}
+              {t.keyDelete} {activeProviderLabel}
             </button>
           ) : null}
         </div>
@@ -958,49 +1180,47 @@ export function SetupPanel() {
 
 
       <section className="panel p-5">
-        <h2 className="text-sm font-semibold text-mist-100">Sau khi lưu key</h2>
+        <h2 className="text-sm font-semibold text-mist-100">{t.nextTitle}</h2>
         <ol className="mt-3 space-y-2 text-sm text-mist-300">
           <li>
-            <span className="font-mono text-brand-200">1.</span> Sang{" "}
+            <span className="font-mono text-brand-200">1.</span> {t.stepOneLead}{" "}
             <Link href="/studio" className="text-gold-200 underline">
               /studio
             </Link>{" "}
-            nhập chủ đề, chọn độ dài rồi bấm sinh bài giảng.
+            {t.stepOneTail}
           </li>
           <li>
-            <span className="font-mono text-brand-200">2.</span> Bài mới lưu vào
-            thư viện trên máy, bấm “Mở trong trình phát”.
+            <span className="font-mono text-brand-200">2.</span> {t.stepTwo}
           </li>
           <li>
-            <span className="font-mono text-brand-200">3.</span> Trong{" "}
+            <span className="font-mono text-brand-200">3.</span> {t.stepThreeLead}{" "}
             <Link href="/lesson" className="text-gold-200 underline">
               /lesson
             </Link>{" "}
-            hãy thử: kéo timeline để tua, <span className="kbd">,</span>{" "}
-            <span className="kbd">.</span> để bước từng khung hình,{" "}
-            <span className="kbd">[</span> <span className="kbd">]</span> rồi{" "}
-            <span className="kbd">\</span> để lặp đúng một đoạn khó.
+            {t.stepThreeScrub} <span className="kbd">,</span>{" "}
+            <span className="kbd">.</span> {t.stepThreeFrame}{" "}
+            <span className="kbd">[</span> <span className="kbd">]</span> {t.stepThreeThen}{" "}
+            <span className="kbd">\</span> {t.stepThreeLoop}
           </li>
         </ol>
 
         <p className="mt-4 flex items-start gap-2 rounded-xl border border-ink-700/70 bg-ink-950/50 p-3 text-[11px] leading-relaxed text-mist-400">
           <ShieldCheck className="mt-0.5 h-4 w-4 shrink-0 text-brand-300" />
-          API cài key chỉ nhận request từ{" "}
-          <code className="font-mono">localhost / 127.0.0.1</code>. Mở web qua IP
-          LAN thì không lưu được key, trừ khi đặt{" "}
+          {t.securityLead}{" "}
+          <code className="font-mono">localhost / 127.0.0.1</code>. {t.securityTail}{" "}
           <code className="font-mono">ALLOW_REMOTE_KEY_ADMIN=true</code>.
         </p>
 
         <p className="mt-3 flex flex-wrap items-center gap-3 text-xs text-mist-400">
           <Link href="/studio" className="btn-ghost">
-            <CirclePlay className="h-4 w-4" /> Đi tới Studio AI
+            <CirclePlay className="h-4 w-4" /> {t.gotoStudio}
           </Link>
           <span>
-            Muốn xem thử? Mở{" "}
+            {t.tryLead}{" "}
             <Link href="/lesson" className="text-brand-200 underline">
               /lesson
             </Link>
-            . Bài mẫu không cần key.
+            {t.tryTail}
           </span>
         </p>
       </section>

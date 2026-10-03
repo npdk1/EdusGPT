@@ -9,6 +9,40 @@ import katex from "katex";
 import "katex/dist/katex.min.css";
 import type { DataPoint, SlideGraph, SlideImage as SlideImageType, SlideTable, Lesson } from "@/lib/lesson/types";
 import { pollinationsImageUrl } from "@/lib/lesson/pollinations";
+import { useCopy } from "@/i18n/provider";
+
+const COPY = {
+  en: {
+    imageCreditAi: "AI image · pollinations.ai",
+    imageCreditFiller: "Random illustration · picsum.photos",
+    imageSource: "source",
+    imageHide: "Hide this image",
+    imageSearchedFor: "searched for",
+    imageNotFound: "No image found",
+    imageLoading: "Finding an image…",
+    imageZoom: "Zoom",
+    imageClose: "Close",
+    imageGraphLabel: "Function graph",
+    imageGraphHint: "Move the pointer along the curve to read its value",
+    imageAxisX: "x-axis",
+    imageAxisY: "y-axis",
+  },
+  vi: {
+    imageCreditAi: "Ảnh AI · pollinations.ai",
+    imageCreditFiller: "Ảnh minh hoạ ngẫu nhiên · picsum.photos",
+    imageSource: "nguồn",
+    imageHide: "Ẩn ảnh này",
+    imageSearchedFor: "tìm với",
+    imageNotFound: "Không tìm được ảnh",
+    imageLoading: "Đang tìm ảnh…",
+    imageZoom: "Phóng to",
+    imageClose: "Đóng",
+    imageGraphLabel: "Đồ thị hàm số",
+    imageGraphHint: "Di chuột dọc đường cong để đọc giá trị",
+    imageAxisX: "trục x",
+    imageAxisY: "trục y",
+  },
+};
 
 /**
  * Pictures a teacher has rejected, keyed by `lessonId::sceneId::query`.
@@ -62,6 +96,18 @@ export function SlideImageView({
   lessonId: string;
   scene: Lesson["scenes"][number];
 }) {
+  const t = useCopy(COPY);
+  /**
+   * The loader below writes the picture's credit line, and it must not re-run
+   * just because the interface language changed — a switch of language should
+   * not put a slide back on "Đang tìm ảnh…" and spend another search request.
+   * So the dictionary travels through a ref rather than the effect's deps.
+   */
+  const copyRef = useRef(t);
+  useEffect(() => {
+    copyRef.current = t;
+  }, [t]);
+
   const [image, setImage] = useState<SlideImageType | null>(null);
   const [failed, setFailed] = useState(false);
   const [hidden, setHidden] = useState(false);
@@ -126,7 +172,7 @@ export function SlideImageView({
       setImage({
         url: generatedUrl,
         title: scene.title,
-        credit: "Ảnh AI · pollinations.ai",
+        credit: copyRef.current.imageCreditAi,
         sourcePage: "https://pollinations.ai/",
       });
       return;
@@ -138,7 +184,7 @@ export function SlideImageView({
       setImage({
         url: `https://picsum.photos/seed/${encodeURIComponent(lessonId)}-${encodeURIComponent(scene.id)}/1024/640`,
         title: scene.title,
-        credit: "Ảnh minh hoạ ngẫu nhiên · picsum.photos",
+        credit: copyRef.current.imageCreditFiller,
         sourcePage: "https://picsum.photos/",
       });
       return;
@@ -230,14 +276,18 @@ export function SlideImageView({
               rel="noreferrer noopener"
               className="shrink-0 underline underline-offset-2 hover:text-brand-300"
             >
-              nguồn
+              {t.imageSource}
             </a>
             {/* No image archive is reliable enough to trust blind: a search for
                 "for loop python" returns a snake and a roller coaster. */}
             <button
               type="button"
               onClick={dismiss}
-              title={generatedUrl ? "Ẩn ảnh này" : `Ẩn ảnh này (tìm với "${query}")`}
+              title={
+                generatedUrl
+                  ? t.imageHide
+                  : `${t.imageHide} (${t.imageSearchedFor} "${query}")`
+              }
               className="ml-auto shrink-0 rounded p-0.5 text-mist-400 transition-colors hover:text-ember-500"
             >
               <EyeOff className="h-3.5 w-3.5" />
@@ -246,11 +296,11 @@ export function SlideImageView({
         </>
       ) : failed ? (
         <span className="chip border-ink-600 text-mist-400">
-          <ImageOff className="h-3.5 w-3.5" /> Không tìm được ảnh
+          <ImageOff className="h-3.5 w-3.5" /> {t.imageNotFound}
         </span>
       ) : (
         <span className="chip border-ink-600 text-mist-400">
-          <ImageIcon className="h-3.5 w-3.5" /> Đang tìm ảnh…
+          <ImageIcon className="h-3.5 w-3.5" /> {t.imageLoading}
         </span>
       )}
     </figure>
@@ -464,6 +514,7 @@ export function SceneDataChart({ data, title }: SceneDataChartProps) {  const va
  * mouse while the narration walks x upward.
  */
 export function FunctionGraph({ graph }: { graph: SlideGraph }) {
+  const t = useCopy(COPY);
   const [hover, setHover] = useState<number | null>(null);
 
   const finiteYs = graph.ys.filter((y): y is number => y !== null);
@@ -532,7 +583,7 @@ export function FunctionGraph({ graph }: { graph: SlideGraph }) {
         viewBox={`0 0 ${W} ${H}`}
         className="block w-full"
         role="img"
-        aria-label={graph.title ?? "Đồ thị hàm số"}
+        aria-label={graph.title ?? t.imageGraphLabel}
         onMouseMove={(event) => {
           const rect = event.currentTarget.getBoundingClientRect();
           const mx = ((event.clientX - rect.left) / rect.width) * W;
@@ -608,7 +659,7 @@ export function FunctionGraph({ graph }: { graph: SlideGraph }) {
       <div className="scene-graph-hint" aria-hidden="true">
         {hoverPoint
           ? `x = ${numberFormat.format(hoverPoint.x)} → y = ${numberFormat.format(hoverPoint.y)}`
-          : `Di chuột dọc đường cong để đọc giá trị${graph.xlabel ? ` · trục x: ${graph.xlabel}` : ""}${graph.ylabel ? ` · trục y: ${graph.ylabel}` : ""}`}
+          : `${t.imageGraphHint}${graph.xlabel ? ` · ${t.imageAxisX}: ${graph.xlabel}` : ""}${graph.ylabel ? ` · ${t.imageAxisY}: ${graph.ylabel}` : ""}`}
       </div>
     </figure>
   );
@@ -623,6 +674,7 @@ export function FunctionGraph({ graph }: { graph: SlideGraph }) {
  * works there too), not a screenshot.
  */
 export function FigureZoom({ label, children }: { label: string; children: ReactNode }) {
+  const t = useCopy(COPY);
   const [open, setOpen] = useState(false);
 
   useEffect(() => {
@@ -640,7 +692,7 @@ export function FigureZoom({ label, children }: { label: string; children: React
         <div className="scene-zoom-body">{children}</div>
         <button type="button" className="scene-zoom-open" onClick={() => setOpen(true)} aria-label={label} title={label}>
           <Maximize2 className="h-[1.6cqw] min-h-3.5 w-[1.6cqw] min-w-3.5" />
-          <span>Phóng to</span>
+          <span>{t.imageZoom}</span>
         </button>
       </div>
       {open ? (
@@ -652,7 +704,7 @@ export function FigureZoom({ label, children }: { label: string; children: React
             aria-label={label}
             onClick={(event) => event.stopPropagation()}
           >
-            <button type="button" className="scene-zoom-close" onClick={() => setOpen(false)} aria-label="Đóng">
+            <button type="button" className="scene-zoom-close" onClick={() => setOpen(false)} aria-label={t.imageClose}>
               <X className="h-4 w-4" />
             </button>
             {children}

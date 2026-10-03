@@ -3,9 +3,9 @@ import { SetupPanel } from "@/components/setup/SetupPanel";
 import { ThemeToggle } from "@/components/site/ThemeToggle";
 
 export const metadata: Metadata = {
-  title: "Cài đặt",
+  title: "Cài đặt · Settings",
   description:
-    "Cài đặt EdusGPT: chọn nhà cung cấp AI (Gemini, OpenRouter hay agent CLI), dán API key rồi kiểm tra ngay trên localhost trước khi ghi vào .env, và chọn giao diện sáng hay tối.",
+    "Set up EdusGPT: pick an AI provider (Gemini, OpenRouter or a CLI agent), paste an API key and test it on localhost before it is written to .env, then choose the light or dark appearance. — Cài đặt EdusGPT: chọn nhà cung cấp AI, dán API key rồi kiểm tra ngay trên localhost trước khi ghi vào .env, và chọn giao diện sáng hay tối.",
 };
 
 export default function SetupPage() {

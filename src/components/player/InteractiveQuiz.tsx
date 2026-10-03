@@ -3,12 +3,30 @@
 import { useState } from "react";
 import { CircleCheck, CircleX, CircleHelp } from "lucide-react";
 import type { QuizOption } from "@/lib/lesson/types";
+import { useCopy } from "@/i18n/provider";
 
 interface InteractiveQuizProps {
   question: string;
   options: QuizOption[];
   onAnswer?: (isCorrect: boolean) => void;
 }
+
+const COPY = {
+  en: {
+    quizKicker: "Quiz",
+    quizCorrect: "Correct.",
+    quizWrong: "Not quite.",
+    quizRetry: "Try again",
+    quizCheck: "Check answer",
+  },
+  vi: {
+    quizKicker: "Trắc nghiệm",
+    quizCorrect: "Chính xác.",
+    quizWrong: "Chưa đúng.",
+    quizRetry: "Làm lại",
+    quizCheck: "Kiểm tra đáp án",
+  },
+};
 
 /**
  * The quiz, as a slide rather than as a web widget.
@@ -25,6 +43,7 @@ interface InteractiveQuizProps {
  * chrome is what made this block tall, and a 16:9 card has the width to spare.
  */
 export function InteractiveQuiz({ question, options, onAnswer }: InteractiveQuizProps) {
+  const t = useCopy(COPY);
   const [selected, setSelected] = useState<string | null>(null);
   const [submitted, setSubmitted] = useState(false);
 
@@ -50,7 +69,7 @@ export function InteractiveQuiz({ question, options, onAnswer }: InteractiveQuiz
     <figure className="scene-quiz">
       <figcaption className="scene-quiz-kicker">
         <CircleHelp className="h-[1.1em] w-[1.1em] shrink-0" />
-        <span>Trắc nghiệm</span>
+        <span>{t.quizKicker}</span>
       </figcaption>
 
       <p className="scene-quiz-question text-balance">{question}</p>
@@ -94,7 +113,7 @@ export function InteractiveQuiz({ question, options, onAnswer }: InteractiveQuiz
           className="scene-quiz-feedback"
           data-state={currentOption.isCorrect ? "correct" : "wrong"}
         >
-          <b>{currentOption.isCorrect ? "Chính xác." : "Chưa đúng."}</b>{" "}
+          <b>{currentOption.isCorrect ? t.quizCorrect : t.quizWrong}</b>{" "}
           {currentOption.explanation}
         </p>
       ) : null}
@@ -102,7 +121,7 @@ export function InteractiveQuiz({ question, options, onAnswer }: InteractiveQuiz
       <div className="scene-quiz-actions">
         {submitted ? (
           <button type="button" onClick={handleReset} className="scene-quiz-button">
-            Làm lại
+            {t.quizRetry}
           </button>
         ) : (
           <button
@@ -112,7 +131,7 @@ export function InteractiveQuiz({ question, options, onAnswer }: InteractiveQuiz
             className="scene-quiz-button"
             data-primary=""
           >
-            Kiểm tra đáp án
+            {t.quizCheck}
           </button>
         )}
       </div>

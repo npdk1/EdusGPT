@@ -14,8 +14,44 @@ import {
 import type { Timebase } from "@/hooks/useTimebase";
 import type { LessonScene } from "@/lib/lesson/types";
 import { formatClock, clamp } from "@/lib/format";
+import { useCopy } from "@/i18n/provider";
 
 const RATES = [0.5, 0.75, 1, 1.25, 1.5, 2];
+
+const COPY = {
+  en: {
+    fullscreenBack5: "Back 5 seconds",
+    fullscreenBack5Title: "Back 5 seconds (←)",
+    fullscreenPlay: "Play",
+    fullscreenPlayTitle: "Play (Space)",
+    fullscreenPause: "Pause",
+    fullscreenPauseTitle: "Pause (Space)",
+    fullscreenForward5: "Forward 5 seconds",
+    fullscreenForward5Title: "Forward 5 seconds (→)",
+    fullscreenVolume: "Volume",
+    fullscreenSpeedTitle: "Playback speed",
+    fullscreenSpeedNow: "Playback speed, currently",
+    fullscreenExit: "Exit fullscreen",
+    fullscreenExitTitle: "Exit fullscreen (F or Esc)",
+    fullscreenProgress: "Lesson progress bar",
+  },
+  vi: {
+    fullscreenBack5: "Tua lui 5 giây",
+    fullscreenBack5Title: "Tua lui 5 giây (←)",
+    fullscreenPlay: "Phát",
+    fullscreenPlayTitle: "Phát (Space)",
+    fullscreenPause: "Tạm dừng",
+    fullscreenPauseTitle: "Tạm dừng (Space)",
+    fullscreenForward5: "Tua tới 5 giây",
+    fullscreenForward5Title: "Tua tới 5 giây (→)",
+    fullscreenVolume: "Âm lượng",
+    fullscreenSpeedTitle: "Tốc độ phát",
+    fullscreenSpeedNow: "Tốc độ phát, hiện tại",
+    fullscreenExit: "Thoát toàn màn hình",
+    fullscreenExitTitle: "Thoát toàn màn hình (F hoặc Esc)",
+    fullscreenProgress: "Thanh tiến trình bài giảng",
+  },
+};
 
 /**
  * The controls that appear over a fullscreen slide, in the style of a media
@@ -45,6 +81,7 @@ export function FullscreenControls({
   activeScene: LessonScene;
   onExit: () => void;
 }) {
+  const t = useCopy(COPY);
   const [visible, setVisible] = useState(true);
   const [speedOpen, setSpeedOpen] = useState(false);
   const [volumeOpen, setVolumeOpen] = useState(false);
@@ -117,8 +154,8 @@ export function FullscreenControls({
 
         <OverlayButton
           onClick={() => timebase.seekBy(-5)}
-          title="Tua lui 5 giây (←)"
-          label="Tua lui 5 giây"
+          title={t.fullscreenBack5Title}
+          label={t.fullscreenBack5}
         >
           <Rewind className="h-4 w-4" />
         </OverlayButton>
@@ -127,8 +164,8 @@ export function FullscreenControls({
           type="button"
           onClick={timebase.toggle}
           className="flex h-11 w-11 items-center justify-center rounded-full bg-white/95 text-black transition-transform hover:scale-105"
-          title={timebase.playing ? "Tạm dừng (Space)" : "Phát (Space)"}
-          aria-label={timebase.playing ? "Tạm dừng" : "Phát"}
+          title={timebase.playing ? t.fullscreenPauseTitle : t.fullscreenPlayTitle}
+          aria-label={timebase.playing ? t.fullscreenPause : t.fullscreenPlay}
         >
           {timebase.playing ? (
             <Pause className="h-5 w-5" />
@@ -139,8 +176,8 @@ export function FullscreenControls({
 
         <OverlayButton
           onClick={() => timebase.seekBy(5)}
-          title="Tua tới 5 giây (→)"
-          label="Tua tới 5 giây"
+          title={t.fullscreenForward5Title}
+          label={t.fullscreenForward5}
         >
           <FastForward className="h-4 w-4" />
         </OverlayButton>
@@ -149,7 +186,7 @@ export function FullscreenControls({
             voice is synthesised per slide, the voice is the sound — and a toggle
             gives a viewer no way to turn it up. */}
         <div className="relative flex shrink-0 items-center">
-          <OverlayButton onClick={openVolume} title="Âm lượng" label="Âm lượng">
+          <OverlayButton onClick={openVolume} title={t.fullscreenVolume} label={t.fullscreenVolume}>
             <VolumeIcon className="h-[18px] w-[18px]" />
           </OverlayButton>
           {volumeOpen ? (
@@ -162,7 +199,7 @@ export function FullscreenControls({
                 value={timebase.volume}
                 onChange={(event) => timebase.setVolume(Number(event.target.value))}
                 onPointerDown={wake}
-                aria-label="Âm lượng"
+                aria-label={t.fullscreenVolume}
                 className="player-range w-full"
               />
               <span className="w-8 shrink-0 text-right font-mono text-[11px] tabular-nums text-white/70">
@@ -177,9 +214,9 @@ export function FullscreenControls({
             type="button"
             onClick={openSpeed}
             className="flex h-9 min-w-[3.25rem] items-center justify-center rounded-lg px-2 font-mono text-xs font-semibold text-white/90 transition-colors hover:bg-white/15"
-            title="Tốc độ phát"
+            title={t.fullscreenSpeedTitle}
             aria-expanded={speedOpen}
-            aria-label={`Tốc độ phát, hiện tại ${timebase.rate} lần`}
+            aria-label={`${t.fullscreenSpeedNow} ${timebase.rate}×`}
           >
             {timebase.rate}×
           </button>
@@ -207,8 +244,8 @@ export function FullscreenControls({
 
         <OverlayButton
           onClick={onExit}
-          title="Thoát toàn màn hình (F hoặc Esc)"
-          label="Thoát toàn màn hình"
+          title={t.fullscreenExitTitle}
+          label={t.fullscreenExit}
         >
           <Minimize className="h-4 w-4" />
         </OverlayButton>
@@ -251,6 +288,7 @@ function OverlayButton({
  * second.
  */
 function ScrubLine({ timebase }: { timebase: Timebase }) {
+  const t = useCopy(COPY);
   const fillRef = useRef<HTMLDivElement>(null);
   const trackRef = useRef<HTMLDivElement>(null);
   const clockRef = useRef<HTMLSpanElement>(null);
@@ -294,7 +332,7 @@ function ScrubLine({ timebase }: { timebase: Timebase }) {
         ref={trackRef}
         role="slider"
         tabIndex={0}
-        aria-label="Thanh tiến trình bài giảng"
+        aria-label={t.fullscreenProgress}
         aria-valuemin={0}
         aria-valuemax={Math.round(timebase.duration)}
         className="relative h-1 w-full cursor-pointer rounded-full bg-white/25 transition-all hover:h-1.5"

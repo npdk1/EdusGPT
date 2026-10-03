@@ -12,6 +12,84 @@ import {
   Sparkles,
   Trash2,
 } from "lucide-react";
+import { useCopy } from "@/i18n/provider";
+
+/**
+ * The screen's own sentences, in both languages.
+ *
+ * A sentence that needs a number keeps it beside the words — a `{n}` placeholder
+ * in a string, a second expression in JSX — so one key still reads correctly for
+ * one scene and for forty.
+ */
+const COPY = {
+  en: {
+    libraryInLibrary: "lessons in the library",
+    libraryRefresh: "Refresh",
+    libraryDeleteAll: "Delete all",
+    libraryDeleteAllTitle: "Delete every lesson in the library",
+    libraryDeleteAllConfirm: "Delete all {n} lessons in the library? This cannot be undone.",
+    libraryNewLesson: "New lesson",
+    libraryCreating: "Creating",
+    libraryScenes: "scenes",
+    libraryCreateFailed: "Lesson creation failed",
+    libraryStoppedHint: "It may have stopped (the server shut down mid-run)",
+    libraryOpenStudioTitle: "Open the lesson builder to watch and listen to each scene",
+    libraryViewProgress: "View progress",
+    libraryDeleteDraft: "Delete draft {title}",
+    libraryDeleteCourse: "Delete {title}",
+    libraryJustNow: "just now",
+    libraryMinutesAgo: "{n} minutes ago",
+    libraryHoursAgo: "{n} hours ago",
+    libraryDaysAgo: "{n} days ago",
+    libraryLoadFailed: "The library could not be loaded.",
+    libraryNetworkError: "Network error.",
+    libraryDeleteLessonFailed: "The lesson could not be deleted.",
+    libraryDeleteLibraryFailed: "The library could not be cleared.",
+    libraryLoading: "Loading the library…",
+    libraryEmptyTitle: "The library is empty",
+    libraryEmptyWhere: "Lessons you generate are saved here, in",
+    libraryEmptyKeep:
+      ". Nothing is lost when you change browser or clear browser data.",
+    libraryCreateFirst: "Create your first lesson",
+    librarySample: "sample",
+    libraryOpen: "Open",
+  },
+  vi: {
+    libraryInLibrary: "bài trong thư viện",
+    libraryRefresh: "Làm mới",
+    libraryDeleteAll: "Xoá hết",
+    libraryDeleteAllTitle: "Xoá toàn bộ bài trong thư viện",
+    libraryDeleteAllConfirm:
+      "Xoá hết {n} bài trong thư viện? Không khôi phục được.",
+    libraryNewLesson: "Sinh bài mới",
+    libraryCreating: "Đang tạo",
+    libraryScenes: "cảnh",
+    libraryCreateFailed: "Tạo bài thất bại",
+    libraryStoppedHint: "Có thể đã dừng (máy chủ tắt giữa chừng)",
+    libraryOpenStudioTitle: "Mở trang tạo bài để xem và nghe từng cảnh",
+    libraryViewProgress: "Xem tiến độ",
+    libraryDeleteDraft: "Xoá bản nháp {title}",
+    libraryDeleteCourse: "Xoá {title}",
+    libraryJustNow: "vừa xong",
+    libraryMinutesAgo: "{n} phút trước",
+    libraryHoursAgo: "{n} giờ trước",
+    libraryDaysAgo: "{n} ngày trước",
+    libraryLoadFailed: "Không tải được thư viện.",
+    libraryNetworkError: "Lỗi mạng.",
+    libraryDeleteLessonFailed: "Không xoá được bài.",
+    libraryDeleteLibraryFailed: "Không xoá được thư viện.",
+    libraryLoading: "Đang tải thư viện…",
+    libraryEmptyTitle: "Thư viện còn trống",
+    libraryEmptyWhere: "Bài bạn sinh sẽ được lưu ở đây, trong",
+    libraryEmptyKeep:
+      ". Không mất khi đổi trình duyệt hay xoá dữ liệu trình duyệt.",
+    libraryCreateFirst: "Đi sinh bài đầu tiên",
+    librarySample: "mẫu",
+    libraryOpen: "Mở",
+  },
+} satisfies Record<string, Record<string, string>>;
+
+type LibraryCopy = (typeof COPY)["en"];
 
 interface CourseSummary {
   id: string;
@@ -25,7 +103,7 @@ interface CourseSummary {
   model?: string;
 }
 
-/** A lesson still being written — shown as a "Đang tạo…" card, not nothing. */
+/** A lesson still being written — shown as a "Creating…" card, not nothing. */
 interface DraftInfo {
   id: string;
   title: string;
@@ -54,18 +132,19 @@ function formatClock(seconds: number): string {
   return `${m}:${String(s).padStart(2, "0")}`;
 }
 
-function relative(iso: string): string {
+function relative(iso: string, t: LibraryCopy): string {
   const diff = Date.now() - new Date(iso).getTime();
   const minutes = Math.round(diff / 60000);
-  if (minutes < 1) return "vừa xong";
-  if (minutes < 60) return `${minutes} phút trước`;
+  if (minutes < 1) return t.libraryJustNow;
+  if (minutes < 60) return t.libraryMinutesAgo.replace("{n}", String(minutes));
   const hours = Math.round(minutes / 60);
-  if (hours < 24) return `${hours} giờ trước`;
-  return `${Math.round(hours / 24)} ngày trước`;
+  if (hours < 24) return t.libraryHoursAgo.replace("{n}", String(hours));
+  return t.libraryDaysAgo.replace("{n}", String(Math.round(hours / 24)));
 }
 
 /** Server-backed course library — survives a browser reinstall. */
 export function LibraryPanel() {
+  const t = useCopy(COPY);
   const [courses, setCourses] = useState<CourseSummary[]>([]);
   const [drafts, setDrafts] = useState<DraftInfo[]>([]);
   const [loading, setLoading] = useState(true);
@@ -87,17 +166,19 @@ export function LibraryPanel() {
         error?: string;
       };
       if (!response.ok) {
-        if (!quiet) setError(payload.error ?? "Không tải được thư viện.");
+        if (!quiet) setError(payload.error ?? t.libraryLoadFailed);
         return;
       }
       setCourses(payload.courses ?? []);
       setDrafts(payload.drafts ?? []);
     } catch (caught) {
-      if (!quiet) setError(caught instanceof Error ? caught.message : "Lỗi mạng.");
+      if (!quiet) {
+        setError(caught instanceof Error ? caught.message : t.libraryNetworkError);
+      }
     } finally {
       if (!quiet) setLoading(false);
     }
-  }, []);
+  }, [t]);
 
   useEffect(() => {
     void load();
@@ -123,19 +204,19 @@ export function LibraryPanel() {
         const payload = (await response.json().catch(() => null)) as {
           error?: string;
         } | null;
-        setError(payload?.error ?? "Không xoá được bài.");
+        setError(payload?.error ?? t.libraryDeleteLessonFailed);
         return;
       }
       setCourses((current) => current.filter((item) => item.id !== id));
     } finally {
       setBusyId(null);
     }
-  }, []);
+  }, [t]);
 
   const removeAll = useCallback(async () => {
     if (
       !window.confirm(
-        `Xoá hết ${courses.length} bài trong thư viện? Không khôi phục được.`,
+        t.libraryDeleteAllConfirm.replace("{n}", String(courses.length)),
       )
     ) {
       return;
@@ -150,23 +231,23 @@ export function LibraryPanel() {
         const payload = (await response.json().catch(() => null)) as {
           error?: string;
         } | null;
-        setError(payload?.error ?? "Không xoá được thư viện.");
+        setError(payload?.error ?? t.libraryDeleteLibraryFailed);
         return;
       }
       setCourses([]);
     } catch (caught) {
-      setError(caught instanceof Error ? caught.message : "Lỗi mạng.");
+      setError(caught instanceof Error ? caught.message : t.libraryNetworkError);
     } finally {
       setClearing(false);
     }
-  }, [courses.length]);
+  }, [courses.length, t]);
 
   return (
     <div className="space-y-5">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div className="flex items-center gap-2 text-sm text-mist-400">
           <FolderOpen className="h-4 w-4 text-brand-300" />
-          {courses.length} bài trong thư viện
+          {courses.length} {t.libraryInLibrary}
         </div>
         <div className="flex gap-2">
           <button type="button" onClick={() => void load()} className="btn-ghost">
@@ -175,7 +256,7 @@ export function LibraryPanel() {
             ) : (
               <RefreshCw className="h-4 w-4" />
             )}
-            Làm mới
+            {t.libraryRefresh}
           </button>
           {courses.length > 0 ? (
             <button
@@ -183,18 +264,18 @@ export function LibraryPanel() {
               onClick={() => void removeAll()}
               disabled={clearing || loading}
               className="btn-ghost"
-              title="Xoá toàn bộ bài trong thư viện"
+              title={t.libraryDeleteAllTitle}
             >
               {clearing ? (
                 <LoaderCircle className="h-4 w-4 animate-spin" />
               ) : (
                 <Trash2 className="h-4 w-4" />
               )}
-              Xoá hết
+              {t.libraryDeleteAll}
             </button>
           ) : null}
           <Link href="/studio" className="btn-primary">
-            <Sparkles className="h-4 w-4" /> Sinh bài mới
+            <Sparkles className="h-4 w-4" /> {t.libraryNewLesson}
           </Link>
         </div>
       </div>
@@ -219,13 +300,17 @@ export function LibraryPanel() {
                   <span className="truncate">{draft.title}</span>
                 </p>
                 <p className="mt-0.5 text-xs text-mist-400">
-                  {state === "running"
-                    ? `Đang tạo ${draft.done}/${draft.total} cảnh`
-                    : state === "failed"
-                      ? "Tạo bài thất bại"
-                      : "Có thể đã dừng (máy chủ tắt giữa chừng)"}
+                  {state === "running" ? (
+                    <>
+                      {t.libraryCreating} {draft.done}/{draft.total} {t.libraryScenes}
+                    </>
+                  ) : state === "failed" ? (
+                    t.libraryCreateFailed
+                  ) : (
+                    t.libraryStoppedHint
+                  )}
                   {draft.subject ? ` · ${draft.subject}` : ""}
-                  {` · ${relative(draft.updatedAt)}`}
+                  {` · ${relative(draft.updatedAt, t)}`}
                 </p>
               </div>
               <div className="flex shrink-0 gap-2">
@@ -233,9 +318,9 @@ export function LibraryPanel() {
                   <Link
                     href="/studio"
                     className="btn-ghost px-3 py-1.5 text-xs"
-                    title="Mở trang tạo bài để xem và nghe từng cảnh"
+                    title={t.libraryOpenStudioTitle}
                   >
-                    Xem tiến độ
+                    {t.libraryViewProgress}
                   </Link>
                 ) : null}
                 <button
@@ -243,7 +328,7 @@ export function LibraryPanel() {
                   onClick={() => void remove(draft.id)}
                   disabled={busyId === draft.id}
                   className="btn-icon"
-                  aria-label={`Xoá bản nháp ${draft.title}`}
+                  aria-label={t.libraryDeleteDraft.replace("{title}", draft.title)}
                 >
                   {busyId === draft.id ? (
                     <LoaderCircle className="h-4 w-4 animate-spin" />
@@ -276,19 +361,19 @@ export function LibraryPanel() {
 
       {loading ? (
         <p className="flex items-center gap-2 py-10 text-sm text-mist-400">
-          <LoaderCircle className="h-4 w-4 animate-spin" /> Đang tải thư viện…
+          <LoaderCircle className="h-4 w-4 animate-spin" /> {t.libraryLoading}
         </p>
       ) : courses.length === 0 ? (
         <div className="panel p-8 text-center">
           <BookOpen className="mx-auto h-8 w-8 text-mist-500" />
-          <p className="mt-3 font-semibold text-mist-100">Thư viện còn trống</p>
+          <p className="mt-3 font-semibold text-mist-100">{t.libraryEmptyTitle}</p>
           <p className="mx-auto mt-2 max-w-md text-sm text-mist-400">
-            Bài bạn sinh sẽ được lưu ở đây, trong{" "}
-            <code className="font-mono text-gold-200">data/courses/</code>. Không
-            mất khi đổi trình duyệt hay xoá dữ liệu trình duyệt.
+            {t.libraryEmptyWhere}{" "}
+            <code className="font-mono text-gold-200">data/courses/</code>
+            {t.libraryEmptyKeep}
           </p>
           <Link href="/studio" className="btn-primary mt-4">
-            <Sparkles className="h-4 w-4" /> Đi sinh bài đầu tiên
+            <Sparkles className="h-4 w-4" /> {t.libraryCreateFirst}
           </Link>
         </div>
       ) : (
@@ -304,7 +389,7 @@ export function LibraryPanel() {
                       : "bg-ink-700 text-mist-300"
                   }`}
                 >
-                  {course.source === "gemini" ? "AI" : "mẫu"}
+                  {course.source === "gemini" ? "AI" : t.librarySample}
                 </span>
               </div>
 
@@ -318,8 +403,10 @@ export function LibraryPanel() {
                   <Clock className="h-3 w-3" />
                   {formatClock(course.duration)}
                 </span>
-                <span>{course.sceneCount} cảnh</span>
-                <span>{relative(course.updatedAt)}</span>
+                <span>
+                  {course.sceneCount} {t.libraryScenes}
+                </span>
+                <span>{relative(course.updatedAt, t)}</span>
               </p>
 
               <div className="mt-auto flex gap-2 pt-1">
@@ -327,14 +414,14 @@ export function LibraryPanel() {
                   href={`/lesson?c=${encodeURIComponent(course.id)}`}
                   className="btn-primary flex-1 px-3 py-1.5 text-xs"
                 >
-                  <Play className="h-3.5 w-3.5" /> Mở
+                  <Play className="h-3.5 w-3.5" /> {t.libraryOpen}
                 </Link>
                 <button
                   type="button"
                   onClick={() => void remove(course.id)}
                   disabled={busyId === course.id}
                   className="btn-icon"
-                  aria-label={`Xoá ${course.title}`}
+                  aria-label={t.libraryDeleteCourse.replace("{title}", course.title)}
                 >
                   {busyId === course.id ? (
                     <LoaderCircle className="h-4 w-4 animate-spin" />
