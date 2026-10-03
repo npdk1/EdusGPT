@@ -512,10 +512,10 @@ function liveSceneToSlide(scene: LiveScene): Lesson["scenes"][number] {
 /**
  * The slide's own picture, small.
  *
- * Only when the slide actually has one. The fallback chain ends at a seeded
- * random photo, which is fine on a full slide where it is labelled as filler —
- * but a list of thumbnails full of stock faces told the teacher nothing about
- * their own lesson, so a slide with no picture gets its number instead.
+ * Only when the slide actually has one. A thumbnail list is the wrong place for
+ * the chain's last stage: a plate drawn from the palette reads as a colour
+ * swatch and tells the teacher nothing, so a slide with no picture yet is shown
+ * by its number instead.
  */
 function SceneThumb({ lessonId, scene }: { lessonId: string; scene: LiveScene }) {
   const prompt = (scene.imagePrompt ?? "").trim();

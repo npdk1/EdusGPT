@@ -1472,6 +1472,36 @@
     box-shadow: 0 0 1.8cqw 0.4cqw rgba(var(--pointer-rgb, 245, 158, 11), 0.16);
   }
 
+  /*
+   * The move.
+   *
+   * When the pointer lands on a new line it pings: the frame of the new target
+   * opens outward once and fades. A dot that simply appears somewhere else is
+   * easy to lose on a full slide, and this says "the hand moved" without
+   * lighting anything up. `scale` is the independent transform property, so it
+   * composes with the `left`/`top` the component positions the box with.
+   */
+  .scene-pointer-ping {
+    border: 1px solid rgba(var(--pointer-rgb, 245, 158, 11), 0.5);
+    border-radius: 1cqw;
+    opacity: 0;
+  }
+
+  .scene-pointer-ping-on {
+    animation: scene-pointer-ping 620ms ease-out both;
+  }
+
+  @keyframes scene-pointer-ping {
+    0% {
+      opacity: 0.75;
+      scale: 1;
+    }
+    100% {
+      opacity: 0;
+      scale: 1.06;
+    }
+  }
+
   [data-pointer="on"] {
     background-color: rgba(var(--pointer-rgb, 245, 158, 11), 0.06);
     border-radius: 10px;

@@ -14,7 +14,7 @@ import { useCopy } from "@/i18n/provider";
 const COPY = {
   en: {
     imageCreditAi: "AI image · pollinations.ai",
-    imageCreditFiller: "Random illustration · picsum.photos",
+    imageCreditDrawn: "Illustration drawn for this slide",
     imageSource: "source",
     imageHide: "Hide this image",
     imageSearchedFor: "searched for",
@@ -29,7 +29,7 @@ const COPY = {
   },
   vi: {
     imageCreditAi: "Ảnh AI · pollinations.ai",
-    imageCreditFiller: "Ảnh minh hoạ ngẫu nhiên · picsum.photos",
+    imageCreditDrawn: "Hình vẽ dựng riêng cho slide này",
     imageSource: "nguồn",
     imageHide: "Ẩn ảnh này",
     imageSearchedFor: "tìm với",
@@ -117,13 +117,16 @@ export function SlideImageView({
   // the seed stays untouched, so a retry never re-rolls the picture.
   const [retry, setRetry] = useState(0);
   /**
-   * Where the current picture comes from. A dead AI render does not end at
-   * the "Không tìm được ảnh" chip: it falls back to the open archive with
-   * the scene's own search query, and only when the archive has nothing does
-   * it use a seeded Picsum photo — clearly labelled as a random filler, so a
-   * slide always has a picture and nobody mistakes it for an illustration.
+   * Where the current picture comes from. A dead AI render does not end at the
+   * "Không tìm được ảnh" chip: it falls back to the open archive with the
+   * scene's own search query, and when the archive has nothing the slide draws
+   * its own plate.
+   *
+   * The plate replaced a seeded stock photo, which was worse than nothing: a
+   * lesson about Newton's second law came up with a stranger's face, and no
+   * amount of labelling it as filler made it teach anything.
    */
-  const [stage, setStage] = useState<"generated" | "archive" | "filler">(
+  const [stage, setStage] = useState<"generated" | "archive" | "drawn">(
     "generated",
   );
 
@@ -178,22 +181,24 @@ export function SlideImageView({
       return;
     }
 
-    // Last resort: a stable seeded photo. Random, and labelled as such — a
-    // slide always has a picture, and nobody mistakes it for an illustration.
-    if (stage === "filler" || (!generatedUrl && query.length < 3)) {
+    // Last resort: a plate drawn here, from the slide's own palette. Deterministic
+    // per lesson and scene, so it never changes under the teacher, and never a
+    // request to anyone.
+    if (stage === "drawn" || (!generatedUrl && query.length < 3)) {
       setImage({
-        url: `https://picsum.photos/seed/${encodeURIComponent(lessonId)}-${encodeURIComponent(scene.id)}/1024/640`,
+        url: "",
         title: scene.title,
-        credit: copyRef.current.imageCreditFiller,
-        sourcePage: "https://picsum.photos/",
+        credit: copyRef.current.imageCreditDrawn,
+        sourcePage: "",
+        drawn: true,
       });
       return;
     }
 
     // No prompt, or the AI render died: the open archive with the scene's own
-    // query. An empty result falls through to the filler above.
+    // query. An empty result falls through to the plate above.
     if (query.length < 3) {
-      setStage("filler");
+      setStage("drawn");
       return;
     }
 
@@ -208,17 +213,17 @@ export function SlideImageView({
         });
         if (cancelled) return;
         if (!response.ok) {
-          setStage("filler");
+          setStage("drawn");
           return;
         }
         const payload = (await response.json()) as { images?: SlideImageType[] };
         const first = payload.images?.[0];
         if (first) setImage(first);
         // An empty result is normal for abstract topics: fall through to the
-        // filler rather than a "not found" the teacher must worry about.
-        else setStage("filler");
+        // plate rather than a "not found" the teacher must worry about.
+        else setStage("drawn");
       } catch {
-        if (!cancelled) setStage("filler");
+        if (!cancelled) setStage("drawn");
       } finally {
         clearTimeout(timer);
       }
@@ -241,43 +246,51 @@ export function SlideImageView({
     <figure className="scene-image min-h-0 self-center">
       {image ? (
         <>
-          {/* Remote, externally-sourced image: next/image cannot optimise it. */}
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img
-            key={generatedUrl ? `${key}:r${retry}` : key}
-            src={
-              generatedUrl && retry > 0 ? `${generatedUrl}&r=${retry}` : image.url
-            }
-            alt={image.title}
-            loading="lazy"
-            referrerPolicy="no-referrer"
-            className="h-full w-full rounded-xl border border-ink-700 bg-ink-900 object-cover"
-            onError={() => {
-              if (generatedUrl && stage === "generated" && retry < 1) {
-                window.setTimeout(() => {
-                  setRetry((current) => (current < 1 ? current + 1 : current));
-                }, 2500);
-              } else if (stage === "generated") {
-                // The AI render is dead: the effect drops to the archive.
-                setStage("archive");
-              } else if (stage === "archive") {
-                // The archive has nothing: the effect drops to the filler.
-                setStage("filler");
-              } else {
-                setFailed(true);
+          {image.drawn ? (
+            <ConceptPlate seed={`${lessonId} ${scene.id}`} label={image.title} />
+          ) : (
+            /* Remote, externally-sourced image: next/image cannot optimise it. */
+            /* eslint-disable-next-line @next/next/no-img-element */
+            <img
+              key={generatedUrl ? `${key}:r${retry}` : key}
+              src={
+                generatedUrl && retry > 0 ? `${generatedUrl}&r=${retry}` : image.url
               }
-            }}
-          />
+              alt={image.title}
+              loading="lazy"
+              referrerPolicy="no-referrer"
+              className="h-full w-full rounded-xl border border-ink-700 bg-ink-900 object-cover"
+              onError={() => {
+                if (generatedUrl && stage === "generated" && retry < 1) {
+                  window.setTimeout(() => {
+                    setRetry((current) => (current < 1 ? current + 1 : current));
+                  }, 2500);
+                } else if (stage === "generated") {
+                  // The AI render is dead: the effect drops to the archive.
+                  setStage("archive");
+                } else if (stage === "archive") {
+                  // The archive has nothing: the effect drops to the plate.
+                  setStage("drawn");
+                } else {
+                  setFailed(true);
+                }
+              }}
+            />
+          )}
           <figcaption className="mt-1 flex items-center gap-1.5 text-[10px] text-mist-400">
             <span className="truncate">{image.credit}</span>
-            <a
-              href={image.sourcePage}
-              target="_blank"
-              rel="noreferrer noopener"
-              className="shrink-0 underline underline-offset-2 hover:text-brand-300"
-            >
-              {t.imageSource}
-            </a>
+            {/* No link on a plate: there is no page to open, and a dead link on a
+                slide is worse than no link. */}
+            {image.sourcePage ? (
+              <a
+                href={image.sourcePage}
+                target="_blank"
+                rel="noreferrer noopener"
+                className="shrink-0 underline underline-offset-2 hover:text-brand-300"
+              >
+                {t.imageSource}
+              </a>
+            ) : null}
             {/* No image archive is reliable enough to trust blind: a search for
                 "for loop python" returns a snake and a roller coaster. */}
             <button
@@ -309,6 +322,107 @@ export function SlideImageView({
 
 interface SceneFormulaProps {
   formula: string;
+}
+
+/**
+ * The plate a slide falls back to when nothing can be fetched for it.
+ *
+ * Every slide in this project used to end its picture hunt at a seeded stock
+ * photo, which is a photograph of a stranger on a slide about Newton's second
+ * law. It was labelled as filler, but a label does not make a wrong picture
+ * teach anything — it just makes it honest about being wrong.
+ *
+ * So the last resort is drawn here instead: a quiet composition of arcs and
+ * discs in the slide's own accent, seeded by the lesson and scene id. The same
+ * slide always gets the same plate, different slides get different ones, and
+ * nothing leaves the machine. Colours come from the `--slide-*` custom
+ * properties the theme already sets, so the plate belongs to whichever palette
+ * the slide is wearing.
+ */
+function ConceptPlate({ seed, label }: { seed: string; label: string }) {
+  // A tiny deterministic generator. Arithmetic rather than a request, so the
+  // plate is identical on every machine and every reload.
+  const base = Array.from(seed).reduce((sum, char) => sum + char.charCodeAt(0), 0);
+  const rand = (step: number): number => {
+    const value = Math.sin(base * 0.013 + step * 7.31) * 43758.5453;
+    return value - Math.floor(value);
+  };
+  // Two plates on one page — a slide and a thumbnail, say — must not share a
+  // gradient id, or the second one paints with the first one's stops. The seed
+  // is unique per scene, so it makes the id unique too.
+  const washId = `plate-wash-${base.toString(36)}`;
+
+  const discs = [0, 1, 2].map((index) => ({
+    cx: 180 + rand(index + 1) * 660,
+    cy: 120 + rand(index + 4) * 400,
+    r: 90 + rand(index + 7) * 150,
+  }));
+  const arcX = 120 + rand(11) * 240;
+  const dots = Array.from({ length: 24 }, (_, index) => ({
+    cx: 640 + (index % 6) * 46,
+    cy: 330 + Math.floor(index / 6) * 46,
+    r: 4 + rand(index + 13) * 4,
+  }));
+
+  return (
+    <svg
+      viewBox="0 0 1024 640"
+      preserveAspectRatio="xMidYMid slice"
+      role="img"
+      aria-label={label}
+      className="h-full w-full rounded-xl border"
+      style={{
+        // An SVG has no intrinsic size, so a plate in a figure with no height
+        // would collapse to nothing where the photograph beside it fills the
+        // box. The viewBox's own ratio is the missing intrinsic size.
+        aspectRatio: "1024 / 640",
+        borderColor: "color-mix(in srgb, var(--slide-rule) 70%, transparent)",
+        background: "var(--slide-bg-sunk)",
+      }}
+    >
+      <defs>
+        <linearGradient id={washId} x1="0" y1="0" x2="0.6" y2="1">
+          <stop
+            offset="0%"
+            stopColor="var(--slide-accent-soft)"
+            stopOpacity="0.22"
+          />
+          <stop offset="100%" stopColor="var(--slide-bg-sunk)" stopOpacity="0" />
+        </linearGradient>
+      </defs>
+      <rect width="1024" height="640" fill={`url(#${washId})`} />
+      {discs.map((disc, index) => (
+        <circle
+          key={index}
+          cx={disc.cx}
+          cy={disc.cy}
+          r={disc.r}
+          fill="var(--slide-accent-soft)"
+          opacity={0.12 + rand(index + 21) * 0.1}
+        />
+      ))}
+      {/* One arc, drawn rather than filled: it reads as a diagram fragment
+          rather than as one more blob. */}
+      <path
+        d={`M ${arcX} 520 A 260 260 0 0 1 ${arcX + 300} 260`}
+        fill="none"
+        stroke="var(--slide-accent)"
+        strokeWidth="3"
+        strokeLinecap="round"
+        opacity="0.35"
+      />
+      {dots.map((dot, index) => (
+        <circle
+          key={index}
+          cx={dot.cx}
+          cy={dot.cy}
+          r={dot.r}
+          fill="var(--slide-ink)"
+          opacity="0.16"
+        />
+      ))}
+    </svg>
+  );
 }
 
 /**

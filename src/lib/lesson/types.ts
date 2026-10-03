@@ -310,6 +310,12 @@ export interface SlideImage {
   license?: string;
   width?: number;
   height?: number;
+  /**
+   * True when this is not a picture at all but a plate drawn from the slide's
+   * own palette — what a slide falls back to when the generator is unavailable
+   * and the archive has nothing on the topic. There is no `url` to load.
+   */
+  drawn?: boolean;
 }
 
 export interface DataPoint {

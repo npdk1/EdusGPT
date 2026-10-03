@@ -55,6 +55,8 @@ export function ScenePointer({
 }) {
   const dotRef = useRef<HTMLDivElement>(null);
   const ringRef = useRef<HTMLDivElement>(null);
+  /** The one-shot ripple drawn when the pointer moves to a new target. */
+  const pingRef = useRef<HTMLDivElement>(null);
   const stateRef = useRef("");
   /** Last resolved anchor, so a sentence that matches nothing holds position. */
   const heldRef = useRef<{ scene: number; target: string } | null>(null);
@@ -106,6 +108,7 @@ export function ScenePointer({
       const stage = stageRef.current;
       const dot = dotRef.current;
       const ring = ringRef.current;
+      const ping = pingRef.current;
       if (!stage || !dot || !ring) return;
 
       const live = channel.live;
@@ -114,6 +117,7 @@ export function ScenePointer({
           stateRef.current = "hidden";
           dot.style.opacity = "0";
           ring.style.opacity = "0";
+          ping?.classList.remove("scene-pointer-ping-on");
           stage.querySelectorAll('[data-pointer="on"]').forEach((node) => {
             node.removeAttribute("data-pointer");
           });
@@ -229,7 +233,7 @@ export function ScenePointer({
       // The dot sits on the target's left edge, vertically centred; the ring
       // frames the whole target. Both are positioned in stage space so they
       // survive the slide's own GSAP transforms.
-      dot.style.transform = `translate(${x - 14}px, ${y + box.height / 2 - 9}px)`;
+      dot.style.transform = `translate(${x - 9}px, ${y + box.height / 2 - 7}px)`;
       ring.style.transform = `translate(${x - 8}px, ${y - 8}px)`;
       ring.style.width = `${box.width + 16}px`;
       ring.style.height = `${box.height + 16}px`;
@@ -242,6 +246,21 @@ export function ScenePointer({
         });
         node.setAttribute("data-pointer", "on");
         ring.dataset.label = label ?? "";
+        // One ping each time the pointer lands somewhere new. Without it the dot
+        // simply appears on a different line and the eye has to find it again;
+        // with it, the move is a thing that happened.
+        if (ping) {
+          ping.style.left = `${x - 8}px`;
+          ping.style.top = `${y - 8}px`;
+          ping.style.width = `${box.width + 16}px`;
+          ping.style.height = `${box.height + 16}px`;
+          ping.classList.remove("scene-pointer-ping-on");
+          // Restarting a CSS animation means removing the class and forcing the
+          // element to be laid out again; without the reflow the class comes back
+          // in the same frame and the animation does not replay.
+          void ping.offsetWidth;
+          ping.classList.add("scene-pointer-ping-on");
+        }
       }
     };
 
@@ -251,6 +270,15 @@ export function ScenePointer({
 
   return (
     <>
+      {/* Under the ring, positioned with left/top rather than a transform: the
+          ripple animates `scale`, and a transform set here would be overwritten
+          by the animation on its first frame and the ping would jump to the
+          slide's corner. */}
+      <div
+        ref={pingRef}
+        aria-hidden="true"
+        className="scene-pointer-ping pointer-events-none absolute left-0 top-0 z-10"
+      />
       <div
         ref={ringRef}
         aria-hidden="true"
@@ -261,7 +289,7 @@ export function ScenePointer({
         aria-hidden="true"
         className="scene-pointer-dot pointer-events-none absolute left-0 top-0 z-10 opacity-0 transition-opacity duration-300"
       >
-        <span className="block h-[18px] w-[18px] rounded-full" />
+        <span className="block h-[14px] w-[14px] rounded-full" />
       </div>
     </>
   );

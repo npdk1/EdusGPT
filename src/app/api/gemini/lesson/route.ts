@@ -760,6 +760,26 @@ Mỗi câu trong "narration" cần một điểm con trỏ, theo đúng thứ t�
  */
 const IMAGE_OPTIONAL = new Set(["cover", "quiz", "summary"]);
 
+/**
+ * The picture a scene gets when the model forgot to ask for one.
+ *
+ * The image-mode rules ask every teaching scene for an `imagePrompt`, and the
+ * model that wrote three lessons in a row ignored that on every single scene:
+ * the deck came out as text on paper with the switch on and nothing to show for
+ * it. A missing prompt is not what the teacher asked for, so it is filled here
+ * from the one thing every scene is guaranteed to have — its own title.
+ *
+ * It is deliberately blunt. Anything cleverer would be inventing a scene the
+ * model did not describe; the honest fallback asks for a clear illustration of
+ * exactly what this slide is about, with no lettering, which is what a picture
+ * generator can actually draw and what the slide needs to stop looking like a
+ * form.
+ */
+function pictureFromTitle(title: string): string {
+  const subject = title.replace(/\s+/g, " ").trim().slice(0, 120);
+  return `clear educational illustration of ${subject}, flat vector style, soft light, no text, no words, no letters`;
+}
+
 /** The system prompt for one scene, with the picture mode folded in. */
 function sceneSystem(withImages: boolean): string {
   return SCENE_SYSTEM + REFERENCE_RULES + SOLUTION_RULES + GRAPH_RULES + POINTER_RULES + (withImages ? IMAGE_MODE_RULES : NO_IMAGE_MODE_RULES);
@@ -1521,7 +1541,7 @@ export async function POST(request: NextRequest) {
             };
           });
 
-          return {
+          const scene = {
             ...detail.data,
             kind,
             accent: plannedScene.accent ?? "brand",
@@ -1529,6 +1549,22 @@ export async function POST(request: NextRequest) {
               detail.data.narration,
               Number(detail.data.duration) || perSceneSeconds,
             ),
+          };
+          const typed = scene as {
+            imagePrompt?: unknown;
+            imageQuery?: unknown;
+          };
+          const wanted = typed.imagePrompt ?? typed.imageQuery;
+          return {
+            ...scene,
+            // Illustrations were asked for, the model gave none, and the switch
+            // the teacher set is the promise this deck has to keep. One picture
+            // per teaching scene, described from the scene's own title.
+            ...(useImages &&
+            !IMAGE_OPTIONAL.has(kind) &&
+            !(typeof wanted === "string" && wanted.trim().length >= 3)
+              ? { imagePrompt: pictureFromTitle(sceneTitle) }
+              : {}),
           };
         };
 

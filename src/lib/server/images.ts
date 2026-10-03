@@ -206,6 +206,53 @@ function words(text: string): string[] {
     .filter(Boolean);
 }
 
+/**
+ * Words that describe how to draw rather than what is in the picture.
+ *
+ * A scene's `imagePrompt` is written for a picture generator: "cartoon delivery
+ * truck pushing a heavy crate uphill, flat style, no text". The archives match
+ * on the titles and tags real files carry, and nothing in a photograph is ever
+ * "cartoon", "flat", "style" or "no text" — so the search came back empty for
+ * every prompt and the slide fell through to the random filler. Measured
+ * against the live sources: "newton cradle" returns 182 Openverse results, and
+ * the same query wrapped in generation instructions returns none.
+ */
+const DRAWING_WORDS = new Set([
+  "art", "artwork", "arts", "cartoon", "cartoons", "clipart", "clip", "drawing",
+  "draw", "drawn", "paint", "painted", "painting", "watercolor", "watercolour",
+  "vector", "flat", "simple", "minimal", "minimalist", "modern", "clean",
+  "professional", "quality", "high", "detailed", "realistic", "stylized",
+  "stylised", "stylized", "svg", "png", "jpeg", "render", "rendered",
+  "rendering", "isometric", "perspective", "macro", "zoomed", "centered",
+  "composition", "background", "foreground", "backdrop", "text", "texts",
+  "words", "word", "letters", "letter", "lettering", "typography", "label",
+  "labels", "caption", "watermark", "logo", "signature", "style", "styled",
+  "looking", "looks", "look", "scene", "shot", "poster", "infographic",
+  "educational", "education", "school", "icon", "emoji", "sticker", "banner",
+  "thumbnail", "hero", "wide", "closeup", "flatstyle", "no", "not", "without",
+  "using", "used", "made", "madeby", "free", "stock",
+]);
+
+/**
+ * What the archives are actually asked for.
+ *
+ * The subject is the noun phrase at the front of the prompt; everything after it
+ * is about the drawing. Both the abstract words already ignored when judging and
+ * these drawing words are dropped before the search, and the cleaned phrase is
+ * what the results are then judged against — so a picture can never be let in by
+ * a word that only existed in the instruction.
+ *
+ * Falls back to the whole phrase when cleaning empties it, because a shorter
+ * query that still means something beats no query at all.
+ */
+function photoSubject(query: string): string {
+  const all = words(query).filter((word) => word.length >= 3);
+  const kept = all.filter(
+    (word) => !STOP_WORDS.has(word) && !DRAWING_WORDS.has(word),
+  );
+  return (kept.length > 0 ? kept : all).join(" ");
+}
+
 /** Words of the query that actually carry meaning. */
 function significantWords(query: string): string[] {
   return words(query).filter((word) => word.length >= 3 && !STOP_WORDS.has(word));
@@ -214,29 +261,23 @@ function significantWords(query: string): string[] {
 /**
  * How well a candidate answers the query: 0..1, where 0 means "do not show".
  *
- * Two rules, because neither alone is right.
+ * EVERY meaningful word of the query has to appear in the file's own text, and
+ * the score is the fraction that matched.
  *
- * The ANCHOR is the longest meaningful word in the query, and it must appear.
- * In practice the longest word is the specific one — "workout" in "gym workout",
- * "anatomy" in "human heart anatomy" — and it is what keeps a generic result
- * out: a gymnasium photograph has no "workout", and Muscle Shoals has no
- * "exercise".
- *
- * The COUNT rule then only asks for a majority. Requiring *every* word instead
- * would discard good matches, because archives name files tersely: Commons has
- * "Heart frontally PDA.jpg" for a lesson on the heart's anatomy, and demanding
- * "human" and "anatomy" in the title throws away a perfectly good diagram. It
- * is the anchor rule that makes settling for a majority safe.
+ * All-or-nothing rather than a majority, because this runs against the *variant*
+ * that actually returned results (see `searchVariants`), and that variant is
+ * already as short as the archives could answer. Asking for a majority of a
+ * five-word prompt admitted a photograph of a school gymnasium on a slide about
+ * workout benefits: it matched "gym" and "of" and nothing else. What keeps a
+ * near-miss out here is whole-word matching, not the word count — "gym" is not a
+ * word inside "gymnasium", so the whole-word test rejects it on its own.
  */
 function relevance(query: string, haystack: string): number {
   const wanted = significantWords(query);
   if (wanted.length === 0) return 0;
   const have = new Set(words(haystack));
   const matched = wanted.filter((word) => have.has(word));
-
-  const anchor = wanted.reduce((longest, word) => (word.length > longest.length ? word : longest), "");
-  if (!have.has(anchor)) return 0;
-  if (matched.length < Math.ceil(wanted.length / 2)) return 0;
+  if (matched.length !== wanted.length) return 0;
 
   return matched.length / wanted.length;
 }
@@ -246,17 +287,17 @@ function relevance(query: string, haystack: string): number {
 /**
  * Shortens a search term until the archives actually return something.
  *
- * Measured, not assumed: Openverse returns 3 results for "newton second law" and
- * **zero** for "newton second law diagram". Its matcher is strict enough that
- * the extra descriptive words a model helpfully adds — exactly the words that
- * make a query specific — are what empties the result set.
+ * Measured, not assumed: Openverse returns 182 results for "newton cradle" and
+ * **zero** for "newton cradle animation". Its matcher is strict enough that the
+ * extra descriptive words a model helpfully adds are what empties the result set.
  *
- * Shortening is for *finding* candidates only. Every candidate is still judged
- * against the original query, so widening the search can never make the answer
- * less relevant. That distinction is the whole fix for the gym case: "gym
- * workout" falls back to the two-word variant "gym", and a candidate matching
- * the shortened query would let a school gymnasium through. Judged against the
- * full query, the gymnasium fails — it never had the word "workout".
+ * A candidate is judged against the variant that found it, not against the full
+ * prompt, because otherwise shortening could never help: "solar system planets
+ * orbiting the sun" shortens to "solar system planets", finds a real photograph
+ * of the solar system, and then fails on the word "orbiting" that the file was
+ * never going to contain. The variant is still two words or more (see below), and
+ * whole-word matching still decides what counts as a hit, so a shortened search
+ * is a narrower question rather than a looser one.
  */
 function searchVariants(query: string): string[] {
   const parts = query.split(/\s+/).filter(Boolean);
@@ -279,7 +320,7 @@ function searchVariants(query: string): string[] {
  * a picture that does not belong to the slide.
  */
 export async function searchSlideImage(query: string): Promise<SlideImage[]> {
-  const term = query.trim();
+  const term = photoSubject(query);
   if (term.length < 3) return [];
 
   const best = new Map<string, { image: SlideImage; score: number }>();
@@ -291,7 +332,9 @@ export async function searchSlideImage(query: string): Promise<SlideImage[]> {
     ]);
 
     for (const candidate of [...openverse, ...commons]) {
-      const score = relevance(term, candidate.text);
+      // Judged against the variant, so a hit means "this file is about the words
+      // that were actually searched for".
+      const score = relevance(variant, candidate.text);
       if (score <= 0) continue;
 
       // Openverse aggregates Commons, so the same file arrives twice.
@@ -303,7 +346,7 @@ export async function searchSlideImage(query: string): Promise<SlideImage[]> {
       // the first only because its categories mention the word — but a file
       // actually NAMED after the topic is the one a teacher means, so the
       // title decides between candidates that are otherwise equally relevant.
-      const rank = score + relevance(term, candidate.image.title) * 0.5;
+      const rank = score + relevance(variant, candidate.image.title) * 0.5;
 
       const previous = best.get(key);
       if (!previous || rank > previous.score) best.set(key, { image: candidate.image, score: rank });
