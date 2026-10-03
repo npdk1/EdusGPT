@@ -329,6 +329,14 @@ export function SlideSurface({
         );
       case "formula":
         return <SceneFormula formula={block.text ?? ""} />;
+      // A plain panel and a plain line: geometry with no words of its own, so
+      // other blocks can sit on top of one. This is what lets a card hold a
+      // heading, or a rule divide two halves, instead of every box being a
+      // rectangle of text.
+      case "shape":
+        return <span className="scene-block-shape" />;
+      case "rule":
+        return <span className="scene-block-rule" />;
       case "image":
         return (
           <SlideImageView

@@ -196,6 +196,8 @@ export const SLIDE_BLOCK_KINDS = [
   "card",
   "formula",
   "image",
+  "shape",
+  "rule",
 ] as const;
 
 export type SlideBlockKind = (typeof SLIDE_BLOCK_KINDS)[number];

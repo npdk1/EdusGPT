@@ -443,7 +443,12 @@ const SLIDE_DESIGN_RULES = `QUY TẮC BỐ CỤC SLIDE (bắt buộc — đây l
 9. "blocks" — TỰ DO ĐẶT KHỐI, dùng khi layout không vừa:
     Đây là lưới 1000 x 562.5 (rộng 1000, cao 562.5). Mỗi khối có "kind", "x", "y"
     (góc trên-trái), "w", "h" (kích thước) — tất cả tính trên lưới đó, KHÔNG phải
-    pixel. Khối có thể là: "title", "subtitle", "text", "card", "formula", "image".
+    pixel. Khối có thể là: "title", "subtitle", "text", "card", "formula", "image",
+     "shape" (một khung nền bo góc, KHÔNG có chữ) hoặc "rule" (một đường kẻ ngang,
+     KHÔNG có chữ).
+     - Dùng "shape" khi muốn có một tấm thẻ nền để tiêu đề hoặc một đoạn ngắn nằm
+       lên; dùng "rule" khi muốn một đường kẻ ngăn hai phần với nhau. Chúng là
+       hình học thuần, không mang chữ — nhờ vậy một ô chữ có thể nằm lên chúng.
     - CHỈ dùng "blocks" cho tối đa 1/3 số cảnh, và chỉ khi bố cục thật sự khác
       (ví dụ: ảnh lớn ở nửa trên, ba thẻ xếp dọc bên dưới; hoặc hai khối lệch
       nhau về hai phía). Cảnh nào không chắc thì BỎ "blocks", để "layout" lo.

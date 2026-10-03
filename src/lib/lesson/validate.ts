@@ -177,13 +177,17 @@ export function sanitizeBlocks(raw: unknown): SlideBlock[] | undefined {
       asString(block.imagePrompt).slice(0, 400) || undefined;
     const imageQuery = asString(block.imageQuery).slice(0, 120) || undefined;
     // Every kind needs its own something: words for the four text kinds, a way
-    // to find the picture for the fifth, a formula for the sixth.
+    // to find the picture for the fifth, a formula for the sixth. A shape or a
+    // rule is pure geometry — a box or a line needs no words of its own, it is
+    // the thing other blocks sit on or against.
     const usable =
       kind === "image"
         ? Boolean(imagePrompt || imageQuery)
         : kind === "formula"
           ? text.length > 0
-          : text.length > 0 || Boolean(label);
+          : kind === "shape" || kind === "rule"
+            ? true
+            : text.length > 0 || Boolean(label);
     if (!usable) continue;
     // The text has to fit the box it was placed in. The prompt asks the model to
     // check this against the same table; doing it here as well means a slide
@@ -200,7 +204,7 @@ export function sanitizeBlocks(raw: unknown): SlideBlock[] | undefined {
     const fitted = text.length
       ? fitBlockText(text, w, h, cqw)
       : undefined;
-    if (kind !== "image" && kind !== "formula" && !fitted) continue;
+    if (kind !== "image" && kind !== "formula" && kind !== "shape" && kind !== "rule" && !fitted) continue;
     blocks.push({
       kind: kind as SlideBlockKind,
       x,

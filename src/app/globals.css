@@ -801,6 +801,31 @@
     align-items: flex-start;
   }
 
+  /*
+   * Geometry blocks: a panel and a line.
+   *
+   * A shape is a rounded panel in the theme's own paper shade, so a card can
+   * sit behind a heading without either of them knowing about the other. A rule
+   * is a hairline in the theme's rule colour, vertically centred in whatever
+   * height it was given. Both take their colour from the palette, so they
+   * follow the theme instead of arriving as one fixed colour.
+   */
+  .scene-block-shape {
+    width: 100%;
+    height: 100%;
+    border-radius: 1.1cqw;
+    background: var(--slide-bg-sunk);
+    box-shadow: inset 0 0 0 1px
+      color-mix(in srgb, var(--slide-rule) 70%, transparent);
+  }
+
+  .scene-block-rule {
+    align-self: center;
+    width: 100%;
+    height: 1px;
+    background: var(--slide-rule);
+  }
+
   /* A picture in a block fills the box it was given, not a slide's column. */
   .scene-layout-blocks .scene-image {
     width: 100%;
