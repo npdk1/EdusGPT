@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
+  CircleCheck,
   TriangleAlert,
   Download,
   FileJson,
@@ -33,6 +34,8 @@ export function LessonPlayer({ initialLesson, samples }: LessonPlayerProps) {
   const [loop, setLoop] = useState<LoopRange>({ enabled: false, a: 0, b: 0 });
   const [helpOpen, setHelpOpen] = useState(false);
   const [exportError, setExportError] = useState<string | null>(null);
+  /** Where the exported file went, so a silent save never looks like a dud. */
+  const [exportNotice, setExportNotice] = useState<string | null>(null);
   const [activeScene, setActiveScene] = useState(0);
   const [voiceState, setVoiceState] = useState<VoiceState>({
     status: "idle", sceneIndex: null, sceneTitle: "", voice: "",
@@ -262,8 +265,51 @@ export function LessonPlayer({ initialLesson, samples }: LessonPlayerProps) {
   // --- standalone export (one self-contained HTML file) ---------------------
   const exportLesson = useCallback(
     async (kind: "html" | "json") => {
+      const filename = `${slugify(lesson.title) || "bai-giang"}.${
+        kind === "html" ? "html" : "lesson.json"
+      }`;
       setExporting(kind);
       setExportError(null);
+      setExportNotice(null);
+      /**
+       * Ask where the file goes, the way every other program does.
+       *
+       * A blob download has no dialogue at all: the file lands in the
+       * Downloads folder under a name nobody chose, which is what made this
+       * button feel broken. Where the browser offers the picker we open it
+       * first — before the (slow) export request, because a picker asked for
+       * after an await is outside the click gesture and gets refused — then
+       * write the finished bytes into the file the teacher picked.
+       */
+      let writable: FileSystemWritableFileStream | null = null;
+      try {
+        if (typeof window.showSaveFilePicker === "function") {
+          const handle = await window.showSaveFilePicker({
+            suggestedName: filename,
+            types: [
+              {
+                description:
+                  kind === "html" ? "Trang HTML tự chạy" : "Dữ liệu bài giảng",
+                accept: {
+                  [kind === "html" ? "text/html" : "application/json"]: [
+                    kind === "html" ? ".html" : ".json",
+                  ],
+                },
+              },
+            ],
+          });
+          writable = await handle.createWritable();
+        }
+      } catch (error) {
+        // Cancelling the dialogue is a decision, not a failure.
+        if (error instanceof DOMException && error.name === "AbortError") {
+          setExporting(null);
+          return;
+        }
+        // No picker, or the browser refused one: fall through to the plain
+        // download below rather than failing the export.
+        writable = null;
+      }
       try {
         const response = await fetch(`/api/export/${kind}`, {
           method: "POST",
@@ -277,17 +323,27 @@ export function LessonPlayer({ initialLesson, samples }: LessonPlayerProps) {
           throw new Error(payload?.error ?? `HTTP ${response.status}`);
         }
         const blob = await response.blob();
-        const url = URL.createObjectURL(blob);
-        const anchor = document.createElement("a");
-        anchor.href = url;
-        anchor.download = `${slugify(lesson.title) || "bai-giang"}.${
-          kind === "html" ? "html" : "lesson.json"
-        }`;
-        document.body.appendChild(anchor);
-        anchor.click();
-        anchor.remove();
-        URL.revokeObjectURL(url);
+        if (writable) {
+          await writable.write(blob);
+          await writable.close();
+          setExportNotice(`Đã lưu "${filename}" vào nơi bạn chọn.`);
+        } else {
+          const url = URL.createObjectURL(blob);
+          const anchor = document.createElement("a");
+          anchor.href = url;
+          anchor.download = filename;
+          document.body.appendChild(anchor);
+          anchor.click();
+          anchor.remove();
+          // Revoking in the same tick cancels the download on some browsers:
+          // give it a moment to start before the URL dies.
+          window.setTimeout(() => URL.revokeObjectURL(url), 30_000);
+          setExportNotice(
+            `Trình duyệt không cho chọn nơi lưu — file "${filename}" nằm trong thư mục Tải xuống.`,
+          );
+        }
       } catch (error) {
+        if (writable) await writable.abort().catch(() => null);
         setExportError(
           error instanceof Error ? error.message : "Không xuất được file",
         );
@@ -409,6 +465,11 @@ export function LessonPlayer({ initialLesson, samples }: LessonPlayerProps) {
             <p className="flex items-start gap-2 rounded-xl border border-ember-500/40 bg-ember-500/10 px-3.5 py-2.5 text-sm text-mist-100">
               <TriangleAlert className="mt-0.5 h-4 w-4 shrink-0 text-ember-400" />
               {exportError}
+            </p>
+          ) : exportNotice ? (
+            <p className="flex items-start gap-2 rounded-xl border border-brand-600/50 bg-brand-500/10 px-3.5 py-2.5 text-sm text-mist-100">
+              <CircleCheck className="mt-0.5 h-4 w-4 shrink-0 text-brand-400" />
+              {exportNotice}
             </p>
           ) : null}
 
