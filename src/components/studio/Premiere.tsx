@@ -1,20 +1,20 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import { LoaderCircle, Pause, Play, RotateCcw, Volume2 } from "lucide-react";
+import { Pause, RotateCcw, Volume2 } from "lucide-react";
 import type { LiveScene } from "./GenerationTimeline";
 import { SceneLoader3D } from "../three/SceneLoader3D";
-import { FigureZoom, SlideImageView } from "../player/SceneFigure";
+import { KaraokeSubtitle } from "../player/KaraokeSubtitle";
+import { SlideSurface } from "../player/SlideSurface";
 import type { Lesson } from "@/lib/lesson/types";
 import {
-  alignSentences,
+  createNarrationChannel,
   decodeWordMarks,
-  type AlignedSentence,
+  type NarrationChannel,
 } from "@/lib/karaoke";
 
 interface CachedAudio {
   url: string;
-  sentences: AlignedSentence[];
 }
 
 type Phase =
@@ -73,9 +73,16 @@ export function PremierePlayer({
 }) {
   const [auto, setAuto] = useState(true);
   const [phase, setPhase] = useState<Phase>({ name: "idle" });
-  const [now, setNow] = useState(0);
-  const [sentences, setSentences] = useState<AlignedSentence[]>([]);
   const [note, setNote] = useState<string | null>(null);
+  /**
+   * The voice channel, as a ref and not state.
+   *
+   * Playback publishes its position here on every animation frame and the
+   * caption reads it inside its own rAF loop, so the highlight never costs a
+   * React render — the same bargain the full player makes. `words` carries the
+   * per-slide word timings, which is why the caption is never a slide behind.
+   */
+  const channelRef = useRef<NarrationChannel>(createNarrationChannel());
 
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const cacheRef = useRef(new Map<number, CachedAudio>());
@@ -87,6 +94,7 @@ export function PremierePlayer({
   const stopAudio = useCallback(() => {
     audioRef.current?.pause();
     audioRef.current = null;
+    channelRef.current.live = null;
   }, []);
 
   const evictBehind = useCallback((keepFrom: number) => {
@@ -108,8 +116,7 @@ export function PremierePlayer({
     failedRef.current.clear();
     atRef.current = null;
     busyRef.current = false;
-    setNow(0);
-    setSentences([]);
+    channelRef.current.live = null;
     setNote(null);
     setPhase({ name: "idle" });
   }, [stopAudio]);
@@ -136,7 +143,10 @@ export function PremierePlayer({
         decodeWordMarks(response.headers.get("x-tts-words")),
       ]);
       const url = URL.createObjectURL(blob);
-      const cached = { url, sentences: alignSentences(text, marks) };
+      // Published on the channel, not held here: the caption under the slide is
+      // the only thing that reads the timings.
+      channelRef.current.words.set(scene.index, marks);
+      const cached = { url };
       cacheRef.current.set(scene.index, cached);
       return cached;
     },
@@ -150,8 +160,6 @@ export function PremierePlayer({
       busyRef.current = true;
       stopAudio();
       atRef.current = index;
-      setNow(0);
-      setSentences([]);
       setNote(null);
       setPhase({ name: "loading-audio", index });
       // Say which slide is on screen straight away: making the voice-over takes
@@ -163,13 +171,17 @@ export function PremierePlayer({
         if (atRef.current !== index) return;
         const audio = new Audio(cached.url);
         audioRef.current = audio;
-        setSentences(cached.sentences);
         setPhase({ name: "playing", index });
         onSceneChange?.(scene);
-        audio.ontimeupdate = () => setNow(audio.currentTime);
+        // One write per frame, read by the caption's own loop: the playhead never
+        // goes through React, so a slide holding a chart stays still.
+        audio.ontimeupdate = () => {
+          channelRef.current.live = { sceneIndex: index, time: audio.currentTime };
+        };
         audio.onended = () => {
           if (audioRef.current !== audio) return;
           audioRef.current = null;
+          channelRef.current.live = null;
           playedRef.current.add(index);
           evictBehind(index);
           atRef.current = null;
@@ -180,6 +192,7 @@ export function PremierePlayer({
         audio.onerror = () => {
           if (audioRef.current !== audio) return;
           audioRef.current = null;
+          channelRef.current.live = null;
           failedRef.current.add(index);
           atRef.current = null;
           busyRef.current = false;
@@ -278,38 +291,33 @@ export function PremierePlayer({
     phase.name === "playing" || phase.name === "loading-audio"
       ? (scenes.find((scene) => scene.index === phase.index) ?? null)
       : null;
-  // A full LessonScene for the picture view, with the same stable id the
-  // saved lesson will carry (`ai-<n>`) so seeds and hide-keys match it.
-  const currentFigure: Lesson["scenes"][number] | null =
-    current && (current.imagePrompt || current.imageQuery)
-      ? {
-          id: `ai-${current.index + 1}`,
-          kind: "concept",
-          accent: "brand",
-          title: current.title,
-          subtitle: current.subtitle,
-          bullets: current.bullets,
-          narration: current.narration,
-          imagePrompt: current.imagePrompt,
-          imageQuery: current.imageQuery,
-          start: 0,
-          duration: 0,
-        }
-      : null;
-  const activeSentence = [...sentences]
-    .reverse()
-    .find((sentence) => sentence.start !== null && sentence.start <= now);
-
+  // A full LessonScene for the slide view, with the same stable id the
+  // saved lesson will carry (`ai-<n>`) so picture seeds match it.
+  const currentSlide: Lesson["scenes"][number] | null = current
+    ? {
+        id: `ai-${current.index + 1}`,
+        kind: (current.kind as Lesson["scenes"][number]["kind"]) ?? "concept",
+        accent: "brand",
+        title: current.title,
+        subtitle: current.subtitle,
+        bullets: current.bullets,
+        narration: current.narration,
+        imagePrompt: current.imagePrompt,
+        imageQuery: current.imageQuery,
+        start: 0,
+        duration: 0,
+      }
+    : null;
   return (
     <div className="mt-4 space-y-3">
-      <div className="overflow-hidden rounded-xl border border-brand-700/50 bg-ink-950/70">
-        <div className="flex flex-wrap items-center justify-between gap-2 border-b border-ink-700/60 px-4 py-2.5">
+      <div className="overflow-hidden rounded-xl border border-ink-600 bg-white">
+        <div className="flex flex-wrap items-center justify-between gap-2 border-b border-ink-600 px-4 py-2.5">
           <p className="flex items-center gap-2 text-sm font-semibold text-mist-100">
-            <span className="h-2 w-2 animate-pulse rounded-full bg-ember-400" />
+            <span className="h-2 w-2 animate-pulse rounded-full bg-ember-500" />
             Chiếu ngay
             {current ? (
               <span className="font-mono text-[11px] font-normal text-mist-400">
-                cảnh {current.index + 1}
+                cảnh {current.index + 1}/{scenes.length}
                 {phase.name === "playing" ? " · đang đọc" : " · đang lấy giọng…"}
               </span>
             ) : null}
@@ -344,52 +352,25 @@ export function PremierePlayer({
           </div>
         </div>
 
-        {current ? (
-          <div className="space-y-2 px-4 py-4">
-            <p className="font-mono text-[11px] uppercase tracking-wide text-brand-300">
-              Cảnh {current.index + 1}
-            </p>
-            <h3 className="text-lg font-semibold text-mist-50">{current.title}</h3>
-            {currentFigure ? (
-              <FigureZoom label={`Phóng to ảnh cảnh ${current.index + 1}`}>
-                <SlideImageView lessonId={lessonId} scene={currentFigure} />
-              </FigureZoom>
-            ) : null}
-            {sentences.length > 0 ? (
-              <div className="space-y-1.5" aria-live="polite">
-                {sentences.map((sentence, i) => {
-                  const active = activeSentence === sentence;
-                  const past =
-                    sentence.start !== null &&
-                    activeSentence?.start !== null &&
-                    activeSentence !== sentence &&
-                    (sentence.start ?? 0) < (activeSentence?.start ?? 0);
-                  return (
-                    <p
-                      key={i}
-                      className={`rounded-lg px-3 py-1.5 text-sm transition-colors ${
-                        active
-                          ? "bg-brand-500/15 text-mist-50"
-                          : past
-                            ? "text-mist-500"
-                            : "text-mist-300"
-                      }`}
-                    >
-                      {sentence.text}
-                    </p>
-                  );
-                })}
-              </div>
-            ) : (
-              <p className="text-sm italic leading-relaxed text-mist-300">
-                {current.narration}
-              </p>
-            )}
-            {phase.name === "loading-audio" ? (
-              <p className="flex items-center gap-2 text-xs text-mist-400">
-                <LoaderCircle className="h-3.5 w-3.5 animate-spin" /> Đang lấy giọng đọc…
-              </p>
-            ) : null}
+        {current && currentSlide ? (
+          /* The slide itself, exactly as the full player draws it, with the
+             karaoke caption in the band the slide reserves at the bottom. */
+          <div className="p-3 sm:p-4">
+            <SlideSurface
+              scene={currentSlide}
+              index={current.index}
+              lessonId={lessonId}
+              caption={
+                current.narration.trim() ? (
+                  <KaraokeSubtitle
+                    key={`ai-${current.index + 1}`}
+                    text={current.narration}
+                    sceneIndex={current.index}
+                    channel={channelRef.current}
+                  />
+                ) : null
+              }
+            />
           </div>
         ) : phase.name === "waiting-scene" ? (
           <div className="p-4">

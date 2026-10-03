@@ -654,17 +654,6 @@
   }
 
   /*
-   * The classroom's slide preview: the same picture view as a slide, but
-   * given the preview card's full width instead of the slide's own picture
-   * column — outside a slide there is no container to measure 22cqw against,
-   * so the figure would size itself off the viewport instead.
-   */
-  .preview-figure .scene-image {
-    width: 100%;
-    max-width: 100%;
-  }
-
-  /*
    * The caption. Sized against the slide so it is legible in fullscreen and
    * unobtrusive in a small embed, and capped to three lines — see the note where
    * it is mounted.

@@ -8,7 +8,6 @@ import {
   LoaderCircle,
   Play,
   TriangleAlert,
-  Volume2,
   X,
 } from "lucide-react";
 import {
@@ -17,7 +16,7 @@ import {
   type RunLogEntry,
 } from "@/components/studio/GenerationTimeline";
 import { PremierePlayer } from "@/components/studio/Premiere";
-import { FigureZoom, SlideImageView } from "@/components/player/SceneFigure";
+import { SlideSurface } from "@/components/player/SlideSurface";
 import { pollinationsImageUrl } from "@/lib/lesson/pollinations";
 import type { Lesson } from "@/lib/lesson/types";
 import { SceneLoader3D } from "@/components/three/SceneLoader3D";
@@ -233,44 +232,35 @@ export default function ClassroomClient({ sessionId }: { sessionId: string | nul
                         title={`Xem trước: ${step.title}`}
                       >
                         <SceneThumb lessonId={sessionId ?? ""} scene={scene} />
-                        <span className="min-w-0 flex-1">
-                          <span className="flex items-center gap-2">
-                            {isCurrent ? (
-                              <span className="h-2 w-2 shrink-0 animate-pulse rounded-full bg-ember-500" />
-                            ) : (
-                              <CircleCheck className="h-3.5 w-3.5 shrink-0 text-brand-400" />
-                            )}
-                            <span
-                              className={`min-w-0 flex-1 truncate ${
-                                isCurrent ? "text-mist-50" : "text-mist-200"
-                              }`}
-                            >
-                              {step.title}
-                            </span>
-                          </span>
-                          <span className="mt-0.5 block pl-5 text-[11px] text-mist-400">
-                            {isCurrent ? "đang chiếu · bấm để xem lại" : "bấm để xem"}
+                        <span className="flex min-w-0 flex-1 items-center gap-2">
+                          {isCurrent ? (
+                            <span className="h-2 w-2 shrink-0 animate-pulse rounded-full bg-ember-500" />
+                          ) : (
+                            <CircleCheck className="h-3.5 w-3.5 shrink-0 text-brand-400" />
+                          )}
+                          <span
+                            className={`min-w-0 flex-1 truncate ${
+                              isCurrent ? "text-mist-50" : "text-mist-200"
+                            }`}
+                          >
+                            {step.title}
                           </span>
                         </span>
                       </button>
                     ) : (
                       <div className={`${row} text-mist-500`}>
-                        <span className="flex h-9 w-14 shrink-0 items-center justify-center rounded-lg border border-ink-600 bg-ink-800 font-mono text-[11px]">
+                        <span className="flex aspect-[4/3] w-14 shrink-0 items-center justify-center rounded-lg border border-ink-600 bg-ink-800 font-mono text-[11px]">
                           {String(i + 1).padStart(2, "0")}
                         </span>
-                        <span className="min-w-0 flex-1">
-                          <span className="flex items-center gap-2">
-                            {step.state === "active" ? (
-                              <LoaderCircle className="h-3.5 w-3.5 shrink-0 animate-spin text-gold-400" />
-                            ) : (
-                              <span className="h-3.5 w-3.5 shrink-0 rounded-full border border-mist-500" />
-                            )}
-                            <span className="min-w-0 flex-1 truncate">{step.title}</span>
-                          </span>
-                          <span className="mt-0.5 block pl-5 text-[11px]">
-                            Đang tạo…
-                          </span>
+                        <span className="flex min-w-0 flex-1 items-center gap-2">
+                          {step.state === "active" ? (
+                            <LoaderCircle className="h-3.5 w-3.5 shrink-0 animate-spin text-gold-400" />
+                          ) : (
+                            <span className="h-3.5 w-3.5 shrink-0 rounded-full border border-mist-500" />
+                          )}
+                          <span className="min-w-0 flex-1 truncate">{step.title}</span>
                         </span>
+                        <span className="shrink-0 text-[11px]">Đang tạo…</span>
                       </div>
                     )}
                   </li>
@@ -331,26 +321,8 @@ export default function ClassroomClient({ sessionId }: { sessionId: string | nul
             </div>
           )}
 
-          {/* Bottom narration bar, like the classroom's teacher line. */}
-          {speaking ? (
-            <div className="mt-4 flex items-start gap-3 rounded-2xl border border-ink-700 bg-white p-4">
-              <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-brand-500/20">
-                <Volume2 className="h-5 w-5 text-brand-200" />
-              </span>
-              <div className="min-w-0">
-                <p className="font-mono text-[11px] uppercase tracking-widest text-brand-300">
-                  Đang giảng · cảnh {speaking.index + 1}
-                </p>
-                <p className="mt-1 text-sm leading-relaxed text-mist-100">
-                  {speaking.narration}
-                </p>
-              </div>
-            </div>
-          ) : null}
-
-          <p className="mt-6 text-center font-mono text-[11px] uppercase tracking-widest text-mist-600">
-            Các tác nhân AI đang làm việc…
-          </p>
+          {/* The narration reads itself on the caption band under the slide —
+              a second copy of the same paragraph below only repeated it. */}
         </main>
       </div>
 
@@ -370,11 +342,12 @@ export default function ClassroomClient({ sessionId }: { sessionId: string | nul
 }
 
 /**
- * A finished slide, opened from the list: its picture, its points and the
- * words the teacher hears — plus a way to send the room straight back to it.
+ * A finished slide, opened from the list.
  *
- * The picture comes from the same view a saved lesson uses, so the classroom
- * shows the slide the course file will keep, not a second, looser render.
+ * It is the same slide the room is playing — same component, same paper, same
+ * page number — because a preview that looked different from the real thing
+ * would not be a preview. The only thing added is the way back: play this one
+ * now, or close and go back to the lesson.
  */
 function SlidePreview({
   lessonId,
@@ -387,10 +360,52 @@ function SlidePreview({
   onClose: () => void;
   onPlay: () => void;
 }) {
-  // The stable id the saved lesson carries, so the picture seed matches.
-  const figure: Lesson["scenes"][number] = {
+  return (
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 p-4 backdrop-blur-[2px]"
+      role="dialog"
+      aria-modal="true"
+      aria-label={`Xem trước slide ${scene.index + 1}`}
+      onClick={onClose}
+    >
+      <div
+        className="w-full max-w-4xl rounded-2xl border border-ink-600 bg-white p-4 shadow-2xl"
+        onClick={(event) => event.stopPropagation()}
+      >
+        <div className="mb-3 flex items-center justify-between gap-3">
+          <p className="font-mono text-[11px] uppercase tracking-widest text-brand-400">
+            Xem trước · slide {String(scene.index + 1).padStart(2, "0")}
+          </p>
+          <div className="flex items-center gap-2">
+            <button type="button" onClick={onPlay} className="btn-primary px-3 py-1.5 text-xs">
+              <Play className="h-3.5 w-3.5" /> Phát slide này
+            </button>
+            <button
+              type="button"
+              onClick={onClose}
+              aria-label="Đóng"
+              className="rounded-full border border-ink-600 p-1.5 text-mist-400 hover:border-brand-500 hover:text-mist-50"
+            >
+              <X className="h-4 w-4" />
+            </button>
+          </div>
+        </div>
+        <SlideSurface scene={liveSceneToSlide(scene)} index={scene.index} lessonId={lessonId} />
+      </div>
+    </div>
+  );
+}
+
+/**
+ * A slide written mid-run, in the shape the slide components expect.
+ *
+ * The id is the one the saved lesson will carry (`ai-<n>`), so the picture seed
+ * and any dismissed-picture memory match the finished course.
+ */
+function liveSceneToSlide(scene: LiveScene): Lesson["scenes"][number] {
+  return {
     id: `ai-${scene.index + 1}`,
-    kind: "concept",
+    kind: (scene.kind as Lesson["scenes"][number]["kind"]) ?? "concept",
     accent: "brand",
     title: scene.title,
     subtitle: scene.subtitle,
@@ -401,115 +416,39 @@ function SlidePreview({
     start: 0,
     duration: 0,
   };
-  const hasFigure = Boolean(
-    (scene.imagePrompt ?? "").trim() || (scene.imageQuery ?? "").trim(),
-  );
-  return (
-    <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 p-4 backdrop-blur-[2px]"
-      role="dialog"
-      aria-modal="true"
-      aria-label={`Xem trước cảnh ${scene.index + 1}`}
-      onClick={onClose}
-    >
-      <div
-        className="max-h-[88vh] w-full max-w-3xl overflow-y-auto rounded-2xl border border-ink-600 bg-white p-5 shadow-2xl"
-        onClick={(event) => event.stopPropagation()}
-      >
-        <div className="flex items-start gap-3">
-          <div className="min-w-0 flex-1">
-            <p className="font-mono text-[11px] uppercase tracking-widest text-brand-400">
-              Slide {String(scene.index + 1).padStart(2, "0")}
-            </p>
-            <h3 className="mt-1 text-xl font-semibold text-mist-50">{scene.title}</h3>
-            {scene.subtitle ? (
-              <p className="mt-1 text-sm text-mist-400">{scene.subtitle}</p>
-            ) : null}
-          </div>
-          <button
-            type="button"
-            onClick={onClose}
-            aria-label="Đóng"
-            className="shrink-0 rounded-full border border-ink-600 p-1.5 text-mist-400 hover:border-brand-500 hover:text-mist-50"
-          >
-            <X className="h-4 w-4" />
-          </button>
-        </div>
-
-        {hasFigure ? (
-          <div className="preview-figure mt-3">
-            <FigureZoom label={`Phóng to ảnh slide ${scene.index + 1}`}>
-              <SlideImageView lessonId={lessonId} scene={figure} />
-            </FigureZoom>
-          </div>
-        ) : (
-          <p className="mt-3 rounded-xl border border-dashed border-ink-600 bg-ink-900 px-4 py-6 text-center text-sm text-mist-400">
-            Slide này chưa có ảnh minh hoạ.
-          </p>
-        )}
-
-        {scene.bullets.length > 0 ? (
-          <ul className="mt-4 space-y-1.5">
-            {scene.bullets.map((bullet, i) => (
-              <li key={i} className="flex gap-2 text-sm leading-relaxed text-mist-200">
-                <span className="font-mono text-[11px] text-brand-400">
-                  {String(i + 1).padStart(2, "0")}
-                </span>
-                <span className="min-w-0 flex-1">{bullet}</span>
-              </li>
-            ))}
-          </ul>
-        ) : null}
-
-        {scene.narration ? (
-          <div className="mt-4 rounded-xl border border-ink-600 bg-ink-900 p-3.5">
-            <p className="font-mono text-[11px] uppercase tracking-widest text-mist-500">
-              Lời giảng
-            </p>
-            <p className="mt-1 text-sm leading-relaxed text-mist-200">
-              {scene.narration}
-            </p>
-          </div>
-        ) : null}
-
-        <div className="mt-4 flex flex-wrap items-center gap-2">
-          <button type="button" onClick={onPlay} className="btn-primary">
-            <Play className="h-4 w-4" /> Phát slide này
-          </button>
-          <button type="button" onClick={onClose} className="btn-ghost">
-            Đóng
-          </button>
-        </div>
-      </div>
-    </div>
-  );
 }
 
 /**
- * The slide's own picture, small: the same URL the full view asks for, so the
- * browser has it already cached by the time the slide is opened. A render the
- * free image service refuses falls back to the seeded photo rather than an
- * empty tile.
+ * The slide's own picture, small.
+ *
+ * Only when the slide actually has one. The fallback chain ends at a seeded
+ * random photo, which is fine on a full slide where it is labelled as filler —
+ * but a list of thumbnails full of stock faces told the teacher nothing about
+ * their own lesson, so a slide with no picture gets its number instead.
  */
 function SceneThumb({ lessonId, scene }: { lessonId: string; scene: LiveScene }) {
-  const [failed, setFailed] = useState(false);
-  const id = `ai-${scene.index + 1}`;
   const prompt = (scene.imagePrompt ?? "").trim();
-  const src =
-    !failed && prompt.length >= 3
-      ? pollinationsImageUrl(lessonId, id, prompt)
-      : `https://picsum.photos/seed/${encodeURIComponent(`${lessonId}-${id}`)}/160/100`;
+  // Only a generated picture has a URL that costs nothing to ask for: it is
+  // arithmetic on the lesson and the prompt. An archive search would mean one
+  // request per row in the list, so those slides show their number instead.
+  const hasImage = prompt.length >= 3;
+  if (!hasImage) {
+    return (
+      <span className="flex aspect-[4/3] w-14 shrink-0 items-center justify-center rounded-lg border border-ink-600 bg-ink-800 font-mono text-[11px] text-mist-400">
+        {String(scene.index + 1).padStart(2, "0")}
+      </span>
+    );
+  }
+  const src = pollinationsImageUrl(lessonId, `ai-${scene.index + 1}`, prompt);
   return (
-    <span className="relative block h-9 w-14 shrink-0 overflow-hidden rounded-lg border border-ink-600 bg-ink-800">
+    <span className="relative block aspect-[4/3] w-14 shrink-0 overflow-hidden rounded-lg border border-ink-600 bg-ink-800">
       {/* Remote picture: next/image cannot optimise it. */}
       {/* eslint-disable-next-line @next/next/no-img-element */}
       <img
-        key={src}
         src={src}
         alt=""
         loading="lazy"
         referrerPolicy="no-referrer"
-        onError={() => setFailed(true)}
         className="h-full w-full object-cover"
       />
       <span className="absolute inset-x-0 bottom-0 bg-ink-950/80 py-px text-center font-mono text-[10px] text-mist-300">
