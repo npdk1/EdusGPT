@@ -150,8 +150,8 @@ export default function ClassroomClient({ sessionId }: { sessionId: string | nul
     : (draft?.message ?? "Đang dựng đề cương bài học");
 
   return (
-    <div className="min-h-screen bg-[#060a14] text-mist-50">
-      <header className="flex items-center justify-between gap-3 border-b border-white/5 px-4 py-3 sm:px-6">
+    <div className="min-h-screen text-mist-50">
+      <header className="flex items-center justify-between gap-3 border-b border-ink-700 px-4 py-3 sm:px-6 lg:px-8">
         <Link
           href="/"
           className="flex items-center gap-1.5 text-sm text-mist-300 hover:text-mist-50"
@@ -195,8 +195,8 @@ export default function ClassroomClient({ sessionId }: { sessionId: string | nul
                       isCurrent
                         ? "border-brand-500/60 bg-brand-500/10 text-mist-50"
                         : landed
-                          ? "border-white/10 bg-white/[0.03] text-mist-200"
-                          : "border-white/5 bg-white/[0.01] text-mist-500"
+                          ? "border-ink-700 bg-white text-mist-200"
+                          : "border-ink-700 bg-ink-900 text-mist-500"
                     }`}
                   >
                     <span className="flex items-center gap-2">
@@ -219,7 +219,7 @@ export default function ClassroomClient({ sessionId }: { sessionId: string | nul
               })}
             </ol>
           ) : (
-            <p className="rounded-xl border border-white/5 bg-white/[0.02] px-3 py-2 text-xs text-mist-500">
+            <p className="rounded-xl border border-ink-700 bg-ink-900 px-3 py-2 text-xs text-mist-500">
               {draft
                 ? `Đang tạo ${draft.done}/${draft.total} cảnh`
                 : "Đang chờ dàn ý…"}
@@ -258,7 +258,7 @@ export default function ClassroomClient({ sessionId }: { sessionId: string | nul
               log={progress.log}
             />
           ) : (
-            <div className="mx-auto w-full max-w-lg rounded-2xl border border-white/10 bg-white/[0.02] p-8 text-center">
+            <div className="mx-auto w-full max-w-lg rounded-2xl border border-ink-700 bg-white p-8 text-center">
               <p className="text-sm text-mist-300">
                 Không thấy buổi tạo bài này — có thể trang đã tải lại sau khi
                 luồng tạo dừng. Bấm tạo lại ở studio để vào lớp mới.
@@ -271,7 +271,7 @@ export default function ClassroomClient({ sessionId }: { sessionId: string | nul
 
           {/* Bottom narration bar, like the classroom's teacher line. */}
           {speaking ? (
-            <div className="mt-4 flex items-start gap-3 rounded-2xl border border-white/10 bg-white/[0.03] p-4">
+            <div className="mt-4 flex items-start gap-3 rounded-2xl border border-ink-700 bg-white p-4">
               <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-brand-500/20">
                 <Volume2 className="h-5 w-5 text-brand-200" />
               </span>
@@ -333,7 +333,7 @@ function WaitingHero({
       </div>
       <h2 className="mt-4 text-center text-xl font-semibold">{title}</h2>
       <p className="mt-1 text-center text-sm text-mist-400">{subtitle}</p>
-      <div className="mt-4 space-y-2 rounded-2xl border border-white/10 bg-white/[0.02] p-4 text-sm">
+      <div className="mt-4 space-y-2 rounded-2xl border border-ink-700 bg-white p-4 text-sm">
         <div className="flex items-center justify-between gap-3">
           <span className="text-mist-500">Trạng thái</span>
           <span className="min-w-0 flex-1 truncate text-right text-mist-100">
@@ -370,7 +370,7 @@ function WaitingHero({
           </div>
         ) : null}
         {feed.length > 0 ? (
-          <ol className="space-y-1 border-t border-white/5 pt-2">
+          <ol className="space-y-1 border-t border-ink-700 pt-2">
             {feed.map((entry, i) => (
               <li key={`${entry.at}-${i}`} className="flex items-baseline gap-2 text-xs">
                 <span className="shrink-0 font-mono text-[11px] text-mist-500">
@@ -398,8 +398,8 @@ function Shell({
   children: React.ReactNode;
 }) {
   return (
-    <div className="min-h-screen bg-[#060a14] text-mist-50">
-      <header className="flex items-center justify-between gap-3 border-b border-white/5 px-4 py-3 sm:px-6">
+    <div className="min-h-screen text-mist-50">
+      <header className="flex items-center justify-between gap-3 border-b border-ink-700 px-4 py-3 sm:px-6 lg:px-8">
         <Link
           href="/"
           className="flex items-center gap-1.5 text-sm text-mist-300 hover:text-mist-50"
