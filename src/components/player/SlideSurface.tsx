@@ -3,11 +3,14 @@
 import { useEffect, useRef, type ReactNode } from "react";
 import {
   SCENE_KIND_LABEL,
+  SLIDE_GRID,
   defaultSlideLayout,
   type Lesson,
+  type SlideBlock,
   type SlideLayout,
 } from "@/lib/lesson/types";
 import { slideIcon } from "@/lib/lesson/slide-icons";
+import { sanitizeBlocks } from "@/lib/lesson/validate";
 import {
   DEFAULT_SLIDE_THEME,
   isDarkTheme,
@@ -118,6 +121,36 @@ export function SlideSurface({
   const split = layout === "image-left" || layout === "image-right";
 
   /**
+   * Free layout: when the scene brings its own geometry, that geometry is the
+   * slide and the named layout is only there to pick the wash.
+   *
+   * The title is the one thing a slide cannot do without, so a set of blocks
+   * that forgot it gets the scene's own title dropped in at the top — a missing
+   * headline is a hole in the page, and the headline already exists.
+   *
+   * Sanitised here as well as at save time: a slide arriving over the live
+   * stream never passed through `coerceLesson`, and a card with no words in it
+   * or a block hanging off the canvas would otherwise reach the screen.
+   */
+  const placed: SlideBlock[] | null = (() => {
+    const blocks = sanitizeBlocks(scene.blocks);
+    if (!blocks?.length) return null;
+    return blocks.some((block) => block.kind === "title")
+      ? blocks
+      : [
+          {
+            kind: "title" as const,
+            x: 60,
+            y: 40,
+            w: 880,
+            h: 90,
+            text: scene.title,
+          },
+          ...blocks,
+        ];
+  })();
+
+  /**
    * The fit pass: a slide with more text than its paper can hold steps the type
    * ladder down until it fits, rather than letting the last bullet run off the
    * bottom.
@@ -136,16 +169,30 @@ export function SlideSurface({
         parseFloat(style.paddingTop) -
         parseFloat(style.paddingBottom);
       if (available <= 0) return;
+      // Placed blocks bring their own geometry: they are boxes on the grid, so
+      // what has to fit is the union of those boxes, not the container. Measuring
+      // the container would always read as too tall and step the type down to its
+      // floor for a slide that was already sized by hand.
+      const measure = (): number => {
+        if (!placed) return content.getBoundingClientRect().height;
+        const boxes = Array.from(
+          content.querySelectorAll<HTMLElement>(".scene-block"),
+        ).map((box) => box.getBoundingClientRect());
+        if (boxes.length === 0) return 0;
+        const top = Math.min(...boxes.map((box) => box.top));
+        const bottom = Math.max(...boxes.map((box) => box.bottom));
+        return bottom - top;
+      };
       for (const step of FIT_STEPS) {
         card.style.setProperty("--slide-fit", String(step));
-        if (content.getBoundingClientRect().height <= available) return;
+        if (measure() <= available) return;
       }
     };
     fit();
     const observer = new ResizeObserver(fit);
     observer.observe(stage);
     return () => observer.disconnect();
-  }, [scene, layout]);
+  }, [scene, layout, placed]);
 
   // The words. Kept apart from the figures so a layout can put them side by
   // side instead of stacked, which is the difference between a slide and a page.
@@ -241,6 +288,41 @@ export function SlideSurface({
     </header>
   );
 
+  const renderBlock = (block: SlideBlock, blockIndex: number): ReactNode => {
+    switch (block.kind) {
+      case "title":
+        return <h3 className="scene-block-title">{block.text}</h3>;
+      case "subtitle":
+        return <p className="scene-block-sub">{block.text}</p>;
+      case "card":
+        return (
+          <>
+            {block.label ? (
+              <span className="scene-block-label">{block.label}</span>
+            ) : null}
+            <span className="scene-block-text">{block.text}</span>
+          </>
+        );
+      case "formula":
+        return <SceneFormula formula={block.text ?? ""} />;
+      case "image":
+        return (
+          <SlideImageView
+            lessonId={lessonId}
+            scene={{
+              ...scene,
+              id: `${scene.id}-b${blockIndex}`,
+              title: block.label ?? scene.title,
+              imagePrompt: block.imagePrompt,
+              imageQuery: block.imageQuery,
+            }}
+          />
+        );
+      default:
+        return <p className="scene-block-text">{block.text}</p>;
+    }
+  };
+
   return (
     <div
       className={`slide-fitted overflow-hidden ${className}`}
@@ -257,7 +339,30 @@ export function SlideSurface({
               paint, not content, and the layout class on the card picks its
               direction from the palette. */}
           <div aria-hidden="true" className="scene-wash" />
-          <div className={`scene-fit scene-layout-${layout}`}>
+          <div
+            className={`scene-fit ${
+              placed ? "scene-layout-blocks" : `scene-layout-${layout}`
+            }`}
+          >
+            {placed ? (
+              <div className="scene-blocks">
+                {placed.map((block, blockIndex) => (
+                  <div
+                    key={`${block.kind}-${blockIndex}`}
+                    className={`scene-block scene-block-${block.kind}`}
+                    style={{
+                      left: `${(block.x / SLIDE_GRID.width) * 100}%`,
+                      top: `${(block.y / SLIDE_GRID.height) * 100}%`,
+                      width: `${(block.w / SLIDE_GRID.width) * 100}%`,
+                      height: `${(block.h / SLIDE_GRID.height) * 100}%`,
+                    }}
+                  >
+                    {renderBlock(block, blockIndex)}
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <>
             {head}
             {split ? (
               <div className="scene-split relative z-10 grid w-full max-w-[86%] items-start gap-x-[5%] sm:grid-cols-2">
@@ -282,6 +387,8 @@ export function SlideSurface({
               <>
                 {text}
                 {figure}
+              </>
+            )}
               </>
             )}
           </div>

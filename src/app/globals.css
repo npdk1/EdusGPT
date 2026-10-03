@@ -728,6 +728,91 @@
   }
 
   /*
+   * Free layout: blocks the model placed on the 1000 x 562.5 grid.
+   *
+   * Positions arrive as percentages of the slide rather than pixels, so one set
+   * of numbers holds on a phone and on a wall. The type ladder still reads
+   * `--slide-fit`, which means a crowded free-layout slide steps its type down
+   * with the rest rather than being scaled as a picture.
+   */
+  .scene-layout-blocks {
+    display: block;
+    position: relative;
+    width: 100%;
+    height: 100%;
+  }
+
+  .scene-blocks {
+    position: relative;
+    width: 100%;
+    height: 100%;
+  }
+
+  .scene-block {
+    position: absolute;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
+    gap: 0.4cqw;
+    overflow: hidden;
+  }
+
+  .scene-block-title {
+    font-size: calc(5.2cqw * var(--slide-fit, 1));
+    line-height: 1.04;
+    letter-spacing: -0.03em;
+    font-weight: 700;
+    color: var(--slide-ink);
+    text-wrap: balance;
+  }
+
+  .scene-block-sub {
+    font-size: calc(1.7cqw * var(--slide-fit, 1));
+    line-height: 1.35;
+    color: var(--slide-ink-soft);
+  }
+
+  .scene-block-text {
+    font-size: calc(1.4cqw * var(--slide-fit, 1));
+    line-height: 1.5;
+    color: var(--slide-ink-soft);
+  }
+
+  .scene-block-card {
+    justify-content: center;
+    padding: 1.2cqw 1.4cqw;
+    border: 1px solid
+      color-mix(in srgb, var(--slide-rule) 85%, transparent);
+    border-radius: 0.9cqw;
+    background: var(--slide-bg-sunk);
+    box-shadow: 0 0.5cqw 1.4cqw
+      color-mix(in srgb, var(--slide-ink) 12%, transparent);
+  }
+
+  .scene-block-label {
+    font-size: calc(1.05cqw * var(--slide-fit, 1));
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--slide-accent);
+  }
+
+  .scene-block-formula {
+    align-items: flex-start;
+  }
+
+  /* A picture in a block fills the box it was given, not a slide's column. */
+  .scene-layout-blocks .scene-image {
+    width: 100%;
+    max-width: 100%;
+    max-height: 100%;
+  }
+
+  .scene-layout-blocks .scene-zoom-open {
+    display: none;
+  }
+
+  /*
    * The wash: a tinted corner behind the content, the way a designed deck
    * breathes instead of sitting on flat paper.
    *

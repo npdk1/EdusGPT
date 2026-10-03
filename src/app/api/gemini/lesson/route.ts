@@ -4,7 +4,7 @@ import { credentialGate } from "@/lib/ai/readiness";
 import { AiError, generateJson } from "@/lib/ai/llm";
 import { isQuotaExhausted } from "@/lib/ai/shared";
 import { recordModelTrust } from "@/lib/ai/model-trust";
-import { SCENE_ACCENTS, SCENE_KINDS, SLIDE_LAYOUTS, POINTER_TARGETS, iconSetFor, newLessonId, type SlideTheme } from "@/lib/lesson/types";
+import { SCENE_ACCENTS, SCENE_KINDS, SLIDE_BLOCK_KINDS, SLIDE_LAYOUTS, POINTER_TARGETS, iconSetFor, newLessonId, type SlideTheme } from "@/lib/lesson/types";
 import { DEFAULT_SLIDE_THEME } from "@/lib/lesson/themes";
 import {
   resolveLessonLength,
@@ -241,6 +241,24 @@ const SCENE_SCHEMA: Record<string, unknown> = {
     imagePrompt: { type: "string" },
     icon: { type: "string" },
     layout: { type: "string", enum: [...SLIDE_LAYOUTS] },
+    blocks: {
+      type: "array",
+      items: {
+        type: "object",
+        properties: {
+          kind: { type: "string", enum: [...SLIDE_BLOCK_KINDS] },
+          x: { type: "number" },
+          y: { type: "number" },
+          w: { type: "number" },
+          h: { type: "number" },
+          text: { type: "string" },
+          label: { type: "string" },
+          imagePrompt: { type: "string" },
+          imageQuery: { type: "string" },
+        },
+        required: ["kind", "x", "y", "w", "h"],
+      },
+    },
     visualNote: { type: "string" },
     narration: { type: "string" },
     pointer: pointerSchema,
@@ -400,7 +418,22 @@ const SLIDE_DESIGN_RULES = `QUY TẮC BỐ CỤC SLIDE (bắt buộc — đây l
      trái sang phải thì đặt ảnh bên trái).
    - "full-figure": cảnh có bảng, biểu đồ, công thức hoặc đồ thị — hình chiếm
      phần lớn diện tích, chữ thu gọn lại.
-   Bài đẹp là bài CÓ LẬT layout, không phải bài 12 slide cùng một khuôn.`;
+   Bài đẹp là bài CÓ LẬT layout, không phải bài 12 slide cùng một khuôn.
+9. "blocks" — TỰ DO ĐẶT KHỐI, dùng khi layout không vừa:
+    Đây là lưới 1000 x 562.5 (rộng 1000, cao 562.5). Mỗi khối có "kind", "x", "y"
+    (góc trên-trái), "w", "h" (kích thước) — tất cả tính trên lưới đó, KHÔNG phải
+    pixel. Khối có thể là: "title", "subtitle", "text", "card", "formula", "image".
+    - CHỈ dùng "blocks" cho tối đa 1/3 số cảnh, và chỉ khi bố cục thật sự khác
+      (ví dụ: ảnh lớn ở nửa trên, ba thẻ xếp dọc bên dưới; hoặc hai khối lệch
+      nhau về hai phía). Cảnh nào không chắc thì BỎ "blocks", để "layout" lo.
+    - "image" phải có "imagePrompt" (tiếng Anh, không chữ) hoặc "imageQuery".
+    - Chữ trong khối dưới 20 từ; số ký tự trên một dòng ≈ (w - 20) / (cỡ chữ ×
+      10) để không tràn dòng.
+    - Lề an toàn: mọi khối nằm trong x từ 50 đến 950, y từ 30 đến 500 (dải dưới
+      500-562 là chỗ phụ đề đè lên, đừng đặt chữ vào đó).
+    - Hai khối không được chồng lấn; khe hở giữa hai khối tối thiểu 20.
+    - Muốn nói chuyện với người xem bằng cách sắp xếp, hãy sắp xếp: một khối
+      "text" ngắn giữa slide trống đọc mạnh hơn một câu dài kèm tiêu đề.`;
 
 const OUTLINE_SYSTEM = `Bạn là giáo viên KINH NGHIỆM lâu năm, tự thiết kế bài giảng cho học sinh phổ thông Việt Nam.
 Trả về DUY NHẤT một JSON đúng schema, không kèm giải thích, không markdown.

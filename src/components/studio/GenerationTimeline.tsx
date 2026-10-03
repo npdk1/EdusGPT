@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { CircleCheck, Circle, LoaderCircle } from "lucide-react";
-import type { Lesson } from "@/lib/lesson/types";
+import type { Lesson, SlideBlock } from "@/lib/lesson/types";
 import type { RunLogEntry } from "@/lib/lesson/run-log";
 import { DEFAULT_LANG, LANG_KEY, useCopy, useLang, type Lang } from "@/i18n/provider";
 
@@ -137,6 +137,8 @@ export interface LiveScene {
   imageQuery?: string;
   /** How the slide arranges itself; see `SLIDE_LAYOUTS`. */
   layout?: string;
+  /** The scene's own geometry on the 1000 x 562.5 slide grid, when it has one. */
+  blocks?: SlideBlock[];
 }
 
 export interface StreamEvent {
@@ -337,6 +339,7 @@ function reduceProgress(
       imagePrompt?: unknown;
       imageQuery?: unknown;
       layout?: unknown;
+      blocks?: unknown;
     };
     const next = steps.map((step) =>
       step.state === "active"
@@ -376,6 +379,9 @@ function reduceProgress(
           ? scene.imageQuery.trim().slice(0, 200)
           : undefined,
       layout: typeof scene.layout === "string" ? scene.layout.slice(0, 20) : undefined,
+      blocks: Array.isArray(scene.blocks)
+        ? (scene.blocks as SlideBlock[])
+        : undefined,
     };
     const liveScenes = [...current.liveScenes, live].sort((a, b) => a.index - b.index);
     return {

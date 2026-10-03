@@ -169,6 +169,50 @@ export function defaultSlideLayout(
   return "statement";
 }
 
+/**
+ * The free-layout grid a scene may place blocks on: 1000 × 562.5, the same
+ * canvas OpenMAIC draws on, which is a 16:9 frame at "1000 units wide".
+ */
+export const SLIDE_GRID = { width: 1000, height: 562.5 } as const;
+
+export const SLIDE_BLOCK_KINDS = [
+  "title",
+  "subtitle",
+  "text",
+  "card",
+  "formula",
+  "image",
+] as const;
+
+export type SlideBlockKind = (typeof SLIDE_BLOCK_KINDS)[number];
+
+/**
+ * One placed piece of a slide.
+ *
+ * Coordinates are in grid units, not pixels: the renderer turns them into
+ * percentages of the slide, so the same numbers work on a phone and on a wall.
+ * The alternative — a fixed arrangement per layout — cannot put a picture
+ * above three cards, which is most of what a designed slide does.
+ */
+export interface SlideBlock {
+  kind: SlideBlockKind;
+  /** Left edge, in grid units from the left. */
+  x: number;
+  /** Top edge, in grid units from the top. */
+  y: number;
+  /** Width in grid units. */
+  w: number;
+  /** Height in grid units. */
+  h: number;
+  /** The words: a headline, a paragraph, a card's body, or a formula. */
+  text?: string;
+  /** A small line above a card, naming what the card is about. */
+  label?: string;
+  /** Picture blocks carry their own prompt or search keyword. */
+  imagePrompt?: string;
+  imageQuery?: string;
+}
+
 export const SCENE_ACCENTS = ["brand", "gold", "ember"] as const;
 export type SceneAccent = (typeof SCENE_ACCENTS)[number];
 
@@ -357,6 +401,15 @@ export interface LessonScene {
    * renderer infers one from what the scene contains.
    */
   layout?: SlideLayout;
+  /**
+   * An explicit arrangement for this slide, in `SLIDE_GRID` units.
+   *
+   * Optional and last resort: a slide without blocks uses its layout, which is
+   * what every lesson written before this field existed renders as. Blocks that
+   * do not survive validation are dropped, and a scene that keeps too few falls
+   * back to the layout too.
+   */
+  blocks?: SlideBlock[];
   narration?: string;
   /**
    * The pointer script, synced to the narration sentence by sentence.

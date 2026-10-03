@@ -1,14 +1,20 @@
 import {
   SCENE_ACCENTS,
   SCENE_KINDS,
+  SLIDE_LAYOUTS,
   POINTER_TARGETS,
   relayoutLesson,
+  SLIDE_BLOCK_KINDS,
+  SLIDE_GRID,
   type Lesson,
   type LessonChapter,
   type LessonScene,
   type SceneAccent,
   type SceneKind,
+  type SlideBlock,
+  type SlideBlockKind,
   type SlideGraph,
+  type SlideLayout,
   type SlideTable,
 } from "./types";
 import { DEFAULT_SLIDE_THEME } from "./themes";
@@ -126,6 +132,73 @@ function buildGraph(raw: Record<string, unknown>): SlideGraph | undefined {
   };
 }
 
+/**
+ * A placed block only survives if it lands on the grid and says something.
+ *
+ * The model places these by hand, so the numbers arrive wrong in every way a
+ * JSON field can be wrong: off the canvas, negative, half a pixel wide, or a
+ * card with no words in it. Each is clamped or dropped here, because a block
+ * that overflows the slide would hide the caption and a block of nothing would
+ * leave a hole in the middle of the page.
+ *
+ * The smallest allowed box is deliberately generous: narrower than a tenth of
+ * the canvas and text cannot be read at it, so such a box is not a layout the
+ * author meant.
+ */
+const MIN_BLOCK = 60;
+const MAX_BLOCKS = 10;
+
+export function sanitizeBlocks(raw: unknown): SlideBlock[] | undefined {
+  if (!Array.isArray(raw)) return undefined;
+  const blocks: SlideBlock[] = [];
+  for (const item of raw) {
+    if (blocks.length >= MAX_BLOCKS) break;
+    if (!item || typeof item !== "object") continue;
+    const block = item as Record<string, unknown>;
+    const kind = asString(block.kind);
+    if (!SLIDE_BLOCK_KINDS.includes(kind as SlideBlockKind)) continue;
+    const w = Math.min(
+      SLIDE_GRID.width,
+      Math.max(MIN_BLOCK, asNumber(block.w, 0)),
+    );
+    const h = Math.min(
+      SLIDE_GRID.height,
+      Math.max(MIN_BLOCK, asNumber(block.h, 0)),
+    );
+    // Clamping the origin keeps a block inside the canvas even when the model
+    // pushed it past the edge: the width is already known, so the slide still
+    // gets the box it asked for.
+    const x = Math.max(0, Math.min(SLIDE_GRID.width - w, asNumber(block.x, 0)));
+    const y = Math.max(0, Math.min(SLIDE_GRID.height - h, asNumber(block.y, 0)));
+    const text = asString(block.text).slice(0, 300);
+    const label = asString(block.label).slice(0, 60) || undefined;
+    const imagePrompt =
+      asString(block.imagePrompt).slice(0, 400) || undefined;
+    const imageQuery = asString(block.imageQuery).slice(0, 120) || undefined;
+    // Every kind needs its own something: words for the four text kinds, a way
+    // to find the picture for the fifth, a formula for the sixth.
+    const usable =
+      kind === "image"
+        ? Boolean(imagePrompt || imageQuery)
+        : kind === "formula"
+          ? text.length > 0
+          : text.length > 0 || Boolean(label);
+    if (!usable) continue;
+    blocks.push({
+      kind: kind as SlideBlockKind,
+      x,
+      y,
+      w,
+      h,
+      text: text || undefined,
+      label,
+      imagePrompt,
+      imageQuery,
+    });
+  }
+  return blocks.length > 0 ? blocks : undefined;
+}
+
 export function coerceLesson(input: unknown): Lesson | null {
   if (!input || typeof input !== "object") return null;
   const raw = input as Record<string, unknown>;
@@ -241,6 +314,13 @@ export function coerceLesson(input: unknown): Lesson | null {
       visualNote: asString(scene.visualNote).slice(0, 400) || undefined,
       narration: asString(scene.narration).slice(0, 900) || undefined,
       pointer: pointer.length > 0 ? pointer : undefined,
+      // Free layout first: an explicit arrangement beats the layout the scene's
+      // contents would otherwise imply. Both are optional and the renderer falls
+      // back to the layout when blocks are missing.
+      blocks: sanitizeBlocks(scene.blocks),
+      layout: SLIDE_LAYOUTS.includes(asString(scene.layout) as SlideLayout)
+        ? (asString(scene.layout) as SlideLayout)
+        : undefined,
       quiz,
       simulation3d,
       start: asNumber(scene.start, 0),
