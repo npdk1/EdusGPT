@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import katex from "katex";
 import "katex/dist/katex.min.css";
 import {
@@ -164,6 +165,26 @@ export function StudioPanel() {
   const [notice, setNotice] = useState<string | null>(null);
   const stream = useGenerationStream();
   const busy = stream.running;
+  const router = useRouter();
+  // The classroom session owns the run's screen from the first event on: as
+  // soon as the server hands over the deck id, route there (SPA navigation —
+  // the singleton stream keeps flowing across it) exactly once per run.
+  const navigatedRef = useRef<string | null>(null);
+  const runLessonId = stream.progress.lessonId ?? null;
+  const runDone = stream.progress.done;
+  useEffect(() => {
+    // Only while the deck is still being written: after `done` the teacher
+    // may be back on the form, and pushing them away again would trap them
+    // in a navigation loop.
+    if (!runLessonId || runDone || navigatedRef.current === runLessonId) return;
+    navigatedRef.current = runLessonId;
+    try {
+      localStorage.setItem("edusgpt.classroom-voice.v1", voice);
+    } catch {
+      /* the classroom falls back to the default voice */
+    }
+    router.push(`/classroom?id=${encodeURIComponent(runLessonId)}`);
+  }, [runLessonId, runDone, router, voice]);
   // The final lesson arrives on the stream's `done` event; mirror it into the
   // panel so the preview/save/open buttons light up.
   const finishedLesson = stream.progress.lesson;

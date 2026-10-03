@@ -66,6 +66,11 @@ export interface StreamEvent {
   model?: string;
   elapsedMs?: number;
   /**
+   * The deck's stable id, sent on the very first event so the studio can
+   * route to the classroom session immediately — the scenes stream there.
+   */
+  lessonId?: string;
+  /**
    * Zero-based position of `scene` in the deck. Batches finish out of order
    * (each scene event is sent the moment its own call lands), so the client
    * orders the progressive script by this instead of arrival order.
@@ -1013,6 +1018,9 @@ export async function POST(request: NextRequest) {
           progress: 5,
           provider: creds.provider,
           model: modelOverride ?? creds.model,
+          // Handed over on the very first event so the studio can route to
+          // the classroom session immediately — the deck streams there.
+          lessonId,
         });
 
         const outlineStart = Date.now();
@@ -1080,6 +1088,7 @@ export async function POST(request: NextRequest) {
           provider: creds.provider,
           model: outlineResult.model,
           elapsedMs: Date.now() - outlineStart,
+          lessonId,
           // Hand the outline over now so the browser can show it within seconds.
           outline: {
             title: outline.title ?? topic,
@@ -1367,21 +1376,10 @@ export async function POST(request: NextRequest) {
           };
         };
 
-        // Scenes are written in bounded parallel batches.
-        //
-        // One call per scene is right — a single response holding ninety scenes
-        // gets truncated, and a model asked to number ninety things loses count
-        // long before that. But a sequential loop turns the longest preset into a
-        // quarter of an hour of waiting, which reads exactly like the feature not
-        // existing. Six at a time makes the wall clock proportional to the number
-        // of batches rather than the number of slides, and stays well clear of the
-        // provider's concurrency limit.
-        //
-        // Each scene is reported the moment its own call lands, not when its
-        // batch finishes: the studio shows the finished slide and reads its
-        // voice-over straight away, instead of waiting for the whole deck.
-        // Batches still finish out of order, so every event carries its
-        // position and the client orders the progressive script by it.
+        // Each scene is reported the moment its own call lands: the classroom
+        // shows the finished slide and reads its voice-over straight away,
+        // instead of waiting for the whole deck. The position still travels
+        // with the event so the client never depends on arrival order.
         const reportScene = (index: number, result: Record<string, unknown>) => {
           scenes[index] = result;
           draftDone += 1;
@@ -1401,22 +1399,20 @@ export async function POST(request: NextRequest) {
           });
           void writeDraft(`Đã xong ${draftDone}/${planned.length} cảnh.`);
         };
-        const BATCH = 6;
-        for (let start = 0; start < planned.length; start += BATCH) {
-          const batch = planned.slice(start, start + BATCH);
+        // Scenes are written strictly one after another: the classroom plays
+        // each finished slide with its voice-over before the next one is even
+        // requested, so the deck grows exactly the way it is watched. Slower
+        // wall-clock than parallel batches — a deliberate trade, chosen so a
+        // long lesson never looks stalled while six calls fight upstream.
+        for (let index = 0; index < planned.length; index += 1) {
           send({
             type: "stage",
             stage: "scene",
-            message: `Đang viết cảnh ${start + 1}–${start + batch.length}/${planned.length}`,
-            progress: Math.round(25 + (start / planned.length) * 70),
+            message: `Đang viết cảnh ${index + 1}/${planned.length}`,
+            progress: Math.round(25 + (index / planned.length) * 70),
           });
-          await Promise.all(
-            batch.map((_, offset) =>
-              writeScene(start + offset).then((result) => {
-                reportScene(start + offset, result);
-              }),
-            ),
-          );
+          const result = await writeScene(index);
+          reportScene(index, result);
         }
 
         // ---------- enforce the shape, whatever the outline said ----------

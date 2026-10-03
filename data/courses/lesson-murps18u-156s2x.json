@@ -1,0 +1,886 @@
+{
+  "format": "eduai-studio/course@1",
+  "updatedAt": "2026-10-03T01:33:25.257Z",
+  "lesson": {
+    "id": "lesson-murps18u-156s2x",
+    "title": "Overfitting trong học máy",
+    "subject": "Chung",
+    "grade": "Phổ thông",
+    "language": "vi",
+    "fps": 30,
+    "duration": 600,
+    "scenes": [
+      {
+        "id": "ai-1",
+        "kind": "cover",
+        "accent": "brand",
+        "title": "Bạn đã bao giờ học máy “điên” chưa?",
+        "subtitle": "Hiểu overfitting để xây dựng mô hình tin cậy",
+        "bullets": [
+          "Mô hình nhớ hết dữ liệu huấn luyện",
+          "Kết quả kiểm tra kém, không khái quát"
+        ],
+        "narration": "Chào các bạn, hôm nay chúng ta sẽ nói về hiện tượng mô hình học máy học vẹt toàn bộ dữ liệu huấn luyện. Khi đó mô hình cho độ chính xác cực cao trên tập train nhưng thất bại hoàn toàn trên dữ liệu mới. Đó chính là overfitting, vấn đề cốt lõi khiến nhiều dự án AI sập bẫy. Bài hôm nay sẽ chỉ ra dấu hiệu, nguyên nhân và cách khắc phục thực tế.",
+        "pointer": [
+          {
+            "target": "title",
+            "label": "Mở đầu giới thiệu chủ đề"
+          },
+          {
+            "target": "bullet-0",
+            "label": "Mô tả hiện tượng nhớ dữ liệu"
+          },
+          {
+            "target": "bullet-1",
+            "label": "Hệ quả trên tập kiểm tra"
+          },
+          {
+            "target": "subtitle",
+            "label": "Tóm tắt mục tiêu bài học"
+          }
+        ],
+        "start": 0,
+        "duration": 40
+      },
+      {
+        "id": "ai-2",
+        "kind": "concept",
+        "accent": "brand",
+        "title": "Định nghĩa overfitting",
+        "subtitle": "Mô hình học máy phản ứng quá mức với dữ liệu huấn luyện",
+        "bullets": [
+          "Đối với dữ liệu huấn luyện, độ sai lệch rất thấp nhưng trên dữ liệu kiểm tra tăng mạnh",
+          "Mô hình học được các nhiễu và mẫu ngẫu nhiên, mất khả năng tổng quát",
+          "Khi thực hiện dự đoán, độ chính xác giảm đáng kể",
+          "Đánh giá bằng độ sai lệch giữa tập huấn luyện và kiểm tra để nhận diện"
+        ],
+        "narration": "Học sinh đang thắc mắc gì ở đây? Overfitting là khi mô hình học máy ghi nhớ quá nhiều chi tiết của dữ liệu huấn luyện, khiến độ sai lệch trên tập huấn luyện rất thấp nhưng trên dữ liệu mới cao. Ví dụ, một mạng neural học đoạn văn nhưng lại chỉ chuẩn xác với văn bản đã được huấn luyện. Khi thử với văn bản khác, độ chính xác sụt giảm, chứng tỏ mô hình không tổng quát. Để nhận diện, ta so sánh độ sai lệch giữa tập huấn luyện và kiểm tra. Các bạn thử đưa ra ví dụ về overfitting trong một bài toán phân loại nhé.",
+        "start": 40,
+        "duration": 40
+      },
+      {
+        "id": "ai-3",
+        "kind": "concept",
+        "accent": "brand",
+        "title": "Tại sao overfitting xảy ra?",
+        "subtitle": "Những yếu tố dẫn đến mô hình quá khớp dữ liệu huấn luyện",
+        "bullets": [
+          "Dữ liệu huấn luyện quá ít, mô hình học chi tiết từng dữ liệu",
+          "Mô hình có độ phức tạp lớn (nhiều tham số) so với nhiệm vụ",
+          "Thiếu kiểm tra dữ liệu ngoài tập huấn luyện"
+        ],
+        "narration": "Bạn có thấy khi mô hình học hết cái “người mẫu” thì lại sai khi gặp dữ liệu mới? Lý do là mẫu học quá sâu vào dữ liệu huấn luyện, để lại “điểm chi tiết” không tồn tại trong thực tế. Ví dụ, nếu chỉ dùng 20 mẫu hình ảnh để huấn luyện mạng neural, mọi mẫu mới có thể bị phân loại sai. Hãy tự hỏi: độ phức tạp mô hình có vừa vặn với số dữ liệu không?",
+        "pointer": [
+          {
+            "target": "title",
+            "label": "Khởi đầu"
+          },
+          {
+            "target": "bullet-0",
+            "label": "Dữ liệu quá ít"
+          },
+          {
+            "target": "bullet-1",
+            "label": "Độ phức tạp cao"
+          },
+          {
+            "target": "bullet-2",
+            "label": "Thiếu dữ liệu ngoài huấn luyện"
+          },
+          {
+            "target": "subtitle",
+            "label": "Tóm tắt nguyên nhân"
+          }
+        ],
+        "start": 80,
+        "duration": 40
+      },
+      {
+        "id": "ai-4",
+        "kind": "concept",
+        "accent": "brand",
+        "title": "Hệ số phức tạp mô hình",
+        "subtitle": "Mô hình quá lớn dẫn tới overfitting",
+        "bullets": [
+          "Số tham số > kích thước dữ liệu gây học nhiễu",
+          "Độ chính xác tập huấn luyện cao nhưng giảm 15% trên kiểm thử",
+          "Kiểm tra lệch trung bình 15 điểm là dấu hiệu overfitting"
+        ],
+        "narration": "Học sinh đang thắc mắc gì ở đây? Khi mô hình quá phức tạp, sai số trên tập huấn luyện giảm nhưng trên dữ liệu chưa thấy, hiện tượng overfitting xuất hiện. Ví dụ, mạng nơ-ron 10 lớp, 1 triệu tham số, trên tập huấn luyện đạt 98% nhưng trên bộ kiểm thử chỉ 83%. Đây là dấu hiệu mô hình “bán” dữ liệu. Khi số tham số vượt mức cần thiết, mô hình học nhiễu thay vì xu hướng thực. Kiểm tra độ lệch trung bình giữa huấn luyện và kiểm thử sẽ cho thấy chênh lệch 15 điểm, chứng minh overfitting.",
+        "pointer": [
+          {
+            "target": "title",
+            "label": "introduce"
+          }
+        ],
+        "start": 120,
+        "duration": 40
+      },
+      {
+        "id": "ai-5",
+        "kind": "diagram",
+        "accent": "brand",
+        "title": "Biểu đồ dữ liệu thực vs dự đoán",
+        "subtitle": "Điểm xanh = thực, đường đỏ = mô hình overfitting",
+        "bullets": [
+          "Mô hình học nhiễu, sai số tập kiểm tra tăng",
+          "Độ phức tạp quá lớn so với lượng dữ liệu"
+        ],
+        "graph": {
+          "title": "Dữ liệu thực vs Dự đoán",
+          "xlabel": "Chỉ số mẫu",
+          "ylabel": "Giá trị",
+          "xs": [
+            1,
+            2,
+            3,
+            4,
+            5,
+            6,
+            7,
+            8,
+            9,
+            10
+          ],
+          "ys": [
+            2.1,
+            3.9,
+            5,
+            7.2,
+            8.8,
+            10.1,
+            11.9,
+            13.5,
+            15.2,
+            16.8
+          ]
+        },
+        "visualNote": "Hai đường cong: dữ liệu thực (điểm xanh) và dự đoán mô hình (đường đỏ) trên cùng trục",
+        "narration": "Trên biểu đồ này chúng ta đặt dữ liệu thực tế dưới dạng các điểm màu xanh trên trục hoành là chỉ số mẫu. Đường cong đỏ là dự đoán của mô hình đã học quá khớp với tập huấn luyện. Nhận thấy mô hình đi qua hầu như mọi điểm nhưng dao động mạnh giữa các điểm, tạo ra đường cong gập ghềnh. Đó là dấu hiệu rõ ràng của overfitting: mô hình ghi nhớ nhiễu thay vì học quy luật chung.",
+        "pointer": [
+          {
+            "target": "graph",
+            "label": "điểm dữ liệu thực"
+          },
+          {
+            "target": "graph",
+            "label": "đường dự đoán"
+          },
+          {
+            "target": "graph",
+            "label": "dao động giữa các điểm"
+          },
+          {
+            "target": "bullet-0",
+            "label": "định nghĩa overfitting"
+          }
+        ],
+        "start": 160,
+        "duration": 40
+      },
+      {
+        "id": "ai-6",
+        "kind": "formula",
+        "accent": "brand",
+        "title": "Công thức MSE",
+        "subtitle": "Các bước tính sai số trung bình bình phương",
+        "bullets": [
+          "MSE = 1/n − ≤ (y_i-ȥy)^2",
+          "n là số mẫu, y_i giá trị thực, ȥy dự đoán",
+          "Đơn vị là bình phương đơn vị dữ liệu",
+          "Sử dụng MSE để so sánh mô hình"
+        ],
+        "formula": "\\frac{1}{n}\\sum_{i=1}^{n}(y_i-\\hat{y})^2",
+        "narration": "Trong bài học, chúng ta tính MSE để đánh giá mô hình học máy. Để thực hiện, lấy độ dài bộ dữ liệu n và mỗi cặp giá trị thực y_i cùng dự đoán \\hat{y}. Đặt vào công thức, tính tổng bình phương sai số rồi chia cho n. Kết quả cho bạn một số đo độ chính xác mà bạn có thể so sánh giữa các mô hình. Giải quyết overfitting bằng cách kiểm tra MSE trên tập kiểm tra.",
+        "start": 200,
+        "duration": 40
+      },
+      {
+        "id": "ai-7",
+        "kind": "example",
+        "accent": "brand",
+        "title": "Ví dụ 1: Nhận diện ảnh mèo",
+        "subtitle": "Khi mô hình học quá nhiều chi tiết của dữ liệu huấn luyện",
+        "bullets": [
+          "Huấn luyện 1000 ảnh mèo, 1000 ảnh chó",
+          "Mô hình học 95% độ chính xác trên tập huấn luyện",
+          "Độ chính xác giảm 30% trên tập kiểm tra mới"
+        ],
+        "steps": [
+          "Bước 1: Thu thập 2000 ảnh, chia 80% huấn luyện, 20% kiểm tra",
+          "Bước 2: Đào tạo mạng CNN với 10 lớp, dropout 0%",
+          "Bước 3: Kiểm tra trên tập huấn luyện, đạt 98%",
+          "Bước 4: Kiểm tra trên tập kiểm tra, đạt 68%",
+          "Bước 5: Nhận thấy chệch lệch do overfitting"
+        ],
+        "narration": "Học sinh, hãy tưởng tượng một mạng học nhận diện mèo. Mô hình được huấn luyện trên 2000 ảnh, đạt 98% độ chính xác trên tập huấn luyện. Khi áp dụng vào ảnh mới, độ chính xác chỉ 68%, điều này cho thấy mô hình đã ghi nhớ quá nhiều chi tiết của tập huấn luyện thay vì học đặc trưng chung. Đây chính là hiện tượng overfitting. Bạn có thể đoán tại sao dropout 0% gây ra vấn đề này?",
+        "pointer": [
+          {
+            "target": "title",
+            "label": "Giới thiệu ví dụ"
+          }
+        ],
+        "start": 240,
+        "duration": 40
+      },
+      {
+        "id": "ai-8",
+        "kind": "example",
+        "accent": "brand",
+        "title": "Ví dụ 2: Dự báo giá cổ phiếu",
+        "subtitle": "Overfitting trong tài chính",
+        "bullets": [
+          "Dữ liệu 100 ngày, mô hình hồi quy tuyến tính",
+          "Độ chính xác training 95%, testing 65%"
+        ],
+        "steps": [
+          "Giả thiết: dữ liệu 100 ngày, mô hình tuyến tính",
+          "Huấn luyện trên toàn bộ dữ liệu, tính độ chính xác training",
+          "Đánh giá trên dữ liệu mới, sai số 30%"
+        ],
+        "narration": "Trong ví dụ này, ta dùng dữ liệu lịch sử giá cổ phiếu A trong 100 ngày để huấn luyện mô hình hồi quy tuyến tính. Khi mô hình được huấn luyện trên toàn bộ dữ liệu, độ chính xác trên tập huấn luyện đạt 95% nhưng khi dự báo ngày 101, sai số tăng lên 30%. Điều này cho thấy mô hình đã học quá mức các biến động ngắn hạn, dẫn tới overfitting. Bạn có thể thấy sự khác biệt lớn giữa độ chính xác training và testing.",
+        "pointer": [
+          {
+            "target": "title",
+            "label": "Giới thiệu ví dụ"
+          },
+          {
+            "target": "subtitle",
+            "label": "Chủ đề"
+          },
+          {
+            "target": "bullet-0",
+            "label": "Dữ liệu"
+          },
+          {
+            "target": "bullet-1",
+            "label": "Độ chính xác"
+          },
+          {
+            "target": "step-0",
+            "label": "Giả thiết"
+          },
+          {
+            "target": "step-1",
+            "label": "Huấn luyện"
+          },
+          {
+            "target": "step-2",
+            "label": "Đánh giá"
+          }
+        ],
+        "start": 280,
+        "duration": 40
+      },
+      {
+        "id": "ai-9",
+        "kind": "example",
+        "accent": "brand",
+        "title": "Ví dụ 3: Phân loại email spam",
+        "subtitle": "Mô hình logistic với 10,000 mẫu, 99% độ chính xác",
+        "bullets": [
+          "Mô hình học 5 lớp, độ sâu 3",
+          "Dữ liệu giảm 10% để tránh overfitting",
+          "Kết quả: 95% chính xác trên dữ liệu kiểm tra"
+        ],
+        "steps": [
+          "Bước 1: Thu thập 10,000 email, 5% spam",
+          "Bước 2: Tạo 20 đặc trưng từ từ khóa",
+          "Bước 3: Huấn luyện mô hình logistic, 100 epoch",
+          "Bước 4: Kiểm tra trên 2,000 email mới",
+          "Bước 5: Phát hiện overfitting khi độ chính xác training 99% nhưng validation 91%"
+        ],
+        "narration": "Học sinh đang thắc mắc gì ở đây? Chúng ta xem một mô hình logistic học 10,000 email spam, đạt 99% độ chính xác trên training nhưng chỉ 91% trên validation. Điều này cho thấy overfitting. Bằng cách giảm dữ liệu và thêm regularization, độ chính xác validation tăng lên 95%. Bạn có thể tưởng tượng làm sao khi mô hình quá khớp với dữ liệu huấn luyện? Điều này làm giảm khả năng tổng quát.",
+        "pointer": [
+          {
+            "target": "title",
+            "label": "Giới thiệu ví dụ"
+          },
+          {
+            "target": "bullet-0",
+            "label": "Chi tiết lớp"
+          },
+          {
+            "target": "bullet-1",
+            "label": "Giảm dữ liệu"
+          },
+          {
+            "target": "bullet-2",
+            "label": "Kết quả"
+          },
+          {
+            "target": "step-0",
+            "label": "Thu thập"
+          },
+          {
+            "target": "step-1",
+            "label": "Tạo đặc trưng"
+          },
+          {
+            "target": "step-2",
+            "label": "Huấn luyện"
+          },
+          {
+            "target": "step-3",
+            "label": "Kiểm tra"
+          },
+          {
+            "target": "step-4",
+            "label": "Phát hiện overfitting"
+          }
+        ],
+        "start": 320,
+        "duration": 40
+      },
+      {
+        "id": "ai-10",
+        "kind": "concept",
+        "accent": "brand",
+        "title": "Cách phòng tránh overfitting",
+        "subtitle": "Từ chia dữ liệu tới regularization và cross‑validation",
+        "bullets": [
+          "Chia dữ liệu thành huấn luyện, xác minh, kiểm thử",
+          "Sử dụng regularization L1/L2 để hạn chế độ phức tạp",
+          "Triển khai k‑fold cross‑validation để đánh giá mô hình"
+        ],
+        "narration": "Thời gian học 40 giây, chúng ta giải thích cách phòng tránh overfitting. Đầu tiên là chia dữ liệu thành tập huấn luyện, xác minh và kiểm thử, giúp mô hình không học sai lệch. Thứ hai sử dụng regularization như L1/L2 để hạn chế độ phức tạp. Thứ ba thực thi cross‑validation, gợi ý học sinh làm ví dụ về k‑fold CV trên bộ dữ liệu MNIST. Cuối cùng, giảm kích thước mẫu, rút gọn đặc trưng bằng PCA. Thử nhớ: Regularize hay không?",
+        "pointer": [
+          {
+            "target": "title",
+            "label": "Giới thiệu"
+          },
+          {
+            "target": "bullet-0",
+            "label": "Chia dữ liệu"
+          },
+          {
+            "target": "bullet-1",
+            "label": "Regularization"
+          },
+          {
+            "target": "bullet-2",
+            "label": "Cross‑validation"
+          },
+          {
+            "target": "bullet-0",
+            "label": "Chia dữ liệu"
+          },
+          {
+            "target": "bullet-1",
+            "label": "Regularization"
+          },
+          {
+            "target": "bullet-2",
+            "label": "Cross‑validation"
+          },
+          {
+            "target": "bullet-0",
+            "label": "Chia dữ liệu"
+          },
+          {
+            "target": "bullet-1",
+            "label": "Regularization"
+          }
+        ],
+        "start": 360,
+        "duration": 40
+      },
+      {
+        "id": "ai-11",
+        "kind": "concept",
+        "accent": "brand",
+        "title": "Regularization L1 và L2",
+        "subtitle": "Hạn chế tổng trọng số bằng thêm chi phí",
+        "bullets": [
+          "L1 ép các trọng số nhỏ về 0 làm mô hình thưa",
+          "L2 thêm bình phương làm mô hình nhăn gọn"
+        ],
+        "narration": "Regularization L1 và L2 giúp giảm overfitting bằng cách tăng chi phí cho các tham số lớn. Khi L1 áp dụng, các trọng số nhỏ bị ép về 0, tạo mô hình thưa. Khi L2 thêm bình phương, mô hình nhăn gọn mà vẫn giữ ý nghĩa. Ví dụ, trong hồi quy tuyến tính khi tập huấn trên 100 mẫu nhưng có 200 biến, thêm L2 giảm độ lệch chuẩn xuống 15% so với mô hình không regularize; bạn có thể thử giá trị λ = 0.01 để quan sát hiệu ứng.",
+        "pointer": [
+          {
+            "target": "bullet-0",
+            "label": "Chi phí tăng"
+          },
+          {
+            "target": "bullet-1",
+            "label": "Trọng số có 0"
+          },
+          {
+            "target": "bullet-2",
+            "label": "Nhăn gọn"
+          },
+          {
+            "target": "subtitle",
+            "label": "Ví dụ cụ thể"
+          }
+        ],
+        "start": 400,
+        "duration": 40
+      },
+      {
+        "id": "ai-12",
+        "kind": "concept",
+        "accent": "brand",
+        "title": "Kỹ thuật pruning và dropout",
+        "subtitle": "Giảm overfitting bằng cắt neuron và thụt giá trị",
+        "bullets": [
+          "Pruning: cắt 30% tham số, giữ độ chính xác 95%",
+          "Dropout: thụt 0.5, giảm overfitting 4%"
+        ],
+        "narration": "Học sinh, khi mô hình quá khớp, pruning giúp cắt bỏ các neuron không cần thiết, giảm số tham số từ 1.2M xuống 0.8M mà độ chính xác vẫn giữ 95%. Dropout thụt giá trị liên tục trong quá trình huấn luyện, cho mạng học những đặc trưng ổn định. Ví dụ, trong mạng 10 lớp, áp dụng dropout 0.5 cho lớp 5 làm giảm overfitting lên 4%. Hãy nhớ, pruning làm giảm kích thước mạng, dropout làm giảm sự phụ thuộc giữa các neuron.",
+        "pointer": [
+          {
+            "target": "title",
+            "label": "định nghĩa"
+          },
+          {
+            "target": "subtitle",
+            "label": "ngữ cảnh"
+          },
+          {
+            "target": "bullet-0",
+            "label": "cắt neuron"
+          },
+          {
+            "target": "bullet-1",
+            "label": "thụt giá trị"
+          }
+        ],
+        "start": 440,
+        "duration": 40
+      },
+      {
+        "id": "ai-13",
+        "kind": "concept",
+        "accent": "brand",
+        "title": "Khi nào không dùng regularization",
+        "subtitle": "Regularization giảm hiệu suất khi mô hình quá đơn giản",
+        "bullets": [
+          "Nếu dữ liệu dĩa nhỏ, regularization gây underfitting"
+        ],
+        "narration": "Bạn đã từng thấy mô hình bị giảm mất điểm khi áp dụng regularization không? Điều đó xảy ra khi tập huấn luyện quá nhỏ, dữ liệu không đủ đa dạng. Khi mô hình quá đơn giản, regularization làm giảm độ phức tạp và mất thông tin quan trọng. Ví dụ, trong bài toán nhận diện chữ viết, regularization có thể làm mất chi tiết nét chữ. Hãy nhớ, regularization chỉ hỗ trợ khi dữ liệu đủ lớn và đa dạng để tránh underfitting.",
+        "start": 480,
+        "duration": 40
+      },
+      {
+        "id": "ai-14",
+        "kind": "quiz",
+        "accent": "brand",
+        "title": "Kiểm tra nhanh kiến thức",
+        "subtitle": "Chọn đáp án đúng trong 4 lựa chọn",
+        "bullets": [
+          "Mô hình phức tạp quá dễ overfitting",
+          "Overfitting = học nhiễu thay vì quy luật"
+        ],
+        "visualNote": "Slide quiz 4 đáp án",
+        "narration": "Chào các bạn, đây là bài kiểm tra nhanh về overfitting, hãy chọn mô hình nào thường bị overfitting khi độ phức tạp quá lớn so với dữ liệu huấn luyện. Có bốn lựa chọn dưới đây, chỉ có một đáp án đúng. Sau khi bạn trả lời, chúng ta sẽ xem giải thích chi tiết cho từng phương án. Nhớ rằng overfitting xảy ra khi mô hình học thuộc lòng nhiễu thay vì quy luật chung.",
+        "pointer": [
+          {
+            "target": "quiz",
+            "label": "giới thiệu câu hỏi"
+          },
+          {
+            "target": "quiz",
+            "label": "liệt kê lựa chọn"
+          },
+          {
+            "target": "quiz",
+            "label": "giải thích sau trả lời"
+          },
+          {
+            "target": "bullet-1",
+            "label": "nhắc lại định nghĩa overfitting"
+          }
+        ],
+        "quiz": {
+          "question": "Mô hình nào sau đây dễ bị overfitting khi độ phức tạp quá lớn so với tập huấn luyện?",
+          "options": [
+            {
+              "id": "A",
+              "text": "Hồi quy tuyến tính đơn giản",
+              "isCorrect": false,
+              "explanation": "Hồi quy tuyến tính có độ phức tạp thấp, ít bị overfitting."
+            },
+            {
+              "id": "B",
+              "text": "Cây quyết định độ sâu lớn",
+              "isCorrect": true,
+              "explanation": "Cây quyết định sâu có thể ghi nhớ toàn bộ dữ liệu huấn luyện, dẫn đến overfitting."
+            },
+            {
+              "id": "C",
+              "text": "K-nearest neighbors với k lớn",
+              "isCorrect": false,
+              "explanation": "K lớn làm mượt mô hình, giảm nguy cơ overfitting."
+            },
+            {
+              "id": "D",
+              "text": "Naive Bayes",
+              "isCorrect": false,
+              "explanation": "Naive Bayes giả định độc lập, thường không overfitting mạnh."
+            }
+          ]
+        },
+        "start": 520,
+        "duration": 40
+      },
+      {
+        "id": "ai-15",
+        "kind": "summary",
+        "accent": "brand",
+        "title": "Những điều cần nhớ về overfitting",
+        "subtitle": "Giới hạn mô hình, dữ liệu, và chiến lược phòng tránh",
+        "bullets": [
+          "Overfitting xảy ra khi mô hình quen với dữ liệu huấn luyện nhưng thiệt kém trên dữ liệu mới",
+          "Số tham số > số mẫu huấn luyện làm tăng nguy cơ học chi tiết nhiễu",
+          "Các biện pháp giảm overfitting: rút gọn mô hình, cross‑validation, regularization, dropout"
+        ],
+        "narration": "Overfitting lừa dối bằng độ phức tạp; ví dụ, mô hình dự đoán giá cổ phiếu dựa trên 10 năm dữ liệu tiền có thể biểu diễn đúng lịch sử nhưng thất bại khi thị trường thay đổi. Bạn có thể kiểm tra bằng cách so sánh độ lỗi trên tập huấn luyện và tập kiểm tra; nếu sai lệch lớn, đó là dấu hiệu overfitting. Để tránh, hãy dùng regularization như L2 hoặc áp dụng dropout trong mạng nơ‑ron. Nhớ rằng, overfitting là sự thiếu tổng quát, không phải chính xác.",
+        "pointer": [
+          {
+            "target": "title",
+            "label": "Đề cao thực tế"
+          },
+          {
+            "target": "bullet-0",
+            "label": "Định nghĩa"
+          },
+          {
+            "target": "bullet-1",
+            "label": "Nguyên nhân"
+          },
+          {
+            "target": "bullet-2",
+            "label": "Chiến lược"
+          }
+        ],
+        "start": 560,
+        "duration": 40
+      }
+    ],
+    "chapters": [
+      {
+        "id": "ch-1",
+        "title": "Bạn đã bao giờ học máy “điên” chưa?",
+        "start": 0,
+        "end": 40,
+        "sceneIds": [
+          "ai-1"
+        ]
+      },
+      {
+        "id": "ch-2",
+        "title": "Định nghĩa overfitting",
+        "start": 40,
+        "end": 80,
+        "sceneIds": [
+          "ai-2"
+        ]
+      },
+      {
+        "id": "ch-3",
+        "title": "Tại sao overfitting xảy ra?",
+        "start": 80,
+        "end": 120,
+        "sceneIds": [
+          "ai-3"
+        ]
+      },
+      {
+        "id": "ch-4",
+        "title": "Hệ số phức tạp mô hình",
+        "start": 120,
+        "end": 160,
+        "sceneIds": [
+          "ai-4"
+        ]
+      },
+      {
+        "id": "ch-5",
+        "title": "Biểu đồ dữ liệu thực vs dự đoán",
+        "start": 160,
+        "end": 200,
+        "sceneIds": [
+          "ai-5"
+        ]
+      },
+      {
+        "id": "ch-6",
+        "title": "Công thức MSE",
+        "start": 200,
+        "end": 240,
+        "sceneIds": [
+          "ai-6"
+        ]
+      },
+      {
+        "id": "ch-7",
+        "title": "Ví dụ 1: Nhận diện ảnh mèo",
+        "start": 240,
+        "end": 280,
+        "sceneIds": [
+          "ai-7"
+        ]
+      },
+      {
+        "id": "ch-8",
+        "title": "Ví dụ 2: Dự báo giá cổ phiếu",
+        "start": 280,
+        "end": 320,
+        "sceneIds": [
+          "ai-8"
+        ]
+      },
+      {
+        "id": "ch-9",
+        "title": "Ví dụ 3: Phân loại email spam",
+        "start": 320,
+        "end": 360,
+        "sceneIds": [
+          "ai-9"
+        ]
+      },
+      {
+        "id": "ch-10",
+        "title": "Cách phòng tránh overfitting",
+        "start": 360,
+        "end": 400,
+        "sceneIds": [
+          "ai-10"
+        ]
+      },
+      {
+        "id": "ch-11",
+        "title": "Regularization L1 và L2",
+        "start": 400,
+        "end": 440,
+        "sceneIds": [
+          "ai-11"
+        ]
+      },
+      {
+        "id": "ch-12",
+        "title": "Kỹ thuật pruning và dropout",
+        "start": 440,
+        "end": 480,
+        "sceneIds": [
+          "ai-12"
+        ]
+      },
+      {
+        "id": "ch-13",
+        "title": "Khi nào không dùng regularization",
+        "start": 480,
+        "end": 520,
+        "sceneIds": [
+          "ai-13"
+        ]
+      },
+      {
+        "id": "ch-14",
+        "title": "Kiểm tra nhanh kiến thức",
+        "start": 520,
+        "end": 560,
+        "sceneIds": [
+          "ai-14"
+        ]
+      },
+      {
+        "id": "ch-15",
+        "title": "Những điều cần nhớ về overfitting",
+        "start": 560,
+        "end": 600,
+        "sceneIds": [
+          "ai-15"
+        ]
+      }
+    ],
+    "source": "gemini",
+    "theme": "paper",
+    "voice": "vi-VN-HoaiMyNeural",
+    "showPointer": true,
+    "pointerColor": "#f59e0b",
+    "model": "nvidia/nemotron-3-ultra-550b-a55b",
+    "createdAt": "2026-10-03T01:33:25.202Z"
+  },
+  "log": [
+    {
+      "message": "Đang lên dàn ý bài học…",
+      "kind": "stage",
+      "at": "08:29:25",
+      "stage": "outline",
+      "provider": "nvidia",
+      "model": "openai/gpt-oss-20b"
+    },
+    {
+      "message": "Dàn ý: 15 cảnh: \"Overfitting trong học máy\"",
+      "kind": "stage",
+      "at": "08:29:33",
+      "stage": "outline-done",
+      "provider": "nvidia",
+      "model": "openai/gpt-oss-20b",
+      "elapsedMs": 8164
+    },
+    {
+      "message": "Đang viết cảnh 1–6/15",
+      "kind": "stage",
+      "at": "08:29:33",
+      "stage": "scene"
+    },
+    {
+      "message": "Xong cảnh 6: Công thức MSE",
+      "kind": "scene",
+      "at": "08:29:39",
+      "stage": "scene",
+      "provider": "nvidia",
+      "model": "openai/gpt-oss-20b",
+      "elapsedMs": 5784
+    },
+    {
+      "message": "Xong cảnh 3: Tại sao overfitting xảy ra?",
+      "kind": "scene",
+      "at": "08:29:42",
+      "stage": "scene",
+      "provider": "nvidia",
+      "model": "openai/gpt-oss-20b",
+      "elapsedMs": 8919
+    },
+    {
+      "message": "Xong cảnh 2: Định nghĩa overfitting",
+      "kind": "scene",
+      "at": "08:29:44",
+      "stage": "scene",
+      "provider": "nvidia",
+      "model": "openai/gpt-oss-20b",
+      "elapsedMs": 11470
+    },
+    {
+      "message": "Xong cảnh 4: Hệ số phức tạp mô hình",
+      "kind": "scene",
+      "at": "08:30:09",
+      "stage": "scene",
+      "provider": "nvidia",
+      "model": "openai/gpt-oss-20b",
+      "elapsedMs": 36115
+    },
+    {
+      "message": "Xong cảnh 5: Biểu đồ dữ liệu thực vs dự đoán",
+      "kind": "scene",
+      "at": "08:31:14",
+      "stage": "scene",
+      "provider": "nvidia",
+      "model": "nvidia/nemotron-3-ultra-550b-a55b",
+      "elapsedMs": 101391
+    },
+    {
+      "message": "Xong cảnh 1: Bạn đã bao giờ học máy “điên” chưa?",
+      "kind": "scene",
+      "at": "08:31:16",
+      "stage": "scene",
+      "provider": "nvidia",
+      "model": "nvidia/nemotron-3-ultra-550b-a55b",
+      "elapsedMs": 102781
+    },
+    {
+      "message": "Đang viết cảnh 7–12/15",
+      "kind": "stage",
+      "at": "08:31:16",
+      "stage": "scene"
+    },
+    {
+      "message": "Xong cảnh 7: Ví dụ 1: Nhận diện ảnh mèo",
+      "kind": "scene",
+      "at": "08:31:22",
+      "stage": "scene",
+      "provider": "nvidia",
+      "model": "openai/gpt-oss-20b",
+      "elapsedMs": 6702
+    },
+    {
+      "message": "Xong cảnh 9: Ví dụ 3: Phân loại email spam",
+      "kind": "scene",
+      "at": "08:31:24",
+      "stage": "scene",
+      "provider": "nvidia",
+      "model": "openai/gpt-oss-20b",
+      "elapsedMs": 8427
+    },
+    {
+      "message": "Xong cảnh 11: Regularization L1 và L2",
+      "kind": "scene",
+      "at": "08:31:41",
+      "stage": "scene",
+      "provider": "nvidia",
+      "model": "openai/gpt-oss-20b",
+      "elapsedMs": 25663
+    },
+    {
+      "message": "Xong cảnh 10: Cách phòng tránh overfitting",
+      "kind": "scene",
+      "at": "08:31:45",
+      "stage": "scene",
+      "provider": "nvidia",
+      "model": "openai/gpt-oss-20b",
+      "elapsedMs": 29121
+    },
+    {
+      "message": "Xong cảnh 8: Ví dụ 2: Dự báo giá cổ phiếu",
+      "kind": "scene",
+      "at": "08:31:50",
+      "stage": "scene",
+      "provider": "nvidia",
+      "model": "openai/gpt-oss-20b",
+      "elapsedMs": 33755
+    },
+    {
+      "message": "Xong cảnh 12: Kỹ thuật pruning và dropout",
+      "kind": "scene",
+      "at": "08:32:09",
+      "stage": "scene",
+      "provider": "nvidia",
+      "model": "openai/gpt-oss-20b",
+      "elapsedMs": 53211
+    },
+    {
+      "message": "Đang viết cảnh 13–15/15",
+      "kind": "stage",
+      "at": "08:32:09",
+      "stage": "scene"
+    },
+    {
+      "message": "Xong cảnh 13: Khi nào không dùng regularization",
+      "kind": "scene",
+      "at": "08:32:15",
+      "stage": "scene",
+      "provider": "nvidia",
+      "model": "openai/gpt-oss-20b",
+      "elapsedMs": 5880
+    },
+    {
+      "message": "Xong cảnh 15: Những điều cần nhớ về overfitting",
+      "kind": "scene",
+      "at": "08:32:17",
+      "stage": "scene",
+      "provider": "nvidia",
+      "model": "openai/gpt-oss-20b",
+      "elapsedMs": 8370
+    },
+    {
+      "message": "Xong cảnh 14: Kiểm tra nhanh kiến thức",
+      "kind": "scene",
+      "at": "08:33:25",
+      "stage": "scene",
+      "provider": "nvidia",
+      "model": "nvidia/nemotron-3-ultra-550b-a55b",
+      "elapsedMs": 75711
+    },
+    {
+      "message": "15 cảnh, 600s.",
+      "kind": "done",
+      "at": "08:33:25",
+      "provider": "nvidia",
+      "model": "nvidia/nemotron-3-ultra-550b-a55b",
+      "elapsedMs": 239879
+    }
+  ]
+}

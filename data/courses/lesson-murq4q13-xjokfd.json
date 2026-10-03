@@ -1,0 +1,401 @@
+{
+  "format": "eduai-studio/course@1",
+  "updatedAt": "2026-10-03T01:40:49.292Z",
+  "lesson": {
+    "id": "lesson-murq4q13-xjokfd",
+    "title": "Định luật bảo toàn năng lượng",
+    "subject": "Chung",
+    "grade": "Phổ thông",
+    "language": "vi",
+    "fps": 30,
+    "duration": 144,
+    "scenes": [
+      {
+        "id": "ai-1",
+        "kind": "cover",
+        "accent": "brand",
+        "title": "Định luật bảo toàn năng lượng",
+        "subtitle": "Năng lượng không biến mất",
+        "bullets": [
+          "Năng lượng chuyển từ dạng nhiệt sang ánh sáng",
+          "Mỗi quá trình giữ tổng năng lượng thành bù"
+        ],
+        "narration": "Học sinh đang thắc mắc gì ở đây? Là “Năng lượng có thể biến đổi công việc không?” Đúng. Nếu một ngọn lửa tắt đi, nhiệt chuyển thành quang. Bài học: tổng năng lượng hệ không đổi. Câu hỏi: khi đá rơi, năng lượng nào chuyển? ...",
+        "pointer": [
+          {
+            "target": "title",
+            "label": "đào sâu chủ đề"
+          },
+          {
+            "target": "subtitle",
+            "label": "giải thích ngắn gọn"
+          },
+          {
+            "target": "bullet-0",
+            "label": "giải thích ví dụ nhiệt-điện"
+          },
+          {
+            "target": "bullet-1",
+            "label": "tổng quát về bảo toàn"
+          }
+        ],
+        "start": 0,
+        "duration": 24
+      },
+      {
+        "id": "ai-2",
+        "kind": "concept",
+        "accent": "gold",
+        "title": "Định nghĩa năng lượng",
+        "subtitle": "Năng lượng là khả năng thực hiện công",
+        "bullets": [
+          "Năng lượng chuyển đổi giữa dạng năng lượng động và năng lượng tiềm ẩn",
+          "Ví dụ: khi một quả bóng rơi, năng lượng tiềm ẩn chuyển thành năng lượng động"
+        ],
+        "narration": "Học sinh đang thắc mắc gì? Năng lượng có thể hiểu là khả năng thực hiện công; ví dụ, một chiếc bóng đổ dẫn tới năng lượng động. Khi vật rơi, năng lượng tiềm ẩn chuyển thành năng lượng động. Bạn nhận thấy thế nào khi quả bóng rơi xuống?",
+        "pointer": [
+          {
+            "target": "title",
+            "label": "giới thiệu"
+          },
+          {
+            "target": "bullet-0",
+            "label": "định nghĩa"
+          },
+          {
+            "target": "bullet-1",
+            "label": "ví dụ"
+          },
+          {
+            "target": "subtitle",
+            "label": "chi tiết"
+          }
+        ],
+        "start": 24,
+        "duration": 24
+      },
+      {
+        "id": "ai-3",
+        "kind": "concept",
+        "accent": "gold",
+        "title": "Ý nghĩa thực tiễn",
+        "subtitle": "Tính toán chi phí điện năng",
+        "bullets": [
+          "Năng lượng điện chuyển thành công suất làm việc.",
+          "Máy lạnh tiêu thụ 1.5 kWh/giờ, chi phí 5 đồng/giờ.",
+          "Công suất đầu ra = công suất đầu vào × hiệu suất.",
+          "Dự báo chi phí dựa trên tiêu thụ và hiệu suất."
+        ],
+        "narration": "Khi máy lạnh chạy, năng lượng điện chuyển thành công suất làm việc. Nếu tiêu thụ 1.5 kWh/giờ và giá 3.5đ/kWh, chi phí mỗi giờ là 5đ. Định luật bảo toàn năng lượng cho phép tính công suất đầu ra bằng công suất đầu vào nhân hiệu suất. Do đó, dự báo chi phí điện dễ khi biết tiêu thụ và hiệu suất.",
+        "pointer": [
+          {
+            "target": "bullet-0",
+            "label": "đưa ví dụ 1"
+          },
+          {
+            "target": "bullet-1",
+            "label": "đưa ví dụ 2"
+          },
+          {
+            "target": "bullet-2",
+            "label": "đưa công thức"
+          },
+          {
+            "target": "bullet-3",
+            "label": "đưa kết luận"
+          }
+        ],
+        "start": 48,
+        "duration": 24
+      },
+      {
+        "id": "ai-4",
+        "kind": "example",
+        "accent": "ember",
+        "title": "Ví dụ chuyển đổi năng lượng",
+        "subtitle": "Trượt bánh xe từ đỉnh xuống dốc",
+        "bullets": [
+          "Bánh xe 1 kg, độ cao 2 m",
+          "Năng lượng tiềm năng chuyển thành động lực",
+          "Tính năng lượng bằng mgh và ½mv²",
+          "Kiểm tra bảo toàn năng lượng"
+        ],
+        "steps": [
+          "Bánh xe 1 kg, độ cao 2 m",
+          "Tính năng lượng tiềm năng: mgh = 1×9.8×2 = 19.6 J",
+          "Khi rơi, năng lượng chuyển thành động: ½mv² = 19.6",
+          "Giải v² = 39.2, v ≈ 6.26 m/s",
+          "Kiểm tra: 19.6 + 0 = 19.6",
+          "Đặt câu hỏi: nếu bánh xe nặng hơn, tốc độ tăng bao nhiêu?"
+        ],
+        "narration": "Bắt đầu với bánh xe 1 kg, độ cao 2 m. 1) Tính năng lượng tiềm năng: mgh = 1×9.8×2 = 19.6 J. 2) Khi rơi, năng lượng chuyển thành động: ½mv² = 19.6. 3) Giải v² = 39.2, v ≈ 6.26 m/s. 4) Kiểm tra: 19.6 + 0 = 19.6. 5) Đặt câu hỏi: nếu bánh xe nặng hơn, tốc độ tăng bao nhiêu?",
+        "pointer": [
+          {
+            "target": "title",
+            "label": "giới thiệu"
+          },
+          {
+            "target": "step-0",
+            "label": "điều kiện"
+          },
+          {
+            "target": "step-1",
+            "label": "tính năng lượng"
+          },
+          {
+            "target": "step-2",
+            "label": "đổi thành động"
+          },
+          {
+            "target": "step-3",
+            "label": "giải vận tốc"
+          },
+          {
+            "target": "step-4",
+            "label": "kiểm tra"
+          },
+          {
+            "target": "step-5",
+            "label": "câu hỏi"
+          }
+        ],
+        "start": 72,
+        "duration": 24
+      },
+      {
+        "id": "ai-5",
+        "kind": "quiz",
+        "accent": "gold",
+        "title": "Kiểm tra lại xem bạn đã hiểu chưa",
+        "subtitle": "Chọn đáp án đúng về nội dung vừa học.",
+        "bullets": [
+          "Đọc lại tóm tắt ở slide trước nếu chưa nhớ.",
+          "Chọn một đáp án, bạn sẽ được giải thích ngay."
+        ],
+        "narration": "Mình cùng kiểm tra lại xem bạn đã nắm được chưa. Đọc câu hỏi và chọn đáp án mình nghĩ là đúng. Chọn sai cũng không sao, mình sẽ giải thích lại ngay tại đây, và đó là cách nhanh nhất để biết mình cần xem lại phần nào.",
+        "quiz": {
+          "question": "Bạn đã nắm được nội dung chính của bài học này chưa?",
+          "options": [
+            {
+              "id": "opt-1",
+              "text": "Rồi, mình hiểu và tự giải thích lại được cho bạn nghe",
+              "isCorrect": true,
+              "explanation": "Đó là đúng. Tự kể lại bằng lời mình mới thật sự nắm."
+            },
+            {
+              "id": "opt-2",
+              "text": "Mình hiểu phần đầu, phần sau hơi mơ hồ",
+              "isCorrect": false,
+              "explanation": "Không sao. Xem lại phần cuối, đó là phần hay quên nhất."
+            },
+            {
+              "id": "opt-3",
+              "text": "Chưa, mình thấy hơi nhiều thông tin",
+              "isCorrect": false,
+              "explanation": "Bài dài là chủ ý. Xem lại dàn ý theo thứ tự, từng phần một sẽ dễ hơn."
+            },
+            {
+              "id": "opt-4",
+              "text": "Chưa, mình muốn xem ví dụ thực tế thêm",
+              "isCorrect": false,
+              "explanation": "Phần ví dụ gần cuối bài. Đọc nó sẽ giúp bạn thấy bài học dùng được thế nào."
+            }
+          ]
+        },
+        "start": 96,
+        "duration": 24
+      },
+      {
+        "id": "ai-6",
+        "kind": "summary",
+        "accent": "brand",
+        "title": "Nhắc lại các điểm chính",
+        "subtitle": "Năng lượng không mất, chỉ chuyển đổi",
+        "bullets": [
+          "Năng lượng tổng hệ kín không đổi",
+          "Chỉ chuyển đổi giữa các dạng (vị, động, nhiệt, …)",
+          "Tổng năng lượng trước và sau mọi quá trình luôn bằng nhau"
+        ],
+        "visualNote": "Slide chữ tối giản, ba gạch đầu dòng",
+        "narration": "Tóm lại, năng lượng tổng của hệ kín luôn không đổi, chỉ chuyển từ dạng này sang dạng khác. Khí cụ thể: năng lượng vị biến thành động khi vật rơi, động chuyển thành nhiệt khi ma sát, và tổng trước sau luôn bằng nhau trong mọi quá trình.",
+        "pointer": [
+          {
+            "target": "title",
+            "label": "Tóm lại khái niệm chính"
+          },
+          {
+            "target": "bullet-1",
+            "label": "Ví dụ chuyển đổi và tổng bằng nhau"
+          }
+        ],
+        "start": 120,
+        "duration": 24
+      }
+    ],
+    "chapters": [
+      {
+        "id": "ch-1",
+        "title": "Định luật bảo toàn năng lượng",
+        "start": 0,
+        "end": 24,
+        "sceneIds": [
+          "ai-1"
+        ]
+      },
+      {
+        "id": "ch-2",
+        "title": "Định nghĩa năng lượng",
+        "start": 24,
+        "end": 48,
+        "sceneIds": [
+          "ai-2"
+        ]
+      },
+      {
+        "id": "ch-3",
+        "title": "Ý nghĩa thực tiễn",
+        "start": 48,
+        "end": 72,
+        "sceneIds": [
+          "ai-3"
+        ]
+      },
+      {
+        "id": "ch-4",
+        "title": "Ví dụ chuyển đổi năng lượng",
+        "start": 72,
+        "end": 96,
+        "sceneIds": [
+          "ai-4"
+        ]
+      },
+      {
+        "id": "ch-5",
+        "title": "Kiểm tra lại xem bạn đã hiểu chưa",
+        "start": 96,
+        "end": 120,
+        "sceneIds": [
+          "ai-5"
+        ]
+      },
+      {
+        "id": "ch-6",
+        "title": "Nhắc lại các điểm chính",
+        "start": 120,
+        "end": 144,
+        "sceneIds": [
+          "ai-6"
+        ]
+      }
+    ],
+    "source": "gemini",
+    "theme": "paper",
+    "voice": "vi-VN-HoaiMyNeural",
+    "showPointer": true,
+    "pointerColor": "#f59e0b",
+    "model": "nvidia/nemotron-3-ultra-550b-a55b",
+    "createdAt": "2026-10-03T01:40:49.273Z"
+  },
+  "log": [
+    {
+      "message": "Đang lên dàn ý bài học…",
+      "kind": "stage",
+      "at": "08:39:17",
+      "stage": "outline",
+      "provider": "nvidia",
+      "model": "openai/gpt-oss-20b"
+    },
+    {
+      "message": "Dàn ý: 5 cảnh: \"Định luật bảo toàn năng lượng\"",
+      "kind": "stage",
+      "at": "08:39:26",
+      "stage": "outline-done",
+      "provider": "nvidia",
+      "model": "openai/gpt-oss-20b",
+      "elapsedMs": 9205
+    },
+    {
+      "message": "Đang viết cảnh 1/5",
+      "kind": "stage",
+      "at": "08:39:26",
+      "stage": "scene"
+    },
+    {
+      "message": "Xong cảnh 1: Định luật bảo toàn năng lượng",
+      "kind": "scene",
+      "at": "08:39:42",
+      "stage": "scene",
+      "provider": "nvidia",
+      "model": "openai/gpt-oss-20b",
+      "elapsedMs": 16387
+    },
+    {
+      "message": "Đang viết cảnh 2/5",
+      "kind": "stage",
+      "at": "08:39:42",
+      "stage": "scene"
+    },
+    {
+      "message": "Xong cảnh 2: Định nghĩa năng lượng",
+      "kind": "scene",
+      "at": "08:39:50",
+      "stage": "scene",
+      "provider": "nvidia",
+      "model": "openai/gpt-oss-20b",
+      "elapsedMs": 7807
+    },
+    {
+      "message": "Đang viết cảnh 3/5",
+      "kind": "stage",
+      "at": "08:39:50",
+      "stage": "scene"
+    },
+    {
+      "message": "Xong cảnh 3: Ý nghĩa thực tiễn",
+      "kind": "scene",
+      "at": "08:40:11",
+      "stage": "scene",
+      "provider": "nvidia",
+      "model": "openai/gpt-oss-20b",
+      "elapsedMs": 21110
+    },
+    {
+      "message": "Đang viết cảnh 4/5",
+      "kind": "stage",
+      "at": "08:40:11",
+      "stage": "scene"
+    },
+    {
+      "message": "Xong cảnh 4: Ví dụ chuyển đổi năng lượng",
+      "kind": "scene",
+      "at": "08:40:21",
+      "stage": "scene",
+      "provider": "nvidia",
+      "model": "openai/gpt-oss-20b",
+      "elapsedMs": 9706
+    },
+    {
+      "message": "Đang viết cảnh 5/5",
+      "kind": "stage",
+      "at": "08:40:21",
+      "stage": "scene"
+    },
+    {
+      "message": "Xong cảnh 5: Nhắc lại các điểm chính",
+      "kind": "scene",
+      "at": "08:40:49",
+      "stage": "scene",
+      "provider": "nvidia",
+      "model": "nvidia/nemotron-3-ultra-550b-a55b",
+      "elapsedMs": 27734
+    },
+    {
+      "message": "6 cảnh, 144s.",
+      "kind": "done",
+      "at": "08:40:49",
+      "provider": "nvidia",
+      "model": "nvidia/nemotron-3-ultra-550b-a55b",
+      "elapsedMs": 91957
+    }
+  ]
+}

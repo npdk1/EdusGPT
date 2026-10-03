@@ -40,6 +40,7 @@ export function PremierePlayer({
   running,
   done,
   progress,
+  onSceneChange,
 }: {
   scenes: LiveScene[];
   voice: string;
@@ -49,6 +50,11 @@ export function PremierePlayer({
   done: boolean;
   /** 0..100 deck progress, for the loader bar while waiting. */
   progress: number;
+  /**
+   * Fires with the scene whose voice starts, and with null when nothing is
+   * speaking — the classroom's bottom narration bar listens to this.
+   */
+  onSceneChange?: (scene: LiveScene | null) => void;
 }) {
   const [auto, setAuto] = useState(true);
   const [phase, setPhase] = useState<Phase>({ name: "idle" });
@@ -141,6 +147,7 @@ export function PremierePlayer({
         audioRef.current = audio;
         setSentences(cached.sentences);
         setPhase({ name: "playing", index });
+        onSceneChange?.(scene);
         audio.ontimeupdate = () => setNow(audio.currentTime);
         audio.onended = () => {
           if (audioRef.current !== audio) return;
@@ -149,6 +156,7 @@ export function PremierePlayer({
           evictBehind(index);
           atRef.current = null;
           busyRef.current = false;
+          onSceneChange?.(null);
           setPhase({ name: "idle" });
         };
         audio.onerror = () => {
@@ -158,6 +166,7 @@ export function PremierePlayer({
           atRef.current = null;
           busyRef.current = false;
           setNote(`Không phát được giọng cảnh ${index + 1}, bỏ qua.`);
+          onSceneChange?.(null);
           setPhase({ name: "idle" });
         };
         await audio.play();
@@ -180,7 +189,7 @@ export function PremierePlayer({
         if (atRef.current !== index) busyRef.current = false;
       }
     },
-    [scenes, fetchAudio, stopAudio, evictBehind],
+    [scenes, fetchAudio, stopAudio, evictBehind, onSceneChange],
   );
 
   // The driver: whenever idle, play the earliest unplayed ready scene; when

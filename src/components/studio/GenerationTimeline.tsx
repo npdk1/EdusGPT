@@ -29,17 +29,24 @@ export interface GenerationProgress {
   log: RunLogEntry[];
   /**
    * Scenes finished so far, ordered by deck position. The server reports each
-   * scene the moment its own call lands (batches finish out of order), so the
-   * studio can show the slide and read its voice-over straight away instead
-   * of waiting for the whole deck.
+   * scene the moment its own call lands, so the studio can show the slide
+   * and read its voice-over straight away instead of waiting for the whole
+   * deck.
    */
   liveScenes: LiveScene[];
+  /**
+   * The deck's stable id, sent on the first event. The studio routes to the
+   * classroom session with it the moment it arrives.
+   */
+  lessonId?: string | null;
 }
 
-/** One finished scene, as far as the progressive script needs to show it. */
+/** One finished scene, as far as the classroom needs to show it. */
 export interface LiveScene {
   index: number;
   title: string;
+  subtitle: string;
+  bullets: string[];
   narration: string;
   kind: string;
 }
@@ -60,6 +67,7 @@ export interface StreamEvent {
   provider?: string;
   model?: string;
   elapsedMs?: number;
+  lessonId?: string;
 }
 
 const EMPTY: GenerationProgress = {
@@ -209,6 +217,7 @@ function reduceProgress(
         error: null,
         log,
         liveScenes: current.liveScenes,
+        lessonId: event.lessonId ?? current.lessonId ?? null,
       },
       steps: doneSteps,
     };
@@ -224,6 +233,7 @@ function reduceProgress(
         outlineReady: true,
         steps: event.outline.scenes,
         log,
+        lessonId: event.lessonId ?? current.lessonId ?? null,
       },
       steps: event.outline.scenes,
     };
@@ -232,6 +242,7 @@ function reduceProgress(
   if (event.type === "scene" && event.scene) {
     const scene = event.scene as {
       title?: string;
+      subtitle?: unknown;
       bullets?: unknown[];
       narration?: unknown;
       kind?: unknown;
@@ -258,18 +269,22 @@ function reduceProgress(
         typeof scene.title === "string" && scene.title.trim()
           ? scene.title.trim().slice(0, 200)
           : `Cảnh ${current.liveScenes.length + 1}`,
+      subtitle: typeof scene.subtitle === "string" ? scene.subtitle.slice(0, 300) : "",
+      bullets: Array.isArray(scene.bullets)
+        ? scene.bullets.filter((b): b is string => typeof b === "string").slice(0, 12).map((b) => b.slice(0, 300))
+        : [],
       narration:
         typeof scene.narration === "string" ? scene.narration.slice(0, 4000) : "",
       kind: typeof scene.kind === "string" ? scene.kind : "concept",
     };
     const liveScenes = [...current.liveScenes, live].sort((a, b) => a.index - b.index);
     return {
-      progress: { ...current, percent, message: event.message, outlineReady: true, steps: next, log, liveScenes },
+      progress: { ...current, percent, message: event.message, outlineReady: true, steps: next, log, liveScenes, lessonId: event.lessonId ?? current.lessonId ?? null },
       steps: next,
     };
   }
 
-  return { progress: { ...current, percent, message: event.message, log }, steps };
+  return { progress: { ...current, percent, message: event.message, log, lessonId: event.lessonId ?? current.lessonId ?? null }, steps };
 }
 
 async function pumpRun(run: ActiveRun, body: Record<string, unknown>): Promise<void> {
