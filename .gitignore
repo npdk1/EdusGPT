@@ -23,6 +23,10 @@ data/tts-cache/
 # làm nặng lịch sử git.
 /data/voices/
 
+# Nhung run.bat tai ve: Node.js portable, ffmpeg, Python, venv + piper.
+# Chi la thu muc may, khong phai san pham.
+/.runtime/
+
 # misc
 .DS_Store
 *.log
