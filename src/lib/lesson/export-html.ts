@@ -84,25 +84,85 @@ body{background-image:radial-gradient(50rem 32rem at 12% -8%,rgba(36,189,172,.16
 .zoom{position:fixed;inset:0;z-index:80;display:none;align-items:center;justify-content:center;padding:24px;background:rgba(4,9,11,.86);backdrop-filter:blur(2px)}
 .zoom.on{display:flex}
 .zoom img{max-width:96vw;max-height:88vh;border-radius:14px;border:1px solid var(--line)}
-.zoom-x{position:absolute;top:16px;right:16px;width:38px;height:38px;border-radius:999px;padding:0;font-size:20px;line-height:1}
+.zoom-x{position:absolute;top:16px;right:16px;width:38px;height:38px;border-radius:999px;border:1px solid var(--line);background:var(--ink2);color:var(--mist);font:inherit;font-size:20px;line-height:1;cursor:pointer}
+.zoom-x:hover{border-color:var(--brand);color:var(--brand3)}
 
-.controls{margin-top:16px;border:1px solid var(--line);background:rgba(8,15,19,.75);border-radius:16px;padding:14px}
-.row{display:flex;flex-wrap:wrap;align-items:center;gap:8px}
-button{font:inherit;color:var(--mist);background:rgba(17,29,35,.9);border:1px solid var(--line);border-radius:10px;padding:8px 12px;cursor:pointer}
-button:hover{border-color:var(--brand7);color:#fff}
-button.primary{background:var(--brand);border-color:var(--brand);color:#04090b;font-weight:700;min-width:46px}
-input[type=range]{-webkit-appearance:none;appearance:none;width:100%;height:28px;background:transparent;cursor:pointer}
-input[type=range]::-webkit-slider-runnable-track{height:10px;border-radius:999px;background:var(--ink3);border:1px solid var(--line)}
-input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:18px;height:18px;margin-top:-5px;border-radius:999px;background:var(--brand3);border:2px solid var(--ink)}
-input[type=range]::-moz-range-track{height:10px;border-radius:999px;background:var(--ink3)}
-input[type=range]::-moz-range-thumb{width:16px;height:16px;border-radius:999px;background:var(--brand3);border:2px solid var(--ink)}
-.marks{display:flex;flex-direction:column;gap:6px;margin-top:12px}
-.mark{text-align:left;font-size:12px;color:var(--mist3);background:transparent;border:0;border-left:1px solid var(--brand7);border-radius:0;padding:4px 10px}
-.mark:hover{color:var(--brand3);border-left-color:var(--brand3)}
-.ab{display:flex;align-items:center;gap:6px;border:1px solid var(--line);border-radius:12px;padding:4px}
-.ab.on{background:var(--gold);color:#04090b;border-color:var(--gold);font-weight:700}
+/* The player bar, laid out the way a player lays one out: the timeline spans
+   the full width directly above the buttons, the clock sits in the same row as
+   the transport, and volume, speed and the shortcut list are on the right. A row
+   of evenly spaced buttons in a black strip is a toolbar, and a toolbar spends
+   the width that a player spends on the one control people reach for. */
+.player{margin-top:14px;border:1px solid var(--line);background:color-mix(in srgb,var(--ink3) 72%,transparent);border-radius:18px;padding:14px 16px 12px}
+.scrubwrap{position:relative;padding-top:26px}
+.hovertime{position:absolute;top:0;left:0;transform:translateX(-50%);border:1px solid var(--line);background:var(--ink2);border-radius:6px;padding:1px 6px;font-family:ui-monospace,monospace;font-size:11px;color:var(--mist);opacity:0;pointer-events:none;transition:opacity .1s}
+.hovertime[data-visible="true"]{opacity:1}
+.scrub{position:relative;height:44px;touch-action:none;user-select:none;cursor:pointer;outline:none}
+.scrub[data-dragging="true"]{cursor:grabbing}
+.scrub:focus-visible .rail{box-shadow:0 0 0 2px color-mix(in srgb,var(--brand3) 55%,transparent)}
+.chapterband{position:absolute;left:0;right:0;top:0;height:16px}
+.chapter{position:absolute;top:0;height:16px;overflow:hidden;white-space:nowrap;text-overflow:ellipsis;border-left:1px solid color-mix(in srgb,var(--brand) 70%,transparent);padding-left:6px;font-size:10px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--mist5)}
+.chapter[data-state="passed"]{color:var(--mist3)}
+.chapter[data-state="current"]{color:var(--brand3)}
+.rail{position:absolute;left:0;right:0;bottom:12px;height:10px;border-radius:999px;background:var(--ink3);border:1px solid var(--line);overflow:hidden}
+.fill{position:absolute;top:0;bottom:0;left:0;width:0;background:linear-gradient(90deg,var(--brand),var(--brand3))}
+.loopregion{position:absolute;bottom:10px;height:14px;border-radius:3px;border-left:2px solid;border-right:2px solid;pointer-events:none}
+.loopregion[data-on="true"]{border-color:var(--gold3);background:color-mix(in srgb,var(--gold) 30%,transparent)}
+.loopregion[data-on="false"]{border-color:var(--mist5);background:color-mix(in srgb,var(--mist5) 15%,transparent)}
+.tick{position:absolute;bottom:12px;width:1px;height:10px;background:var(--ink2)}
+.handle{position:absolute;bottom:6px;width:20px;height:20px;margin-left:-10px;border-radius:999px;background:var(--brand3);border:2px solid var(--ink);box-shadow:0 6px 14px rgba(0,0,0,.45);transition:transform .12s}
+.scrub:hover .handle,.scrub[data-dragging="true"] .handle{transform:scale(1.12)}
+.scrubfoot{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:8px;font-family:ui-monospace,monospace;font-size:11px;color:var(--mist5)}
+.transport{display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin-top:12px}
+.tbtn{display:inline-flex;align-items:center;justify-content:center;gap:6px;width:36px;height:36px;border-radius:10px;padding:0;font:inherit;color:var(--mist3);background:transparent;border:1px solid transparent;cursor:pointer}
+.tbtn:hover{color:var(--mist);background:color-mix(in srgb,var(--ink3) 92%,transparent);border-color:var(--line)}
+.tbtn svg{width:17px;height:17px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.tbtn svg[data-fill="1"]{fill:currentColor;stroke:none}
+.tplay{display:inline-flex;align-items:center;justify-content:center;width:44px;height:44px;border-radius:12px;border:0;background:var(--brand);color:var(--ink);cursor:pointer}
+.tplay:hover{background:var(--brand3)}
+.tplay svg{width:21px;height:21px;fill:currentColor;stroke:none}
+.tsep{width:1px;height:28px;background:var(--line)}
+.clock{border:1px solid var(--line);background:var(--ink2);border-radius:8px;padding:6px 10px;font-family:ui-monospace,monospace;font-size:12px;color:var(--brand3);white-space:nowrap}
+.loopbox{display:flex;align-items:center;gap:6px;border:1px solid var(--line);background:color-mix(in srgb,var(--ink3) 70%,transparent);border-radius:12px;padding:4px}
+.loopbox .tbtn{width:auto;height:28px;padding:0 8px;font-size:12px;font-weight:600}
+.loopbox .tbtn[aria-pressed="true"]{background:var(--gold);color:var(--ink)}
+.ab{height:28px;border:0;border-radius:8px;padding:0 8px;font-family:ui-monospace,monospace;font-size:12px;color:var(--mist3);background:transparent;cursor:pointer}
+.ab:hover{color:var(--mist);background:color-mix(in srgb,var(--ink3) 92%,transparent)}
+.clearbtn{height:28px;border:0;border-radius:8px;padding:0 8px;font:inherit;font-size:12px;color:var(--mist5);background:transparent;cursor:pointer}
+.clearbtn:hover{color:var(--ember)}
+.rate{border:1px solid var(--line);background:var(--ink2);border-radius:8px;padding:6px 8px;font-family:ui-monospace,monospace;font-size:12px;color:var(--mist);cursor:pointer}
+.volrow{display:flex;align-items:center;gap:6px;margin-left:auto}
+input[type=range]{-webkit-appearance:none;appearance:none;width:84px;height:22px;background:transparent;cursor:pointer}
+input[type=range]::-webkit-slider-runnable-track{height:6px;border-radius:999px;background:var(--ink3);border:1px solid var(--line)}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:14px;height:14px;margin-top:-5px;border-radius:999px;background:var(--brand3);border:2px solid var(--ink)}
+input[type=range]::-moz-range-track{height:6px;border-radius:999px;background:var(--ink3)}
+input[type=range]::-moz-range-thumb{width:12px;height:12px;border-radius:999px;background:var(--brand3);border:2px solid var(--ink)}
+.chapterlist{display:flex;flex-direction:column;gap:4px;margin-top:12px;max-height:170px;overflow-y:auto}
+.mark{display:flex;align-items:baseline;justify-content:space-between;gap:10px;width:100%;text-align:left;font:inherit;font-size:12px;color:var(--mist3);background:transparent;border:0;border-left:2px solid var(--line);border-radius:0;padding:5px 10px;cursor:pointer}
+.mark:hover{color:var(--brand3);border-left-color:var(--brand3);background:transparent}
+.mark[data-current="true"]{color:var(--mist);border-left-color:var(--brand)}
+.mark .at{font-family:ui-monospace,monospace;font-size:11px;color:var(--mist5)}
 .hint{color:var(--mist5);font-size:11px;margin-top:10px;font-family:ui-monospace,monospace}
-@media (prefers-reduced-motion:reduce){.sent,.sent .w{transition:none}}
+/* Fullscreen takes the whole page, slide and transport together: the browser
+   owns the screen, and a presenter who cannot reach the play button has no
+   controls at all. */
+.wrap:fullscreen{background:var(--ink);padding:16px;overflow:auto}
+
+/* The shortcut sheet, opened with \`?\`. Every key here is bound below, so the
+   list cannot drift away from what the file actually does. */
+.dlg{position:fixed;inset:0;z-index:90;display:none;align-items:center;justify-content:center;padding:16px;background:color-mix(in srgb,var(--ink) 82%,transparent);backdrop-filter:blur(4px)}
+.dlg.on{display:flex}
+.dlg-panel{width:100%;max-width:780px;max-height:85vh;overflow-y:auto;border:1px solid var(--line);background:var(--ink2);border-radius:16px;padding:20px}
+.dlg-head{display:flex;align-items:flex-start;justify-content:space-between;gap:16px}
+.dlg-head h2{margin:0;font-size:17px}
+.dlg-head p{margin:4px 0 0;font-size:13px;color:var(--mist5)}
+.dlg-grid{display:grid;gap:20px;margin-top:18px}
+@media (min-width:640px){.dlg-grid{grid-template-columns:1fr 1fr}}
+.dlg-grid h3{margin:0 0 8px;font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--brand3)}
+.dlg-grid ul{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:6px}
+.dlg-grid li{display:flex;align-items:center;justify-content:space-between;gap:10px;border:1px solid var(--line);background:color-mix(in srgb,var(--ink3) 60%,transparent);border-radius:9px;padding:7px 10px}
+.kbd{font-family:ui-monospace,monospace;font-size:11px;white-space:nowrap}
+.dlg-grid li .what{font-size:12px;color:var(--mist3);text-align:right}
+@media (prefers-reduced-motion:reduce){.sent,.sent .w,.handle{transition:none}}
 `;
 
 /**
@@ -124,15 +184,73 @@ function themeCss(palette: SlidePalette, dark: boolean): string {
     `--brand:${p.accent};--brand3:${p.accentSoft};--brand7:${p.accent}}` +
     `body{background-image:none}` +
     `.stage{background:${p.bg}}` +
-    `.controls{background:color-mix(in srgb, ${p.bgSunk} 72%, transparent)}` +
-    `button{background:color-mix(in srgb, ${p.bgSunk} 90%, transparent)}` +
-    `button.primary{color:${dark ? "#04090b" : "#ffffff"}}` +
+    `.player{background:color-mix(in srgb, ${p.bgSunk} 72%, transparent)}` +
+    // The play button sits on the accent, so its ink has to come from the paper
+    // rather than from the accent's own theme: a light deck would otherwise put
+    // near-white text on a mid-tone accent.
+    `.tplay{color:${dark ? p.bg : "#ffffff"}}` +
     `.wash{background:radial-gradient(120% 90% at 88% -10%,` +
     `color-mix(in srgb, ${p.accentSoft} 16%, transparent) 0%,transparent 62%)}` +
     `.fig img{background:${p.bgSunk}}` +
     `.zoom{background:color-mix(in srgb, ${p.ink} 82%, transparent)}` +
     `.formula{border-color:color-mix(in srgb, #f6b93b 40%, transparent);` +
     `background:color-mix(in srgb, #f6b93b 10%, transparent)}`
+  );
+}
+
+/**
+ * The transport icons, drawn inline.
+ *
+ * A downloaded file has no bundler and no icon package, and the alternative —
+ * text buttons — is the toolbar this bar exists to stop being. These are the
+ * same shapes the web player's bar uses, so a teacher moves between the two
+ * without re-learning the row.
+ */
+const ICON = {
+  toStart: '<polygon points="19 20 9 12 19 4 19 20"/><line x1="5" x2="5" y1="19" y2="5"/>',
+  back10:
+    '<polygon points="11 19 2 12 11 5 11 19"/><polygon points="22 19 13 12 22 5 22 19"/>',
+  stepBack: '<path d="m15 18-6-6 6-6"/>',
+  play: '<polygon points="6 3 20 12 6 21 6 3"/>',
+  pause: '<rect x="14" y="4" width="4" height="16" rx="1"/><rect x="6" y="4" width="4" height="16" rx="1"/>',
+  stepForward: '<path d="m9 18 6-6-6-6"/>',
+  forward10:
+    '<polygon points="13 19 22 12 13 5 13 19"/><polygon points="2 19 11 12 2 5 2 19"/>',
+  toEnd: '<polygon points="5 4 15 12 5 20 5 4"/><line x1="19" x2="19" y1="5" y2="19"/>',
+  repeat:
+    '<path d="m17 2 4 4-4 4"/><path d="M3 11v-1a4 4 0 0 1 4-4h14"/><path d="m7 22-4-4 4-4"/><path d="M21 13v1a4 4 0 0 1-4 4H3"/>',
+  volumeHigh:
+    '<polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M15.54 8.46a5 5 0 0 1 0 7.07"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14"/>',
+  volumeLow:
+    '<polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M15.54 8.46a5 5 0 0 1 0 7.07"/>',
+  volumeMute:
+    '<polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><line x1="22" x2="16" y1="9" y2="15"/><line x1="16" x2="22" y1="9" y2="15"/>',
+  keyboard:
+    '<rect width="20" height="16" x="2" y="4" rx="2"/><path d="M6 8h.01"/><path d="M8 12h.01"/><path d="M10 8h.01"/><path d="M12 12h.01"/><path d="M14 8h.01"/><path d="M16 12h.01"/><path d="M18 8h.01"/><path d="M7 16h10"/>',
+  fullscreen:
+    '<path d="M8 3H5a2 2 0 0 0-2 2v3"/><path d="M21 8V5a2 2 0 0 0-2-2h-3"/><path d="M3 16v3a2 2 0 0 0 2 2h3"/><path d="M16 21h3a2 2 0 0 0 2-2v-3"/>',
+  shrink:
+    '<path d="M8 3v3a2 2 0 0 1-2 2H3"/><path d="M21 8h-3a2 2 0 0 1-2-2V3"/><path d="M3 16h3a2 2 0 0 1 2 2v3"/><path d="M16 21v-3a2 2 0 0 1 2-2h3"/>',
+  close: '<path d="M18 6 6 18"/><path d="m6 6 12 12"/>',
+} as const;
+
+type IconName = keyof typeof ICON;
+
+function icon(name: IconName, filled = false): string {
+  return `<svg viewBox="0 0 24 24" aria-hidden="true"${filled ? ' data-fill="1"' : ""}>${ICON[name]}</svg>`;
+}
+
+/** A labelled icon button, the way the transport bar is built. */
+function toolButton(
+  id: string,
+  label: string,
+  title: string,
+  name: IconName,
+  extra = "",
+): string {
+  return (
+    `<button type="button" class="tbtn" id="${id}" title="${escapeHtml(title)}"` +
+    ` aria-label="${escapeHtml(label)}"${extra}>${icon(name)}</button>`
   );
 }
 
@@ -297,15 +415,182 @@ function sceneMarkup(
     .join("\n");
 }
 
-function chapterMarkup(lesson: Lesson): string {
-  return lesson.chapters
+/** The rates the speed control steps through, in the web player's order. */
+const RATES = [0.5, 0.75, 1, 1.25, 1.5, 2];
+
+function percent(value: number, total: number): string {
+  if (!Number.isFinite(total) || total <= 0) return "0%";
+  return `${Math.min(100, Math.max(0, (value / total) * 100))}%`;
+}
+
+/**
+ * The player: a timeline with the deck's structure drawn on it, and the transport
+ * row under it.
+ *
+ * The chapter bands and the scene ticks are written into the file rather than
+ * placed by script, because the deck's own timings are known here — the same
+ * reason the caption's sentences are. Everything that moves with the playhead
+ * (the fill, the handle, the chapter states, the loop region) is set by the
+ * script, so scrubbing never has to rebuild this markup.
+ */
+function playerMarkup(lesson: Lesson): string {
+  const total = lesson.duration || 1;
+  const bands = lesson.chapters
+    .map((chapter, index) => {
+      const left = percent(chapter.start, total);
+      const width = Math.min(
+        100 - parseFloat(left),
+        Math.max(0.8, ((chapter.end - chapter.start) / total) * 100),
+      );
+      return (
+        `<span class="chapter" data-chapter="${index}" data-state="todo"` +
+        ` style="left:${left};width:${width}%" title="${escapeHtml(chapter.title)}">` +
+        `${escapeHtml(chapter.title)}</span>`
+      );
+    })
+    .join("");
+  const ticks = lesson.scenes
+    .slice(1)
     .map(
-      (chapter, index) =>
-        `<button class="mark" data-seek="${chapter.start}" data-chapter="${index}">${escapeHtml(
-          chapter.title,
-        )} &middot; ${chapter.start.toFixed(1)}s</button>`,
+      (scene) => `<span class="tick" style="left:${percent(scene.start, total)}"></span>`,
     )
     .join("");
+  const speeds = RATES.map(
+    (rate) =>
+      `<option value="${rate}"${rate === 1 ? " selected" : ""}>${rate}&times;</option>`,
+  ).join("");
+  const chapters = lesson.chapters
+    .map(
+      (chapter, index) =>
+        `<button type="button" class="mark" data-chapter="${index}" data-seek="${chapter.start}">` +
+        `<span class="nm">${escapeHtml(chapter.title)}</span>` +
+        `<span class="at">${chapter.start.toFixed(1)}s</span></button>`,
+    )
+    .join("");
+
+  return (
+    `<div class="player" id="player">` +
+    `<div class="scrubwrap">` +
+    `<div class="hovertime" id="hovertime" data-visible="false">00:00.0</div>` +
+    `<div class="scrub" id="scrub" role="slider" tabindex="0"` +
+    ` aria-label="Timeline bài giảng. Kéo để tua, phím mũi tên để tua từng bước"` +
+    ` aria-valuemin="0" aria-valuemax="${Math.round(total)}" aria-valuenow="0"` +
+    ` aria-valuetext="0 giây" data-dragging="false">` +
+    `<div class="chapterband">${bands}</div>` +
+    `<div class="rail"><div class="fill" id="fill"></div></div>` +
+    `<div class="loopregion" id="loopregion" data-on="false" hidden></div>` +
+    ticks +
+    `<div class="handle" id="handle" style="left:0%"></div>` +
+    `</div></div>` +
+    `<div class="scrubfoot">` +
+    `<span>${lesson.scenes.length} cảnh &middot; ${lesson.chapters.length} chương</span>` +
+    `<span>&larr; / &rarr; tua 5s &middot; Shift + &larr;/&rarr; tua 1s &middot; , / . từng khung hình</span>` +
+    `</div>` +
+    `<div class="transport">` +
+    toolButton("toStart", "Về đầu", "Về đầu (Home)", "toStart") +
+    toolButton("back10", "Tua lui 10 giây", "Tua lui 10 giây (J)", "back10") +
+    toolButton("stepBack", "Lùi một khung hình", "Lùi 1 khung hình (,)", "stepBack") +
+    `<button type="button" class="tplay" id="play" title="Phát (Space)" aria-label="Phát">` +
+    icon("play", true) +
+    `</button>` +
+    toolButton("stepForward", "Tiến một khung hình", "Tiến 1 khung hình (.)", "stepForward") +
+    toolButton("forward10", "Tua tới 10 giây", "Tua tới 10 giây (L)", "forward10") +
+    toolButton("toEnd", "Tới cuối", "Tới cuối (End)", "toEnd") +
+    `<span class="clock" id="clock">00:00.0 / 00:00.0</span>` +
+    `<span class="tsep" aria-hidden="true"></span>` +
+    `<div class="loopbox">` +
+    // The loop toggle carries its label next to the icon, so it is written out
+    // rather than going through `toolButton`: it is a switch with a name, not
+    // one more icon in a row.
+    `<button type="button" class="tbtn" id="loop" aria-pressed="false"` +
+    ` title="Bật/tắt lặp trong khoảng A→B (\\)" aria-label="Bật/tắt lặp A→B">` +
+    `${icon("repeat")}<span>A&rarr;B</span></button>` +
+    `<button type="button" class="ab" id="setA" title="Đặt mốc A tại vị trí hiện tại ([)">A 00:00.0</button>` +
+    `<button type="button" class="ab" id="setB" title="Đặt mốc B tại vị trí hiện tại (])">B 00:00.0</button>` +
+    `<button type="button" class="clearbtn" id="clearLoop" title="Xoá khoảng lặp">xoá</button>` +
+    `</div>` +
+    `<select class="rate" id="speed" title="Tốc độ phát (− / + để đổi nhanh)"` +
+    ` aria-label="Tốc độ phát">${speeds}</select>` +
+    `<div class="volrow">` +
+    toolButton("mute", "Tắt hoặc bật tiếng", "Tắt/bật tiếng (M)", "volumeHigh") +
+    `<input type="range" id="vol" min="0" max="1" step="0.05" value="1"` +
+    ` aria-label="Âm lượng" title="Âm lượng 100%" />` +
+    toolButton("help", "Danh sách phím tắt", "Danh sách phím tắt (?)", "keyboard") +
+    toolButton("fullscreen", "Toàn màn hình", "Toàn màn hình (F)", "fullscreen") +
+    `</div>` +
+    `</div>` +
+    (chapters ? `<div class="chapterlist" id="chapterlist">${chapters}</div>` : "") +
+    `</div>`
+  );
+}
+
+/**
+ * The shortcut sheet.
+ *
+ * Written out rather than generated from the key handler, because a list of keys
+ * that is itself generated is a list that can quietly stop being true. Every row
+ * here is bound in the script below.
+ */
+function shortcutsMarkup(): string {
+  const groups: Array<[string, Array<[string, string]>]> = [
+    [
+      "Tua & phát",
+      [
+        ["Space / K", "Phát hoặc tạm dừng"],
+        ["← / →", "Tua lui / tua tới 5 giây"],
+        ["J / L", "Tua lui / tua tới 10 giây"],
+        ["Shift + ← / →", "Tua chậm 1 giây"],
+        [", / .", "Lùi / tiến đúng 1 khung hình"],
+        ["0 – 9", "Nhảy tới 0% – 90% thời lượng"],
+        ["Home / End", "Về đầu / tới cuối"],
+      ],
+    ],
+    [
+      "Lặp một đoạn để học kỹ",
+      [
+        ["[", "Đặt mốc A tại vị trí hiện tại"],
+        ["]", "Đặt mốc B tại vị trí hiện tại"],
+        ["\\", "Bật/tắt lặp A→B"],
+        ["1 lần nhấn", "Chuột kéo trên timeline để tua tự do"],
+      ],
+    ],
+    [
+      "Khác",
+      [
+        ["− / +", "Giảm / tăng tốc độ phát"],
+        ["M", "Tắt hoặc bật tiếng"],
+        ["F", "Toàn màn hình vùng trình chiếu"],
+        ["?", "Mở bảng phím tắt này"],
+        ["Esc", "Đóng bảng / thoát toàn màn hình / đóng ảnh phóng to"],
+      ],
+    ],
+  ];
+  return (
+    `<div class="dlg" id="dlg" role="dialog" aria-modal="true" aria-label="Phím tắt trình phát">` +
+    `<div class="dlg-panel">` +
+    `<div class="dlg-head"><div>` +
+    `<h2>Phím tắt trình phát</h2>` +
+    `<p>Mọi thao tác tua đều hoạt động trên timeline của bài giảng.</p>` +
+    `</div>` +
+    toolButton("dlgClose", "Đóng bảng phím tắt", "Đóng (Esc)", "close") +
+    `</div>` +
+    `<div class="dlg-grid">` +
+    groups
+      .map(
+        ([title, rows]) =>
+          `<section><h3>${title}</h3><ul>` +
+          rows
+            .map(
+              ([keys, what]) =>
+                `<li><span class="kbd">${escapeHtml(keys)}</span>` +
+                `<span class="what">${escapeHtml(what)}</span></li>`,
+            )
+            .join("") +
+          `</ul></section>`,
+      )
+      .join("") +
+    `</div></div></div>`
+  );
 }
 
 const PLAYER_JS = `
@@ -341,11 +626,38 @@ const PLAYER_JS = `
 
   var current = 0, playing = false, rate = 1, raf = null, last = 0;
   var loopOn = false, loopA = 0, loopB = 0;
-  var range = document.getElementById('scrub');
+  var muted = false, volume = 1, dragging = false, seekPending = null, seekRaf = null;
   var clock = document.getElementById('clock');
   var playBtn = document.getElementById('play');
   var fps = data.fps || 30;
-  range.max = String(total);
+
+  // --- the timeline and the transport row.
+  var scrub = document.getElementById('scrub');
+  var fill = document.getElementById('fill');
+  var handle = document.getElementById('handle');
+  var hovertime = document.getElementById('hovertime');
+  var loopRegion = document.getElementById('loopregion');
+  var muteBtn = document.getElementById('mute');
+  var rateSelect = document.getElementById('speed');
+  var volInput = document.getElementById('vol');
+  var chapterEls = scrub.querySelectorAll('.chapter');
+  var chapterRows = document.querySelectorAll('.chapterlist .mark');
+  var chapters = data.chapters || [];
+  var dlg = document.getElementById('dlg');
+  // The icons that change with state are written here rather than kept as extra
+  // hidden nodes in the markup: the play button and the volume button swap theirs
+  // constantly, and a hidden node per state is a node the file never reads.
+  var RATES = [0.5, 0.75, 1, 1.25, 1.5, 2];
+  var PLAY_ICON = '<svg viewBox="0 0 24 24" aria-hidden="true" data-fill="1"><polygon points="6 3 20 12 6 21 6 3"/></svg>';
+  var PAUSE_ICON = '<svg viewBox="0 0 24 24" aria-hidden="true" data-fill="1"><rect x="14" y="4" width="4" height="16" rx="1"/><rect x="6" y="4" width="4" height="16" rx="1"/></svg>';
+  var FULLSCREEN_ICON = '<path d="M8 3H5a2 2 0 0 0-2 2v3"/><path d="M21 8V5a2 2 0 0 0-2-2h-3"/><path d="M3 16v3a2 2 0 0 0 2 2h3"/><path d="M16 21h3a2 2 0 0 0 2-2v-3"/>';
+  var SHRINK_ICON = '<path d="M8 3v3a2 2 0 0 1-2 2H3"/><path d="M21 8h-3a2 2 0 0 1-2-2V3"/><path d="M3 16h3a2 2 0 0 1 2 2v3"/><path d="M16 21v-3a2 2 0 0 1 2-2h3"/>';
+  var VOLUME_ICONS = {
+    high: '<polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M15.54 8.46a5 5 0 0 1 0 7.07"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14"/>',
+    low: '<polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M15.54 8.46a5 5 0 0 1 0 7.07"/>',
+    mute: '<polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><line x1="22" x2="16" y1="9" y2="15"/><line x1="16" x2="22" y1="9" y2="15"/>'
+  };
+  scrub.setAttribute('aria-valuemax', String(Math.round(total)));
 
   // --- teacher voice: one narration clip per scene, embedded as data URIs.
   // There is no server here, so every clip rides inside the file. The timeline
@@ -501,8 +813,26 @@ const PLAYER_JS = `
   function paint() {
     tl.pause();
     tl.time(current);
-    range.value = String(current);
+    var share = total > 0 ? (current / total) * 100 : 0;
+    fill.style.width = share.toFixed(3) + '%';
+    handle.style.left = share.toFixed(3) + '%';
     clock.textContent = fmt(current) + ' / ' + fmt(total);
+    scrub.setAttribute('aria-valuenow', current.toFixed(2));
+    scrub.setAttribute('aria-valuetext', fmt(current) + ' trên ' + fmt(total));
+    // Which chapters are behind the playhead. The rail alone answers "how far",
+    // but a deck read at 2x leaves the reader with no way to tell that whole
+    // sections are done — and the bands are the only place the deck's structure
+    // is drawn, so it is the only place it can be marked.
+    for (var ci = 0; ci < chapters.length; ci++) {
+      var chapter = chapters[ci];
+      var passed = current >= chapter.end;
+      var inside = current >= chapter.start && current < chapter.end;
+      var state = passed ? 'passed' : (inside ? 'current' : 'todo');
+      var band = chapterEls[ci];
+      if (band && band.getAttribute('data-state') !== state) band.setAttribute('data-state', state);
+      var row = chapterRows[ci];
+      if (row) row.setAttribute('data-current', inside ? 'true' : 'false');
+    }
     var idx = sceneIndexAt(current);
     paintCaption(idx, Math.max(0, current - data.scenes[idx].start));
     if (playing && idx !== voiceScene) syncVoice();
@@ -514,9 +844,15 @@ const PLAYER_JS = `
     syncVoice();
   }
 
+  function setPlayIcon(name) {
+    playBtn.innerHTML = name;
+    playBtn.setAttribute('aria-label', name === PAUSE_ICON ? 'Tạm dừng' : 'Phát');
+    playBtn.setAttribute('title', name === PAUSE_ICON ? 'Tạm dừng (Space)' : 'Phát (Space)');
+  }
+
   function stop() {
     playing = false;
-    playBtn.textContent = 'Phat';
+    setPlayIcon(PLAY_ICON);
     if (raf) cancelAnimationFrame(raf);
     raf = null;
     try { voice.pause(); } catch (e) {}
@@ -525,10 +861,14 @@ const PLAYER_JS = `
   function start() {
     if (current >= total - 0.05) current = 0;
     playing = true;
-    playBtn.textContent = 'Dung';
+    setPlayIcon(PAUSE_ICON);
     last = performance.now();
     raf = requestAnimationFrame(tick);
     syncVoice();
+  }
+
+  function toggle() {
+    playing ? stop() : start();
   }
 
   function tick(now) {
@@ -542,6 +882,138 @@ const PLAYER_JS = `
     if (current >= total) { current = total; paint(); stop(); return; }
     paint();
     raf = requestAnimationFrame(tick);
+  }
+
+  // --- the timeline: click to seek, drag to scrub, hover for the timecode.
+  //
+  // Drag seeks are coalesced to one per frame. A pointermove can fire faster
+  // than the deck can be told about, and every one of those seeks repaints the
+  // slide, the caption and the voice — so the drag reads the position and hands
+  // over at most one seek per frame.
+  function ratioFrom(clientX) {
+    var rect = scrub.getBoundingClientRect();
+    return Math.min(1, Math.max(0, (clientX - rect.left) / Math.max(rect.width, 1)));
+  }
+
+  function queueSeek(time) {
+    seekPending = time;
+    if (seekRaf !== null) return;
+    seekRaf = requestAnimationFrame(function () {
+      seekRaf = null;
+      if (seekPending !== null) seek(seekPending);
+    });
+  }
+
+  scrub.addEventListener('pointerdown', function (event) {
+    dragging = true;
+    scrub.setAttribute('data-dragging', 'true');
+    if (scrub.setPointerCapture) {
+      try { scrub.setPointerCapture(event.pointerId); } catch (e) {}
+    }
+    try { scrub.focus({ preventScroll: true }); } catch (e) {}
+    seek(ratioFrom(event.clientX) * total);
+  });
+
+  scrub.addEventListener('pointermove', function (event) {
+    var time = ratioFrom(event.clientX) * total;
+    var rect = scrub.getBoundingClientRect();
+    var offset = Math.min(
+      Math.max(event.clientX - rect.left, 52),
+      Math.max(rect.width - 52, 52),
+    );
+    hovertime.style.transform = 'translateX(' + offset.toFixed(0) + 'px)';
+    hovertime.textContent = fmt(time);
+    hovertime.setAttribute('data-visible', 'true');
+    if (dragging) queueSeek(time);
+  });
+
+  function endDrag(event) {
+    if (!dragging) return;
+    dragging = false;
+    scrub.setAttribute('data-dragging', 'false');
+    if (scrub.releasePointerCapture && event.pointerId !== undefined) {
+      try { scrub.releasePointerCapture(event.pointerId); } catch (e) {}
+    }
+  }
+
+  scrub.addEventListener('pointerup', endDrag);
+  scrub.addEventListener('pointercancel', endDrag);
+  scrub.addEventListener('pointerleave', function () {
+    hovertime.setAttribute('data-visible', 'false');
+  });
+
+  // --- the A→B loop, drawn on the timeline as well as set from the bar.
+  function syncLoop() {
+    var loopBtn = document.getElementById('loop');
+    loopBtn.setAttribute('aria-pressed', loopOn ? 'true' : 'false');
+    document.getElementById('setA').textContent = 'A ' + fmt(loopA);
+    document.getElementById('setB').textContent = 'B ' + fmt(loopB);
+    if (loopB > loopA) {
+      loopRegion.hidden = false;
+      loopRegion.setAttribute('data-on', loopOn ? 'true' : 'false');
+      loopRegion.style.left = ((loopA / total) * 100).toFixed(3) + '%';
+      loopRegion.style.width = (((loopB - loopA) / total) * 100).toFixed(3) + '%';
+    } else {
+      loopRegion.hidden = true;
+    }
+  }
+
+  function setPoint(which) {
+    if (which === 'a') {
+      loopA = current;
+      if (loopB <= loopA) loopB = Math.min(total, loopA + 5);
+    } else {
+      loopB = current;
+      if (loopA >= loopB) loopA = Math.max(0, loopB - 5);
+    }
+    syncLoop();
+  }
+
+  // --- loudness: the slider and the mute button write the same value, so the
+  // deck and the synthesised voice follow each other.
+  function applyVolume() {
+    voiceOn = !muted;
+    try {
+      voice.volume = volume;
+      voice.muted = muted;
+    } catch (e) {}
+    var shape = muted ? 'mute' : (volume < 0.5 ? 'low' : 'high');
+    muteBtn.querySelector('svg').innerHTML = VOLUME_ICONS[shape];
+    muteBtn.setAttribute('aria-label', muted ? 'Bật tiếng' : 'Tắt hoặc bật tiếng');
+    volInput.title = 'Âm lượng ' + Math.round(volume * 100) + '%';
+    if (muted) { try { voice.pause(); } catch (e) {} }
+  }
+
+  function stepRate(direction) {
+    var at = RATES.indexOf(rate);
+    if (at < 0) at = 2;
+    rate = RATES[Math.min(RATES.length - 1, Math.max(0, at + direction))];
+    rateSelect.value = String(rate);
+  }
+
+  function stepFrames(count) {
+    seek(Math.round((current + count / fps) * fps) / fps);
+  }
+
+  function toggleFullscreen() {
+    var target = document.getElementById('wrap');
+    if (document.fullscreenElement) {
+      if (document.exitFullscreen) document.exitFullscreen();
+    } else if (target && target.requestFullscreen) {
+      target.requestFullscreen();
+    }
+  }
+
+  function syncFullscreen() {
+    var on = Boolean(document.fullscreenElement);
+    var btn = document.getElementById('fullscreen');
+    btn.querySelector('svg').innerHTML = on ? SHRINK_ICON : FULLSCREEN_ICON;
+    btn.setAttribute('aria-label', on ? 'Thoát toàn màn hình' : 'Toàn màn hình');
+    btn.setAttribute('title', on ? 'Thoát toàn màn hình (F hoặc Esc)' : 'Toàn màn hình (F)');
+  }
+
+  function setHelp(open) {
+    dlg.classList[open ? 'add' : 'remove']('on');
   }
 
   // --- pictures: click to open, and a missing one takes its figure with it.
@@ -588,63 +1060,83 @@ const PLAYER_JS = `
     zoom.classList.add('on');
   });
 
-  document.getElementById('play').addEventListener('click', function () { playing ? stop() : start(); });
-  document.getElementById('back').addEventListener('click', function () { seek(current - 5); });
-  document.getElementById('fwd').addEventListener('click', function () { seek(current + 5); });
-  document.getElementById('prevFrame').addEventListener('click', function () { stop(); seek(Math.round((current - 1 / fps) * fps) / fps); });
-  document.getElementById('nextFrame').addEventListener('click', function () { stop(); seek(Math.round((current + 1 / fps) * fps) / fps); });
-  document.getElementById('speed').addEventListener('change', function (event) {
-    rate = parseFloat(event.target.value);
+  document.getElementById('play').addEventListener('click', toggle);
+  document.getElementById('toStart').addEventListener('click', function () { seek(0); });
+  document.getElementById('toEnd').addEventListener('click', function () { seek(total); });
+  document.getElementById('back10').addEventListener('click', function () { seek(current - 10); });
+  document.getElementById('forward10').addEventListener('click', function () { seek(current + 10); });
+  document.getElementById('stepBack').addEventListener('click', function () { stop(); stepFrames(-1); });
+  document.getElementById('stepForward').addEventListener('click', function () { stop(); stepFrames(1); });
+  rateSelect.addEventListener('change', function (event) { rate = parseFloat(event.target.value); });
+  volInput.addEventListener('input', function (event) {
+    volume = parseFloat(event.target.value);
+    applyVolume();
   });
-  range.addEventListener('input', function () { seek(parseFloat(range.value)); });
-  document.getElementById('voiceBtn').addEventListener('click', function () {
-    voiceOn = !voiceOn;
-    document.getElementById('voiceBtn').textContent = voiceOn ? 'Tiếng: bật' : 'Tiếng: tắt';
-    syncVoice();
+  muteBtn.addEventListener('click', function () { muted = !muted; applyVolume(); });
+  document.getElementById('loop').addEventListener('click', function () { loopOn = !loopOn; syncLoop(); });
+  document.getElementById('setA').addEventListener('click', function () { setPoint('a'); });
+  document.getElementById('setB').addEventListener('click', function () { setPoint('b'); });
+  document.getElementById('clearLoop').addEventListener('click', function () {
+    loopOn = false;
+    loopA = 0;
+    loopB = 0;
+    syncLoop();
   });
+  document.getElementById('help').addEventListener('click', function () { setHelp(true); });
+  document.getElementById('dlgClose').addEventListener('click', function () { setHelp(false); });
+  document.getElementById('fullscreen').addEventListener('click', toggleFullscreen);
+  dlg.addEventListener('click', function (event) {
+    if (event.target === dlg) setHelp(false);
+  });
+  document.addEventListener('fullscreenchange', syncFullscreen);
 
   Array.prototype.forEach.call(document.querySelectorAll('[data-seek]'), function (button) {
     button.addEventListener('click', function () { seek(parseFloat(button.getAttribute('data-seek'))); });
-  });
-
-  function syncLoop() {
-    var button = document.getElementById('loop');
-    button.className = loopOn ? 'ab on' : 'ab';
-    document.getElementById('setA').textContent = 'A ' + fmt(loopA);
-    document.getElementById('setB').textContent = 'B ' + fmt(loopB);
-  }
-  document.getElementById('setA').addEventListener('click', function () {
-    loopA = current;
-    if (loopB <= loopA) loopB = Math.min(total, loopA + 5);
-    syncLoop();
-  });
-  document.getElementById('setB').addEventListener('click', function () {
-    loopB = current;
-    if (loopA >= loopB) loopA = Math.max(0, loopB - 5);
-    syncLoop();
-  });
-  document.getElementById('loop').addEventListener('click', function () {
-    loopOn = !loopOn;
-    syncLoop();
   });
 
   document.addEventListener('keydown', function (event) {
     var tag = event.target && event.target.tagName ? event.target.tagName : '';
     if (/INPUT|TEXTAREA|SELECT/.test(tag)) return;
     var key = event.key;
-    if (key === 'Escape') closeZoom();
-    else if (key === ' ') { event.preventDefault(); playing ? stop() : start(); }
+    // Escape only ever closes what is open, in the reverse order the reader put
+    // it: the zoomed picture, then the shortcut sheet, then fullscreen. The
+    // browser also leaves fullscreen on Escape, but only from its own gesture —
+    // the button promises it, so the file honours it too.
+    if (key === 'Escape') {
+      closeZoom();
+      setHelp(false);
+      if (document.fullscreenElement && document.exitFullscreen) document.exitFullscreen();
+      return;
+    }
+    if (key === '?' || (key === '/' && event.shiftKey)) {
+      event.preventDefault();
+      setHelp(!dlg.classList.contains('on'));
+      return;
+    }
+    if (key === ' ' || key === 'k' || key === 'K') { event.preventDefault(); toggle(); }
     else if (key === 'ArrowLeft') { event.preventDefault(); seek(current - (event.shiftKey ? 1 : 5)); }
     else if (key === 'ArrowRight') { event.preventDefault(); seek(current + (event.shiftKey ? 1 : 5)); }
     else if (key === 'j' || key === 'J') seek(current - 10);
     else if (key === 'l' || key === 'L') seek(current + 10);
-    else if (key === ',') { stop(); seek(Math.round((current - 1 / fps) * fps) / fps); }
-    else if (key === '.') { stop(); seek(Math.round((current + 1 / fps) * fps) / fps); }
+    else if (key === ',') { stop(); stepFrames(-1); }
+    else if (key === '.') { stop(); stepFrames(1); }
+    else if (key >= '0' && key <= '9') seek((Number(key) / 10) * total);
     else if (key === 'Home') seek(0);
     else if (key === 'End') seek(total);
+    else if (key === '[') setPoint('a');
+    else if (key === ']') setPoint('b');
+    // Four backslashes: this lives in a template literal, so the file has to be
+    // handed the two characters that spell a backslash inside a JS string.
+    else if (key === '\\\\') { loopOn = !loopOn; syncLoop(); }
+    else if (key === '-' || key === '_') stepRate(-1);
+    else if (key === '+' || key === '=') stepRate(1);
+    else if (key === 'm' || key === 'M') { muted = !muted; applyVolume(); }
+    else if (key === 'f' || key === 'F') toggleFullscreen();
   });
 
+  applyVolume();
   syncLoop();
+  syncFullscreen();
   paint();
 
 })();
@@ -670,12 +1162,6 @@ export function buildStandaloneHtml({ lesson, audios, karaoke }: StandaloneHtmlO
   const theme = themeCss(preset.palette, isDarkTheme(lesson.theme));
   // `<` is escaped so the JSON blob can never close its own <script> tag.
   const payload = JSON.stringify(lesson).replace(/</g, "\\u003c");
-  const speeds = [0.5, 0.75, 1, 1.25, 1.5, 2]
-    .map(
-      (speed) =>
-        `<option value="${speed}"${speed === 1 ? " selected" : ""}>${speed}&times;</option>`,
-    )
-    .join("");
 
   return `<!doctype html>
 <html lang="vi">
@@ -686,7 +1172,7 @@ export function buildStandaloneHtml({ lesson, audios, karaoke }: StandaloneHtmlO
 <style>${CSS}${theme}${katexCss()}</style>
 </head>
 <body>
-<div class="wrap">
+<div class="wrap" id="wrap">
   <div class="head">
     <h1>${escapeHtml(lesson.title)}</h1>
     <span class="tag">${escapeHtml(lesson.subject)}${lesson.grade ? ` &middot; ${escapeHtml(lesson.grade)}` : ""}</span>
@@ -694,26 +1180,11 @@ export function buildStandaloneHtml({ lesson, audios, karaoke }: StandaloneHtmlO
     <span class="tag">${escapeHtml(preset.label)}</span>
   </div>
   <div class="stage" id="stage">${sceneMarkup(lesson, audios, karaoke)}</div>
-  <div class="controls">
-    <audio id="voice" preload="auto" style="display:none"></audio>
-    <div class="row">
-      <button class="primary" id="play">Phát</button>
-      <button id="back">&minus;5s</button>
-      <button id="prevFrame">&minus;1 khung</button>
-      <button id="nextFrame">+1 khung</button>
-      <button id="fwd">+5s</button>
-      <button id="voiceBtn">Tiếng: bật</button>
-      <label class="mono" style="font-size:12px;color:#9fb9bd">tốc độ <select id="speed">${speeds}</select></label>
-      <div class="ab" id="loop">A&rarr;B</div>
-      <button id="setA">A 00:00.0</button>
-      <button id="setB">B 00:00.0</button>
-      <span class="mono" id="clock" style="margin-left:auto">00:00.0 / 00:00.0</span>
-    </div>
-    <input type="range" id="scrub" min="0" max="1" step="0.01" value="0" aria-label="Timeline bài giảng" />
-    <div class="marks">${chapterMarkup(lesson)}</div>
-    <p class="hint">Space phát/dừng · &larr;/&rarr; tua 5s · Shift+&larr;/&rarr; tua 1s · ,/. từng khung hình · J/L tua 10s · Home/End · A/B đặt vùng lặp · Esc đóng ảnh phóng to</p>
-  </div>
+  <audio id="voice" preload="auto" style="display:none"></audio>
+  ${playerMarkup(lesson)}
+  <p class="hint">Toàn bộ bài nằm trong file này. GSAP tải từ CDN nên cần mạng ở lần mở đầu; bài học và giọng đọc thì không.</p>
 </div>
+${shortcutsMarkup()}
 <script id="lesson-data" type="application/json">${payload}</script>
 <script src="https://cdn.jsdelivr.net/npm/gsap@3.15.0/dist/gsap.min.js"></script>
 <script>${PLAYER_JS}</script>
