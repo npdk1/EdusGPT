@@ -752,8 +752,12 @@ export function SetupPanel() {
         </p>
       </header>
 
-      {/* status — one compact row instead of a six-cell grid */}
-      <section className="panel p-4">
+      {/* relative z-10: the model dropdown overflows this section, and every
+          .panel has backdrop-blur (a stacking context), so without this the
+          next section would paint over the open list and eat its clicks. */}
+      <section className="panel relative z-10 space-y-4 p-5">
+        {/* status — one compact row at the top of this card, instead of a
+            six-cell grid or a section of its own. */}
         <div className="flex flex-wrap items-center gap-2">
           {status?.configured ? (
             <CircleCheck className="h-4 w-4 shrink-0 text-brand-300" />
@@ -800,17 +804,11 @@ export function SetupPanel() {
         </div>
 
         {status?.lastValidationMessage ? (
-          <p className="mt-2.5 text-xs leading-relaxed text-mist-400">
+          <p className="text-xs leading-relaxed text-mist-400">
             {status.lastValidationMessage}
           </p>
         ) : null}
-      </section>
 
-
-      {/* relative z-10: the model dropdown overflows this section, and every
-          .panel has backdrop-blur (a stacking context), so without this the
-          next section would paint over the open list and eat its clicks. */}
-      <section className="panel relative z-10 space-y-4 p-5">
         <h2 className="text-sm font-semibold text-mist-100">
           {t.selectHeading}
         </h2>
