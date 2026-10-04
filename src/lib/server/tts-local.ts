@@ -26,7 +26,7 @@ import type { WordMark } from "./tts";
 const VOICE_DIR = join(process.cwd(), "data", "voices");
 const SCRIPT = join(process.cwd(), "scripts", "local-voice", "piper_speak.py");
 /** Bitrate for the MP3 handed to the browser; the source is 22 kHz mono. */
-const MP3_BITRATE = "96k";
+export const MP3_BITRATE = "96k";
 
 export interface LocalVoiceModel {
   id: string;
@@ -101,7 +101,7 @@ const PYTHON_CANDIDATES: { command: string; args: string[] }[] = [
   { command: "python3", args: [] },
 ];
 
-async function resolvePython(): Promise<{ command: string; args: string[] } | null> {
+export async function resolvePython(): Promise<{ command: string; args: string[] } | null> {
   for (const candidate of PYTHON_CANDIDATES) {
     if (!candidate.command) continue;
     const result = await probe(candidate.command, [
@@ -114,7 +114,7 @@ async function resolvePython(): Promise<{ command: string; args: string[] } | nu
   return null;
 }
 
-async function listModels(): Promise<LocalVoiceModel[]> {
+export async function listModels(): Promise<LocalVoiceModel[]> {
   if (!existsSync(VOICE_DIR)) return [];
   const names = await readdir(VOICE_DIR).catch(() => [] as string[]);
   const models: LocalVoiceModel[] = [];
@@ -249,7 +249,7 @@ export interface LocalNarration {
  * fortieth of "bảo toàn". Punctuation rides on the word before it rather than
  * claiming a window of its own, which is what the caption's alignment expects.
  */
-function speechWeight(token: string): number {
+export function speechWeight(token: string): number {
   if (token.trim().length === 0) return 0;
   const letters = token.replace(/[^\p{L}\p{N}]/gu, "");
   if (letters.length === 0) return 0;
@@ -271,7 +271,7 @@ function speechWeight(token: string): number {
  * an estimate, and it is only ever a few tens of milliseconds out on a word the
  * eye is already following past.
  */
-function wordsFromTimings(
+export function wordsFromTimings(
   sentences: string[],
   durations: number[],
 ): WordMark[] {

@@ -1,4 +1,4 @@
-﻿import { MsEdgeTTS, OUTPUT_FORMAT } from "msedge-tts";
+import { MsEdgeTTS, OUTPUT_FORMAT } from "msedge-tts";
 import { mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
@@ -29,8 +29,9 @@ export {
   type LessonVoiceId,
 } from "@/lib/lesson/voices";
 
-import { resolveVoice, type LessonVoiceId } from "@/lib/lesson/voices";
+import { resolveVoice, voiceForLanguage, type LessonVoiceId } from "@/lib/lesson/voices";
 import { speakLocal } from "./tts-local";
+import { localVoiceFor, speakLocalProvider, type LocalVoiceOption } from "./local-voices";
 import { readTtsEngine, type TtsEngine } from "./tts-settings";
 
 /**
@@ -421,6 +422,11 @@ export async function speakCloud(text: string, voice: LessonVoiceId): Promise<Sp
  * worth reading: it is the one the teacher can act on.
  */
 export async function speak(text: string, voice: LessonVoiceId): Promise<SpeakResult> {
+  // A voice id that names a local engine speaks with that engine whatever the
+  // engine setting says: the teacher picked a person, not a machine.
+  const named = await localVoiceFor(voice);
+  if (named) return speakNamedLocalVoice(text, voice, named);
+
   const engine = await readTtsEngine();
   if (engine === "cloud") return speakCloud(text, voice);
 
@@ -439,6 +445,41 @@ export async function speak(text: string, voice: LessonVoiceId): Promise<SpeakRe
     try {
       const cloud = await speakCloud(text, voice);
       return { ...cloud, notice: `Giọng trên máy chưa dùng được (${reason}). Đã đọc bằng API.` };
+    } catch (cloudError) {
+      const detail = cloudError instanceof Error ? cloudError.message : String(cloudError);
+      throw new Error(`${reason} · API cũng không đọc được: ${detail}`);
+    }
+  }
+}
+
+/**
+ * Speaks with the engine a voice id names, and falls back to the service.
+ *
+ * The fallback voice is an Edge one because the service only knows its own names:
+ * handing it `vieneu:Hải Đăng` would fail for a reason that has nothing to do
+ * with the network. The chosen engine travels with the audio and the notice says
+ * which voice actually read the line.
+ */
+async function speakNamedLocalVoice(
+  text: string,
+  voice: LessonVoiceId,
+  option: LocalVoiceOption,
+): Promise<SpeakResult> {
+  try {
+    const local = await speakLocalProvider(text, option);
+    return {
+      audio: local.audio,
+      voice,
+      chunks: local.chunks,
+      words: local.words,
+      engine: "local",
+      contentType: local.contentType,
+    };
+  } catch (localError) {
+    const reason = localError instanceof Error ? localError.message : String(localError);
+    try {
+      const cloud = await speakCloud(text, voiceForLanguage("vi"));
+      return { ...cloud, voice, notice: `Giọng ${option.label} chưa dùng được (${reason}). Đã đọc bằng API.` };
     } catch (cloudError) {
       const detail = cloudError instanceof Error ? cloudError.message : String(cloudError);
       throw new Error(`${reason} · API cũng không đọc được: ${detail}`);

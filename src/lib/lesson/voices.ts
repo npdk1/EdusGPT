@@ -44,12 +44,42 @@ export type LessonVoiceId = string;
 
 export const DEFAULT_VOICE: LessonVoiceId = "vi-VN-HoaiMyNeural";
 
+/**
+ * The three engines that read a lesson on this machine, each named by a prefix
+ * on the voice id.
+ *
+ * A local voice id is written `provider:target` — `piper:vi_VN-vais1000-medium`,
+ * `vieneu:Hải Đăng`, `vtts:NF` — so a saved lesson remembers not just which
+ * voice but which program has to speak it. The catalogue above is a fixed list;
+ * this half is discovered at runtime, because which of these voices exist depends
+ * on what the teacher has installed (`src/lib/server/local-voices.ts`).
+ */
+export const LOCAL_PROVIDERS = ["piper", "vieneu", "vtts"] as const;
+
+export type LocalProvider = (typeof LOCAL_PROVIDERS)[number];
+
+export function localProviderOf(value: unknown): LocalProvider | null {
+  if (typeof value !== "string") return null;
+  const head = value.split(":", 1)[0];
+  return (LOCAL_PROVIDERS as readonly string[]).includes(head) ? (head as LocalProvider) : null;
+}
+
+export function isLocalVoiceId(value: unknown): value is LessonVoiceId {
+  return typeof value === "string" && localProviderOf(value) !== null && value.includes(":");
+}
+
 export function isVoiceId(value: unknown): value is LessonVoiceId {
-  return typeof value === "string" && VOICES.some((v) => v.id === value);
+  if (typeof value !== "string") return false;
+  // A local id is only as real as the install behind it, and that install lives
+  // on the server; the client asks `/api/tts` for the list rather than guessing.
+  return VOICES.some((v) => v.id === value) || isLocalVoiceId(value);
 }
 
 export function isVietnameseVoice(value: unknown): boolean {
-  return typeof value === "string" && value.startsWith("vi-");
+  if (typeof value !== "string") return false;
+  // Every local engine in the catalogue is Vietnamese by construction, which is
+  // why a lesson saved with one keeps it when the script is Vietnamese.
+  return value.startsWith("vi-") || isLocalVoiceId(value);
 }
 
 /** The Edge name plus the prosody the service needs. */

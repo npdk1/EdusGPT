@@ -4,6 +4,7 @@ import { speak, isVoiceId, pickVoice, DEFAULT_VOICE, VOICES, type LessonVoiceId,
 import { pruneCache, readCachedAudio, writeCachedAudio } from "@/lib/server/tts-cache";
 import { readTtsEngine } from "@/lib/server/tts-settings";
 import { localVoiceStatus } from "@/lib/server/tts-local";
+import { localVoiceCatalog } from "@/lib/server/local-voices";
 import { clientKey, rateLimit, rejectRemote } from "@/lib/server/guard";
 
 export const runtime = "nodejs";
@@ -43,9 +44,25 @@ const MAX_TEXT = 4_000;
  * letting the teacher wonder why "Nam Minh" sounds like Hoài My.
  */
 export async function GET() {
-  const [engine, local] = await Promise.all([readTtsEngine(), localVoiceStatus()]);
+  const [engine, local, catalog] = await Promise.all([
+    readTtsEngine(),
+    localVoiceStatus(),
+    localVoiceCatalog(),
+  ]);
+  // The picker shows the voices this machine can actually speak, not just the
+  // hosted ones: a catalogue of twelve names when the machine has thirty more
+  // waiting is the same as not having them.
+  const voices = [
+    ...VOICES,
+    ...catalog.voices.map((option) => ({
+      id: option.id,
+      label: option.label,
+      provider: option.provider,
+      ...(option.note ? { note: option.note } : {}),
+    })),
+  ];
   return NextResponse.json({
-    voices: VOICES,
+    voices,
     default: DEFAULT_VOICE,
     maxChars: MAX_TEXT,
     engine,
@@ -55,6 +72,7 @@ export async function GET() {
       cuda: local.cuda,
       ffmpeg: local.ffmpeg,
       models: local.models.map((model) => ({ id: model.id, label: model.label })),
+      providers: catalog.providers,
     },
   });
 }

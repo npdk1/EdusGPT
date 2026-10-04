@@ -9,6 +9,7 @@ import {
   TriangleAlert,
   CircleCheck,
   ChevronDown,
+  ChevronUp,
   Copy,
   Download,
   KeyRound,
@@ -117,6 +118,8 @@ const COPY = {
       "Reading from this machine: the names below are tempos, not different people — one installed voice, sped or slowed to suit the slide.",
     voiceLocalMissing:
       "No voice is installed on this machine yet, so this falls back to the online voice.",
+    voiceShowMore: "Show {count} more voices",
+    voiceShowLess: "Show fewer voices",
     voiceLocalSetup: "Install the machine voice",
     imageLegend: "Illustrations",
     imageOn: "AI draws an illustration for each slide",
@@ -224,6 +227,8 @@ const COPY = {
       "Đang đọc bằng giọng trên máy: các tên bên dưới là tốc độ, không phải người khác nhau — một giọng đã cài, nhanh hoặc chậm theo từng slide.",
     voiceLocalMissing:
       "Máy này chưa cài giọng nào, nên đang dùng giọng trên mạng thay thế.",
+    voiceShowMore: "Xem thêm {count} giọng",
+    voiceShowLess: "Thu gọn danh sách",
     voiceLocalSetup: "Cài giọng cho máy",
     imageLegend: "Ảnh minh hoạ",
     imageOn: "AI vẽ ảnh minh hoạ cho mỗi slide",
@@ -1019,6 +1024,9 @@ export function StudioPanel() {
  * voice — and a generic demo sentence hides exactly the accents and pacing that
  * make one voice suit a lesson and another not.
  */
+/** How many voices stay on screen before the list opens. */
+const TOP_VOICES = 10;
+
 function VoiceChooser({
   value,
   onChange,
@@ -1029,7 +1037,13 @@ function VoiceChooser({
   topic: string;
 }) {
   const t = useCopy(COPY);
-  const [voices, setVoices] = useState<{ id: string; label: string }[]>([]);
+  const [voices, setVoices] = useState<{ id: string; label: string; provider?: string; note?: string }[]>([]);
+  /**
+   * Thirty-odd local voices plus the hosted ones is a wall of chips. The first
+   * handful stays on screen and the rest opens under a single line, because a
+   * picker nobody can see the end of is a picker nobody reads.
+   */
+  const [expanded, setExpanded] = useState(false);
   const [playing, setPlaying] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   /**
@@ -1102,11 +1116,19 @@ function VoiceChooser({
     }
   };
 
+  // The machine's own voices first: with the local engine chosen these are
+  // the ones that will actually speak, and they are the reason to open /setup.
+  const ordered = [...voices.filter((v) => v.provider), ...voices.filter((v) => !v.provider)];
+  const visible = expanded
+    ? ordered
+    : [...ordered.slice(0, TOP_VOICES), ...ordered.slice(TOP_VOICES).filter((v) => v.id === value)];
+  const hidden = Math.max(0, ordered.length - TOP_VOICES);
+
   return (
     <fieldset className="mt-3">
       <legend className="label">{t.voiceLabel}</legend>
       <div className="flex flex-wrap gap-2">
-        {voices.map((option) => {
+        {visible.map((option) => {
           const selected = value === option.id;
           const isPlaying = playing === option.id;
           return (
@@ -1146,6 +1168,17 @@ function VoiceChooser({
           <span className="text-xs text-mist-500">{t.voiceLoading}</span>
         ) : null}
       </div>
+      {hidden > 0 || expanded ? (
+        <button
+          type="button"
+          onClick={() => setExpanded((open) => !open)}
+          aria-expanded={expanded}
+          className="mt-2 flex items-center gap-1 text-xs text-brand-300 transition-colors hover:text-brand-200"
+        >
+          {expanded ? t.voiceShowLess : t.voiceShowMore.replace("{count}", String(hidden))}
+          {expanded ? <ChevronUp className="h-3.5 w-3.5" /> : <ChevronDown className="h-3.5 w-3.5" />}
+        </button>
+      ) : null}
       {engine?.engine === "local" ? (
         <p className="mt-2 text-[11px] leading-relaxed text-mist-500">
           {engine.localReady ? t.voiceLocalTempo : t.voiceLocalMissing}{" "}
