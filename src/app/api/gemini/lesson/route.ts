@@ -4,6 +4,7 @@ import { credentialGate } from "@/lib/ai/readiness";
 import { AiError, generateJson } from "@/lib/ai/llm";
 import { isQuotaExhausted } from "@/lib/ai/shared";
 import { recordModelTrust } from "@/lib/ai/model-trust";
+import { noteCompactModel, readCompactModel } from "@/lib/server/token-limit";
 import { SCENE_ACCENTS, SCENE_KINDS, SLIDE_BLOCK_KINDS, SLIDE_LAYOUTS, POINTER_TARGETS, iconSetFor, newLessonId, type SlideTheme } from "@/lib/lesson/types";
 import { DEFAULT_SLIDE_THEME } from "@/lib/lesson/themes";
 import {
@@ -1124,6 +1125,25 @@ export async function POST(request: NextRequest) {
     .filter(Boolean)
     .join("\n");
 
+  /*
+   * The same lesson with the instruction furniture taken off.
+   *
+   * Used only when the provider refuses the full prompt for being larger than
+   * its per-minute budget allows: the design rules, the style guide and the skim
+   * of the reference are the bulk of the tokens, and a scene written without
+   * them is still a scene — a slightly plainer one, which beats the placeholder
+   * narration the fallback would have shipped.
+   */
+  const shortContext = [
+    `Chủ đề: ${topic}`,
+    `Môn: ${subject}`,
+    grade ? `Trình độ/khối: ${grade}` : "",
+    `Ngôn ngữ: ${language}`,
+    body.notes?.trim() ? `Yêu cầu thêm: ${body.notes.trim()}` : "",
+  ]
+    .filter(Boolean)
+    .join("\n");
+
   const encoder = new TextEncoder();
   const perScene = (count: number) =>
     Math.max(6, Math.round(totalSeconds / Math.max(1, count)));
@@ -1309,6 +1329,27 @@ export async function POST(request: NextRequest) {
         // Scenes that came back as the "đang được bổ sung" placeholder. Kept as a
         // count so the run can refuse to ship a deck that is mostly holes.
         let fallbackScenes = 0;
+        // The first real reason a scene fell back. The error below used to say
+        // only "the provider may have run out", which is a guess; the call that
+        // actually failed says exactly what went wrong (a 429, a schema the model
+        // refused, a timeout), and that sentence is what makes the difference
+        // between retrying and switching provider.
+        const fallbackReasons: string[] = [];
+        /**
+         * Scenes written in the smaller coat, after a provider refused the full
+         * prompt for its size. Counted so the run log can say why a lesson looks
+         * plainer than the one the teacher asked for.
+         */
+        let compactScenes = 0;
+        /**
+         * Once a provider has refused one full prompt for its size, the rest of
+         * the lesson is written in the smaller coat straight away. The ceiling
+         * does not change between scenes, so paying for a refusal per scene is
+         * a minute per slide the teacher can have back for nothing.
+         */
+        let compactByDefault = false;
+        // A previous run on this provider already found out; start in the smaller coat.
+        compactByDefault = await readCompactModel(creds.provider, creds.model);
         // Per-scene call facts for the run log: which model answered, how long
         // the call took (retry included), and whether it needed a second try.
         // Filled inside `writeScene`, read by the batch loop when it reports
@@ -1316,7 +1357,14 @@ export async function POST(request: NextRequest) {
         // call at" without streaming tokens the providers never send.
         const sceneStats = new Map<
           number,
-          { model: string; elapsedMs: number; retried: boolean; fallback: boolean }
+          {
+            model: string;
+            elapsedMs: number;
+            retried: boolean;
+            fallback: boolean;
+            /** Why the call failed, when it did. Empty on success. */
+            reason: string;
+          }
         >();
         const perSceneSeconds = perScene(planned.length);
         // The system prompt is identical for every scene call (and its
@@ -1329,7 +1377,11 @@ export async function POST(request: NextRequest) {
          * Writes one scene. Split out from the loop because the loop is batched,
          * and a batch cannot `await` inside itself.
          */
-        const writeScene = async (index: number): Promise<Record<string, unknown>> => {
+        const writeScene = async (
+          index: number,
+          forceCompact = false,
+        ): Promise<Record<string, unknown>> => {
+          const compact = forceCompact || compactByDefault;
           const plannedScene = planned[index];
           const kind = plannedScene.kind ?? "concept";
           const sceneTitle = plannedScene.title ?? `Cảnh ${index + 1}`;
@@ -1350,8 +1402,12 @@ export async function POST(request: NextRequest) {
 
           const sceneRequest = {
             model: modelOverride,
-            system: sceneSystemPrompt,
-            prompt: `${context}\n\nBài: "${outline.title ?? topic}"\nCảnh ${
+            // The plain instruction set, kept for the retry below: the style
+            // guide and the icon rules are worth a thousand tokens, and on a
+            // provider with an 8000-token-per-minute budget they are the
+            // difference between a written scene and a refused request.
+            system: compact ? sceneSystem(useImages) : sceneSystemPrompt,
+            prompt: `${compact ? shortContext : context}\n\nBài: "${outline.title ?? topic}"\nCảnh ${
               index + 1
             }/${planned.length}: loại "${kind}", tiêu đề "${sceneTitle}"${
               plannedScene.subtitle ? `, phụ đề "${plannedScene.subtitle}"` : ""
@@ -1485,22 +1541,54 @@ export async function POST(request: NextRequest) {
               });
               return writeOnce(SCENE_RETRY_TIMEOUT_MS);
             })
+            /*
+             * A prompt the provider says is too large for its minute is worth one
+             * more try in a smaller coat: same scene, same outline slot, without
+             * the design rules, the style guide and the reference skim. Providers
+             * that never refuse keep both paths identical, because this branch is
+             * only reached by an error that says the request did not fit.
+             */
+            .catch(async (error: unknown) => {
+              const message = error instanceof Error ? error.message : String(error);
+              const tooBig =
+                /too large|tokens per minute|\bTPM\b|reduce your message size/i.test(message);
+              if (compact || !tooBig) throw error;
+              compactScenes += 1;
+              compactByDefault = true;
+              await noteCompactModel(creds.provider, creds.model);
+              send({
+                type: "stage",
+                stage: "scene-compact",
+                message: `Cảnh "${sceneTitle}" vượt hạn mức của nhà cung cấp — viết lại gọn hơn.`,
+                progress: Math.round(25 + (index / planned.length) * 70),
+                provider: creds.provider,
+                elapsedMs: Date.now() - callStart,
+              });
+              return writeScene(index, true).then((scene) => ({ data: scene }));
+            })
             .then((result) => {
               // Remember which model actually produced this scene: when a call
               // rotates to a backup, `creds.model` still names the one that was
               // asked for, and a lesson then claims a model that never wrote it.
-              if (result && typeof result.model === "string" && result.model) {
-                generatedModel = result.model;
+              if (
+                result &&
+                typeof (result as { model?: unknown }).model === "string" &&
+                (result as { model?: unknown }).model
+              ) {
+                generatedModel = (result as { model: string }).model;
               }
               sceneStats.set(index, {
                 model: generatedModel,
                 elapsedMs: Date.now() - callStart,
                 retried,
                 fallback: false,
+                reason: "",
               });
               return result;
             })
-            .catch(() => {
+            .catch((error: unknown) => {
+              const reason = error instanceof Error ? error.message : String(error);
+              fallbackReasons.push(reason);
             // One bad scene must not sink the lesson: keep the outline's shape
             // and ship a minimal body so playback still works.
             fallbackScenes += 1;
@@ -1509,11 +1597,13 @@ export async function POST(request: NextRequest) {
               elapsedMs: Date.now() - callStart,
               retried,
               fallback: true,
+              reason,
             });
             send({
               type: "stage",
               stage: "scene-fallback",
-              message: `Cảnh "${sceneTitle}" ghi lỗi, tạm dùng nội dung tối giản.`,
+              message:
+                `Cảnh "${sceneTitle}" ghi lỗi (${reason.slice(0, 200)}), tạm dùng nội dung tối giản.`,
               progress: Math.round(25 + (index / planned.length) * 70),
               provider: creds.provider,
               elapsedMs: Date.now() - callStart,
@@ -1654,7 +1744,8 @@ export async function POST(request: NextRequest) {
         if (fallbackScenes > fallbackLimit) {
           throw new AiError(
             `Chỉ viết được ${planned.length - fallbackScenes}/${planned.length} cảnh, ` +
-              `phần còn lại không viết nổi (có thể đã hết hạn mức của nhà cung cấp). ` +
+              `phần còn lại không viết nổi. ` +
+              (fallbackReasons[0] ? `Lý do: ${fallbackReasons[0].slice(0, 300)}. ` : "") +
               `Bài chưa được lưu — thử lại sau.`,
           );
         }

@@ -23,6 +23,10 @@ data/tts-cache/
 # làm nặng lịch sử git.
 /data/voices/
 
+# Han muc token do provider do day ra, tu hoc lai. May, khong phai
+# cau hinh cua bai.
+/data/token-limits.json
+
 # Nhung run.bat tai ve: Node.js portable, ffmpeg, Python, venv + piper.
 # Chi la thu muc may, khong phai san pham.
 /.runtime/

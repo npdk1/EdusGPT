@@ -1,6 +1,13 @@
 import type { ProviderCredentials } from "./config";
 import { PROVIDERS } from "./config";
 import {
+  estimateTokens,
+  noteTokenLimit,
+  parseTokenCeiling,
+  readTokenLimit,
+  TokenPacer,
+} from "@/lib/server/token-limit";
+import {
   AiError,
   findDegenerateText,
   isModelUnavailable,
@@ -153,7 +160,7 @@ export async function listChatModels(
  * usable.
  */
 const MODEL_NOISE =
-  /(embedding|embed|whisper|tts|audio|speech|ocr|voxtral|bark|moderation|rerank|guard|clip|stable-diffusion|bge)/i;
+  /(embedding|embed|whisper|tts|audio|speech|orpheus|playai|elevenlabs|voxtral|bark|moderation|rerank|guard|clip|stable-diffusion|bge)/i;
 
 /**
  * Parameter count in the id, e.g. `openai/gpt-oss-120b` → 120.
@@ -422,6 +429,7 @@ const JSON_ONLY_SUFFIX =
 function buildBody(
   model: string,
   options: ChatGenerateOptions,
+  headroom = REASONING_MODEL.test(model) ? REASONING_HEADROOM_TOKENS : 0,
 ): Record<string, unknown> {
   const contentBudget = options.maxOutputTokens ?? 4096;
   const reasons = REASONING_MODEL.test(model);
@@ -432,7 +440,7 @@ function buildBody(
       { role: "user", content: options.prompt + schemaAsPrompt(options.schema) + JSON_ONLY_SUFFIX },
     ],
     temperature: options.temperature ?? 0.7,
-    max_tokens: reasons ? contentBudget + REASONING_HEADROOM_TOKENS : contentBudget,
+    max_tokens: reasons ? contentBudget + headroom : contentBudget,
     response_format: { type: "json_object" },
     // Several vendors default these families to a high reasoning effort. Only
     // sent to models that are known to accept it, so no other vendor sees a
@@ -440,6 +448,73 @@ function buildBody(
     ...(reasons ? { reasoning_effort: "low" } : {}),
   };
 }
+
+/**
+ * The answer budget that fits inside this model's per-minute ceiling.
+ *
+ * `buildBody` adds the reasoning headroom on top of whatever it is handed, so the
+ * headroom comes off the top here. Returns `undefined` for a model the app has
+ * never been refused by, which leaves the request exactly as it was.
+ */
+async function fitAnswerBudget(
+  provider: string,
+  model: string,
+  options: ChatGenerateOptions,
+  budgetScale: number,
+): Promise<{ maxOutputTokens: number; headroom: number } | undefined> {
+  const limit = await readTokenLimit(provider, model);
+  if (!limit) return undefined;
+  const input = estimateInputTokens(options);
+  const wanted = Math.round((options.maxOutputTokens ?? 4096) * budgetScale);
+  /*
+   * When the room is tight the trace gives way before the answer does.
+   *
+   * The fixed 2048-token headroom is sized for a generous provider, and on an
+   * 8000-token-per-minute tier it is a quarter of everything: measured against
+   * `openai/gpt-oss-20b`, a scene prompt alone came to about 5800 tokens, so
+   * reserving 2048 for reasoning left 352 for the answer — not enough for the
+   * slide, and the request was refused for being too large no matter how small
+   * the answer got. With `reasoning_effort: "low"` the trace on this prompt came
+   * to a few hundred tokens, which is all it needs here.
+   */
+  const full = REASONING_MODEL.test(model) ? REASONING_HEADROOM_TOKENS : 0;
+  const room = Math.floor(limit * 0.9) - input;
+  if (room <= 0) return undefined;
+  const headroom = Math.min(full, Math.max(256, Math.floor(room / 3)));
+  return { maxOutputTokens: Math.max(512, Math.min(wanted, room - headroom)), headroom };
+}
+
+/** What this prompt is likely to cost the provider, before the answer. */
+function estimateInputTokens(options: ChatGenerateOptions): number {
+  return estimateTokens(
+    `${options.system ?? ""}\n${options.prompt}\n${schemaAsPrompt(options.schema)}\n${JSON_ONLY_SUFFIX}`,
+  );
+}
+
+/**
+ * What the call actually cost, so the pacer spends real numbers rather than
+ * estimates. Vendors disagree on the field names, so both spellings are read.
+ */
+function usageField(usage: unknown, ...names: string[]): number {
+  if (!usage || typeof usage !== "object") return 0;
+  const record = usage as Record<string, unknown>;
+  for (const name of names) {
+    const value = record[name];
+    if (typeof value === "number") return value;
+  }
+  return 0;
+}
+
+function inputTokens(usage: unknown): number {
+  return usageField(usage, "prompt_tokens", "input_tokens");
+}
+
+function outputTokens(usage: unknown): number {
+  return usageField(usage, "completion_tokens", "output_tokens");
+}
+
+/** Shared across calls: the window belongs to the account, not to one stage. */
+const sharedPacer = new TokenPacer();
 
 function chat(
   creds: ProviderCredentials,
@@ -585,16 +660,28 @@ export async function generateChatJson<T>(
      * second: "flash" scores well, the account cannot answer it, and every
      * attempt then burned a full timeout before rotating on. The ids in
      * `modelChoices` were each verified to answer this API, so they are the ones
-     * worth falling back to; the rest of the catalogue is only used when the
-     * vetted ones are gone.
+     * worth falling back to.
+     *
+     * The raw catalogue is a last resort, not a top-up. It is also where a speech
+     * model sits: a lesson rotated onto `canopylabs/orpheus-arabic-saudi` and came
+     * back "requires terms acceptance", which is the provider refusing a TTS model
+     * asked to write prose — five scenes of that and the lesson was never saved.
+     * `MODEL_NOISE` keeps most of those out, but a vetted queue is better than a
+     * filtered guess, so the catalogue is only read when nothing vetted exists.
      */
     const live = new Set(catalog.map((model) => model.id));
     const vetted = (PROVIDERS[creds.provider]?.modelChoices ?? []).filter((id) =>
       live.has(id),
     );
-    for (const id of [...vetted, ...rankChatModels(catalog, 4)]) {
+    for (const id of vetted) {
       if (queue.length >= 4) break;
       push(id);
+    }
+    if (queue.length === 1) {
+      for (const id of rankChatModels(catalog, 4)) {
+        if (queue.length >= 4) break;
+        push(id);
+      }
     }
   } catch {
     /* keep the single candidate */
@@ -615,6 +702,7 @@ export async function generateChatJson<T>(
   let queueIndex = 0;
   let transientStreak = 0;
   let throttleStreak = 0;
+  let refits = 0;
   let lastError: AiError | null = null;
 
   const backoff = (streak: number) =>
@@ -629,18 +717,28 @@ export async function generateChatJson<T>(
     let response: Response;
     try {
       await respectThrottle();
+      // Sixteen scenes in a row spend a small budget twice over even when each
+      // call fits on its own, so the run waits its turn in the minute.
+      const known = await readTokenLimit(creds.provider, model);
+      const fit = await fitAnswerBudget(creds.provider, model, options, budgetScale);
+      if (known && fit) {
+        const input = estimateInputTokens(options);
+        const waited = await sharedPacer.waitForRoom(
+          known,
+          sharedPacer.estimateCall(input, fit.maxOutputTokens),
+        );
+        if (waited > 2_000) {
+          await debugLog(
+            `TPM-WAIT ${vendorLabel(creds)} model=${model} ${Math.round(waited / 1000)}s`,
+          );
+        }
+      }
       response = await chat(
         creds,
         buildBody(
           model,
-          budgetScale === 1
-            ? options
-            : {
-                ...options,
-                maxOutputTokens: Math.round(
-                  (options.maxOutputTokens ?? 4096) * budgetScale,
-                ),
-              },
+          fit === undefined ? options : { ...options, maxOutputTokens: fit.maxOutputTokens },
+          fit?.headroom,
         ),
         // A bigger budget takes proportionally longer to stream: measured at
         // roughly 30 s per 3k output tokens on the 550B model, so the flat 90 s
@@ -740,10 +838,40 @@ export async function generateChatJson<T>(
         throw lastError;
       }
 
+      sharedPacer.note(inputTokens(payload.usage), outputTokens(payload.usage));
       return { data: parsed, model, text, usage: payload.usage };
     }
 
     const message = await readError(response);
+    /*
+     * "Request too large … on tokens per minute (TPM): Limit 8000, Requested
+     * 8405" is not a broken model and not a spent quota: the request we built is
+     * larger than the minute it was meant to fit in. The vendor is also the only
+     * place the ceiling is written down, so this is where the app learns it —
+     * then asks for a smaller answer and runs the very same call again.
+     */
+    const ceiling = parseTokenCeiling(message);
+    if (ceiling) {
+      // Learn first either way: the number in the refusal is the only place the
+      // ceiling is ever written down, and every later call is sized from it.
+      await noteTokenLimit(creds.provider, model, ceiling.limit);
+      await debugLog(
+        `TPM-CEILING ${vendorLabel(creds)} model=${model} limit=${ceiling.limit} requested=${ceiling.requested} http=${response.status}`,
+      );
+      /*
+       * A 429 means the window is already spent, so the call below — the one that
+       * knows how to wait a throttle out — is the right one to fall into, and the
+       * ceiling now in hand will pace every attempt after it. A refusal that is
+       * not a throttle is a size problem: ask for a smaller answer and run the
+       * very same call again.
+       */
+      if (response.status !== 429 && refits < 2) {
+        refits += 1;
+        attempt -= 1;
+        continue;
+      }
+    }
+
     lastError = new AiError(message, response.status);
     await debugLog(
       `HTTP ${response.status} ${vendorLabel(creds)} model=${model}: ${message}`,

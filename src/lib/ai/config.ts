@@ -81,19 +81,21 @@ export const PROVIDERS: Record<ProviderId, ProviderSpec> = {
     // their place the same way: each finished a whole short lesson with the
     // lesson crediting it back (`lesson.model` equal to the requested id).
     //   - `openai/gpt-oss-120b` (5 slides, 212s).
-    //   - `openai/gpt-oss-safeguard-20b` (6 slides, 178s).
     //   - `qwen/qwen3.8-27b` (6 slides, 147s). The free tier meters it on
     //     *input* tokens at 7000/min and one scene request already carries
     //     ~5100 of them, so it 429s constantly — but the throttle gate waits it
     //     out on the same model instead of falling back, and the lesson still
     //     lands. Slow, not broken.
+    // Dropped: `openai/gpt-oss-safeguard-20b` earned its place when it finished
+    // a lesson, and then stopped being one — it is a guardrail model, and its
+    // free tier meters 2000 tokens a minute. A fallback that cannot hold a scene
+    // prompt only spends the queue.
     // Kept out: `openai/gpt-oss-20b` replies `Failed to validate JSON` with an
     // empty body and its lessons end up written by `gpt-oss-120b`; `allam-2-7b`
     // is too small for the prompt (`reduce the length of the messages`); the
     // two `canopylabs/orpheus-*` models demand terms acceptance first.
     modelChoices: [
       "openai/gpt-oss-120b",
-      "openai/gpt-oss-safeguard-20b",
       "qwen/qwen3.8-27b",
     ],
     keyHintPrefix: "gsk_",
