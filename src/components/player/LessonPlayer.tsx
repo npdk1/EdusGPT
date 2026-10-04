@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
@@ -398,8 +398,8 @@ export function LessonPlayer({ initialLesson, samples }: LessonPlayerProps) {
       {/* min-w-0 on both children: without it a wide descendant (a long chip, a
           figure, a chart) refuses to shrink and pushes the second column off
           the screen instead of scrolling inside its own column. */}
-      <div className="grid min-w-0 gap-5 lg:grid-cols-[minmax(0,2.2fr)_minmax(0,1fr)]">
-        <div className="min-w-0 space-y-4">
+      <div className="grid min-w-0 gap-5 md:min-h-0 md:flex-1 md:grid-cols-[minmax(0,1fr)_23rem] md:grid-rows-[minmax(0,1fr)] md:gap-4">
+        <div className="flex min-w-0 flex-col space-y-4 md:min-h-0 md:overflow-y-auto">
           {/* toolbar */}
           <div className="panel flex flex-wrap items-center gap-2.5 p-3">
             <label className="flex items-center gap-2">
@@ -516,7 +516,7 @@ export function LessonPlayer({ initialLesson, samples }: LessonPlayerProps) {
           {/* The stage. `stage-fullscreen` is what turns this element
               into a letterboxed fullscreen player: the slide keeps its 16:9
               shape and is centred instead of stretching to the window. */}
-          <div ref={stageWrapRef} className="stage-fullscreen relative">
+          <div ref={stageWrapRef} className="stage-fullscreen stage-fills relative md:min-h-[16rem] md:flex-1 md:[container-type:size]">
             <GsapSlideStage
               lesson={lesson}
               timebase={timebase}
@@ -568,7 +568,7 @@ export function LessonPlayer({ initialLesson, samples }: LessonPlayerProps) {
         </div>
 
         {/* right column */}
-        <div className="min-w-0 space-y-4">
+        <div className="min-w-0 space-y-4 md:flex md:min-h-0 md:flex-col md:overflow-y-auto md:pr-1">
 
           <ChapterList
             lesson={lesson}

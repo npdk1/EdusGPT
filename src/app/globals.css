@@ -357,6 +357,46 @@
     aspect-ratio: 16 / 9;
   }
 
+  /*
+ * The lesson page owns the whole window.
+ *
+ * The site chrome sits outside the page, so a locked player would still scroll:
+ * the sticky header and the marketing footer add up to more than the viewport.
+ * `:has()` catches the player's own marker class, which costs no JavaScript and
+ * cannot paint before the page decides to hide them. The page keeps its own slim
+ * header with the way back to the library.
+ */
+body:has(.lesson-shell) > header,
+body:has(.lesson-shell) > footer {
+  display: none;
+}
+
+/*
+   * A stage that fills the window rather than the width it is given.
+   *
+   * `stage-fills` marks the stage whose height comes from the page (the
+   * viewport-locked desktop layout), so the slide has to answer to that height as
+   * well as to the width: 16:9 taken from the smaller of the two, otherwise the
+   * slide keeps its full width and spills below the fold — which on a player this
+   * tall means the caption sits outside the frame.
+   */
+  .stage-fills > .panel {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  /*
+   * `flex: 0 0 auto` is load-bearing. As a flex item the slide would take its
+   * width from its own content — and its content is sized in `cqw`, which is
+   * itself measured from this width. The loop resolves downwards and the slide
+   * collapses to its min-content width instead of the one asked for.
+   */
+  .stage-fills .slide-fitted {
+    flex: 0 0 auto;
+    width: min(100%, calc(100cqh * 16 / 9));
+  }
+
   .stage-fullscreen:fullscreen .slide-fitted {
     width: var(--slide-w, 100%);
     height: auto;
@@ -1761,6 +1801,36 @@
   .scene-table {
     font-size: 1.35cqw;
     color: var(--slide-ink-soft);
+  }
+
+  /*
+   * The last resort for a slide that is still too tall once the type has reached
+   * its floor: the tables and diagrams get a box of their own and scroll inside
+   * it. Without this the fit pass had nowhere left to give — it can shrink the
+   * type and it can drop the picture, and a slide with a long table and no
+   * picture is left with neither — so the block overflowed and the last rows were
+   * printed through the caption. Capping the box keeps every row reachable with
+   * a scroll instead of losing it silently.
+   */
+  .scene-card[data-crowded="true"] :is(.scene-table, .scene-zoom) {
+    max-height: 26cqw;
+    overflow: auto;
+    overscroll-behavior: contain;
+  }
+
+  /* The caption is the one thing that must never be covered, so it sits above
+     whatever the fit pass decided to shrink. */
+  .scene-card[data-crowded="true"] .scene-caption-stack {
+    position: relative;
+    z-index: 20;
+  }
+
+  /* And the last case: a slide so full that even the capped boxes and the floor
+     scale do not fit. The column scrolls rather than running under the caption —
+     the slide stays complete, and the type stays at a size that can be read. */
+  .scene-card[data-crowded="true"] .scene-fit {
+    overflow-y: auto;
+    overscroll-behavior: contain;
   }
 
   /* Table. No filled header row and no zebra: on a light paper a grey band is

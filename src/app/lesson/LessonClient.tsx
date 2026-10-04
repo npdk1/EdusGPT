@@ -118,7 +118,9 @@ export default function LessonClient({ courseId }: LessonClientProps) {
   }
 
   return (
-    <>
+    // A column, so the player can take the height the page hands it and the run
+    // log below it can be capped rather than pushing the stage off the screen.
+    <div className="flex min-h-0 flex-1 flex-col">
       {loadError ? (
         <p className="mb-4 rounded-xl border border-gold-500/40 bg-gold-500/[0.08] px-3.5 py-2.5 text-sm text-mist-100">
           {t[loadError]} {t.lessonSampleNotice}
@@ -129,7 +131,7 @@ export default function LessonClient({ courseId }: LessonClientProps) {
         samples={SAMPLE_LESSONS.filter((item) => item.id !== lesson.id)}
       />
       {runLog.length > 0 ? (
-        <div className="panel mt-4 p-4">
+        <div className="panel mt-4 p-4 md:max-h-[28vh] md:overflow-y-auto">
           <button
             type="button"
             onClick={() => setLogOpen((open) => !open)}
@@ -146,6 +148,6 @@ export default function LessonClient({ courseId }: LessonClientProps) {
           {logOpen ? <RunLog log={runLog} /> : null}
         </div>
       ) : null}
-    </>
+    </div>
   );
 }

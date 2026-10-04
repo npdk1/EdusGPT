@@ -182,7 +182,7 @@ export function ClassroomAgentChat({ currentScene, lessonTitle }: ClassroomAgent
   };
 
   return (
-    <div className="panel flex h-[480px] flex-col overflow-hidden">
+    <div className="panel flex h-[480px] flex-col overflow-hidden md:h-auto md:min-h-0 md:flex-1">
       <div className="flex items-center justify-between border-b border-ink-700/70 bg-ink-950/70 px-4 py-3">
         <div className="flex items-center gap-2">
           <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-brand-500/20 text-brand-300">

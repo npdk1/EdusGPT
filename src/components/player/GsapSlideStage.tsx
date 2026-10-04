@@ -338,9 +338,21 @@ export function GsapSlideStage({
          * height by ~15px. That is enough to put the last table row under the
          * subtitle while the arithmetic claimed everything fitted. The transform
          * was reset a line above, so this is the unscaled height.
+         *
+         * And the `max-height: 100%` cap has to come off before that height can
+         * be taken at all: with the cap on, the box can never report more than the
+         * room it was given, so a slide whose blocks add up to more than that
+         * measured as a perfect fit and nothing was scaled — which is how a long
+         * table ended up printed through the caption.
          */
+        const cap = content.style.maxHeight;
+        content.style.maxHeight = "none";
         const natural = content.getBoundingClientRect().height;
-        if (natural <= available || available <= 0) return;
+        content.style.maxHeight = cap;
+        if (natural <= available || available <= 0) {
+          card.removeAttribute("data-crowded");
+          return;
+        }
 
         // Two things are being absorbed here. A safety factor, because the
         // measurement is taken before the width compensation below is applied and
@@ -351,6 +363,24 @@ export function GsapSlideStage({
         const scale = Math.max(0.6, (available * 0.98) / natural);
         content.style.transformOrigin = "top center";
         content.style.transform = `scale(${scale})`;
+        // Past that floor there is no scale left to give, so the tables and
+        // diagrams get a box of their own and scroll inside it. Nothing is lost
+        // and the caption keeps its air.
+        if (scale * natural > available) {
+          card.setAttribute("data-crowded", "true");
+          /*
+           * Capping the tables changes the height, so the scale is taken again
+           * over what is actually left. Without this second pass the slide kept
+           * the scale it was given for the uncapped height, and the block that had
+           * just been shrunk still reached past the caption — the arithmetic was
+           * right about a layout that no longer existed.
+           */
+          content.style.transform = "none";
+          const capped = content.getBoundingClientRect().height;
+          if (capped > available) {
+            content.style.transform = `scale(${Math.max(0.5, (available * 0.98) / capped)})`;
+          }
+        }
         // No width compensation here, and the reason is worth keeping: widening
         // the column to `100 / scale` percent does undo the narrowing, but the
         // children are sized in percentages of it — a heading capped at `86%`
@@ -361,8 +391,13 @@ export function GsapSlideStage({
     };
 
     fit();
+    // The stage and every card on it, not just the stage: the slide is sized from
+    // the window, so the card can change height while the stage around it stays
+    // exactly as tall — and then the answer this pass computes is stale, which is
+    // how a full slide kept printing its last table row through the caption.
     const observer = new ResizeObserver(fit);
     observer.observe(stage);
+    stage.querySelectorAll<HTMLElement>(".scene-card").forEach((card) => observer.observe(card));
     return () => observer.disconnect();
   }, [lesson]);
 

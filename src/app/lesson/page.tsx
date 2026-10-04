@@ -18,10 +18,20 @@ export default async function LessonPage({ searchParams }: LessonPageProps) {
   const raw = (await searchParams).c;
   const courseId = typeof raw === "string" && raw ? raw : null;
   return (
-    <div className="mx-auto max-w-7xl px-4 py-10 sm:px-6">
+    <div className="lesson-shell px-4 py-6 sm:px-6 md:flex md:h-dvh md:flex-col md:gap-2 md:overflow-hidden md:py-3">
       <LessonHeader />
 
-      <LessonClient courseId={courseId} />
+      {/*
+        On a desktop the page is the player, so it is sized to the window rather
+        than to its content: `h-dvh` plus `overflow-hidden` means the stage, the
+        transport and the AI panel fill the screen and the page itself never
+        scrolls — zooming the browser re-lays it out inside the same frame
+        instead of pushing the controls off the bottom. Below `md` the document
+        keeps its normal flow, because a phone has no room to spare.
+      */}
+      <div className="flex min-h-0 flex-1 flex-col">
+        <LessonClient courseId={courseId} />
+      </div>
     </div>
   );
 }

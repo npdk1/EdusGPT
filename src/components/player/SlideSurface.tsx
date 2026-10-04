@@ -223,6 +223,7 @@ export function SlideSurface({
       card.style.setProperty("--slide-fit", "1");
       card.removeAttribute("data-no-figure");
       card.removeAttribute("data-small-figure");
+      card.removeAttribute("data-crowded");
       const style = getComputedStyle(card);
       const available =
         card.clientHeight -
@@ -260,6 +261,13 @@ export function SlideSurface({
           card.removeAttribute("data-small-figure");
           card.setAttribute("data-no-figure", "true");
         }
+      }
+      // A slide whose words fill the paper even at the floor, and which has no
+      // picture to give up, used to print its table straight through the caption.
+      // The tables and diagrams get a box of their own instead and scroll inside
+      // it: nothing is dropped, and the caption keeps its air.
+      if (measure() > available) {
+        card.setAttribute("data-crowded", "true");
       }
       // Hand the cap back, so what is on screen is the bounded column.
       content.style.maxHeight = "";
