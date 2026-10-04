@@ -41,10 +41,13 @@ body{background-image:radial-gradient(50rem 32rem at 12% -8%,rgba(36,189,172,.16
    web player's stylesheet uses rather than a fresh guess at "about right". */
 .stage{position:relative;aspect-ratio:16/9;container-type:inline-size;background:var(--ink2);border:1px solid var(--line);border-radius:20px;overflow:hidden;box-shadow:0 28px 60px -34px rgba(0,0,0,.75)}
 .scene{position:absolute;inset:0;opacity:0;visibility:hidden}
-.card{--slide-fit:1;position:absolute;inset:0;display:flex;flex-direction:column;justify-content:safe center;gap:1.1cqw;padding:3.4cqw 5.5cqw 9cqw;overflow:hidden;background-image:linear-gradient(180deg,color-mix(in srgb,var(--ink) 88%,var(--mist5)) 0%,var(--ink) 38%,var(--ink3) 100%)}
+.card{--slide-fit:1;position:absolute;inset:0;display:flex;flex-direction:column;justify-content:safe center;padding:3.4cqw 5.5cqw 9cqw;overflow:hidden;background-image:linear-gradient(180deg,color-mix(in srgb,var(--ink) 88%,var(--mist5)) 0%,var(--ink) 38%,var(--ink3) 100%)}
 .wash{position:absolute;inset:0;z-index:-1;pointer-events:none;background:radial-gradient(120% 90% at 88% -10%,color-mix(in srgb,var(--brand3) 16%,transparent) 0%,transparent 62%)}
-.wm{position:absolute;right:6%;bottom:4%;font-family:ui-monospace,monospace;font-size:1.6cqw;font-weight:700;color:color-mix(in srgb,var(--mist5) 70%,transparent)}
-.head-in{position:relative;z-index:1;width:100%;max-width:86%}
+.wm{position:absolute;right:6%;bottom:4%;z-index:3;font-family:ui-monospace,monospace;font-size:1.6cqw;font-weight:700;color:color-mix(in srgb,var(--mist5) 70%,transparent)}
+/* The column the fit pass measures: capped at the paper, so nothing spills into
+   the caption strip, with the picture as the one thing allowed to give way. */
+.fit{position:relative;z-index:2;display:flex;flex-direction:column;gap:1.1cqw;flex-shrink:0;max-height:100%;min-height:0}
+.head-in{width:100%;max-width:86%}
 .kicker{display:inline-flex;align-items:center;gap:.6cqw;font-size:calc(1.05cqw * var(--slide-fit));font-weight:700;letter-spacing:.18em;text-transform:uppercase;color:var(--brand)}
 .title{margin:2.5% 0 0;font-size:calc(5.2cqw * var(--slide-fit));line-height:1.04;letter-spacing:-.03em;font-weight:700;color:var(--mist);text-wrap:balance}
 .sub{margin:2% 0 0;font-size:calc(1.7cqw * var(--slide-fit));color:var(--mist3)}
@@ -52,23 +55,29 @@ body{background-image:radial-gradient(50rem 32rem at 12% -8%,rgba(36,189,172,.16
 
 /* Hairlines, not filled cards: one alignment for the eye and none of the visual
    weight, which is what keeps a long list looking designed. */
-.body{position:relative;z-index:1;display:grid;width:100%;max-width:86%;gap:0 6%;grid-template-columns:1fr;margin:0;padding:0;list-style:none}
+.body{display:grid;width:100%;max-width:86%;gap:0 6%;grid-template-columns:1fr;margin:0;padding:0;list-style:none}
 @container (min-width:620px){.body{grid-template-columns:1fr 1fr}}
 .body li{display:flex;align-items:baseline;gap:1.5cqw;font-size:calc(1.4cqw * var(--slide-fit));line-height:1.62;padding:.75cqw 0;border-top:1px solid var(--line);color:var(--mist3)}
 .body .bi{font-family:ui-monospace,monospace;font-size:.8em;font-weight:600;color:var(--brand);flex:0 0 auto}
 .body li>span:last-child{display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:3;line-clamp:3;overflow:hidden}
 .inline-code{font-family:ui-monospace,monospace;font-size:.92em;padding:0 .3em;border-radius:.3em;background:color-mix(in srgb,var(--mist) 8%,transparent)}
 .formula{margin:0;width:fit-content;border:1px solid rgba(246,185,59,.4);background:rgba(246,185,59,.1);color:var(--gold3);border-radius:12px;padding:12px 16px;font-family:ui-monospace,monospace;font-size:calc(2cqw * var(--slide-fit));font-weight:600}
-.fig{position:relative;z-index:1;margin:1.2cqw 0 0;display:flex;flex-direction:column;align-items:center}
-.fig img{max-width:78%;max-height:32cqw;border-radius:1.2cqw;border:1px solid var(--line);cursor:zoom-in;background:var(--ink3)}
+/* The picture, under the words and under the caption: a photograph that covered
+   the line being read was worse than no photograph at all. */
+.fig{position:relative;z-index:1;margin:0;display:flex;flex-direction:column;align-items:center;flex:0 1 auto;min-height:0}
+.fig img{max-width:78%;max-height:calc(30cqw * var(--slide-fit));width:auto;height:auto;margin-inline:auto;border-radius:1.2cqw;border:1px solid var(--line);cursor:zoom-in;background:var(--ink3);object-fit:contain}
 .fig figcaption{margin-top:.5cqw;font-size:calc(1cqw * var(--slide-fit));color:var(--mist5)}
 .fig.gone{display:none}
+/* A crowded slide keeps a small picture before it keeps none; a slide with no
+   room at all keeps its words and loses the picture. Both set by the fit pass. */
+.card[data-small-figure] .fig img{max-height:calc(14cqw * var(--slide-fit))}
+.card[data-no-figure] .fig{display:none}
 
 /* The caption: two rows held open at all times, the sentence being spoken over
    the one coming next. Reserving both rows is the point — a caption whose height
    changes when the hand-over happens moves every line on screen, and the reader
    feels it as a stutter at the exact moment they are following the voice. */
-.cap{position:absolute;left:4%;right:4%;bottom:1.08cqw;height:5.22cqw;overflow:hidden;text-align:center;pointer-events:none}
+.cap{position:absolute;left:4%;right:4%;bottom:1.08cqw;z-index:3;height:5.22cqw;overflow:hidden;text-align:center;pointer-events:none}
 .sent{position:absolute;left:0;right:0;margin:0;font-size:1.75cqw;line-height:1.32;font-weight:500;letter-spacing:.005em;color:var(--mist);opacity:0;transition:opacity .16s linear}
 .sent[data-row="live"]{top:0;opacity:1}
 .sent[data-row="next"]{top:2.91cqw;opacity:1;color:var(--mist5)}
@@ -392,6 +401,7 @@ function sceneMarkup(
           : "",
         `<div class="card">`,
         `<div class="wash"></div>`,
+        `<div class="fit">`,
         `<header class="head-in">`,
         `<span class="kicker">${escapeHtml(SCENE_KIND_LABEL[scene.kind])}</span>`,
         `<h2 class="title">${inlineHtml(scene.title, escapeHtml)}</h2>`,
@@ -402,6 +412,7 @@ function sceneMarkup(
         steps ? `<ol class="body">${steps}</ol>` : "",
         scene.formula ? formulaMarkup(scene.formula) : "",
         figureMarkup(lesson, scene),
+        `</div>`,
         scene.narration
           ? narrationMarkup(scene.narration, karaoke[index] ?? [])
           : "",
@@ -1059,6 +1070,56 @@ const PLAYER_JS = `
     zoomImg.src = node.src;
     zoom.classList.add('on');
   });
+
+  // --- the fit pass, the same one the web player runs.
+  //
+  // A slide with more on it than the paper holds steps the type ladder down
+  // rather than letting the last line run into the caption. The picture is part
+  // of that column and steps with it: it is sized in cqw times the fit step, so
+  // shrinking the words shrinks the photograph too. A slide still too tall at the
+  // floor gets a small picture, and only a slide with no room at all loses it —
+  // a caption nobody can read is the worse outcome either way.
+  //
+  // It measures the column uncapped, because the fit column is capped at the
+  // paper to keep anything from spilling into the caption strip, and it runs
+  // again when a
+  // picture arrives: a remote image is nothing at first paint and its real size a
+  // second later, which is exactly when a mount-time measurement went wrong.
+  var FIT_STEPS = [1, 0.94, 0.88, 0.82, 0.76, 0.7, 0.64, 0.58, 0.52];
+  function fitSlides() {
+    var cards = stage.querySelectorAll('.card');
+    for (var ci = 0; ci < cards.length; ci++) {
+      var card = cards[ci];
+      var fit = card.querySelector('.fit');
+      if (!fit) continue;
+      card.style.setProperty('--slide-fit', '1');
+      card.removeAttribute('data-no-figure');
+      card.removeAttribute('data-small-figure');
+      var style = window.getComputedStyle(card);
+      var available =
+        card.clientHeight - parseFloat(style.paddingTop) - parseFloat(style.paddingBottom);
+      fit.style.maxHeight = 'none';
+      if (available <= 0) { fit.style.maxHeight = ''; continue; }
+      for (var si = 0; si < FIT_STEPS.length; si++) {
+        card.style.setProperty('--slide-fit', String(FIT_STEPS[si]));
+        if (fit.getBoundingClientRect().height <= available) break;
+      }
+      if (card.querySelector('.fig') && fit.getBoundingClientRect().height > available) {
+        card.setAttribute('data-small-figure', 'true');
+        if (fit.getBoundingClientRect().height > available) {
+          card.removeAttribute('data-small-figure');
+          card.setAttribute('data-no-figure', 'true');
+        }
+      }
+      fit.style.maxHeight = '';
+    }
+  }
+  fitSlides();
+  window.addEventListener('resize', fitSlides);
+  // A load event does not bubble, so this is captured: one listener for every
+  // picture in the deck, including the ones that arrive long after the file
+  // opened.
+  stage.addEventListener('load', fitSlides, true);
 
   document.getElementById('play').addEventListener('click', toggle);
   document.getElementById('toStart').addEventListener('click', function () { seek(0); });

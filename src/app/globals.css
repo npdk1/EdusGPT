@@ -582,6 +582,21 @@
     flex-direction: column;
     gap: 1.1cqw;
     flex-shrink: 0;
+    /*
+     * Capped at the card's own content box, with the picture as the one thing in
+     * here allowed to give way.
+     *
+     * The card reserves the caption track as its bottom padding, so this box is
+     * exactly the space a slide may use. Without the cap a crowded column kept
+     * its height, overflowed past that padding and the picture at the end of it
+     * landed on the caption — the narration hidden behind a photograph, on the
+     * one slide where there was most to read. Type steps down first (the fit
+     * pass); when even the smallest step does not fit, the picture shrinks
+     * instead, because a smaller picture is still worth looking at and an
+     * unreadable caption is not.
+     */
+    max-height: 100%;
+    min-height: 0;
   }
 
   .scene-fit > * {
@@ -1788,17 +1803,54 @@
    * image staying thumbnail-sized on a wall of white.
    */
   .scene-image {
-    width: 22cqw;
+    /*
+     * Sized in `cqw * var(--slide-fit)`, like the type ladder, and allowed to
+     * shrink.
+     *
+     * A picture that ignored the fit step was the reason a crowded slide still
+     * overflowed after the type had been stepped down to its floor: the words
+     * gave way, the photograph did not, and it finished on top of the caption.
+     * `flex: 0 1 auto` plus `min-height: 0` is what lets it give way when even
+     * the smallest step is not enough, and the z-index keeps it under the words
+     * and the caption no matter how the slide is arranged.
+     */
+    width: calc(22cqw * var(--slide-fit, 1));
     max-width: 34%;
     align-self: center;
+    flex: 0 1 auto;
+    min-height: 0;
+    z-index: 1;
   }
 
   .scene-image img {
-    aspect-ratio: 4 / 3;
-    /* Bounded by height as well as width: the figure is allowed to shrink, and
-       without this the image would overflow the box it is shrinking into. */
-    max-height: 100%;
+    /*
+     * Natural aspect, bounded on both sides.
+     *
+     * The old `aspect-ratio: 4 / 3` letterboxed every picture into the same
+     * frame, which meant a photograph arrived cropped and a drawing arrived
+     * with bars. The height cap is what actually matters here, so the image
+     * keeps its own proportions and is centred when the cap is the tighter of
+     * the two.
+     */
+    max-width: 100%;
+    max-height: calc(30cqw * var(--slide-fit, 1));
+    width: auto;
+    height: auto;
+    margin-inline: auto;
     object-fit: contain;
+  }
+
+  /* A crowded slide keeps a small picture before it keeps none: 14cqw is small
+     enough to leave the words their paper and still large enough to read at a
+     glance, which is what a picture on a slide is for. The fit pass sets this. */
+  .scene-card[data-small-figure] .scene-image img {
+    max-height: calc(14cqw * var(--slide-fit, 1));
+  }
+
+  /* A slide whose words fill the paper even at the smallest step keeps its words
+     and loses the picture. The fit pass sets this; see `SlideSurface`. */
+  .scene-card[data-no-figure] .scene-image {
+    display: none;
   }
 
   .scene-image figcaption {

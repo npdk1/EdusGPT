@@ -67,8 +67,13 @@ function pad2(value: number): string {
  * The steps are close enough (about a tenth apart) to read as one system, and
  * the floor is where a slide stops being legible at classroom distance rather
  * than where the arithmetic runs out.
+ *
+ * It reaches well past what a slide of prose needs, because the steps that
+ * matter are the crowded ones: a slide carrying a title, a few bullets, a board
+ * solution and a picture has to land somewhere inside the paper, and a ladder
+ * that stopped at 0.7 left the picture with nowhere to go but the caption.
  */
-const FIT_STEPS = [1, 0.94, 0.88, 0.82, 0.76, 0.7] as const;
+const FIT_STEPS = [1, 0.94, 0.88, 0.82, 0.76, 0.7, 0.64, 0.58, 0.52] as const;
 
 /**
  * One slide, drawn the way the full player draws it.
@@ -178,7 +183,17 @@ export function SlideSurface({
   /**
    * The fit pass: a slide with more text than its paper can hold steps the type
    * ladder down until it fits, rather than letting the last bullet run off the
-   * bottom.
+   * bottom. The picture is part of the column and steps with it.
+   *
+   * Three things it has to get right. The height of the column *uncapped* —
+   * `.scene-fit` is capped at the card's content box so nothing spills into the
+   * caption track, and measuring the capped box would report every slide as
+   * fitting. The picture's real height, because a remote image is nothing at
+   * first paint and its full size a second later, so a pass that ran only on
+   * mount measured a slide without its picture and stopped stepping. And the
+   * last resort: a slide whose words fill the paper even at the floor keeps its
+   * words and loses the picture, because a caption nobody can read is a worse
+   * outcome than a slide without a photograph.
    */
   useEffect(() => {
     const stage = stageRef.current;
@@ -186,14 +201,21 @@ export function SlideSurface({
     const card = stage.querySelector<HTMLElement>(".scene-card");
     const content = card?.querySelector<HTMLElement>(".scene-fit");
     if (!card || !content) return;
+    const picture = card.querySelector<HTMLElement>(".scene-image");
     const fit = () => {
       card.style.setProperty("--slide-fit", "1");
+      card.removeAttribute("data-no-figure");
+      card.removeAttribute("data-small-figure");
       const style = getComputedStyle(card);
       const available =
         card.clientHeight -
         parseFloat(style.paddingTop) -
         parseFloat(style.paddingBottom);
-      if (available <= 0) return;
+      content.style.maxHeight = "none";
+      if (available <= 0) {
+        content.style.maxHeight = "";
+        return;
+      }
       // Placed blocks bring their own geometry: they are boxes on the grid, so
       // what has to fit is the union of those boxes, not the container. Measuring
       // the container would always read as too tall and step the type down to its
@@ -210,13 +232,32 @@ export function SlideSurface({
       };
       for (const step of FIT_STEPS) {
         card.style.setProperty("--slide-fit", String(step));
-        if (measure() <= available) return;
+        if (measure() <= available) break;
       }
+      // Still too tall at the floor: give the picture a small size before
+      // giving it up. A picture the reader can still make out is worth more
+      // than a clean margin, and only a slide with no room at all loses it.
+      if (picture && measure() > available) {
+        card.setAttribute("data-small-figure", "true");
+        if (measure() > available) {
+          card.removeAttribute("data-small-figure");
+          card.setAttribute("data-no-figure", "true");
+        }
+      }
+      // Hand the cap back, so what is on screen is the bounded column.
+      content.style.maxHeight = "";
     };
     fit();
     const observer = new ResizeObserver(fit);
     observer.observe(stage);
-    return () => observer.disconnect();
+    // `load` does not bubble, so this is captured: one listener for every
+    // picture the slide may grow, including the ones the fallback chain swaps in
+    // later.
+    content.addEventListener("load", fit, true);
+    return () => {
+      observer.disconnect();
+      content.removeEventListener("load", fit, true);
+    };
   }, [scene, layout, placed]);
 
   // The words. Kept apart from the figures so a layout can put them side by
