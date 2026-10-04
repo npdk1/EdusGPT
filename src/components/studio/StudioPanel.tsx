@@ -113,6 +113,11 @@ const COPY = {
     voicePreviewFailed:
       "Could not preview this voice. You can still use it when the lesson plays.",
     voicePreview: "Preview voice",
+    voiceLocalTempo:
+      "Reading from this machine: the names below are tempos, not different people — one installed voice, sped or slowed to suit the slide.",
+    voiceLocalMissing:
+      "No voice is installed on this machine yet, so this falls back to the online voice.",
+    voiceLocalSetup: "Install the machine voice",
     imageLegend: "Illustrations",
     imageOn: "AI draws an illustration for each slide",
     imageOff: "Text only, no images",
@@ -215,6 +220,11 @@ const COPY = {
     voiceLoadFailed: "Không tải được danh sách giọng đọc.",
     voicePreviewFailed: "Không nghe thử được giọng này. Bạn vẫn có thể dùng nó khi phát bài.",
     voicePreview: "Nghe thử giọng",
+    voiceLocalTempo:
+      "Đang đọc bằng giọng trên máy: các tên bên dưới là tốc độ, không phải người khác nhau — một giọng đã cài, nhanh hoặc chậm theo từng slide.",
+    voiceLocalMissing:
+      "Máy này chưa cài giọng nào, nên đang dùng giọng trên mạng thay thế.",
+    voiceLocalSetup: "Cài giọng cho máy",
     imageLegend: "Ảnh minh hoạ",
     imageOn: "AI vẽ ảnh minh hoạ cho mỗi slide",
     imageOff: "Chỉ chữ, không dùng ảnh",
@@ -1022,6 +1032,15 @@ function VoiceChooser({
   const [voices, setVoices] = useState<{ id: string; label: string }[]>([]);
   const [playing, setPlaying] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  /**
+   * Which engine the server will actually use, and whether it is ready.
+   *
+   * In local mode the list of names stops meaning what it says — there is one
+   * installed voice, and a name is a request for a tempo — so the chooser has to
+   * say so rather than let the teacher wonder why "Hoài My" sounds like the one
+   * voice installed.
+   */
+  const [engine, setEngine] = useState<{ engine: string; localReady: boolean } | null>(null);
   const audioRef = useRef<HTMLAudioElement | null>(null);
 
   useEffect(() => {
@@ -1031,6 +1050,10 @@ function VoiceChooser({
       .then((data) => {
         if (cancelled || !Array.isArray(data?.voices)) return;
         setVoices(data.voices);
+        setEngine({
+          engine: typeof data.engine === "string" ? data.engine : "cloud",
+          localReady: Boolean(data.local?.ready),
+        });
         // The server's own default wins over "" so the choice shown is the one
         // that will actually be used.
         if (!value && typeof data.default === "string") onChange(data.default);
@@ -1123,6 +1146,14 @@ function VoiceChooser({
           <span className="text-xs text-mist-500">{t.voiceLoading}</span>
         ) : null}
       </div>
+      {engine?.engine === "local" ? (
+        <p className="mt-2 text-[11px] leading-relaxed text-mist-500">
+          {engine.localReady ? t.voiceLocalTempo : t.voiceLocalMissing}{" "}
+          <Link href="/setup" className="text-brand-300 underline underline-offset-2">
+            {t.voiceLocalSetup}
+          </Link>
+        </p>
+      ) : null}
       {error ? <p className="mt-1.5 text-xs text-ember-300">{error}</p> : null}
     </fieldset>
   );

@@ -30,6 +30,8 @@ export {
 } from "@/lib/lesson/voices";
 
 import { resolveVoice, type LessonVoiceId } from "@/lib/lesson/voices";
+import { speakLocal } from "./tts-local";
+import { readTtsEngine, type TtsEngine } from "./tts-settings";
 
 /**
  * Keeps a bug in msedge-tts from killing the whole app.
@@ -368,11 +370,28 @@ export interface SpeakResult {
   chunks: number;
   /** Per-word timings, empty when the service sent no boundary metadata. */
   words: WordMark[];
+  /** Which engine produced these bytes. */
+  engine: TtsEngine;
+  /**
+   * MP3 unless the machine has no ffmpeg, in which case the local engine hands
+   * back the WAV Piper produced. Both play in a browser; only the size differs.
+   */
+  contentType: "audio/mpeg" | "audio/wav";
+  /**
+   * Set when the chosen engine could not do it and the other one did.
+   *
+   * A silent fallback would be the wrong call: a teacher who chose the machine's
+   * own voice and hears the service's is looking at a setting that says
+   * otherwise. So the engine that actually spoke travels with the audio, and the
+   * studio says so once.
+   */
+  notice?: string;
 }
 
 const MAX_ATTEMPTS = 3;
 
-export async function speak(text: string, voice: LessonVoiceId): Promise<SpeakResult> {
+/** The hosted voice service: many voices, and per-word timings it measures. */
+export async function speakCloud(text: string, voice: LessonVoiceId): Promise<SpeakResult> {
   const pieces = splitForSpeech(text);
   if (pieces.length === 0) throw new Error("Không có chữ để đọc.");
 
@@ -380,7 +399,7 @@ export async function speak(text: string, voice: LessonVoiceId): Promise<SpeakRe
   for (let attempt = 1; attempt <= MAX_ATTEMPTS; attempt += 1) {
     try {
       const { audio, words } = await withConnection(() => synthesizeOnce(pieces, voice));
-      return { audio, voice, chunks: pieces.length, words };
+      return { audio, voice, chunks: pieces.length, words, engine: "cloud", contentType: "audio/mpeg" };
     } catch (error) {
       lastError = error;
       // A dropped socket stays dropped; the next attempt needs a new one.
@@ -390,4 +409,39 @@ export async function speak(text: string, voice: LessonVoiceId): Promise<SpeakRe
     }
   }
   throw lastError instanceof Error ? lastError : new Error("TTS thất bại");
+}
+
+/**
+ * Speaks a narration with whichever engine the teacher chose.
+ *
+ * Local is the default and the one that cannot fail for a reason nobody can fix,
+ * so it goes first. When it is not ready — no Python, no voice downloaded, a
+ * machine that has never been set up — the service reads the line instead and the
+ * result carries a notice saying so. When both fail, the local reason is the one
+ * worth reading: it is the one the teacher can act on.
+ */
+export async function speak(text: string, voice: LessonVoiceId): Promise<SpeakResult> {
+  const engine = await readTtsEngine();
+  if (engine === "cloud") return speakCloud(text, voice);
+
+  try {
+    const local = await speakLocal(text, voice);
+    return {
+      audio: local.audio,
+      voice,
+      chunks: local.chunks,
+      words: local.words,
+      engine: "local",
+      contentType: local.contentType,
+    };
+  } catch (localError) {
+    const reason = localError instanceof Error ? localError.message : String(localError);
+    try {
+      const cloud = await speakCloud(text, voice);
+      return { ...cloud, notice: `Giọng trên máy chưa dùng được (${reason}). Đã đọc bằng API.` };
+    } catch (cloudError) {
+      const detail = cloudError instanceof Error ? cloudError.message : String(cloudError);
+      throw new Error(`${reason} · API cũng không đọc được: ${detail}`);
+    }
+  }
 }

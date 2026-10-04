@@ -18,6 +18,11 @@ next-env.d.ts
 data/library-text/
 data/tts-cache/
 
+# Giọng nói tải về cho giọng đọc chạy trên máy (Piper). Mỗi voice là một file
+# .onnx 60 MB, tải lại được bằng nút "cài giọng" ở /setup, nên để trong repo chỉ
+# làm nặng lịch sử git.
+/data/voices/
+
 # misc
 .DS_Store
 *.log

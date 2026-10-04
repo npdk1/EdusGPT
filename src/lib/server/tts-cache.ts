@@ -18,8 +18,16 @@ const CACHE_DIR = join(process.cwd(), "data", "tts-cache");
 /** Bounded so a long-running install cannot fill the disk. */
 const MAX_ENTRIES = 2_000;
 
-function keyFor(text: string, voice: string): string {
-  return createHash("sha256").update(`${voice}\n${text}`).digest("hex");
+/**
+ * The cache key, engine included.
+ *
+ * The two engines do not produce the same bytes for the same text, and their word
+ * timings are not even the same kind of thing — one measured, one estimated. A
+ * key without the engine would hand a lesson the other engine's audio after the
+ * teacher switched, and the subtitle would light up on someone else's cadence.
+ */
+function keyFor(text: string, voice: string, engine: string): string {
+  return createHash("sha256").update(`${engine}\n${voice}\n${text}`).digest("hex");
 }
 
 export interface CachedNarration {
@@ -31,37 +39,60 @@ export interface CachedNarration {
    * full voice call for data we already had.
    */
   words: WordMark[] | null;
+  /**
+   * What the bytes actually are. The local engine hands back WAV on a machine
+   * with no ffmpeg, and a WAV served as `audio/mpeg` is a file some players
+   * refuse — so the type is stored with the audio rather than assumed.
+   */
+  contentType: "audio/mpeg" | "audio/wav";
+}
+
+/** The extension the cache stores an engine's output under. */
+function extension(contentType: "audio/mpeg" | "audio/wav"): string {
+  return contentType === "audio/wav" ? "wav" : "mp3";
 }
 
 export async function readCachedAudio(
   text: string,
   voice: string,
+  engine: string,
 ): Promise<CachedNarration | null> {
-  try {
-    const base = keyFor(text, voice);
-    const audio = new Uint8Array(await readFile(join(CACHE_DIR, `${base}.mp3`)));
-    let words: WordMark[] | null = null;
+  const base = keyFor(text, voice, engine);
+  // Both extensions are tried: which one this entry is depends on the machine
+  // that wrote it, and a cache from before ffmpeg was installed is still good
+  // audio.
+  for (const [suffix, contentType] of [
+    [".mp3", "audio/mpeg"],
+    [".wav", "audio/wav"],
+  ] as const) {
     try {
-      const raw = JSON.parse(await readFile(join(CACHE_DIR, `${base}.words.json`), "utf8"));
-      if (Array.isArray(raw)) words = raw as WordMark[];
+      const audio = new Uint8Array(await readFile(join(CACHE_DIR, `${base}${suffix}`)));
+      let words: WordMark[] | null = null;
+      try {
+        const raw = JSON.parse(await readFile(join(CACHE_DIR, `${base}.words.json`), "utf8"));
+        if (Array.isArray(raw)) words = raw as WordMark[];
+      } catch {
+        words = null;
+      }
+      return { audio, words, contentType };
     } catch {
-      words = null;
+      /* try the other extension */
     }
-    return { audio, words };
-  } catch {
-    return null;
   }
+  return null;
 }
 
-/** Written to a temp file then renamed, so a crash never leaves a partial MP3. */
+/** Written to a temp file then renamed, so a crash never leaves a partial file. */
 export async function writeCachedAudio(
   text: string,
   voice: string,
+  engine: string,
   audio: Uint8Array,
   words?: WordMark[],
+  contentType: "audio/mpeg" | "audio/wav" = "audio/mpeg",
 ): Promise<void> {
-  const base = keyFor(text, voice);
-  const target = join(CACHE_DIR, `${base}.mp3`);
+  const base = keyFor(text, voice, engine);
+  const target = join(CACHE_DIR, `${base}.${extension(contentType)}`);
   const temp = `${target}.${process.pid}.tmp`;
   try {
     await mkdir(CACHE_DIR, { recursive: true });
@@ -78,7 +109,9 @@ export async function writeCachedAudio(
 /** Drops the oldest entries once the cache outgrows MAX_ENTRIES. */
 export async function pruneCache(): Promise<void> {
   try {
-    const names = (await readdir(CACHE_DIR)).filter((name) => name.endsWith(".mp3"));
+    const names = (await readdir(CACHE_DIR)).filter(
+      (name) => name.endsWith(".mp3") || name.endsWith(".wav"),
+    );
     if (names.length <= MAX_ENTRIES) return;
 
     const stamped = await Promise.all(

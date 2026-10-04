@@ -2,6 +2,8 @@ import { gzipSync } from "node:zlib";
 import { NextResponse, type NextRequest } from "next/server";
 import { speak, isVoiceId, pickVoice, DEFAULT_VOICE, VOICES, type LessonVoiceId, type WordMark } from "@/lib/server/tts";
 import { pruneCache, readCachedAudio, writeCachedAudio } from "@/lib/server/tts-cache";
+import { readTtsEngine } from "@/lib/server/tts-settings";
+import { localVoiceStatus } from "@/lib/server/tts-local";
 import { clientKey, rateLimit, rejectRemote } from "@/lib/server/guard";
 
 export const runtime = "nodejs";
@@ -33,8 +35,28 @@ function encodeWords(words: WordMark[]): string {
  */
 const MAX_TEXT = 4_000;
 
+/**
+ * The voices on offer, and which engine is reading them.
+ *
+ * The client needs the engine for one reason: in local mode the chosen name is a
+ * request for a tempo, not a different person, and the studio says so rather than
+ * letting the teacher wonder why "Nam Minh" sounds like Hoài My.
+ */
 export async function GET() {
-  return NextResponse.json({ voices: VOICES, default: DEFAULT_VOICE, maxChars: MAX_TEXT });
+  const [engine, local] = await Promise.all([readTtsEngine(), localVoiceStatus()]);
+  return NextResponse.json({
+    voices: VOICES,
+    default: DEFAULT_VOICE,
+    maxChars: MAX_TEXT,
+    engine,
+    local: {
+      ready: local.ready,
+      reason: local.reason,
+      cuda: local.cuda,
+      ffmpeg: local.ffmpeg,
+      models: local.models.map((model) => ({ id: model.id, label: model.label })),
+    },
+  });
 }
 
 export async function POST(request: NextRequest) {
@@ -80,15 +102,18 @@ export async function POST(request: NextRequest) {
   );
 
   // Narrating the same sentence again is the common case, not the exception:
-  // serve it from disk and skip the voice service entirely.
-  const cached = await readCachedAudio(text, voice);
+  // serve it from disk and skip the voice service entirely. The cache is keyed
+  // by engine as well, so a teacher who switches engines hears the new one.
+  const engine = await readTtsEngine();
+  const cached = await readCachedAudio(text, voice, engine);
   if (cached) {
     return new NextResponse(Buffer.from(cached.audio), {
       headers: {
-        "content-type": "audio/mpeg",
+        "content-type": cached.contentType,
         "content-length": String(cached.audio.length),
         "cache-control": "no-store",
         "x-tts-voice": voice,
+        "x-tts-engine": engine,
         "x-tts-cache": "hit",
         ...(cached.words ? { "x-tts-words": encodeWords(cached.words) } : {}),
       },
@@ -96,19 +121,23 @@ export async function POST(request: NextRequest) {
   }
 
   try {
-    const { audio, chunks, words } = await speak(text, voice);
-    await writeCachedAudio(text, voice, audio, words);
+    const { audio, chunks, words, contentType, engine: used, notice } = await speak(text, voice);
+    await writeCachedAudio(text, voice, used, audio, words, contentType);
     // Cheap, and only occasionally does real work.
     void pruneCache();
     return new NextResponse(Buffer.from(audio), {
       headers: {
-        "content-type": "audio/mpeg",
+        "content-type": contentType,
         "content-length": String(audio.length),
         "cache-control": "no-store",
         "x-tts-voice": voice,
+        "x-tts-engine": used,
         "x-tts-chunks": String(chunks),
         "x-tts-cache": "miss",
         "x-tts-words": encodeWords(words),
+        // Only ever set when the chosen engine could not do it: the studio shows
+        // it once so the teacher knows which voice actually read the slide.
+        ...(notice ? { "x-tts-notice": encodeURIComponent(notice) } : {}),
       },
     });
   } catch (error) {

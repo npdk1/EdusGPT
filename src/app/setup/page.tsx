@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { SetupPanel } from "@/components/setup/SetupPanel";
+import { VoiceSettings } from "@/components/setup/VoiceSettings";
 import { ThemeToggle } from "@/components/site/ThemeToggle";
 
 export const metadata: Metadata = {
@@ -12,6 +13,9 @@ export default function SetupPage() {
   return (
     <div className="mx-auto max-w-4xl space-y-5 px-4 py-12 sm:px-6">
       <SetupPanel />
+      {/* Which engine reads the narration. Under the key, because a machine that
+          already has a voice needs nothing from the panel above to speak. */}
+      <VoiceSettings />
       <ThemeToggle />
     </div>
   );
