@@ -18,7 +18,7 @@ export default async function LessonPage({ searchParams }: LessonPageProps) {
   const raw = (await searchParams).c;
   const courseId = typeof raw === "string" && raw ? raw : null;
   return (
-    <div className="lesson-shell px-4 py-6 sm:px-6 md:flex md:h-dvh md:flex-col md:gap-2 md:overflow-hidden md:py-3">
+    <div className="lesson-shell px-4 py-6 sm:px-6 md:flex md:h-full md:flex-col md:gap-2 md:overflow-hidden md:py-3">
       <LessonHeader />
 
       {/*

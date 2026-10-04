@@ -358,17 +358,39 @@
   }
 
   /*
- * The lesson page owns the whole window.
+ * The lesson page owns the window below the site header.
  *
- * The site chrome sits outside the page, so a locked player would still scroll:
- * the sticky header and the marketing footer add up to more than the viewport.
- * `:has()` catches the player's own marker class, which costs no JavaScript and
- * cannot paint before the page decides to hide them. The page keeps its own slim
- * header with the way back to the library.
+ * The header stays — it is how you get anywhere else — so the body becomes a
+ * column: the header keeps its own height, the page takes the rest, and the
+ * document never scrolls. That is what makes the browser's own zoom work here:
+ * zooming scales every box, and the slide answers by shrinking to the new height
+ * instead of being cropped.
+ *
+ * `:has()` catches the player's own marker class, so this costs no JavaScript and
+ * cannot paint before the page has decided to claim the frame. Only the footer
+ * steps aside: it is a half-screen block of links that has no place on a page
+ * whose whole point is the slide.
  */
-body:has(.lesson-shell) > header,
-body:has(.lesson-shell) > footer {
-  display: none;
+@media (min-width: 768px) {
+  body:has(.lesson-shell) {
+    display: flex;
+    flex-direction: column;
+    height: 100dvh;
+    overflow: hidden;
+  }
+
+  body:has(.lesson-shell) > header {
+    flex: none;
+  }
+
+  body:has(.lesson-shell) > footer {
+    display: none;
+  }
+
+  body:has(.lesson-shell) > main {
+    flex: 1 1 0%;
+    min-height: 0;
+  }
 }
 
 /*
