@@ -1,7 +1,6 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
-import Link from "next/link";
 import {
   TriangleAlert,
   CircleCheck,
@@ -10,7 +9,6 @@ import {
   EyeOff,
   KeyRound,
   LoaderCircle,
-  CirclePlay,
   Cloud,
   Search,
   SquareTerminal,
@@ -154,23 +152,6 @@ const COPY = {
     advancedBaseUrl: "Advanced: base URL",
     baseUrlHint:
       "Change this only if you go through a compatible proxy or gateway. Unknown hosts are rejected on the server.",
-    // after saving
-    nextTitle: "After you save a key",
-    stepOneLead: "Go to",
-    stepOneTail: ", enter a topic, choose a length, then generate the lesson.",
-    stepTwo:
-      "The new lesson is saved to the library on your machine — click “Open in player”.",
-    stepThreeLead: "In",
-    stepThreeScrub: "try dragging the timeline to scrub,",
-    stepThreeFrame: "step frame by frame,",
-    stepThreeThen: "then use",
-    stepThreeLoop: "to repeat one awkward passage.",
-    securityLead: "The setup API only accepts requests from",
-    securityTail:
-      ". Opening the site over a LAN IP cannot save a key, unless you set",
-    gotoStudio: "Go to AI Studio",
-    tryLead: "Want to try it? Open",
-    tryTail: ". The sample lesson needs no key.",
   },
   vi: {
     providerReady: "sẵn sàng",
@@ -255,22 +236,6 @@ const COPY = {
     advancedBaseUrl: "Nâng cao: base URL",
     baseUrlHint:
       "Chỉ đổi khi bạn đi qua proxy/gateway tương thích. Host lạ sẽ bị từ chối ở server.",
-    nextTitle: "Sau khi lưu key",
-    stepOneLead: "Sang",
-    stepOneTail: ", nhập chủ đề, chọn độ dài rồi bấm sinh bài giảng.",
-    stepTwo:
-      "Bài mới lưu vào thư viện trên máy, bấm “Mở trong trình phát”.",
-    stepThreeLead: "Trong",
-    stepThreeScrub: "hãy thử: kéo timeline để tua,",
-    stepThreeFrame: "để bước từng khung hình,",
-    stepThreeThen: "rồi",
-    stepThreeLoop: "để lặp đúng một đoạn khó.",
-    securityLead: "API cài key chỉ nhận request từ",
-    securityTail:
-      ". Mở web qua IP LAN thì không lưu được key, trừ khi đặt",
-    gotoStudio: "Đi tới Studio AI",
-    tryLead: "Muốn xem thử? Mở",
-    tryTail: ". Bài mẫu không cần key.",
   },
 };
 
@@ -1179,51 +1144,6 @@ export function SetupPanel() {
       </section>
 
 
-      <section className="panel p-5">
-        <h2 className="text-sm font-semibold text-mist-100">{t.nextTitle}</h2>
-        <ol className="mt-3 space-y-2 text-sm text-mist-300">
-          <li>
-            <span className="font-mono text-brand-200">1.</span> {t.stepOneLead}{" "}
-            <Link href="/studio" className="text-gold-200 underline">
-              /studio
-            </Link>{" "}
-            {t.stepOneTail}
-          </li>
-          <li>
-            <span className="font-mono text-brand-200">2.</span> {t.stepTwo}
-          </li>
-          <li>
-            <span className="font-mono text-brand-200">3.</span> {t.stepThreeLead}{" "}
-            <Link href="/lesson" className="text-gold-200 underline">
-              /lesson
-            </Link>{" "}
-            {t.stepThreeScrub} <span className="kbd">,</span>{" "}
-            <span className="kbd">.</span> {t.stepThreeFrame}{" "}
-            <span className="kbd">[</span> <span className="kbd">]</span> {t.stepThreeThen}{" "}
-            <span className="kbd">\</span> {t.stepThreeLoop}
-          </li>
-        </ol>
-
-        <p className="mt-4 flex items-start gap-2 rounded-xl border border-ink-700/70 bg-ink-950/50 p-3 text-[11px] leading-relaxed text-mist-400">
-          <ShieldCheck className="mt-0.5 h-4 w-4 shrink-0 text-brand-300" />
-          {t.securityLead}{" "}
-          <code className="font-mono">localhost / 127.0.0.1</code>. {t.securityTail}{" "}
-          <code className="font-mono">ALLOW_REMOTE_KEY_ADMIN=true</code>.
-        </p>
-
-        <p className="mt-3 flex flex-wrap items-center gap-3 text-xs text-mist-400">
-          <Link href="/studio" className="btn-ghost">
-            <CirclePlay className="h-4 w-4" /> {t.gotoStudio}
-          </Link>
-          <span>
-            {t.tryLead}{" "}
-            <Link href="/lesson" className="text-brand-200 underline">
-              /lesson
-            </Link>
-            {t.tryTail}
-          </span>
-        </p>
-      </section>
     </div>
   );
 }
