@@ -49,12 +49,12 @@ export const DEFAULT_VOICE: LessonVoiceId = "vi-VN-HoaiMyNeural";
  * on the voice id.
  *
  * A local voice id is written `provider:target` — `piper:vi_VN-vais1000-medium`,
- * `vieneu:Hải Đăng`, `vtts:NF` — so a saved lesson remembers not just which
+ * `vieneu:nano:Hải Đăng` — so a saved lesson remembers not just which
  * voice but which program has to speak it. The catalogue above is a fixed list;
  * this half is discovered at runtime, because which of these voices exist depends
  * on what the teacher has installed (`src/lib/server/local-voices.ts`).
  */
-export const LOCAL_PROVIDERS = ["piper", "vieneu", "vtts"] as const;
+export const LOCAL_PROVIDERS = ["piper", "vieneu"] as const;
 
 export type LocalProvider = (typeof LOCAL_PROVIDERS)[number];
 

@@ -2,18 +2,13 @@ import { mkdir, readFile, rename, writeFile } from "node:fs/promises";
 import { join } from "node:path";
 
 /**
- * Which engine speaks the narration, and the one key that lets a gated model in.
+ * Which engine speaks the narration.
  *
  * Two settings, one file:
  *
- *   - `engine`   — `local` reads on this machine, `cloud` uses the hosted voice
+ *   - `engine` — `local` reads on this machine, `cloud` uses the hosted voice
  *                  service. Local is the default because it is the one that cannot
  *                  fail for a reason the teacher cannot fix.
- *   - `hfToken`  — some local models are published on Hugging Face behind a gate.
- *                  v-tts is one of them: without a token its weights cannot be
- *                  downloaded and the engine cannot speak. A read-only public token
- *                  for public models is all that is needed, and it stays on this
- *                  machine in `data/`, which is gitignored.
  *
  * Written to `data/tts-settings.json` rather than to the AI settings file: this is a
  * choice about speech, not about a model, and the two are read by different parts of
@@ -28,7 +23,6 @@ export const DEFAULT_ENGINE: TtsEngine = "local";
 
 export interface TtsConfig {
   engine: TtsEngine;
-  hfToken: string;
 }
 
 export function isTtsEngine(value: unknown): value is TtsEngine {
@@ -49,16 +43,14 @@ export async function readTtsConfig(): Promise<TtsConfig> {
   try {
     const raw = JSON.parse(await readFile(SETTINGS_FILE, "utf8")) as {
       engine?: unknown;
-      hfToken?: unknown;
     };
     cached = {
       engine: isTtsEngine(raw.engine) ? raw.engine : DEFAULT_ENGINE,
-      hfToken: typeof raw.hfToken === "string" ? raw.hfToken.trim() : "",
     };
   } catch {
     // No file yet — a fresh clone, or a machine that has never spoken. Local is
     // the default and needs no setup beyond the voice itself.
-    cached = { engine: DEFAULT_ENGINE, hfToken: "" };
+    cached = { engine: DEFAULT_ENGINE };
   }
   return cached;
 }
@@ -81,11 +73,6 @@ export async function readTtsEngine(): Promise<TtsEngine> {
 
 export async function writeTtsEngine(engine: TtsEngine): Promise<TtsEngine> {
   return (await writeTtsConfig({ engine })).engine;
-}
-
-/** The Hugging Face token, or "" when the teacher has not set one. */
-export async function readHfToken(): Promise<string> {
-  return (await readTtsConfig()).hfToken;
 }
 
 /** Test seam, and what a settings change calls to forget the cached answer. */

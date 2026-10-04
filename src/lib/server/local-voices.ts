@@ -2,12 +2,12 @@
  * The local voice engines, as far as the app is concerned.
  *
  * Piper is the one this project started with: one Vietnamese voice, small, fast.
- * VieNeu-TTS and v-tts are two more Vietnamese models that run on the same
- * machine, and between them they bring something Piper cannot: a choice of
- * speakers. A teacher picking a voice for a lesson is picking a person, and
- * "Nam Minh chậm" or "Hải Đăng" is a better answer than one voice at three tempos.
+ * VieNeu-TTS is one more Vietnamese model that runs on the same machine, and
+ * it brings something Piper cannot: a choice of speakers. A teacher picking a
+ * voice for a lesson is picking a person, and "Hải Đăng" is a better answer
+ * than one voice at three tempos.
  *
- * All three are Python, all three are installed into the project's own venv
+ * Both are Python, both are installed into the project's own venv
  * (`run.bat` creates it, `EDUSGPT_PYTHON` points at it), and all three are
  * driven by one script per engine under `scripts/local-voice/` with the same
  * contract: sentences in, one WAV and per-sentence durations out.
@@ -35,7 +35,6 @@ import {
   resolvePython,
   wordsFromTimings,
 } from "./tts-local";
-import { readHfToken } from "./tts-settings";
 
 const SCRIPT_DIR = join(process.cwd(), "scripts", "local-voice");
 
@@ -74,10 +73,6 @@ const PROVIDER_META: Record<LocalProvider, { label: string; pip: string }> = {
   vieneu: {
     label: "VieNeu-TTS",
     pip: "vieneu",
-  },
-  vtts: {
-    label: "v-tts",
-    pip: "git+https://github.com/tronghieuit/v-tts.git",
   },
 };
 
@@ -128,16 +123,6 @@ const VIENEU_TURBO_VOICES = [
   "Thùy Dung",
 ];
 
-const VTTS_SPEAKERS = ["NF", "SF", "NM1", "SM", "NM2"];
-
-const VTTS_NOTES: Record<string, string> = {
-  NF: "nữ Bắc",
-  SF: "nữ Nam",
-  NM1: "nam Bắc",
-  SM: "nam Nam",
-  NM2: "nam Bắc (thứ hai)",
-};
-
 type Cache = { at: number; voices: LocalVoiceOption[]; providers: LocalProviderStatus[] };
 let cached: Cache | null = null;
 
@@ -150,7 +135,7 @@ export function forgetLocalVoices(): void {
  *
  * Probing spawns a Python process per engine, so the answer is cached for a
  * minute. Every engine is probed even after one fails, because the point of the
- * list is to show which of three buttons to press, not to report the first
+ * list is to show which of two buttons to press, not to report the first
  * problem found.
  */
 export async function localVoiceCatalog(
@@ -199,27 +184,6 @@ export async function localVoiceCatalog(
     label: PROVIDER_META.vieneu.label,
   });
   voices.push(...vieneuVoices);
-
-  const vtts = await probeProvider(python, "v_tts");
-  const vttsVoices = vtts.ok
-    ? VTTS_SPEAKERS.map((speaker) => ({
-        id: `vtts:${speaker}` as LessonVoiceId,
-        label: `${speaker} (v-tts)`,
-        provider: "vtts" as const,
-        target: speaker,
-        language: "vi",
-        note: VTTS_NOTES[speaker],
-      }))
-    : [];
-  providers.push({
-    provider: "vtts",
-    installed: vtts.ok,
-    reason: vtts.ok ? "" : "Chưa cài v-tts trong venv. Bấm “Cài” ở /setup.",
-    voices: vttsVoices.length,
-    pip: PROVIDER_META.vtts.pip,
-    label: PROVIDER_META.vtts.label,
-  });
-  voices.push(...vttsVoices);
 
   cached = { at: Date.now(), voices, providers };
   return { voices, providers };
@@ -309,7 +273,7 @@ export interface LocalNarrationResult {
  * weights on start-up, and paying that once per slide instead of once per lesson
  * would be the difference between a lesson that previews and one that does not.
  * The sentence durations the model reports are spread across the words to build
- * the caption's timings — none of the three engines measures word boundaries.
+ * the caption's timings — neither engine measures word boundaries.
  */
 export async function speakLocalProvider(
   text: string,
@@ -329,9 +293,6 @@ export async function speakLocalProvider(
 
   try {
     await writeFile(input, JSON.stringify(sentences), "utf8");
-    // A gated model on Hugging Face needs the teacher's read-only token; the
-    // environment is inherited so the other engines are unaffected.
-    const token = await readHfToken();
     const result = await runPython(python, scriptFor(option), argsFor(option, [
       "--input",
       input,
@@ -339,7 +300,7 @@ export async function speakLocalProvider(
       wav,
       "--align",
       align,
-    ]), token);
+    ]));
     if (result.code !== 0) {
       throw new Error(result.tail || `${option.provider} không đọc được.`);
     }
@@ -362,12 +323,7 @@ export async function speakLocalProvider(
 }
 
 function scriptFor(option: LocalVoiceOption): string {
-  const file =
-    option.provider === "vieneu"
-      ? "vieneu_speak.py"
-      : option.provider === "vtts"
-        ? "vtts_speak.py"
-        : "piper_speak.py";
+  const file = option.provider === "vieneu" ? "vieneu_speak.py" : "piper_speak.py";
   return join(SCRIPT_DIR, file);
 }
 
@@ -377,9 +333,6 @@ function argsFor(option: LocalVoiceOption, common: string[]): string[] {
     // speaker. Nano by default because it is the one a laptop can afford.
     const [, mode = "nano", ...rest] = option.id.split(":");
     return ["--mode", mode === "turbo" ? "turbo" : "nano", "--voice", rest.join(":"), ...common];
-  }
-  if (option.provider === "vtts") {
-    return ["--speaker", option.target, ...common];
   }
   return ["--model", option.target, ...common];
 }
@@ -426,15 +379,12 @@ async function runPython(
   python: { command: string; args: string[] },
   script: string,
   args: string[],
-  /** Hugging Face token for the gated models; "" leaves the environment alone. */
-  hfToken = "",
 ): Promise<{ code: number; tail: string }> {
   return new Promise((resolve) => {
     let child;
     try {
       child = spawn(python.command, [...python.args, script, ...args], {
         windowsHide: true,
-        ...(hfToken ? { env: { ...process.env, HF_TOKEN: hfToken } } : {}),
       });
     } catch (error) {
       resolve({ code: -1, tail: String(error) });

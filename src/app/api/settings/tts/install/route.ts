@@ -15,18 +15,18 @@ export const maxDuration = 900;
 /**
  * One click, and this machine can speak for itself.
  *
- * Three engines, one per provider id: Piper (the original, one Vietnamese
- * voice), VieNeu-TTS (25 speakers at 48 kHz) and v-tts (five speakers, small
- * enough for any laptop). All of them are Python, and all of them go into the
- * project's own venv — `resolvePython` prefers `EDUSGPT_PYTHON`, which `run.bat`
- * points at `.runtime\venv`, so nothing is installed into the machine's Python
- * and nothing the teacher already had can be broken.
+ * Two engines, one per provider id: Piper (the original, one Vietnamese
+ * voice) and VieNeu-TTS (dozens of speakers, torch-free ONNX on CPU). Both
+ * are Python, and both go into the project's own venv — `resolvePython`
+ * prefers `EDUSGPT_PYTHON`, which `run.bat` points at `.runtime\venv`, so
+ * nothing is installed into the machine's Python and nothing the teacher
+ * already had can be broken.
  *
  * The output is streamed line by line as server-sent events because both steps
- * take a while — pip resolving v-tts pulls a full PyTorch, and a 60 MB voice is
- * not instant — and a spinner with no words on it reads as a hang.
+ * take a while — pip resolving on a cold machine, and a 60 MB voice, are not
+ * instant — and a spinner with no words on it reads as a hang.
  *
- * Query: `?package=piper` (default), `vieneu`, `vtts`.
+ * Query: `?package=piper` (default), `vieneu`.
  */
 const VOICE = "vi_VN-vais1000-medium";
 const VOICE_DIR = join(process.cwd(), "data", "voices");
@@ -42,16 +42,11 @@ const PACKAGES: Record<
     blurb: "Cài VieNeu-TTS (không cần PyTorch, chạy bằng ONNX)…",
     needsVoice: false,
   },
-  vtts: {
-    pip: "git+https://github.com/tronghieuit/v-tts.git",
-    blurb: "Cài v-tts (kéo cả PyTorch, lần đầu hơi lâu)…",
-    needsVoice: false,
-  },
 };
 
 function requestedProvider(request: NextRequest): LocalProvider {
   const value = new URL(request.url).searchParams.get("package");
-  return value === "vieneu" || value === "vtts" ? value : "piper";
+  return value === "vieneu" ? value : "piper";
 }
 
 export async function POST(request: NextRequest) {

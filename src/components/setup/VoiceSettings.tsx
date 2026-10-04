@@ -6,7 +6,6 @@ import {
   Cloud,
   Cpu,
   Download,
-  KeyRound,
   LoaderCircle,
   Play,
   RefreshCw,
@@ -60,16 +59,10 @@ const COPY = {
     fallbackNotice:
       "The local voice could not read it, so the online voice was used instead.",
     providersTitle: "Voices on this machine",
-    providersNote: "Three engines, all of them free and all of them running inside this project's own Python environment. Install one, then pick any of its voices in the studio.",
+    providersNote: "Two engines, both free and both running inside this project's own Python environment. Install one, then pick any of its voices in the studio.",
     providerCount: "{count} voices",
     providerInstall: "Install",
     providerInstalling: "Installing…",
-    providerToken: "needs a Hugging Face token",
-    tokenTitle: "Hugging Face token",
-    tokenNote: "v-tts keeps its weights behind a gate, so it needs a free read-only token from huggingface.co to download them. The other two engines do not.",
-    tokenSave: "Save token",
-    tokenSaved: "Token saved.",
-    tokenPlaceholder: "hf_…",
     switched: "Switched",
   },
   vi: {
@@ -102,16 +95,10 @@ const COPY = {
     fallbackNotice:
       "Giọng trên máy không đọc được, đã dùng giọng trên mạng thay thế.",
     providersTitle: "Giọng có trên máy này",
-    providersNote: "Ba bộ đọc, đều miễn phí và đều chạy trong môi trường Python riêng của project. Cài bộ nào thì dùng được các giọng của bộ đó trong Studio.",
+    providersNote: "Hai bộ đọc, đều miễn phí và đều chạy trong môi trường Python riêng của project. Cài bộ nào thì dùng được các giọng của bộ đó trong Studio.",
     providerCount: "{count} giọng",
     providerInstall: "Cài",
     providerInstalling: "Đang cài…",
-    providerToken: "cần token Hugging Face",
-    tokenTitle: "Token Hugging Face",
-    tokenNote: "v-tts giấu trọng số sau một cổng, nên cần token miễn phí (chỉ đọc) từ huggingface.co mới tải được. Hai bộ còn lại không cần.",
-    tokenSave: "Lưu token",
-    tokenSaved: "Đã lưu token.",
-    tokenPlaceholder: "hf_…",
     switched: "Đã đổi",
   },
 } satisfies Record<string, Record<string, string>>;
@@ -135,7 +122,7 @@ interface LocalStatus {
 }
 
 interface ProviderStatus {
-  provider: "piper" | "vieneu" | "vtts";
+  provider: "piper" | "vieneu";
   installed: boolean;
   reason: string;
   voices: number;
@@ -148,7 +135,6 @@ interface SettingsPayload {
   default: Engine;
   local: LocalStatus;
   providers?: ProviderStatus[];
-  hfToken?: string;
 }
 
 const SAMPLE = "Bài học hôm nay nói về định luật bảo toàn năng lượng.";
@@ -158,8 +144,6 @@ export function VoiceSettings() {
   const [engine, setEngine] = useState<Engine | null>(null);
   const [local, setLocal] = useState<LocalStatus | null>(null);
   const [providers, setProviders] = useState<ProviderStatus[]>([]);
-  const [token, setToken] = useState("");
-  const [tokenSaved, setTokenSaved] = useState(false);
   const [busy, setBusy] = useState<"save" | "install" | "preview" | null>(null);
   const [log, setLog] = useState<string[]>([]);
   const [note, setNote] = useState<string | null>(null);
@@ -173,7 +157,6 @@ export function VoiceSettings() {
       setEngine(payload.engine);
       setLocal(payload.local);
       setProviders(payload.providers ?? []);
-      setToken(payload.hfToken ?? "");
     } catch {
       /* the panel keeps the last answer */
     }
@@ -210,7 +193,7 @@ export function VoiceSettings() {
    * from a hang. The route sends a line per stage, so the log fills in as the work
    * does and a teacher can tell a slow download from a failed one.
    */
-  const install = useCallback(async (provider: "piper" | "vieneu" | "vtts" = "piper") => {
+  const install = useCallback(async (provider: "piper" | "vieneu" = "piper") => {
     setBusy("install");
     setLog([]);
     setNote(null);
@@ -262,24 +245,6 @@ export function VoiceSettings() {
     }
   }, [refresh]);
 
-  /**
-   * The token is written next to the engine, in the same file and the same
-   * request: a teacher who pastes a key expects it to be used, not stored
-   * politely somewhere else.
-   */
-  const saveToken = useCallback(async () => {
-    setBusy("save");
-    try {
-      await fetch("/api/settings/tts", {
-        method: "POST",
-        headers: { "content-type": "application/json" },
-        body: JSON.stringify({ engine: engine ?? "local", hfToken: token }),
-      });
-      setTokenSaved(true);
-    } finally {
-      setBusy(null);
-    }
-  }, [engine, token]);
   /** One sentence through the chosen engine, so the answer is heard not read. */
   const preview = useCallback(async () => {
     setBusy("preview");
@@ -440,11 +405,11 @@ export function VoiceSettings() {
         ) : null}
       </div>
       {/*
-        * The three local engines. Piper is the one this project started with and
-        * the smallest; the other two bring the choice of speakers that a single
+        * The two local engines. Piper is the one this project started with and
+        * the smallest; VieNeu-TTS brings the choice of speakers that a single
         * voice cannot. Each row installs on its own, because the sizes are wildly
-        * different and nobody should download a gigabyte to try a voice they do
-        * not like.
+        * different and nobody should download hundreds of megabytes to try a
+        * voice they do not like.
         */}
       <div className="rounded-xl border border-ink-700 bg-ink-950/50 px-3.5 py-3">
         <div>
@@ -466,9 +431,6 @@ export function VoiceSettings() {
               <span className="chip">
                 {t.providerCount.replace("{count}", String(provider.voices))}
               </span>
-              {provider.provider === "vtts" ? (
-                <span className="chip text-gold-300">{t.providerToken}</span>
-              ) : null}
               <button
                 type="button"
                 onClick={() => void install(provider.provider)}
@@ -490,34 +452,8 @@ export function VoiceSettings() {
             </div>
           ))}
         </div>
-
-        <div className="mt-3 border-t border-ink-800 pt-3">
-          <p className="text-xs font-semibold text-mist-100">{t.tokenTitle}</p>
-          <p className="mt-1 text-[11px] leading-relaxed text-mist-400">{t.tokenNote}</p>
-          <div className="mt-2 flex flex-wrap gap-2">
-            <input
-              type="password"
-              value={token}
-              onChange={(event) => {
-                setToken(event.target.value);
-                setTokenSaved(false);
-              }}
-              placeholder={t.tokenPlaceholder}
-              spellCheck={false}
-              className="min-w-0 flex-1 rounded-lg border border-ink-700 bg-ink-950 px-3 py-2 font-mono text-xs text-mist-100"
-            />
-            <button
-              type="button"
-              onClick={() => void saveToken()}
-              className="btn-ghost text-xs"
-              disabled={busy !== null}
-            >
-              <KeyRound className="h-3.5 w-3.5" /> {t.tokenSave}
-            </button>
-          </div>
-          {tokenSaved ? <p className="mt-1 text-[11px] text-brand-300">{t.tokenSaved}</p> : null}
-        </div>
-      </div>    </section>
+      </div>
+    </section>
   );
 }
 
