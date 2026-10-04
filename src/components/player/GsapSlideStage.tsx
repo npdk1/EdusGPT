@@ -423,11 +423,17 @@ export function GsapSlideStage({
                   pass below has a single element to measure and scale. The page
                   number stays outside it: it is chrome pinned to the corner, and
                   scaling it with the content would move it. */}
-              <div className="scene-fit">
+              <div
+                className={`scene-fit${
+                  scene.simulation3d || scene.kind === "simulation3d" || scene.quiz
+                    ? " scene-has-interactive"
+                    : ""
+                }`}
+              >
               {/* Measured against the slide's own width (container queries), not
                   a fixed cap: a fullscreen slide is twice the width of the
                   embedded one and must use the space, not sit in the corner. */}
-              <header className="relative z-10 w-full max-w-[86%]">
+              <header className="scene-head relative z-10 w-full">
                 {/* The kicker. In this style the scene kind is a small caps label
                     above the title, not a coloured pill — it should read as
                     metadata, not as a button. The icon leads it: one glyph that
@@ -455,7 +461,7 @@ export function GsapSlideStage({
                   formula *and* four bullets genuinely does not fit a 16:9 card,
                   and the honest response is to tighten the gaps rather than lose
                   the last line off the bottom edge. */}
-              <ul className="scene-body relative z-10 grid w-full max-w-[86%] gap-x-[6%] sm:grid-cols-2">
+              <ul className="scene-body relative z-10 grid w-full gap-x-[6%] sm:grid-cols-2">
                 {scene.bullets.map((bullet, bulletIndex) => (
                   <li
                     key={bullet}
@@ -488,13 +494,13 @@ export function GsapSlideStage({
               ) : null}
 
               {scene.kind === "simulation3d" || scene.simulation3d ? (
-                <div className="relative z-10 my-2 flex justify-center">
+                <div className="scene-interactive-panel relative z-10 my-2">
                   <InteractiveSimulation config={scene.simulation3d} />
                 </div>
               ) : null}
 
               {scene.kind === "quiz" && scene.quiz ? (
-                <div className="relative z-10 my-2 max-w-2xl">
+                <div className="scene-interactive-panel scene-interactive-quiz relative z-10 my-2">
                   <InteractiveQuiz
                     question={scene.quiz.question}
                     options={scene.quiz.options}

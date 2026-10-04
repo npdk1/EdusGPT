@@ -181,6 +181,20 @@ export function SlideSurface({
   })();
 
   /**
+   * Something on this slide the reader operates rather than reads: a 3D model, a
+   * draggable answer. Those get the words in a column and the control beside
+   * them, instead of being stacked under a column of text with nothing left.
+   * Placed blocks bring their own geometry, so they are left alone.
+   */
+  const interactive =
+    !placed &&
+    Boolean(
+      scene.simulation3d ||
+        scene.kind === "simulation3d" ||
+        (scene.kind === "quiz" && scene.quiz),
+    );
+
+  /**
    * The fit pass: a slide with more text than its paper can hold steps the type
    * ladder down until it fits, rather than letting the last bullet run off the
    * bottom. The picture is part of the column and steps with it.
@@ -268,7 +282,7 @@ export function SlideSurface({
   const text = (
     <>
       {scene.bullets.length > 0 ? (
-        <ul className="scene-body relative z-10 grid w-full max-w-[86%] gap-x-[6%] sm:grid-cols-2">
+        <ul className="scene-body relative z-10 grid w-full gap-x-[6%] sm:grid-cols-2">
           {scene.bullets.map((bullet, bulletIndex) => (
             <li
               key={bullet}
@@ -284,7 +298,7 @@ export function SlideSurface({
       ) : null}
 
       {scene.steps?.length ? (
-        <ol className="scene-steps relative z-10 grid w-full max-w-[86%] gap-x-[6%] sm:grid-cols-2">
+        <ol className="scene-steps relative z-10 grid w-full gap-x-[6%] sm:grid-cols-2">
           {scene.steps.map((step, stepIndex) => (
             <li
               key={step}
@@ -306,13 +320,13 @@ export function SlideSurface({
   const figure = (
     <>
       {scene.kind === "simulation3d" || scene.simulation3d ? (
-        <div className="relative z-10 my-2 flex justify-center">
+        <div className="scene-interactive-panel relative z-10 my-2">
           <InteractiveSimulation config={scene.simulation3d} />
         </div>
       ) : null}
 
       {scene.kind === "quiz" && scene.quiz ? (
-        <div className="relative z-10 my-2 max-w-2xl">
+        <div className="scene-interactive-panel scene-interactive-quiz relative z-10">
           <InteractiveQuiz
             question={scene.quiz.question}
             options={scene.quiz.options}
@@ -340,7 +354,7 @@ export function SlideSurface({
   );
 
   const head = (
-    <header className="scene-head relative z-10 w-full max-w-[86%]">
+    <header className="scene-head relative z-10 w-full">
       <span className="scene-kicker">
         {KickerIcon ? (
           <KickerIcon className="scene-kicker-icon" aria-hidden="true" />
@@ -429,7 +443,7 @@ export function SlideSurface({
           <div
             className={`scene-fit ${
               placed ? "scene-layout-blocks" : `scene-layout-${layout}`
-            }`}
+            }${interactive ? " scene-has-interactive" : ""}`}
           >
             {placed ? (
               <div className="scene-blocks">

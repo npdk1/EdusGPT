@@ -554,6 +554,15 @@
     gap: 1.1cqw;
     padding: 3.4cqw 5.5cqw var(--slide-caption-track);
     /*
+     * The type ladder's starting point.
+     *
+     * Declared here rather than left to the fit pass alone: a `calc(... *
+     * var(--slide-fit, 1))` whose custom property is *set but empty* does not
+     * fall back to the 1 — the declaration is simply invalid and dropped, which
+     * is how an interactive panel ended up 127px wide instead of 36cqw.
+     */
+    --slide-fit: 1;
+    /*
      * `safe center`, not `center`.
      *
      * A slide that outgrows its card used to be centred anyway, and centring an
@@ -657,6 +666,18 @@
    */
   .scene-body {
     flex-shrink: 0;
+    /*
+     * The measure of the words, in the stylesheet rather than as a `max-w-[86%]`
+     * utility on the element: a Tailwind utility sits in the utilities layer and
+     * outranks every rule here, so the interactive layout — where the words take
+     * a column and must fill it — could not have widened them.
+     */
+    max-width: 86%;
+  }
+
+  .scene-head {
+    flex-shrink: 0;
+    max-width: 86%;
   }
 
   /* A hairline instead of a filled card. Same alignment for the eye, none of the
@@ -686,6 +707,7 @@
      longer is a paragraph, not a step. */
   .scene-steps {
     flex-shrink: 0;
+    max-width: 86%;
   }
 
   .scene-step {
@@ -1916,8 +1938,96 @@
     height: calc(10cqw * var(--slide-fit, 1));
   }
 
-  .scene-card[data-no-figure] .scene-sim {
+  /*
+   * The model on an interactive slide is the content, not decoration, so the
+   * fit pass is not allowed to drop it: only a plain figure slide can lose its
+   * picture.
+   */
+  .scene-card[data-no-figure] .scene-fit:not(.scene-has-interactive) .scene-sim {
     display: none;
+  }
+
+  /*
+   * A slide the reader operates rather than reads.
+   *
+   * A 3D model, a draggable answer, anything with a control in it: stacked under
+   * the words it had nothing left to be. The column wanted its full height, the
+   * bullets wanted theirs, and the card clipped one of them — which is why a
+   * simulation slide used to end with the model hanging off the bottom edge.
+   *
+   * So the head keeps the full width across the top, and what is left becomes two
+   * columns: the words on the left, the interactive panel on the right taking the
+   * height that is actually there. A model that is a fifth of the slide and a row
+   * of three numbers is the arrangement a teacher would draw by hand.
+   */
+  .scene-fit.scene-has-interactive {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    grid-template-rows: auto minmax(0, 1fr);
+    column-gap: 3cqw;
+    align-items: start;
+    /*
+     * Fill the card rather than size to content.
+     *
+     * Left as `auto` the second row was exactly as tall as the taller column —
+     * three bullets — which left the model 95px tall on a full-size slide and
+     * 37px of canvas inside it. A slide with something to operate in it wants the
+     * leftover height handed to the control, which is the whole arrangement.
+     */
+    height: 100%;
+  }
+
+  .scene-fit.scene-has-interactive > .scene-head {
+    grid-column: 1 / -1;
+    max-width: none;
+  }
+
+  .scene-fit.scene-has-interactive > .scene-body,
+  .scene-fit.scene-has-interactive > .scene-steps {
+    grid-column: 1;
+    grid-row: 2;
+    align-self: start;
+    max-width: none;
+  }
+
+  /* The panel cell. `stretch` is what gives the model the full height of the
+     row, and the floor keeps it worth looking at on a small slide: below about a
+     seventh of the width, a model is a smudge and the words are better alone. */
+  .scene-has-interactive > .scene-interactive-panel {
+    grid-column: 2;
+    grid-row: 2;
+    align-self: stretch;
+    display: flex;
+    margin-block: 0;
+    /*
+     * A share of the slide's width, no percentage cap: the percentage resolved
+     * against the grid column this very width had just sized, and clamped the
+     * panel to half of what it asked for — a 286px cell holding a 149px model.
+     */
+    width: calc(36cqw * var(--slide-fit, 1));
+    min-width: 18cqw;
+    min-height: calc(14cqw * var(--slide-fit, 1));
+  }
+
+  /* An answer list is text, so it needs a wider cell than a picture does. */
+  .scene-has-interactive > .scene-interactive-quiz {
+    width: calc(44cqw * var(--slide-fit, 1));
+    /* A long answer list scrolls inside its cell rather than growing the row and
+       pushing the slide back into an overflow. */
+    max-height: 100%;
+    overflow-y: auto;
+  }
+
+  .scene-has-interactive > .scene-interactive-panel > .scene-sim {
+    width: 100%;
+    height: 100%;
+  }
+
+  /* Height now comes from the cell rather than from a share of the slide width,
+     so the canvas fills whatever the row left over. */
+  .scene-has-interactive .scene-sim-canvas {
+    height: auto;
+    flex: 1 1 auto;
   }
 
   .text-gradient-warm {
