@@ -488,7 +488,7 @@ export function GsapSlideStage({
               ) : null}
 
               {scene.kind === "simulation3d" || scene.simulation3d ? (
-                <div className="relative z-10 my-2 max-w-xl">
+                <div className="relative z-10 my-2 flex justify-center">
                   <InteractiveSimulation config={scene.simulation3d} />
                 </div>
               ) : null}

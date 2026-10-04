@@ -201,7 +201,10 @@ export function SlideSurface({
     const card = stage.querySelector<HTMLElement>(".scene-card");
     const content = card?.querySelector<HTMLElement>(".scene-fit");
     if (!card || !content) return;
-    const picture = card.querySelector<HTMLElement>(".scene-image");
+    // The picture, and the 3D model with it: both are the one thing on a slide that
+    // may be asked to give way, and both are sized in the same `cqw` unit, so
+    // they answer to the same escape steps below.
+    const picture = card.querySelector<HTMLElement>(".scene-image, .scene-sim");
     const fit = () => {
       card.style.setProperty("--slide-fit", "1");
       card.removeAttribute("data-no-figure");
@@ -303,7 +306,7 @@ export function SlideSurface({
   const figure = (
     <>
       {scene.kind === "simulation3d" || scene.simulation3d ? (
-        <div className="relative z-10 my-2 max-w-xl">
+        <div className="relative z-10 my-2 flex justify-center">
           <InteractiveSimulation config={scene.simulation3d} />
         </div>
       ) : null}

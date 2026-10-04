@@ -50,6 +50,20 @@ export function InteractiveSimulation({ config, className }: InteractiveSimulati
     renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
     container.innerHTML = "";
     container.appendChild(renderer.domElement);
+    // The drawing buffer follows the element, the element follows the slide. The
+    // fit pass resizes this panel whenever it steps the type down, and a canvas
+    // that kept its first size was left stretched or cropped — a blurry model
+    // that no longer matched the camera's aspect ratio.
+    const resize = () => {
+      const nextWidth = container.clientWidth;
+      const nextHeight = container.clientHeight;
+      if (nextWidth < 8 || nextHeight < 8) return;
+      renderer.setSize(nextWidth, nextHeight, false);
+      camera.aspect = nextWidth / nextHeight;
+      camera.updateProjectionMatrix();
+    };
+    const observer = new ResizeObserver(resize);
+    observer.observe(container);
 
     const group = new THREE.Group();
     scene.add(group);
@@ -101,6 +115,7 @@ export function InteractiveSimulation({ config, className }: InteractiveSimulati
 
       return () => {
         cancelAnimationFrame(animId);
+        observer.disconnect();
         renderer.dispose();
       };
     } else {
@@ -141,21 +156,33 @@ export function InteractiveSimulation({ config, className }: InteractiveSimulati
 
       return () => {
         cancelAnimationFrame(animId);
+        observer.disconnect();
         renderer.dispose();
       };
     }
   }, [config, param]);
 
   return (
-    <div className={`relative flex flex-col items-center justify-center rounded-2xl border border-ink-700/80 bg-ink-950/80 p-4 ${className ?? ""}`}>
+    <div
+      className={`scene-sim relative min-h-0 overflow-hidden rounded-2xl border border-ink-700/80 bg-ink-950/80 ${className ?? ""}`}
+    >
       <div className="absolute top-3 left-4 z-10 flex items-center gap-2 text-xs font-semibold text-brand-300">
         <span className="inline-block h-2 w-2 rounded-full bg-brand-400 animate-pulse" />
         {t.simLabel}
       </div>
 
-      <div ref={containerRef} className="h-56 w-full cursor-grab active:cursor-grabbing" />
+      {/*
+       * The height comes from the stylesheet, in `cqw * var(--slide-fit)`, for
+       * the same reason the pictures are sized there: the slide's fit pass steps
+       * type down until the column fits, and a canvas with a fixed pixel height
+       * ignored every step and finished clipped by the bottom of the card.
+       */}
+      <div
+        ref={containerRef}
+        className="scene-sim-canvas w-full cursor-grab active:cursor-grabbing"
+      />
 
-      <div className="mt-2 flex w-full max-w-xs items-center gap-3 text-xs text-mist-300">
+      <div className="mt-2 flex w-full max-w-xs shrink-0 items-center gap-3 text-xs text-mist-300">
         <span>{fill(t.simSpeed, { value: param.toFixed(1) })}</span>
         <input
           type="range"

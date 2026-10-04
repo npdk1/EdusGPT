@@ -1857,6 +1857,69 @@
     font-size: 0.9cqw;
   }
 
+  /*
+   * The interactive 3D model, sized like the picture column.
+   *
+   * It was a fixed `h-56` canvas inside a `max-w-xl` box, which is the one thing
+   * on a slide that could not give way: the type stepped down through the whole
+   * ladder, the column stayed 224px tall, and the card clipped the model at the
+   * bottom edge. Everything here is `cqw * var(--slide-fit)` so the model shrinks
+   * with the words, and `min-height: 0` plus `flex: 0 1 auto` is what lets the
+   * fit pass squeeze it when even the smallest step is not enough.
+   */
+  .scene-sim {
+    /*
+     * The box itself, laid out here rather than with `flex` in the class list:
+     * a Tailwind `display` utility lives in the utilities layer, which outranks
+     * this one whatever its specificity, so `display: none` further down — the
+     * fit pass giving up its last square of room — would have had no effect.
+     */
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    /* Padding in `cqw` too: on a small slide a fixed 16px frame plus the slider
+       row is most of the room the model has left. */
+    padding: 1.2cqw;
+    width: calc(30cqw * var(--slide-fit, 1));
+    max-width: 46%;
+    flex: 0 1 auto;
+    min-height: 0;
+    z-index: 1;
+  }
+
+  .scene-sim-canvas {
+    /*
+     * The canvas track: a share of the slide's width, so a big slide gets a big
+     * model and an embedded one a small model rather than a thumbnail.
+     *
+     * `flex: 0 1 auto` and not `flex-1`: a zero basis makes the flex algorithm
+     * own this height and the `height` below is ignored — which is how a panel
+     * that had been given a percentage size ended up 300px tall again.
+     */
+    flex: 0 1 auto;
+    min-height: 0;
+    height: calc(15cqw * var(--slide-fit, 1));
+  }
+
+  .scene-sim canvas {
+    display: block;
+    width: 100%;
+    height: 100%;
+  }
+
+  .scene-card[data-small-figure] .scene-sim {
+    width: calc(20cqw * var(--slide-fit, 1));
+  }
+
+  .scene-card[data-small-figure] .scene-sim-canvas {
+    height: calc(10cqw * var(--slide-fit, 1));
+  }
+
+  .scene-card[data-no-figure] .scene-sim {
+    display: none;
+  }
+
   .text-gradient-warm {
     background-image: linear-gradient(
       100deg,
