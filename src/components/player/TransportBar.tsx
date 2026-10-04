@@ -131,7 +131,9 @@ export function TransportBar({
   }, [subscribeClock]);
 
   return (
-    <div className="flex flex-wrap items-center gap-2">
+    // One row on a desktop for the same reason as the toolbar above: a wrapped
+    // transport bar cost the slide half its height. Sideways scroll, not taller.
+    <div className="flex flex-wrap items-center gap-2 md:flex-nowrap md:overflow-x-auto md:[&>*]:shrink-0">
       <button
         type="button"
         onClick={() => timebase.seek(0)}

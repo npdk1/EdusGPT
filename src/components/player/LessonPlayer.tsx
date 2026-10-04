@@ -398,10 +398,16 @@ export function LessonPlayer({ initialLesson, samples }: LessonPlayerProps) {
       {/* min-w-0 on both children: without it a wide descendant (a long chip, a
           figure, a chart) refuses to shrink and pushes the second column off
           the screen instead of scrolling inside its own column. */}
-      <div className="grid min-w-0 gap-5 md:min-h-0 md:flex-1 md:grid-cols-[minmax(0,1fr)_23rem] md:grid-rows-[minmax(0,1fr)] md:gap-4">
-        <div className="flex min-w-0 flex-col space-y-4 md:min-h-0 md:overflow-y-auto">
+      <div className="grid min-w-0 gap-5 md:min-h-0 md:flex-1 md:grid-cols-[minmax(0,1fr)_20rem] md:grid-rows-[minmax(0,1fr)] md:gap-4">
+        {/*
+          One row on a desktop, wrapping only on a phone: every wrapped row
+          costs the stage ~40px of height, and two wrapped bars were what pushed
+          the timeline below the fold. Nothing is removed — the row scrolls
+          sideways on a narrow window instead of growing taller.
+        */}
+        <div className="flex min-w-0 flex-col space-y-4 md:min-h-0 md:gap-3 md:space-y-0 md:overflow-y-auto">
           {/* toolbar */}
-          <div className="panel flex flex-wrap items-center gap-2.5 p-3">
+          <div className="panel flex flex-wrap items-center gap-2.5 p-3 md:flex-nowrap md:gap-2 md:overflow-x-auto md:p-2 md:[&>*]:shrink-0">
             <label className="flex items-center gap-2">
               <span className="sr-only">{t.playerLessonLabel}</span>
               <select
@@ -541,7 +547,7 @@ export function LessonPlayer({ initialLesson, samples }: LessonPlayerProps) {
           </div>
 
           {/* transport + timeline */}
-          <div className="panel space-y-3 p-4">
+          <div className="panel space-y-3 p-4 md:space-y-2 md:p-3">
             <TransportBar
               timebase={timebase}
               loop={loop}

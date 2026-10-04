@@ -402,10 +402,32 @@
    * slide keeps its full width and spills below the fold — which on a player this
    * tall means the caption sits outside the frame.
    */
+  /*
+   * Column, not row: this panel holds the stage's own header bar, the slide,
+   * then the thin progress rail. As a row the header was squeezed into a 135px
+   * strip off the edge of the frame and the rail collapsed to zero width —
+   * which is exactly how the player looked broken. The slide centres itself
+   * while the bars stretch edge to edge.
+   */
   .stage-fills > .panel {
     display: flex;
-    align-items: center;
+    flex-direction: column;
+    align-items: stretch;
     justify-content: center;
+  }
+
+  .stage-fills > .panel > .slide-fitted {
+    align-self: center;
+  }
+
+  /*
+   * The bars keep their own height: as flex items they would otherwise shrink
+   * to nothing once the slide takes its share — which is how the progress rail
+   * measured 0px tall.
+   */
+  .stage-fills > .panel > .stage-bar,
+  .stage-fills > .panel > .stage-rail {
+    flex: none;
   }
 
   /*
@@ -413,10 +435,14 @@
    * width from its own content — and its content is sized in `cqw`, which is
    * itself measured from this width. The loop resolves downwards and the slide
    * collapses to its min-content width instead of the one asked for.
+   *
+   * The 60px reserve is the stage's own header bar plus the progress rail: the
+   * slide answers to the height left after them, not the whole stage, or it
+   * prints over the rail the way it used to print over the caption.
    */
   .stage-fills .slide-fitted {
     flex: 0 0 auto;
-    width: min(100%, calc(100cqh * 16 / 9));
+    width: min(100%, calc((100cqh - 60px) * 16 / 9));
   }
 
   .stage-fullscreen:fullscreen .slide-fitted {

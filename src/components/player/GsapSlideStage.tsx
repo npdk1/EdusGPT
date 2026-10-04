@@ -403,7 +403,7 @@ export function GsapSlideStage({
 
   return (
     <div className="panel overflow-hidden">
-      <div className="flex flex-wrap items-center justify-between gap-3 border-b border-ink-700/70 px-4 py-2.5">
+      <div className="stage-bar flex flex-wrap items-center justify-between gap-3 border-b border-ink-700/70 px-4 py-2.5">
         <div className="flex items-center gap-2.5">
           <span className="flex items-center gap-1.5">
             <span
@@ -626,7 +626,7 @@ export function GsapSlideStage({
         />
       </div>
 
-      <div className="relative h-1 w-full bg-ink-800">
+      <div className="stage-rail relative h-1 w-full bg-ink-800">
         <div
           ref={fillRef}
           className="h-full w-full origin-left bg-gradient-to-r from-brand-400 via-brand-300 to-gold-400"
