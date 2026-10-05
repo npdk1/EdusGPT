@@ -28,7 +28,7 @@ powershell -ExecutionPolicy Bypass -File scripts/smoke-test.ps1
 Mở `/setup`. Trang này chia hai nhóm:
 
 - Cloud: gọi API của hãng qua mạng, cần key. Groq và NVIDIA — hai hãng nói cùng một thứ tiếng (OpenAI chat-completions) nên dùng chung một adapter `src/lib/ai/openai-compatible.ts`; thêm hãng mới chỉ là thêm một mục trong `PROVIDERS`.
-- CLI: điều khiển chương trình cài sẵn trên máy, không cần key. Antigravity CLI (`agy`) đã chạy được — agent tự đọc thư viện `ONLY_FOR_AI_TO_LEARN` để dạy, xem `docs/ANTIGRAVITY.md`. Claude Code CLI, Gemini CLI, Codex CLI và Ollama mới ở mức danh sách dự kiến, nằm trong `PLANNED_CLI_PROVIDERS` ở `src/lib/ai/config.ts`.
+- CLI: điều khiển chương trình cài sẵn trên máy, không cần key. Antigravity CLI (`agy`) đã chạy được — đọc tài liệu bạn bỏ vào thư mục tài liệu để dạy, xem `docs/ANTIGRAVITY.md`. Claude Code CLI, Gemini CLI, Codex CLI và Ollama mới ở mức danh sách dự kiến, nằm trong `PLANNED_CLI_PROVIDERS` ở `src/lib/ai/config.ts`.
 
 Key lấy ở `console.groq.com/keys` (Groq) và `build.nvidia.com` (NVIDIA). Cả hai đều còn gói free không cần thẻ, nên app vẫn dùng được khi hết quota hãng kia. Dán key vào ô của đúng hãng, bấm kiểm tra rồi lưu. Server ghi key vào `.env` (`GROQ_API_KEY`, `NVIDIA_API_KEY`) và từ đó giao diện chỉ hiện dạng đã che.
 
@@ -127,7 +127,6 @@ src/lib/
   lesson/          model bài và cảnh, kiểu trình bày, chủ đề màu, icon,
                    bài mẫu, validate, xuất HTML, rút trích đoạn tài liệu
   server/          rút chữ tài liệu, tìm ảnh, tổng hợp giọng, lưu bài
-prompt/skills/     quy tắc viết prompt: humanizer, markitdown, prompt-optimizer
 public/            logo, icon tab, logo các hãng AI
 run.bat, run.sh    khởi động một chạm
 clean_all.bat      dọn sạch để cài lại

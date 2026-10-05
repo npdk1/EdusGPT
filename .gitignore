@@ -54,15 +54,6 @@ tsconfig.tsbuildinfo
 
 # Saved lessons ship with the tool (data/courses/).
 
-# Tài liệu gốc của người học. Giữ ngoài repo: đây là slide PDF của trường, nặng
-# hàng trăm MB, và phần GDQP là giấy tờ hành chính — không nên nằm trong lịch sử
-# git. Thư viện vẫn dùng được nhờ `data/course-library.json` (chỉ là manifest,
-# không chứa nội dung) và `npm run index:library` để dựng lại.
-/ONLY_FOR_AI_TO_LEARN/
-
 # Script tạo bài thử dùng một lần, không thuộc sản phẩm.
 /tmp-make-lesson.mjs
 /run-*.log
-
-# Thu muc cong cua editor; khong phai san pham.
-.serena/
