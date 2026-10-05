@@ -15,7 +15,7 @@ import {
   Sparkles,
   WandSparkles,
 } from "lucide-react";
-import { HeroCanvas } from "@/components/three/HeroCanvas";
+import { SceneLoader3D } from "@/components/three/SceneLoader3D";
 import { Magnetic, Marquee } from "@/components/motion/Interactive";
 import { Reveal } from "@/components/motion/Reveal";
 import { AnimatedNumber, SplitHeading } from "@/components/motion/SplitHeading";
@@ -44,14 +44,15 @@ const COPY = {
     homeDemoKeysHint: "loop a hard passage with A→B",
     homeDemoNote:
       "The timeline lives right in the browser, so you can scrub back and forth freely before presenting, and review a moment without rendering anything in advance.",
+    homeRobotLabel: "Your AI tutor, on every slide",
     homeFeaturesChip: "what is different",
     homeFeaturesTitle: "The three things you asked for, carried all the way through",
     homeFeatureSeekTitle: "Scrubbing both ways, no drift",
     homeFeatureSeekBody:
       "Every scene has its own timings, so seeking forward or back lands on the same frame — including when you scrub backwards halfway through.",
-    homeFeatureLayersTitle: "Three layers of motion",
+    homeFeatureLayersTitle: "Layers of motion",
     homeFeatureLayersBody:
-      "The 3D backdrop, the interface motion and the lesson content are three separate layers. Each one is isolated and can be switched off on a slow machine.",
+      "The interface motion and the lesson content are separate layers. Each one is isolated and can be switched off on a slow machine.",
     homeFeatureKeyTitle: "Add the API key from the browser",
     homeFeatureKeyBody:
       "Open /setup on localhost, paste the key, press check and you are done. The key stays in .env on your machine and goes nowhere else.",
@@ -104,14 +105,15 @@ const COPY = {
     homeDemoKeysHint: "lặp đoạn khó bằng A→B",
     homeDemoNote:
       "Timeline sống ngay trong trình duyệt nên bạn tua tới lui thoải mái trước khi trình chiếu, xem lại ngay mà không cần render trước.",
+    homeRobotLabel: "Trợ giảng AI, có mặt mọi slide",
     homeFeaturesChip: "khác biệt",
     homeFeaturesTitle: "Ba thứ bạn yêu cầu, làm tới nơi tới chốn",
     homeFeatureSeekTitle: "Tua hai chiều, không trôi hình",
     homeFeatureSeekBody:
       "Mỗi cảnh có mốc thời gian riêng nên tua tới hay tua lui đều ra đúng khung, kể cả khi tua ngược lại giữa chừng.",
-    homeFeatureLayersTitle: "Ba lớp chuyển động",
+    homeFeatureLayersTitle: "Các lớp chuyển động",
     homeFeatureLayersBody:
-      "Nền 3D, chuyển động giao diện và nội dung bài giảng là ba lớp riêng. Mỗi lớp tách bạch, tắt được khi máy yếu.",
+      "Chuyển động giao diện và nội dung bài giảng là hai lớp riêng. Mỗi lớp tách bạch, tắt được khi máy yếu.",
     homeFeatureKeyTitle: "Cài API key ngay trên web",
     homeFeatureKeyBody:
       "Mở /setup trên localhost, dán key, bấm kiểm tra là xong. Key nằm trong .env trên máy bạn, không đi đâu khác.",
@@ -239,7 +241,6 @@ export default function HomeClient() {
     <div className="mx-auto max-w-7xl px-4 sm:px-6">
       {/* hero */}
       <section className="relative -mx-4 overflow-hidden px-4 pt-14 sm:-mx-6 sm:px-6 lg:pt-20">
-        <HeroCanvas className="pointer-events-none absolute inset-0 opacity-90" />
         <div className="relative grid gap-10 pb-16 lg:grid-cols-[minmax(0,1.05fr)_minmax(0,0.95fr)] lg:items-center">
           <div>
             <span className="chip">
@@ -291,7 +292,11 @@ export default function HomeClient() {
             </dl>
           </div>
 
-          <Reveal className="panel relative p-5 lg:p-6" y={40}>
+          <Reveal className="min-w-0 space-y-4" y={40}>
+            {/* The same tutor robot that waits while a lesson is written —
+                normal flow, its own card, so no text ever covers it. */}
+            <SceneLoader3D label={t.homeRobotLabel} progress={100} height={240} />
+          <div className="panel relative p-5 lg:p-6">
             <div className="flex items-center justify-between gap-3">
               <span className="chip">
                 <MousePointerClick className="h-3.5 w-3.5" /> {t.homeDragChip}
@@ -342,6 +347,7 @@ export default function HomeClient() {
             <p className="mt-4 text-xs leading-relaxed text-mist-400">
               {t.homeDemoNote}
             </p>
+          </div>
           </Reveal>
         </div>
       </section>
