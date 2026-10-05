@@ -165,8 +165,12 @@ input[type=range]::-moz-range-thumb{width:12px;height:12px;border-radius:999px;b
 .wrap:fullscreen{background:var(--ink);padding:16px;overflow:auto}
 /* The exit has to stay reachable: in fullscreen the slide is tall enough to
    push the transport below the fold, and a presenter scrolling for the shrink
-   button has no controls at all. Pinned to the bottom instead. */
-.wrap:fullscreen .player{position:sticky;bottom:0;z-index:5}
+   button has no controls at all. Pinned to the bottom instead.
+   Opaque, because a translucent bar pinned over the slide reads as the slide
+   having broken text through it — the zoomed case made it obvious. The colour is
+   the fullscreen page background, so the bar looks cut off from the slide
+   rather than laid on top of it. */
+.wrap:fullscreen .player{position:sticky;bottom:0;z-index:5;background:var(--ink);border-color:var(--line);box-shadow:0 -18px 32px -24px rgba(0,0,0,.9)}
 
 /* The shortcut sheet, opened with \`?\`. Every key here is bound below, so the
    list cannot drift away from what the file actually does. */
