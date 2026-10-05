@@ -124,13 +124,18 @@ export async function POST(request: NextRequest) {
   // by engine as well, so a teacher who switches engines hears the new one.
   const engine = await readTtsEngine();
   const cached = await readCachedAudio(text, voice, engine);
+  // Header values must be ByteString: a VieNeu preset name carries
+  // Vietnamese ("vieneu:turbo:Hải Đăng"), and sending it raw crashes
+  // Response construction. Nobody reads this header back, it only rides
+  // along for debugging.
+  const voiceHeader = encodeURIComponent(voice);
   if (cached) {
     return new NextResponse(Buffer.from(cached.audio), {
       headers: {
         "content-type": cached.contentType,
         "content-length": String(cached.audio.length),
         "cache-control": "no-store",
-        "x-tts-voice": voice,
+        "x-tts-voice": voiceHeader,
         "x-tts-engine": engine,
         "x-tts-cache": "hit",
         ...(cached.words ? { "x-tts-words": encodeWords(cached.words) } : {}),
@@ -148,7 +153,7 @@ export async function POST(request: NextRequest) {
         "content-type": contentType,
         "content-length": String(audio.length),
         "cache-control": "no-store",
-        "x-tts-voice": voice,
+        "x-tts-voice": voiceHeader,
         "x-tts-engine": used,
         "x-tts-chunks": String(chunks),
         "x-tts-cache": "miss",
