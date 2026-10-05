@@ -1371,6 +1371,7 @@ function LengthPicker({
   onChange: (next: LessonLengthId) => void;
 }) {
   const t = useCopy(COPY);
+  const lang = useLang();
   return (
     <div>
       <p className="label">{t.lengthLabel}</p>
@@ -1392,8 +1393,8 @@ function LengthPicker({
               <span
                 className={`block text-sm font-semibold ${active ? "text-brand-100" : "text-mist-100"}`}
               >
-                {preset.label}
-                <span className="ml-1.5 font-normal text-mist-400">{preset.caption}</span>
+                {lang === "vi" ? preset.label : preset.labelEn}
+                <span className="ml-1.5 font-normal text-mist-400">{lang === "vi" ? preset.caption : preset.captionEn}</span>
               </span>
               <span className="mt-0.5 block text-xs text-mist-400">
                 {preset.scenes[0]}–{preset.scenes[1]} {t.slideUnit} ·{" "}
@@ -1420,6 +1421,7 @@ function StylePicker({
   onChange: (style: PresentationStyle) => void;
 }) {
   const t = useCopy(COPY);
+  const lang = useLang();
   return (
     <fieldset className="rounded-xl border border-ink-700 bg-ink-900/60 p-3">
       <legend className="px-1 text-[10px] font-semibold uppercase tracking-[0.14em] text-mist-500">
@@ -1467,7 +1469,7 @@ function StylePicker({
                 </span>
               </span>
               <span className="mt-1.5 block text-[11px] leading-snug text-mist-400">
-                {style.hint}
+                {lang === "vi" ? style.hint : style.hintEn}
               </span>
               <span className="mt-1 block text-[10px] text-mist-500">
                 {style.images ? t.styleWithImages : t.styleTextOnly} ·{" "}

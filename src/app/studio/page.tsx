@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { StudioPanel } from "@/components/studio/StudioPanel";
 
 export const metadata: Metadata = {
-  title: "Studio AI",
+  title: "Tạo Bài Giảng · Create Lesson",
   description:
     "Write a lesson from a topic, an outline or your own material, then open it straight in a player you can scrub.",
 };

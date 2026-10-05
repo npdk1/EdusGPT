@@ -39,8 +39,12 @@ export interface LessonLengthPreset {
   id: LessonLengthId;
   /** Short name for the control. */
   label: string;
+  /** English label — data files carry no language switch of their own. */
+  labelEn: string;
   /** What the user is choosing, in the units they think in. */
   caption: string;
+  /** English caption, same reason. */
+  captionEn: string;
   /** Slides to write, inclusive. */
   scenes: [number, number];
   /** Narration words per slide, inclusive. */
@@ -59,7 +63,9 @@ export const LESSON_LENGTHS: readonly LessonLengthPreset[] = [
   {
     id: "short",
     label: "Thấp",
+    labelEn: "Short",
     caption: "1–2 phút",
+    captionEn: "1–2 min",
     scenes: [3, 5],
     wordsPerScene: [45, 65],
     minutes: [1, 2],
@@ -73,7 +79,9 @@ export const LESSON_LENGTHS: readonly LessonLengthPreset[] = [
   {
     id: "medium",
     label: "Trung bình",
+    labelEn: "Medium",
     caption: "6–10 phút",
+    captionEn: "6–10 min",
     scenes: [10, 16],
     wordsPerScene: [70, 110],
     minutes: [6, 10],
@@ -86,7 +94,9 @@ Một bài giảng trọn vẹn vừa để giảng trong một tiết.
   {
     id: "long",
     label: "Cao",
+    labelEn: "Long",
     caption: "45–60 phút",
+    captionEn: "45–60 min",
     scenes: [60, 95],
     wordsPerScene: [80, 110],
     minutes: [45, 60],
@@ -141,6 +151,8 @@ export interface PresentationStyle {
   label: string;
   /** One line on when to reach for it. */
   hint: string;
+  /** English hint, same reason as above. */
+  hintEn: string;
   /** Palette this style draws with, unless the teacher overrides it. */
   theme: string;
   /** Whether the deck should carry real pictures. */
@@ -162,6 +174,7 @@ export const PRESENTATION_STYLES: readonly PresentationStyle[] = [
     id: "minimalist",
     label: "Minimalist Presentation",
     hint: "Chữ to, nền trắng, mỗi slide một ý. Dạng slide lời giảng, một câu một ý.",
+    hintEn: "Big type, white paper, one idea per slide. Spoken-word slides, one sentence each.",
     theme: "paper",
     images: false,
     icons: false,
@@ -182,6 +195,7 @@ export const PRESENTATION_STYLES: readonly PresentationStyle[] = [
     id: "visual-story",
     label: "Visual Story",
     hint: "Ảnh thật chiếm chỗ, chữ ít. Hợp sinh học, địa lí, lịch sử.",
+    hintEn: "Real photos lead, few words. Fits biology, geography, history.",
     theme: "chalk",
     images: true,
     icons: true,
@@ -200,6 +214,7 @@ Slide là một bức ảnh kể chuyện, chữ chỉ để đặt ngữ cảnh
     id: "classroom",
     label: "Classroom Slides",
     hint: "Nhiều gạch đầu dòng, bảng và biểu đồ. Hợp toán, hoá, lịch sử.",
+    hintEn: "Many bullets, tables and charts. Fits math, chemistry, history.",
     theme: "chalk",
     images: false,
     icons: true,
@@ -217,6 +232,7 @@ Slide như trong sách giáo khoa: đủ thông tin để học sinh chép và g
     id: "cinematic",
     label: "Cinematic Documentary",
     hint: "Nền tối, câu chữ giàu cảm xúc. Hợp lịch sử, văn hoá, tự nhiên.",
+    hintEn: "Dark stage, emotional lines. Fits history, culture, nature.",
     theme: "midnight",
     images: true,
     icons: true,

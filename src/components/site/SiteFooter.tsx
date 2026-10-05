@@ -7,7 +7,7 @@ const COPY = {
   en: {
     product: "Product",
     linkLesson: "Lesson player",
-    linkStudio: "AI Studio",
+    linkStudio: "Create Lesson",
     linkLibrary: "Saved lesson library",
     linkSetup: "API key setup",
     tagline:
@@ -17,7 +17,7 @@ const COPY = {
   vi: {
     product: "Sản phẩm",
     linkLesson: "Trình phát bài giảng",
-    linkStudio: "Studio sinh bài giảng",
+    linkStudio: "Tạo Bài Giảng",
     linkLibrary: "Thư viện bài đã lưu",
     linkSetup: "Cài API key",
     tagline:
