@@ -4,7 +4,7 @@
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>EdusGPT — Soạn bài giảng AI, phát và xuất HTML trong 1 chạm</title>
-<meta name="description" content="EdusGPT soạn bài giảng thành từng cảnh có slide, giọng đọc tiếng Việt và phụ đề karaoke. Chạy trên máy bạn, tải miễn phí từ GitHub." />
+<meta name="description" content="EdusGPT soạn bài giảng thành từng cảnh có slide, giọng đọc tiếng Việt và phụ đề karaoke. Mã nguồn mở trên GitHub, chạy trên máy bạn." />
 <meta name="theme-color" content="#0b63e5" />
 <link rel="icon" type="image/png" href="logo.png" />
 <style>
@@ -36,6 +36,8 @@ section{scroll-margin-top:84px}
 .btn-ghost{background:#fff;color:var(--blue);border-color:var(--blue-line)}
 .btn-ghost:hover{background:var(--blue-soft)}
 .btn-sm{padding:9px 14px;font-size:13px}
+.gh-icon{width:17px;height:17px;fill:currentColor;flex:none}
+.btn-sm .gh-icon{width:15px;height:15px}
 .menu-btn{display:none;margin-left:auto;background:#fff;border:1px solid var(--line);border-radius:10px;padding:9px 11px;font-size:16px;color:var(--ink)}
 /* hero */
 .hero{background:radial-gradient(900px 420px at 85% -60px,var(--blue-soft),transparent 65%),radial-gradient(700px 380px at 5% 0%,#e7f0ff,transparent 60%),var(--bg);border-bottom:1px solid var(--line)}
@@ -126,8 +128,7 @@ footer{padding:28px 0 40px;color:var(--muted);font-size:13.5px}
       <a href="#yeu-cau">Yêu cầu</a>
     </nav>
     <div class="nav-cta">
-      <a class="btn btn-ghost btn-sm" href="https://github.com/npdk1/EdusGPT" target="_blank" rel="noopener">GitHub</a>
-      <a class="btn btn-primary btn-sm" href="https://github.com/npdk1/EdusGPT/archive/refs/heads/main.zip">Tải miễn phí</a>
+      <a class="btn btn-primary btn-sm" href="https://github.com/npdk1/EdusGPT" target="_blank" rel="noopener"><svg class="gh-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 .297c-6.63 0-12 5.373-12 12 0 5.303 3.438 9.8 8.205 11.385.6.113.82-.258.82-.577 0-.285-.01-1.04-.015-2.04-3.338.724-4.042-1.61-4.042-1.61C4.422 18.07 3.633 17.7 3.633 17.7c-1.087-.744.084-.729.084-.729 1.205.084 1.838 1.236 1.838 1.236 1.07 1.835 2.809 1.305 3.495.998.108-.776.417-1.305.76-1.605-2.665-.3-5.466-1.332-5.466-5.93 0-1.31.465-2.38 1.235-3.22-.135-.303-.54-1.523.105-3.176 0 0 1.005-.322 3.3 1.23.96-.267 1.98-.399 3-.405 1.02.006 2.04.138 3 .405 2.28-1.552 3.285-1.23 3.285-1.23.645 1.653.24 2.873.12 3.176.765.84 1.23 1.91 1.23 3.22 0 4.61-2.805 5.625-5.475 5.92.42.36.81 1.096.81 2.22 0 1.606-.015 2.896-.015 3.286 0 .315.21.69.825.57C20.565 22.092 24 17.592 24 12.297c0-6.627-5.373-12-12-12"/></svg>GitHub</a>
     </div>
     <button class="menu-btn" id="menuBtn" aria-label="Mở menu" aria-expanded="false">☰</button>
   </div>
@@ -141,8 +142,8 @@ footer{padding:28px 0 40px;color:var(--muted);font-size:13.5px}
         <h1>Soạn <span class="hl">bài giảng AI</span> thành từng cảnh, phát và xuất HTML</h1>
         <p class="lead">Nhập chủ đề là có slide, giọng đọc tiếng Việt và phụ đề karaoke chạy theo từng chữ. Tua tới lui từng giây, lặp đoạn A→B, rồi gói cả bài vào một file HTML độc lập.</p>
         <div class="hero-actions">
-          <a class="btn btn-primary" href="https://github.com/npdk1/EdusGPT/archive/refs/heads/main.zip">Tải EdusGPT miễn phí</a>
-          <a class="btn btn-ghost" href="https://github.com/npdk1/EdusGPT" target="_blank" rel="noopener">Xem mã nguồn</a>
+          <a class="btn btn-primary" href="https://github.com/npdk1/EdusGPT" target="_blank" rel="noopener"><svg class="gh-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 .297c-6.63 0-12 5.373-12 12 0 5.303 3.438 9.8 8.205 11.385.6.113.82-.258.82-.577 0-.285-.01-1.04-.015-2.04-3.338.724-4.042-1.61-4.042-1.61C4.422 18.07 3.633 17.7 3.633 17.7c-1.087-.744.084-.729.084-.729 1.205.084 1.838 1.236 1.838 1.236 1.07 1.835 2.809 1.305 3.495.998.108-.776.417-1.305.76-1.605-2.665-.3-5.466-1.332-5.466-5.93 0-1.31.465-2.38 1.235-3.22-.135-.303-.54-1.523.105-3.176 0 0 1.005-.322 3.3 1.23.96-.267 1.98-.399 3-.405 1.02.006 2.04.138 3 .405 2.28-1.552 3.285-1.23 3.285-1.23.645 1.653.24 2.873.12 3.176.765.84 1.23 1.91 1.23 3.22 0 4.61-2.805 5.625-5.475 5.92.42.36.81 1.096.81 2.22 0 1.606-.015 2.896-.015 3.286 0 .315.21.69.825.57C20.565 22.092 24 17.592 24 12.297c0-6.627-5.373-12-12-12"/></svg>Xem EdusGPT trên GitHub</a>
+          <a class="btn btn-ghost" href="#tinh-nang">Khám phá tính năng</a>
         </div>
         <div class="hero-meta">
           <span>✓ Không Docker</span>
@@ -248,11 +249,10 @@ footer{padding:28px 0 40px;color:var(--muted);font-size:13.5px}
   <section class="section" id="tai">
     <div class="wrap">
       <div class="dl">
-        <h2>Tải EdusGPT miễn phí</h2>
-        <p>Mã nguồn mở trên GitHub. Tải ZIP về, giải nén, nhấp đúp <b>run.bat</b> là dạy được ngay.</p>
+        <h2>Mã nguồn mở trên GitHub</h2>
+        <p>Clone repo về, nhấp đúp <b>run.bat</b> là dạy được ngay. Mọi thứ chạy trên máy bạn, không Docker.</p>
         <div class="row">
-          <a class="btn btn-white" href="https://github.com/npdk1/EdusGPT/archive/refs/heads/main.zip">Tải bản mới nhất (.zip)</a>
-          <a class="btn btn-outline-w" href="https://github.com/npdk1/EdusGPT" target="_blank" rel="noopener">Mở repo GitHub</a>
+          <a class="btn btn-white" href="https://github.com/npdk1/EdusGPT" target="_blank" rel="noopener"><svg class="gh-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 .297c-6.63 0-12 5.373-12 12 0 5.303 3.438 9.8 8.205 11.385.6.113.82-.258.82-.577 0-.285-.01-1.04-.015-2.04-3.338.724-4.042-1.61-4.042-1.61C4.422 18.07 3.633 17.7 3.633 17.7c-1.087-.744.084-.729.084-.729 1.205.084 1.838 1.236 1.838 1.236 1.07 1.835 2.809 1.305 3.495.998.108-.776.417-1.305.76-1.605-2.665-.3-5.466-1.332-5.466-5.93 0-1.31.465-2.38 1.235-3.22-.135-.303-.54-1.523.105-3.176 0 0 1.005-.322 3.3 1.23.96-.267 1.98-.399 3-.405 1.02.006 2.04.138 3 .405 2.28-1.552 3.285-1.23 3.285-1.23.645 1.653.24 2.873.12 3.176.765.84 1.23 1.91 1.23 3.22 0 4.61-2.805 5.625-5.475 5.92.42.36.81 1.096.81 2.22 0 1.606-.015 2.896-.015 3.286 0 .315.21.69.825.57C20.565 22.092 24 17.592 24 12.297c0-6.627-5.373-12-12-12"/></svg>npdk1/EdusGPT</a>
         </div>
         <p class="fine">github.com/npdk1/EdusGPT · MIT · chạy tại localhost:3000</p>
       </div>
@@ -263,7 +263,7 @@ footer{padding:28px 0 40px;color:var(--muted);font-size:13.5px}
 <footer>
   <div class="wrap foot">
     <span>© <span id="year">2026</span> EdusGPT — soạn bài giảng AI cho lớp học.</span>
-    <span><a href="https://github.com/npdk1/EdusGPT" target="_blank" rel="noopener">GitHub</a> · <a href="https://github.com/npdk1/EdusGPT/archive/refs/heads/main.zip">Tải tool</a></span>
+    <span><a href="https://github.com/npdk1/EdusGPT" target="_blank" rel="noopener">GitHub</a> · Mã nguồn mở MIT</span>
   </div>
 </footer>
 <script>
