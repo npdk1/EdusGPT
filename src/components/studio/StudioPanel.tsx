@@ -15,11 +15,21 @@ import {
   KeyRound,
   LoaderCircle,
   Pause,
+  Palette,
   Play,
   Save,
+  SlidersHorizontal,
+  Sparkles,
+  TextCursorInput,
+  Timer,
   Trash2,
   Volume2,
   WandSparkles,
+  AudioLines,
+  FolderOpen,
+  Image as ImageIcon,
+  MousePointerClick,
+  Presentation,
 } from "lucide-react";
 import type { PublicAiStatus } from "@/lib/ai/config";
 import {
@@ -447,7 +457,10 @@ function MotionPicker({
   const hidden = Math.max(0, SLIDE_MOTIONS.length - TOP_MOTIONS);
   return (
     <div>
-      <p className="label">{t.motionLabel}</p>
+      <p className="label flex items-center gap-1.5">
+        <SlidersHorizontal className="h-3.5 w-3.5 text-mist-400" />
+        {t.motionLabel}
+      </p>
       <div className="flex flex-wrap gap-1.5">
         {visible.map((id) => {
           const selected = value === id;
@@ -798,7 +811,8 @@ export function StudioPanel() {
     <div className="space-y-6">
       <header className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight text-mist-50 sm:text-4xl">
+          <h1 className="flex items-center gap-3 text-3xl font-bold tracking-tight text-mist-50 sm:text-4xl">
+            <WandSparkles className="h-7 w-7 shrink-0 text-brand-300 sm:h-8 sm:w-8" />
             {t.createLesson}
           </h1>
           <p className="mt-2 max-w-2xl text-sm leading-relaxed text-mist-300 sm:text-base">
@@ -853,7 +867,8 @@ export function StudioPanel() {
       */}
       <section className="panel space-y-4 p-5">
         <div>
-          <label className="label" htmlFor="topic">
+          <label className="label flex items-center gap-1.5" htmlFor="topic">
+            <TextCursorInput className="h-3.5 w-3.5 text-mist-400" />
             {t.topicLabel}
           </label>
           <textarea
@@ -895,7 +910,10 @@ export function StudioPanel() {
         <ThemePicker value={theme} onChange={setTheme} open={themeOpen} setOpen={setThemeOpen} />
 
         <div>
-          <p className="label">{t.patternLabel}</p>
+          <p className="label flex items-center gap-1.5">
+            <Sparkles className="h-3.5 w-3.5 text-mist-400" />
+            {t.patternLabel}
+          </p>
           <div className="flex flex-wrap gap-1.5">
             {SLIDE_PATTERNS.map((id) => {
               const labels: Record<string, string> = {
@@ -1181,7 +1199,8 @@ export function StudioPanel() {
 
       <section className="panel p-5">
         <div className="flex items-center justify-between gap-3">
-          <h2 className="text-sm font-semibold text-mist-100">
+          <h2 className="flex items-center gap-2 text-sm font-semibold text-mist-100">
+            <FolderOpen className="h-4 w-4 text-brand-300" />
             {t.libraryTitle} ({stored.length})
           </h2>
           <span className="text-xs text-mist-500">{t.libraryStorage}</span>
@@ -1352,7 +1371,10 @@ function VoiceChooser({
 
   return (
     <fieldset className="mt-3">
-      <legend className="label">{t.voiceLabel}</legend>
+      <legend className="label flex items-center gap-1.5">
+        <AudioLines className="h-3.5 w-3.5 text-mist-400" />
+        {t.voiceLabel}
+      </legend>
       <div className="flex flex-wrap gap-2">
         {visible.map((option) => {
           const selected = value === option.id;
@@ -1441,7 +1463,8 @@ function ImageModeToggle({
   const t = useCopy(COPY);
   return (
     <fieldset className="rounded-xl border border-ink-700 bg-ink-900/60 p-3">
-      <legend className="px-1 text-[10px] font-semibold uppercase tracking-[0.14em] text-mist-500">
+      <legend className="flex items-center gap-1.5 px-1 text-[10px] font-semibold uppercase tracking-[0.14em] text-mist-500">
+        <ImageIcon className="h-3 w-3" />
         {t.imageLegend}
       </legend>
       <label className="mt-1 flex cursor-pointer items-start gap-3">
@@ -1505,7 +1528,8 @@ function PointerModeToggle({
   const t = useCopy(COPY);
   return (
     <fieldset className="rounded-xl border border-ink-700 bg-ink-900/60 p-3">
-      <legend className="px-1 text-[10px] font-semibold uppercase tracking-[0.14em] text-mist-500">
+      <legend className="flex items-center gap-1.5 px-1 text-[10px] font-semibold uppercase tracking-[0.14em] text-mist-500">
+        <MousePointerClick className="h-3 w-3" />
         {t.pointerLegend}
       </legend>
       <label className="mt-1 flex cursor-pointer items-start gap-3">
@@ -1592,7 +1616,10 @@ function LengthPicker({
   const lang = useLang();
   return (
     <div>
-      <p className="label">{t.lengthLabel}</p>
+      <p className="label flex items-center gap-1.5">
+        <Timer className="h-3.5 w-3.5 text-mist-400" />
+        {t.lengthLabel}
+      </p>
       <div className="grid grid-cols-1 gap-2 sm:grid-cols-3">
         {LESSON_LENGTHS.map((preset) => {
           const active = preset.id === value;
@@ -1731,7 +1758,8 @@ function StylePicker({
   const lang = useLang();
   return (
     <fieldset className="rounded-xl border border-ink-700 bg-ink-900/60 p-3">
-      <legend className="px-1 text-[10px] font-semibold uppercase tracking-[0.14em] text-mist-500">
+      <legend className="flex items-center gap-1.5 px-1 text-[10px] font-semibold uppercase tracking-[0.14em] text-mist-500">
+        <Presentation className="h-3 w-3" />
         {t.styleLegend}
       </legend>
       <div className="mt-1.5 grid gap-1.5 sm:grid-cols-2">
@@ -1806,7 +1834,10 @@ function ThemePicker({
 
   return (
     <fieldset className="mt-3">
-      <legend className="label">{t.themeLegend}</legend>
+      <legend className="label flex items-center gap-1.5">
+        <Palette className="h-3.5 w-3.5 text-mist-400" />
+        {t.themeLegend}
+      </legend>
 
       <button
         type="button"
