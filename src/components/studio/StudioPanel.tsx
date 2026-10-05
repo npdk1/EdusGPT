@@ -1116,9 +1116,17 @@ function VoiceChooser({
     }
   };
 
-  // The machine's own voices first: with the local engine chosen these are
-  // the ones that will actually speak, and they are the reason to open /setup.
-  const ordered = [...voices.filter((v) => v.provider), ...voices.filter((v) => !v.provider)];
+  // Grouped by engine, in the order a teacher thinks in: VieNeu-TTS first,
+  // then the Edge cloud voices, then Piper. The old order put every local
+  // voice first, which stranded the single Piper voice at the head of the
+  // list and let a cloud voice leak into the top 10 — the chips no longer
+  // matched the engine they belong to. Stable within each group, so the API
+  // order (Nano before Turbo, Vietnamese before English) is kept.
+  const providerRank = (voice: { provider?: string }): number =>
+    voice.provider === "vieneu" ? 0 : !voice.provider ? 1 : 2;
+  const ordered = [...voices].sort(
+    (a, b) => providerRank(a) - providerRank(b),
+  );
   const visible = expanded
     ? ordered
     : [...ordered.slice(0, TOP_VOICES), ...ordered.slice(TOP_VOICES).filter((v) => v.id === value)];
