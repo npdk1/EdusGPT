@@ -1165,18 +1165,19 @@ export async function POST(request: NextRequest) {
   // hears the teacher stop short on every slide. Word count is knowable exactly
   // here, so it is used as the floor.
   //
-  // Vietnamese is syllable-timed, so a word runs closer to 0.3s than an English
-  // word's 0.4s. Three per second is the rate this and the wordsPerScene ranges
-  // in the length presets are calibrated against — drop it and the presets stop
-  // describing the lessons they produce, because every scene would run long and
-  // a "6-10 minute" deck would come out at twelve. The padding is the pause at
-  // the end of a slide, not at a sentence.
+  // Measured October 2026, one 55-word narration through every engine: Edge
+  // HoaiMy 11.3-12.5s, Piper 11.4s, VieNeu Nano 11.1s, even the "slow" HoaiMy
+  // 11.7s — about 4.7 words a second across the board, not the 3.0 the old
+  // syllable-timing theory claimed. At 3.0 every scene carried ~12s of dead
+  // air after the voice stopped, which is the silence teachers reported. The
+  // padding is the pause at the end of a slide, not at a sentence.
   //
-  // A dead slide is the cheaper failure — a few seconds of silence reads as a
-  // pause, a truncated sentence reads as a bug — so the correction only ever
-  // lengthens. The cap keeps one runaway paragraph from producing a slide that
-  // outlasts the whole lesson around it.
-  const NARRATION_WORDS_PER_SECOND = 3;
+  // The correction also shortens now: a scene whose narration only fills half
+  // its budget gets the smaller duration rather than sitting quiet. The floor
+  // stays 6s and the cap stays proposed*1.8, so a runaway paragraph still
+  // cannot strand the deck around it — and what the rate gets wrong, the
+  // player's skip-silence backstop absorbs at play time.
+  const NARRATION_WORDS_PER_SECOND = 4.7;
   const NARRATION_PADDING_SECONDS = 1.5;
   const durationFor = (narration: unknown, proposed: number): number => {
     const text = typeof narration === "string" ? narration.trim() : "";
@@ -1185,7 +1186,7 @@ export async function POST(request: NextRequest) {
     const spoken = words / NARRATION_WORDS_PER_SECOND + NARRATION_PADDING_SECONDS;
     return Math.min(
       Math.max(6, proposed) * 1.8,
-      Math.max(proposed, Math.ceil(spoken)),
+      Math.max(6, Math.ceil(spoken)),
     );
   };
 

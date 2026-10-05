@@ -47,6 +47,14 @@ interface TeacherVoiceProps {
    */
   onVoiceState?: (state: VoiceState) => void;
   /**
+   * True while the A→B loop is on.
+   *
+   * The silence skip below must stand down then: the loop owns the playhead
+   * inside its region, and jumping to a scene boundary would cut the loop's
+   * tail off on every pass.
+   */
+  loopEnabled?: boolean;
+  /**
    * What the voice is doing right now, for the running subtitle: the playback
    * position within the slide it is reading, plus the word timings for a scene.
    *
@@ -141,6 +149,7 @@ export function TeacherVoice({
   timebase,
   activeSceneIndex,
   onVoiceState,
+  loopEnabled = false,
   onNarration,
 }: TeacherVoiceProps) {
   const t = useCopy(COPY);
@@ -311,6 +320,8 @@ export function TeacherVoice({
       text: string,
       /** Seconds into the slide to begin at; 0 for ordinary forward playback. */
       startAt = 0,
+      /** Timeline end of this slide; the silence skip aims at it. */
+      sceneEnd = Number.POSITIVE_INFINITY,
     ) => {
       const audio = new Audio(entry.url);
       audioRef.current = audio;
@@ -350,6 +361,25 @@ export function TeacherVoice({
         setLoading(false);
         stopTracking();
         onVoiceState?.({ status: "idle", sceneIndex: null, sceneTitle: "", voice });
+        // Residual silence, skipped: the clip ended but its slide still holds
+        // seconds of nothing (the engine read faster than the estimate, or an
+        // older deck was authored under the old 3-words-a-second rate). Jump
+        // to the boundary instead of sitting quiet — the same rule the
+        // exported file follows. The 2.5s floor keeps the designed end-of-slide
+        // pause: only unintended silence is skipped. Not on the last slide
+        // (let it end naturally) and never while looping.
+        if (!loopEnabled) {
+          const tb = timebaseRef.current;
+          const now = tb.timeRef.current;
+          const total = tb.duration;
+          if (
+            sceneEnd - now > 2.5 &&
+            sceneEnd < total - 0.3 &&
+            now < sceneEnd
+          ) {
+            tb.seek(sceneEnd);
+          }
+        }
       };
       audio.onerror = () => {
         setSpeaking(false);
@@ -385,7 +415,7 @@ export function TeacherVoice({
     },
     // `t` is the active dictionary object itself, so its identity only changes
     // with the language — naming it here cannot restart the reader per frame.
-    [onVoiceState, stopTracking, track, voice, t],
+    [onVoiceState, stopTracking, track, voice, t, loopEnabled],
   );
 
   const speak = useCallback(
@@ -405,6 +435,8 @@ export function TeacherVoice({
        * the seek entirely.
        */
       startAt = 0,
+      /** Timeline end of this slide; the silence skip aims at it. */
+      sceneEnd = Number.POSITIVE_INFINITY,
     ) => {
       stop();
       const key = `${sceneId}|${voice}`;
@@ -413,7 +445,7 @@ export function TeacherVoice({
       abortRef.current = controller;
 
       if (cached) {
-        play(cached, sceneIndex, sceneTitle, text, startAt);
+        play(cached, sceneIndex, sceneTitle, text, startAt, sceneEnd);
         return;
       }
 
@@ -425,7 +457,7 @@ export function TeacherVoice({
         onVoiceState?.({ status: "preparing", sceneIndex, sceneTitle, voice });
         const rode = await waitForWarm(key, controller.signal);
         if (rode) {
-          play(rode, sceneIndex, sceneTitle, text, startAt);
+          play(rode, sceneIndex, sceneTitle, text, startAt, sceneEnd);
           return;
         }
         if (controller.signal.aborted) return;
@@ -469,7 +501,7 @@ export function TeacherVoice({
         const entry: CachedNarration = { url: URL.createObjectURL(blob), words };
         cacheRef.current.set(key, entry);
         release();
-        play(entry, sceneIndex, sceneTitle, text, startAt);
+        play(entry, sceneIndex, sceneTitle, text, startAt, sceneEnd);
       } catch (error) {
         release();
         if (controller.signal.aborted) return;
@@ -667,7 +699,7 @@ export function TeacherVoice({
       if (!jumped) return;
 
       lastSpokenSceneRef.current = sceneIndex;
-      void speakNow(scene.narration, scene.id, sceneIndex, scene.title, scene.duration, offset);
+      void speakNow(scene.narration, scene.id, sceneIndex, scene.title, scene.duration, offset, scene.start + scene.duration);
     });
     // `enabled` and `playing` are the only things that change what this does.
     // Deliberately not `timebase`: it is a new object every render, and depending

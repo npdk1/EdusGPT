@@ -437,6 +437,7 @@ export function LessonPlayer({ initialLesson, samples }: LessonPlayerProps) {
               lesson={lesson}
               timebase={timebase}
               activeSceneIndex={activeScene}
+              loopEnabled={loop.enabled}
               onVoiceState={setVoiceState}
               onNarration={(update) => {
                 // Written straight onto the channel; see the note where it is
