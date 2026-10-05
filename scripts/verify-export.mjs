@@ -53,7 +53,7 @@ if (!player) {
 const checks = [
   [/gsap\.min\.js/, "gsap từ CDN"],
   [/tl\.time\(current\)/, "seek timeline hai chiều"],
-  [/input type="range" id="scrub"/, "thanh tua"],
+  [/class="scrub" id="scrub"/, "thanh tua"],
   [/id="loop"/, "điều khiển lặp A-B"],
   [/data-scene="0"/, "lớp cảnh đầu tiên"],
 ];

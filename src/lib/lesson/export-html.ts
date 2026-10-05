@@ -162,15 +162,23 @@ input[type=range]::-moz-range-thumb{width:12px;height:12px;border-radius:999px;b
 /* Fullscreen takes the whole page, slide and transport together: the browser
    owns the screen, and a presenter who cannot reach the play button has no
    controls at all. */
-.wrap:fullscreen{background:var(--ink);padding:16px;overflow:auto}
-/* The exit has to stay reachable: in fullscreen the slide is tall enough to
-   push the transport below the fold, and a presenter scrolling for the shrink
-   button has no controls at all. Pinned to the bottom instead.
-   Opaque, because a translucent bar pinned over the slide reads as the slide
-   having broken text through it — the zoomed case made it obvious. The colour is
-   the fullscreen page background, so the bar looks cut off from the slide
-   rather than laid on top of it. */
-.wrap:fullscreen .player{position:sticky;bottom:0;z-index:5;background:var(--ink);border-color:var(--line);box-shadow:0 -18px 32px -24px rgba(0,0,0,.9)}
+/* Fullscreen is the web player's fullscreen, not a long page: the slide owns
+   the screen at its own 16:9 with the letterbox around it, and the transport
+   rides over the bottom of the slide and gets out of the way, exactly like
+   FullscreenControls does on /lesson. A downloaded deck that grew a separate
+   media player under its slide was a second design to look after. */
+.wrap:fullscreen{position:relative;display:flex;align-items:center;justify-content:center;background:var(--ink);padding:0;overflow:hidden}
+.wrap:fullscreen .head,.wrap:fullscreen .hint{display:none}
+.wrap:fullscreen .stage{width:min(100vw,calc(100vh * 16 / 9));border:0;border-radius:0;box-shadow:none}
+/* One dark sheet, the web player's gradient rather than a translucent card: a
+   see-through bar over a pale slide washes the buttons out to unreadable. */
+.wrap:fullscreen .player{position:absolute;left:0;right:0;bottom:0;z-index:5;margin:0;border:0;border-radius:0;padding:22px 16px 10px;background:linear-gradient(to top,rgba(0,0,0,.94),rgba(0,0,0,.74) 46%,rgba(0,0,0,.28));transition:opacity .3s}
+.wrap:fullscreen .player[data-idle="true"]{opacity:0;pointer-events:none}
+/* The deck's structure is on the slide and in the chapter list; over a slide it
+   is just three more rows eating the picture. */
+.wrap:fullscreen .chapterband,.wrap:fullscreen .scrubfoot,.wrap:fullscreen .chapterlist,.wrap:fullscreen .loopbox{display:none}
+.wrap:fullscreen .scrubwrap{padding-top:0}
+@media (prefers-reduced-motion:reduce){.wrap:fullscreen .player{transition:none}}
 
 /* The shortcut sheet, opened with \`?\`. Every key here is bound below, so the
    list cannot drift away from what the file actually does. */
@@ -624,6 +632,7 @@ const PLAYER_JS = `
 (function () {
   var data = JSON.parse(document.getElementById('lesson-data').textContent);
   var stage = document.getElementById('stage');
+  var wrap = document.getElementById('wrap');
   var tl = gsap.timeline({ paused: true, defaults: { ease: 'power3.out' } });
 
   data.scenes.forEach(function (scene, index) {
@@ -680,7 +689,22 @@ const PLAYER_JS = `
   var muted = false, volume = 1, dragging = false, seekPending = null, seekRaf = null;
   var clock = document.getElementById('clock');
   var playBtn = document.getElementById('play');
+  var playerEl = document.getElementById('player');
   var fps = data.fps || 30;
+
+  // --- fullscreen: the transport rides over the slide and fades when nobody is
+  // reaching for it, the same rule as the web player's FullscreenControls.
+  // Mirrored rather than shared: this file ships without a bundler.
+  var idleTimer = null;
+  function wake() {
+    if (!playerEl || !document.fullscreenElement) return;
+    playerEl.setAttribute('data-idle', 'false');
+    if (idleTimer !== null) clearTimeout(idleTimer);
+    // A paused deck is being read, and reading takes longer than the countdown.
+    if (playing) idleTimer = setTimeout(function () {
+      playerEl.setAttribute('data-idle', 'true');
+    }, 2600);
+  }
 
   // --- the timeline and the transport row.
   var scrub = document.getElementById('scrub');
@@ -970,12 +994,16 @@ const PLAYER_JS = `
     if (raf) cancelAnimationFrame(raf);
     raf = null;
     try { voice.pause(); } catch (e) {}
+    // Both ends of the transport, or pausing on a faded bar hides the only
+    // control that can start it again.
+    wake();
   }
 
   function start() {
     if (current >= total - 0.05) current = 0;
     playing = true;
     setPlayIcon(PAUSE_ICON);
+    wake();
     last = performance.now();
     raf = requestAnimationFrame(tick);
     syncVoice();
@@ -1123,6 +1151,13 @@ const PLAYER_JS = `
     var on = Boolean(document.fullscreenElement);
     var btn = document.getElementById('fullscreen');
     if (!btn) return;
+    // Leaving fullscreen must not leave the bar faded: outside it the transport
+    // is the page's own layout, not an overlay that gets out of the way.
+    if (!on && playerEl) {
+      playerEl.removeAttribute('data-idle');
+      if (idleTimer !== null) clearTimeout(idleTimer);
+    }
+    if (on) wake();
     // Guarded: if this ever runs before the transport renders, a throw here
     // would leave the expand icon on screen while already fullscreen — a
     // player that zooms in with no visible way back.
@@ -1263,6 +1298,8 @@ const PLAYER_JS = `
   });
   document.addEventListener('fullscreenchange', syncFullscreen);
   syncFullscreen();
+  wrap.addEventListener('mousemove', wake);
+  wrap.addEventListener('pointerdown', wake);
 
   Array.prototype.forEach.call(document.querySelectorAll('[data-seek]'), function (button) {
     button.addEventListener('click', function () { seek(parseFloat(button.getAttribute('data-seek'))); });
