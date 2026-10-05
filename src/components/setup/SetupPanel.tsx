@@ -17,8 +17,7 @@ import {
   IconTrash,
 } from "@tabler/icons-react";
 import type { PublicAiStatus, ProviderId } from "@/lib/ai/config";
-import { formatRelativeTime } from "@/lib/format";
-import { useCopy, useLang } from "@/i18n/provider";
+import { useCopy } from "@/i18n/provider";
 
 interface LiveModel {
   id: string;
@@ -96,18 +95,6 @@ const COPY = {
       "The key is called once to check it, then written to",
     headerKeyAfterEnv: "on your machine.",
     // status row
-    statusAgentReady: "CLI agent ready",
-    statusHasKey: "key saved",
-    statusCliMissing: "CLI not installed",
-    statusOk: "ok",
-    statusFailed: "failed",
-    statusNeverChecked: "never checked",
-    statusRefresh: "Refresh",
-    sourceLoggedIn: "logged in locally",
-    sourceNotLoggedIn: "not logged in",
-    sourceShellEnv: "shell environment variable",
-    sourceEnvFile: ".env file",
-    sourceNone: "none",
     healthFailed: "Could not reach /api/health.",
     // key box
     selectHeading: "Choose a provider and paste a key",
@@ -181,18 +168,6 @@ const COPY = {
     headerKeyAction: "Kiểm tra & lưu",
     headerKeyBeforeEnv: "Key được gọi thử một lần rồi ghi vào",
     headerKeyAfterEnv: "trên máy bạn.",
-    statusAgentReady: "agent CLI sẵn sàng",
-    statusHasKey: "đã có key",
-    statusCliMissing: "CLI chưa cài",
-    statusOk: "đạt",
-    statusFailed: "lỗi",
-    statusNeverChecked: "chưa kiểm tra",
-    statusRefresh: "Làm mới",
-    sourceLoggedIn: "đăng nhập local",
-    sourceNotLoggedIn: "chưa đăng nhập",
-    sourceShellEnv: "biến môi trường của shell",
-    sourceEnvFile: "file .env",
-    sourceNone: "chưa có",
     healthFailed: "Không gọi được /api/health.",
     selectHeading: "Chọn nhà cung cấp & dán key",
     keyHide: "Ẩn key",
@@ -336,9 +311,6 @@ function ProviderCard({
  */
 export function SetupPanel() {
   const t = useCopy(COPY);
-  // The "checked 3 minutes ago" chip is time prose, not copy, so it takes the
-  // language straight from the switcher.
-  const lang = useLang();
   const [status, setStatus] = useState<PublicAiStatus | null>(null);
   const [provider, setProvider] = useState<ProviderId | "">("");
   /**
@@ -715,15 +687,6 @@ export function SetupPanel() {
   // The active provider's kind is already on the status payload; re-deriving it
   // by searching the provider list was both noisier and wrong-prone.
   const statusIsCli = status?.providerKind === "cli";
-  const sourceLabel = statusIsCli
-    ? status?.cli?.available
-      ? `${t.sourceLoggedIn}${status.cli.version ? ` · ${status.cli.version}` : ""}`
-      : t.sourceNotLoggedIn
-    : status?.keySource === "env"
-      ? t.sourceShellEnv
-      : status?.keySource === "file"
-        ? t.sourceEnvFile
-        : t.sourceNone;
 
   return (
     <div className="space-y-5">
@@ -751,55 +714,6 @@ export function SetupPanel() {
           .panel has backdrop-blur (a stacking context), so without this the
           next section would paint over the open list and eat its clicks. */}
       <section className="panel relative z-10 space-y-4 p-5">
-        {/* status — one compact row at the top of this card, instead of a
-            six-cell grid or a section of its own. */}
-        {/* status — one row, scrolled sideways when narrow: wrapping these
-            chips stacks three lines and the summary stops scanning. */}
-        <div className="flex flex-nowrap items-center gap-2 overflow-x-auto [&>*]:shrink-0">
-          {status?.configured ? (
-            <IconCircleCheck className="h-4 w-4 shrink-0 text-brand-300" />
-          ) : (
-            <IconAlertTriangle className="h-4 w-4 shrink-0 text-gold-300" />
-          )}
-          <span className="text-sm font-semibold text-mist-100">
-            {status?.providerLabel ?? "—"}
-          </span>
-          <span className="chip">
-            {status?.configured
-              ? statusIsCli
-                ? t.statusAgentReady
-                : t.statusHasKey
-              : statusIsCli
-                ? t.statusCliMissing
-                : t.providerNoKey}
-          </span>
-          {!statusIsCli && status?.keyHint ? (
-            <span className="chip font-mono">{status.keyHint}</span>
-          ) : null}
-          <span className="chip">{sourceLabel}</span>
-          {status?.model ? <span className="chip font-mono">{status.model}</span> : null}
-          <span className="chip">
-            {status?.lastValidatedAt
-              ? `${formatRelativeTime(status.lastValidatedAt, lang)} · ${
-                  status.lastValidationOk ? t.statusOk : t.statusFailed
-                }`
-              : t.statusNeverChecked}
-          </span>
-          <button
-            type="button"
-            onClick={() => void refreshStatus()}
-            className="btn-ghost ml-auto"
-            disabled={busy !== null}
-          >
-            {busy === "status" ? (
-              <IconLoader2 className="h-4 w-4 animate-spin" />
-            ) : (
-              <IconRefresh className="h-4 w-4" />
-            )}
-            {t.statusRefresh}
-          </button>
-        </div>
-
         {status?.lastValidationMessage ? (
           <p className="text-xs leading-relaxed text-mist-400">
             {status.lastValidationMessage}

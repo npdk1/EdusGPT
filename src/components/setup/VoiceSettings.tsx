@@ -8,7 +8,6 @@ import {
   IconDownload,
   IconLoader2,
   IconPlayerPlay,
-  IconRefresh,
   IconTerminal2,
   IconAlertTriangle,
 } from "@tabler/icons-react";
@@ -41,17 +40,8 @@ const COPY = {
       "Microsoft's public Edge read-aloud voice. No key, no account — but it needs the network, and it can rate-limit a long lesson.",
     localReady: "Ready",
     localNotReady: "Not ready",
-    statusTitle: "Machine check",
-    checkPython: "Python",
-    checkPiper: "Piper",
-    checkVoice: "Voice",
-    checkFfmpeg: "MP3 converter",
-    checkCuda: "GPU",
-    checkMissing: "not found",
-    checkOk: "ok",
     install: "Install the voice",
     installing: "Installing…",
-    refresh: "Check again",
     preview: "Hear this engine",
     previewing: "Reading…",
     logTitle: "Install log",
@@ -78,17 +68,8 @@ const COPY = {
       "Giọng đọc Edge của Microsoft. Không cần key, không cần tài khoản — nhưng cần mạng, và bài dài có thể bị giới hạn.",
     localReady: "Sẵn sàng",
     localNotReady: "Chưa sẵn sàng",
-    statusTitle: "Kiểm tra máy",
-    checkPython: "Python",
-    checkPiper: "Piper",
-    checkVoice: "Giọng",
-    checkFfmpeg: "Chuyển MP3",
-    checkCuda: "GPU",
-    checkMissing: "chưa có",
-    checkOk: "có",
     install: "Cài giọng cho máy này",
     installing: "Đang cài…",
-    refresh: "Kiểm tra lại",
     preview: "Nghe thử cách này",
     previewing: "Đang đọc…",
     logTitle: "Nhật ký cài đặt",
@@ -310,45 +291,6 @@ export function VoiceSettings() {
 
       {/* What the machine can actually do, and the one button that changes it. */}
       <div className="rounded-xl border border-ink-700 bg-ink-950/50 px-3.5 py-3">
-        {/* One row like the provider status above: wrap turns five chips into
-            a stack nobody scans. */}
-        <div className="flex flex-nowrap items-center gap-2 overflow-x-auto [&>*]:shrink-0">
-          {local?.ready ? (
-            <IconCircleCheck className="h-4 w-4 shrink-0 text-brand-300" />
-          ) : (
-            <IconAlertTriangle className="h-4 w-4 shrink-0 text-gold-300" />
-          )}
-          <span className="text-sm font-semibold text-mist-100">{t.statusTitle}</span>
-          <span className="chip">
-            {t.checkPython}:{" "}
-            {local?.python ? (
-              <span className="font-mono">{local.python.split(/[\\/]/).pop()}</span>
-            ) : (
-              t.checkMissing
-            )}
-          </span>
-          <span className="chip">
-            {t.checkPiper}: {local?.piper ? t.checkOk : t.checkMissing}
-          </span>
-          <span className="chip">
-            {t.checkVoice}: {local?.models.length ?? 0}
-          </span>
-          <span className="chip">
-            {t.checkFfmpeg}: {local?.ffmpeg ? t.checkOk : t.checkMissing}
-          </span>
-          <span className="chip">
-            {t.checkCuda}: {local?.cuda ? t.checkOk : "CPU"}
-          </span>
-          <button
-            type="button"
-            onClick={() => void refresh()}
-            className="btn-ghost ml-auto"
-            disabled={busy !== null}
-          >
-            <IconRefresh className="h-4 w-4" /> {t.refresh}
-          </button>
-        </div>
-
         {local?.models.length ? (
           <div className="mt-2 flex flex-wrap gap-1.5">
             {local.models.map((model) => (
