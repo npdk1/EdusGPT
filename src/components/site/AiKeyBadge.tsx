@@ -93,7 +93,7 @@ export function AiKeyBadge({ compact = false }: { compact?: boolean }) {
     return (
       <Link
         href="/setup"
-        className="chip border-gold-500/60 bg-gold-500/10 text-gold-200 transition-colors hover:border-gold-400 hover:text-gold-100"
+        className="chip whitespace-nowrap border-gold-500/60 bg-gold-500/10 text-gold-200 transition-colors hover:border-gold-400 hover:text-gold-100"
       >
         <IconAlertTriangle className="h-3.5 w-3.5" />
         {isCli
@@ -122,7 +122,7 @@ export function AiKeyBadge({ compact = false }: { compact?: boolean }) {
   return (
     <Link
       href="/setup"
-      className="chip border-brand-600/60 bg-brand-500/10 text-brand-200 transition-colors hover:border-brand-400 hover:text-brand-100"
+      className="chip whitespace-nowrap border-brand-600/60 bg-brand-500/10 text-brand-200 transition-colors hover:border-brand-400 hover:text-brand-100"
       title={title}
     >
       <IconCircleCheck className="h-3.5 w-3.5" />

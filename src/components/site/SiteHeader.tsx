@@ -52,8 +52,11 @@ export function SiteHeader() {
 
   return (
     <header className="sticky top-0 z-40 border-b border-ink-800/80 bg-ink-950/80 backdrop-blur-md">
-      <div className="mx-auto flex h-16 max-w-7xl items-center justify-between gap-4 px-4 sm:px-6">
-        <Link href="/" className="flex items-center gap-2.5">
+      {/* No max width and no wrapping: this bar holds six items that each read
+          as one line, and a wrapped "Generate a lesson" is what made it look
+          broken. Narrow windows hide items instead (nav, badge, CTA). */}
+      <div className="flex h-16 items-center justify-between gap-3 px-4 sm:px-6">
+        <Link href="/" className="flex shrink-0 items-center gap-2.5">
           <img
             src="/logo.png"
             alt="Logo EdusGPT"
@@ -61,7 +64,7 @@ export function SiteHeader() {
             height={36}
             className="h-9 w-9 rounded-xl object-cover"
           />
-          <span className="leading-tight">
+          <span className="whitespace-nowrap leading-tight">
             <span className="block text-sm font-bold tracking-tight text-mist-50">
               EdusGPT
             </span>
@@ -71,7 +74,7 @@ export function SiteHeader() {
           </span>
         </Link>
 
-        <nav className="hidden items-center gap-1 md:flex">
+        <nav className="hidden min-w-0 items-center gap-1 md:flex">
           {NAV.map((item) => {
             const active =
               item.href === "/" ? pathname === "/" : pathname.startsWith(item.href);
@@ -79,7 +82,7 @@ export function SiteHeader() {
               <Link
                 key={item.href}
                 href={item.href}
-                className={`flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium transition-colors ${
+                className={`flex shrink-0 items-center gap-2 whitespace-nowrap rounded-lg px-3 py-2 text-sm font-medium transition-colors ${
                   active
                     ? "bg-ink-800 text-brand-200"
                     : "text-mist-300 hover:bg-ink-850 hover:text-mist-100"
@@ -92,14 +95,14 @@ export function SiteHeader() {
           })}
         </nav>
 
-        <div className="flex items-center gap-2">
-          <div className="hidden lg:block">
+        <div className="flex shrink-0 items-center gap-2">
+          <div className="hidden shrink-0 lg:block">
             <LocaleSwitcher />
           </div>
-          <div className="hidden sm:block">
+          <div className="hidden shrink-0 sm:block">
             <AiKeyBadge />
           </div>
-          <Link href="/studio" className="btn-primary hidden lg:inline-flex">
+          <Link href="/studio" className="btn-primary hidden whitespace-nowrap lg:inline-flex">
             <IconSparkles className="h-4 w-4" /> {t.ctaGenerate}
           </Link>
           <button

@@ -41,7 +41,7 @@ export function LocaleSwitcher({ compact = false }: { compact?: boolean }) {
             type="button"
             onClick={() => setLang(item)}
             aria-pressed={active}
-            className={`rounded-md px-2.5 py-1 text-xs font-medium transition-colors ${
+            className={`whitespace-nowrap rounded-md px-2.5 py-1 text-xs font-medium transition-colors ${
               active
                 ? "bg-brand-500/15 text-brand-200"
                 : "text-mist-400 hover:text-mist-100"
