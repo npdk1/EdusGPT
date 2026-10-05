@@ -227,6 +227,32 @@ export function TeacherVoice({
     trackFrameRef.current = requestAnimationFrame(tick);
   }, []);
 
+  /**
+   * Rides along on a lookahead fetch for the same slide+voice, if one is already
+   * running, instead of synthesising twice.
+   *
+   * Returns null when there is nothing to ride (warmer failed or gave up), and
+   * the caller falls through to its own fetch. The warmer always removes its
+   * key when it settles, so waiting on the key alone can never hang past the
+   * timeout — and a switch aborts through the same signal.
+   */
+  const waitForWarm = useCallback(
+    async (key: string, signal: AbortSignal): Promise<CachedNarration | null> => {
+      const start = Date.now();
+      for (;;) {
+        if (signal.aborted) return null;
+        const hit = cacheRef.current.get(key);
+        if (hit) return hit;
+        // The warmer finished without caching: it failed, and waiting longer
+        // only delays the retry that actually reports the failure.
+        if (!warmingRef.current.has(key)) return null;
+        if (Date.now() - start > 150_000) return null;
+        await new Promise((resolve) => setTimeout(resolve, 250));
+      }
+    },
+    [],
+  );
+
   useEffect(() => {
     fetch("/api/tts")
       .then((r) => (r.ok ? r.json() : null))
@@ -260,7 +286,7 @@ export function TeacherVoice({
     };
   }, []);
 
-  const stop = useCallback(() => {
+  const stop = useCallback((reportVoice?: string) => {
     abortRef.current?.abort();
     abortRef.current = null;
     audioRef.current?.pause();
@@ -271,7 +297,9 @@ export function TeacherVoice({
     }
     setSpeaking(false);
     setLoading(false);
-    onVoiceState?.({ status: "idle", sceneIndex: null, sceneTitle: "", voice });
+    // The voice that is actually done, not the one from the closure: after a
+    // switch the stale id would flash on the chip until the new fetch lands.
+    onVoiceState?.({ status: "idle", sceneIndex: null, sceneTitle: "", voice: reportVoice ?? voice });
   }, [onVoiceState, stopTracking, voice]);
 
   /** Hands a decoded narration to the player. */
@@ -389,6 +417,26 @@ export function TeacherVoice({
         return;
       }
 
+      // A lookahead may already be fetching this exact slide+voice (switching
+      // voices re-warms the current slide before the next frame speaks it).
+      // Riding along beats a second synthesis for one playback.
+      if (warmingRef.current.has(key)) {
+        setLoading(true);
+        onVoiceState?.({ status: "preparing", sceneIndex, sceneTitle, voice });
+        const rode = await waitForWarm(key, controller.signal);
+        if (rode) {
+          play(rode, sceneIndex, sceneTitle, text, startAt);
+          return;
+        }
+        if (controller.signal.aborted) return;
+      }
+
+      // The warmers share this set: without registering, a lookahead fetch
+      // for this same slide+voice runs alongside this one and the server
+      // synthesises twice for one playback.
+      warmingRef.current.add(key);
+      const release = () => warmingRef.current.delete(key);
+
       setLoading(true);
       // The gap the presenter actually cares about: the slide is on screen but
       // its narration is still being fetched.
@@ -400,7 +448,10 @@ export function TeacherVoice({
           body: JSON.stringify({ text, voice }),
           signal: controller.signal,
         });
-        if (controller.signal.aborted) return;
+        if (controller.signal.aborted) {
+          release();
+          return;
+        }
 
         if (!response.ok) {
           const detail = (await response.json().catch(() => null)) as { error?: string } | null;
@@ -411,11 +462,16 @@ export function TeacherVoice({
         // blob is what we actually need from it.
         const words = await decodeWordMarks(response.headers.get("x-tts-words"));
         const blob = await response.blob();
-        if (controller.signal.aborted) return;
+        if (controller.signal.aborted) {
+          release();
+          return;
+        }
         const entry: CachedNarration = { url: URL.createObjectURL(blob), words };
         cacheRef.current.set(key, entry);
+        release();
         play(entry, sceneIndex, sceneTitle, text, startAt);
       } catch (error) {
+        release();
         if (controller.signal.aborted) return;
         setLoading(false);
         if (error instanceof Error && error.name === "AbortError") return;
@@ -450,7 +506,7 @@ export function TeacherVoice({
         );
       }
     },
-    [play, stop, stopTracking, voice, t],
+    [play, stop, stopTracking, voice, t, waitForWarm],
   );
 
   /**
@@ -655,7 +711,7 @@ export function TeacherVoice({
     // more than a frame, which on a paused deck is never.
     lastSeenTimeRef.current = null;
     setNotice(null);
-    stop();
+    stop(next);
   };
 
   const toggle = () => {
