@@ -398,16 +398,16 @@ export function LessonPlayer({ initialLesson, samples }: LessonPlayerProps) {
       {/* min-w-0 on both children: without it a wide descendant (a long chip, a
           figure, a chart) refuses to shrink and pushes the second column off
           the screen instead of scrolling inside its own column. */}
-      <div className="grid min-w-0 gap-5 md:min-h-0 md:flex-1 md:grid-cols-[minmax(0,1fr)_20rem] md:grid-rows-[minmax(0,1fr)] md:gap-4">
+      <div className="grid min-w-0 gap-5 lg:min-h-0 lg:flex-1 lg:grid-cols-[minmax(0,1fr)_20rem] lg:grid-rows-[minmax(0,1fr)] lg:gap-4">
         {/*
           One row on a desktop, wrapping only on a phone: every wrapped row
           costs the stage ~40px of height, and two wrapped bars were what pushed
           the timeline below the fold. Nothing is removed — the row scrolls
           sideways on a narrow window instead of growing taller.
         */}
-        <div className="flex min-w-0 flex-col space-y-4 md:min-h-0 md:gap-3 md:space-y-0 md:overflow-y-auto">
+        <div className="flex min-w-0 flex-col space-y-4 lg:min-h-0 lg:gap-3 lg:space-y-0 lg:overflow-y-auto">
           {/* toolbar */}
-          <div className="panel flex flex-wrap items-center gap-2.5 p-3 md:flex-nowrap md:gap-2 md:overflow-x-auto md:p-2 md:[&>*]:shrink-0">
+          <div className="panel flex flex-wrap items-center gap-2.5 p-3 lg:flex-nowrap lg:gap-2 lg:overflow-x-auto lg:p-2 lg:[&>*]:shrink-0">
             <label className="flex items-center gap-2">
               <span className="sr-only">{t.playerLessonLabel}</span>
               <select
@@ -522,7 +522,7 @@ export function LessonPlayer({ initialLesson, samples }: LessonPlayerProps) {
           {/* The stage. `stage-fullscreen` is what turns this element
               into a letterboxed fullscreen player: the slide keeps its 16:9
               shape and is centred instead of stretching to the window. */}
-          <div ref={stageWrapRef} className="stage-fullscreen stage-fills relative md:min-h-[16rem] md:flex-1 md:[container-type:size]">
+          <div ref={stageWrapRef} className="stage-fullscreen stage-fills relative lg:min-h-[16rem] lg:flex-1 lg:[container-type:size]">
             <GsapSlideStage
               lesson={lesson}
               timebase={timebase}
@@ -574,7 +574,7 @@ export function LessonPlayer({ initialLesson, samples }: LessonPlayerProps) {
         </div>
 
         {/* right column */}
-        <div className="min-w-0 space-y-4 md:flex md:min-h-0 md:flex-col md:overflow-y-auto md:pr-1">
+        <div className="min-w-0 space-y-4 lg:flex lg:min-h-0 lg:flex-col lg:overflow-y-auto lg:pr-1">
 
           <ChapterList
             lesson={lesson}

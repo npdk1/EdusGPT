@@ -131,7 +131,7 @@ export default function LessonClient({ courseId }: LessonClientProps) {
         samples={SAMPLE_LESSONS.filter((item) => item.id !== lesson.id)}
       />
       {runLog.length > 0 ? (
-        <div className="panel mt-4 p-4 md:max-h-[28vh] md:overflow-y-auto">
+        <div className="panel mt-4 p-4 lg:max-h-[28vh] lg:overflow-y-auto">
           <button
             type="button"
             onClick={() => setLogOpen((open) => !open)}

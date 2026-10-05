@@ -31,15 +31,15 @@ export function LessonHeader() {
   const t = useCopy(COPY);
 
   return (
-    <header className="mb-6 flex flex-col gap-4 md:mb-1 md:flex-row md:items-center md:justify-between">
+    <header className="mb-6 flex flex-col gap-4 lg:mb-1 lg:flex-row lg:items-center lg:justify-between">
       <div className="flex min-w-0 items-baseline gap-4">
-        <h1 className="shrink-0 text-3xl font-bold tracking-tight text-mist-50 md:text-lg">
+        <h1 className="shrink-0 text-3xl font-bold tracking-tight text-mist-50 lg:text-lg">
           {t.lessonTitle}
         </h1>
         {/* The lead is three lines of explanation, which is welcome on a phone and
             pure height on a player that wants the whole window. One line, and cut
             off at the end, keeps it available without costing the stage a row. */}
-        <p className="hidden truncate text-sm text-mist-400 md:inline-block">
+        <p className="hidden truncate text-sm text-mist-400 lg:inline-block">
           {t.lessonLead}
         </p>
       </div>

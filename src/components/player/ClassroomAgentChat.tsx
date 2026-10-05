@@ -206,7 +206,7 @@ export function ClassroomAgentChat({ currentScene, lessonTitle }: ClassroomAgent
       className={
         expanded
           ? "panel fixed inset-y-3 right-3 z-[70] flex w-[min(36rem,94vw)] flex-col overflow-hidden shadow-2xl"
-          : "panel flex h-[480px] flex-col overflow-hidden md:h-auto md:min-h-0 md:flex-1"
+          : "panel flex h-[480px] flex-col overflow-hidden lg:h-auto lg:min-h-0 lg:flex-1"
       }
     >
       <div className="flex items-center justify-between border-b border-ink-700/70 bg-ink-950/70 px-4 py-3">

@@ -371,7 +371,7 @@
  * steps aside: it is a half-screen block of links that has no place on a page
  * whose whole point is the slide.
  */
-@media (min-width: 768px) {
+@media (min-width: 1024px) {
   body:has(.lesson-shell) {
     display: flex;
     flex-direction: column;
