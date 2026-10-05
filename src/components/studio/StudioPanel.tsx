@@ -1529,57 +1529,81 @@ function LengthPicker({
  */
 function StyleLayoutPreview({ styleId, palette }: {
   styleId: string;
-  palette: { bg: string; ink: string; inkSoft: string; accent: string };
+  palette: { bg: string; bgSunk: string; ink: string; inkSoft: string; rule: string; accent: string; accentSoft: string };
 }) {
-  const bar = (width: string, color?: string, tall = false) => (
+  const bar = (width: string, color?: string, cls = "h-1") => (
     <span
       aria-hidden="true"
-      className={`block rounded-full ${tall ? "h-1.5" : "h-1"}`}
-      style={{ width, background: color ?? palette.inkSoft, opacity: 0.75 }}
+      className={`block rounded-full ${cls}`}
+      style={{ width, background: color ?? palette.inkSoft, opacity: 0.8 }}
     />
   );
   const index = (n: string) => (
     <span
       aria-hidden="true"
-      className="font-mono text-[8px] font-bold leading-none"
+      className="font-mono text-[9px] font-bold leading-none"
       style={{ color: palette.accent }}
     >
       {n}
     </span>
   );
+  const kicker = (width = "22%") => (
+    <span aria-hidden="true" className="flex items-center gap-1">
+      <span className="block h-1 w-1 rounded-full" style={{ background: palette.accent }} />
+      <span className="block h-1 rounded-full" style={{ width, background: palette.accent, opacity: 0.7 }} />
+    </span>
+  );
+  const dots = (count: number) => (
+    <span aria-hidden="true" className="flex gap-0.5">
+      {Array.from({ length: count }).map((_, i) => (
+        <span key={i} className="block h-1 w-1 rounded-full" style={{ background: palette.rule }} />
+      ))}
+    </span>
+  );
   return (
     <span
       aria-hidden="true"
-      className="block h-16 w-full space-y-1 overflow-hidden rounded-md border border-ink-700/60 p-1.5"
+      className="block h-24 w-full space-y-1.5 overflow-hidden rounded-lg border border-ink-700/60 p-2"
       style={{ background: palette.bg }}
     >
       {styleId === "minimalist" ? (
-        <span className="block space-y-1 pt-2">
-          {bar("85%", palette.ink, true)}
-          {bar("55%")}
-        </span>
+        <>
+          {kicker()}
+          <span className="block h-2.5 w-11/12 rounded-full" style={{ background: palette.ink }} />
+          {bar("60%")}
+          <span className="block pt-1">{dots(5)}</span>
+        </>
       ) : styleId === "visual-story" ? (
         <span className="flex h-full gap-1.5">
-          <span className="block h-full w-1/3 rounded-sm" style={{ background: palette.accent, opacity: 0.55 }} />
-          <span className="block flex-1 space-y-1 pt-1">
-            {bar("90%", palette.ink, true)}
+          <span className="flex w-2/5 flex-col justify-end rounded-md p-1" style={{ background: palette.accent, opacity: 0.5 }}>
+            <span className="block h-1 w-3/4 rounded-full" style={{ background: palette.bg }} />
+          </span>
+          <span className="block flex-1 space-y-1 pt-0.5">
+            {kicker("35%")}
+            <span className="block h-2 w-11/12 rounded-full" style={{ background: palette.ink }} />
+            {bar("85%")}
             {bar("70%")}
-            {bar("80%")}
+            <span className="block pt-0.5">{dots(4)}</span>
           </span>
         </span>
       ) : styleId === "classroom" ? (
-        <span className="block space-y-1">
-          {[["01", "88%"], ["02", "76%"], ["03", "82%"]].map(([n, w]) => (
-            <span key={n} className="flex items-center gap-1">
+        <>
+          {kicker("18%")}
+          <span className="block h-1.5 w-2/3 rounded-full" style={{ background: palette.ink }} />
+          {[["01", "92%"], ["02", "84%"], ["03", "88%"]].map(([n, w]) => (
+            <span key={n} className="flex items-center gap-1 rounded" style={{ background: palette.bgSunk, padding: "2px 4px" }}>
               {index(n)}
               {bar(w)}
             </span>
           ))}
-        </span>
+        </>
       ) : (
-        <span className="block space-y-1 pt-2 text-center">
-          <span className="mx-auto block h-1.5 w-2/3 rounded-full" style={{ background: palette.ink }} />
-          {bar("45%")}
+        <span className="flex h-full flex-col items-center justify-center gap-1 text-center">
+          {kicker("26%")}
+          <span className="block h-2 w-4/5 rounded-full" style={{ background: palette.ink }} />
+          {bar("55%")}
+          <span className="block h-px w-1/4" style={{ background: palette.accent }} />
+          {bar("30%")}
         </span>
       )}
     </span>
@@ -1616,16 +1640,10 @@ function StylePicker({
                   : "border-ink-700 hover:border-ink-600"
               }`}
             >
-              <span className="flex items-start gap-2">
-                {/* The style's own paper, arranged the way the style arranges
-                    content — not a colour chip. */}
-                <span className="w-24 shrink-0">
-                  <StyleLayoutPreview styleId={style.id} palette={preset.palette} />
-                </span>
-                <span className="min-w-0 flex-1 pt-0.5">
-                  <span className="block truncate text-xs font-semibold text-mist-100">
-                    {style.label}
-                  </span>
+              <span className="block">
+                <StyleLayoutPreview styleId={style.id} palette={preset.palette} />
+                <span className="mt-1.5 block truncate text-xs font-semibold text-mist-100">
+                  {style.label}
                 </span>
               </span>
               <span className="mt-1.5 block text-[11px] leading-snug text-mist-400">
