@@ -55,7 +55,7 @@ export function SiteHeader() {
       {/* No max width and no wrapping: this bar holds six items that each read
           as one line, and a wrapped "Generate a lesson" is what made it look
           broken. Narrow windows hide items instead (nav, badge, CTA). */}
-      <div className="flex h-16 items-center justify-between gap-3 px-4 sm:px-6">
+      <div className="flex h-16 items-center justify-between gap-3 overflow-x-auto px-4 sm:px-6">
         <Link href="/" className="flex shrink-0 items-center gap-2.5">
           <img
             src="/logo.png"

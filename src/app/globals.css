@@ -376,7 +376,12 @@
     display: flex;
     flex-direction: column;
     height: 100dvh;
-    overflow: hidden;
+    /* Vertical stays locked so browser zoom re-lays out inside the frame;
+       horizontal is the escape hatch: at high zoom the fixed-width columns
+       no longer fit side by side, and clipping them leaves controls
+       unreachable. A sideways scroll only ever appears past that point. */
+    overflow-x: auto;
+    overflow-y: hidden;
   }
 
   body:has(.lesson-shell) > header {

@@ -207,7 +207,10 @@ export function LibraryPanel() {
         setError(payload?.error ?? t.libraryDeleteLessonFailed);
         return;
       }
+      // Failed lessons are drafts, not courses: filter both or the card stays
+      // until the next reload, which is exactly the reported bug.
       setCourses((current) => current.filter((item) => item.id !== id));
+      setDrafts((current) => current.filter((item) => item.id !== id));
     } finally {
       setBusyId(null);
     }
