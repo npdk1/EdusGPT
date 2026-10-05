@@ -8,10 +8,15 @@ out
 build
 next-env.d.ts
 
-# Secrets never ship. `.env` is where /setup writes your API key, and
-# `.env.example` carries the documented defaults for a fresh clone — copy it
-# with `run.bat` (or by hand) and the app starts with zero setup.
-.env
+# `.env` is committed, with every key blank: a fresh clone then starts with the
+# right shape and no setup, and `/setup` fills the keys in on the machine.
+#
+# It is tracked, so it stays tracked — that is the point of shipping it. The
+# cost is real: `/setup` writing a key leaves `.env` dirty, and a careless
+# `git add -A` would commit that key. Before committing anything, check
+# `git diff .env` and do not stage it if it now holds a key.
+#
+# `.env.local` is still ignored — it is machine-local overrides, never shipped.
 .env.local
 
 # `.env` sống tới khi bạn tự xoá — `uninstall.bat` giữ nguyên nó.

@@ -1,25 +1,28 @@
 {
-  "provider": "antigravity",
-  "model": "gemini-3.8-flash-high",
-  "baseUrl": "local://antigravity-cli",
+  "provider": "groq",
+  "model": "openai/gpt-oss-120b",
+  "baseUrl": "https://api.groq.com/openai/v1",
   "keyHints": {
-    "gemini": "",
-    "openrouter": ""
+    "groq": "gsk_3D…oXZa",
+    "nvidia": "nvapi-…KypI"
   },
   "keySources": {
-    "gemini": "none",
-    "openrouter": "none"
+    "groq": "file",
+    "nvidia": "file"
   },
-  "baseUrls": {},
+  "baseUrls": {
+    "groq": "https://api.groq.com/openai/v1",
+    "nvidia": "https://integrate.api.nvidia.com/v1"
+  },
   "models": {
-    "openrouter": "~deepseek/deepseek-v4-flash-latest",
-    "gemini": "gemini-flash-latest",
-    "antigravity": "gemini-3.8-flash-high"
+    "antigravity": "gemini-3.8-flash-high",
+    "groq": "openai/gpt-oss-120b",
+    "nvidia": "nvidia/nemotron-3-ultra-550b-a55b"
   },
-  "lastValidatedAt": "2026-10-01T16:14:57.363Z",
+  "lastValidatedAt": "2026-10-05T16:23:10.840Z",
   "lastValidationOk": true,
-  "lastValidationMessage": "Antigravity CLI sẵn sàng (1.2.14 · 7 model cấu hình, đăng nhập local đã có). Không cần API key.",
-  "updatedAt": "2026-10-01T16:14:57.380Z",
+  "lastValidationMessage": "Key hoạt động. Model \"openai/gpt-oss-120b\" trả lời trong 907ms.",
+  "updatedAt": "2026-10-05T16:23:10.840Z",
   "keyHint": "",
   "keySource": "none"
 }
