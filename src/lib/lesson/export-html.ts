@@ -42,7 +42,7 @@ body{background-image:radial-gradient(50rem 32rem at 12% -8%,rgba(36,189,172,.16
 .stage{position:relative;aspect-ratio:16/9;container-type:inline-size;background:var(--ink2);border:1px solid var(--line);border-radius:20px;overflow:hidden;box-shadow:0 28px 60px -34px rgba(0,0,0,.75)}
 .scene{position:absolute;inset:0;opacity:0;visibility:hidden}
 .card{--slide-fit:1;position:absolute;inset:0;display:flex;flex-direction:column;justify-content:safe center;padding:3.4cqw 5.5cqw 9cqw;overflow:hidden;background-image:linear-gradient(180deg,color-mix(in srgb,var(--ink) 88%,var(--mist5)) 0%,var(--ink) 38%,var(--ink3) 100%)}
-.wash{position:absolute;inset:0;z-index:-1;pointer-events:none;background:radial-gradient(120% 90% at 88% -10%,color-mix(in srgb,var(--brand3) 16%,transparent) 0%,transparent 62%)}
+.wash{position:absolute;inset:0;z-index:-1;pointer-events:none;background:radial-gradient(120% 90% at 88% -10%,color-mix(in srgb,var(--brand3) 16%,transparent) 0%,transparent 62%),radial-gradient(90% 80% at 8% 108%,color-mix(in srgb,var(--brand) 10%,transparent) 0%,transparent 60%)}
 .wm{position:absolute;right:6%;bottom:4%;z-index:3;font-family:ui-monospace,monospace;font-size:1.6cqw;font-weight:700;color:color-mix(in srgb,var(--mist5) 70%,transparent)}
 /* The column the fit pass measures: capped at the paper, so nothing spills into
    the caption strip, with the picture as the one thing allowed to give way. */

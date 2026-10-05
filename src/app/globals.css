@@ -519,7 +519,7 @@
      * sheet has a gradient down it. All three stops are theme roles — paper,
      * its sunk step, and the faint tone between them — so a dark palette gets a
      * sheet that settles into its own deeper ink and a paper palette one that
-     * settles into its own warmer tone. The same picture in thirty-six
+     * settles into its own warmer tone. The same picture in forty-two
      * palettes, with no colour named here.
      */
     background-image: linear-gradient(
@@ -1041,11 +1041,21 @@
        carries `z-index: 1`, so this can never escape onto the page. */
     z-index: -1;
     pointer-events: none;
-    background: radial-gradient(
-      120% 90% at 88% -10%,
-      color-mix(in srgb, var(--slide-accent-soft) 16%, transparent) 0%,
-      transparent 62%
-    );
+    /* Two blobs, not one: the trend on every template site is a mesh, not a
+       flat sheet — a soft accent glow top-right and a fainter full-strength
+       one bottom-left. Both resolve through the palette, so all forty-two
+       papers get the depth with no colour named here. */
+    background:
+      radial-gradient(
+        120% 90% at 88% -10%,
+        color-mix(in srgb, var(--slide-accent-soft) 16%, transparent) 0%,
+        transparent 62%
+      ),
+      radial-gradient(
+        90% 80% at 8% 108%,
+        color-mix(in srgb, var(--slide-accent) 10%, transparent) 0%,
+        transparent 60%
+      );
   }
 
   .scene-on-cover .scene-wash {

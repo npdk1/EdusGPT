@@ -264,6 +264,42 @@ export const SLIDE_PRESETS: readonly SlideThemePreset[] = [
     group: "tint",
     palette: { bg: "#eee9f2", bgSunk: "#e2dbe8", ink: "#181420", inkSoft: "#544c5c", inkFaint: "#857c8d", rule: "#d0c8d8", accent: "#6a4a9a", accentSoft: "#9276bb" },
   },
+  {
+    id: "aurora",
+    label: "Cực quang",
+    group: "paper",
+    palette: { bg: "#edf1fb", bgSunk: "#dde6f6", ink: "#141a2e", inkSoft: "#4d5878", inkFaint: "#8b93ad", rule: "#c3cfe4", accent: "#0b7a5c", accentSoft: "#45b393" },
+  },
+  {
+    id: "peach",
+    label: "Đào",
+    group: "paper",
+    palette: { bg: "#faf0e6", bgSunk: "#f1e0cf", ink: "#221610", inkSoft: "#6b5a4d", inkFaint: "#a08e7e", rule: "#d9c7b3", accent: "#c2410c", accentSoft: "#e08a5a" },
+  },
+  {
+    id: "ocean",
+    label: "Đại dương",
+    group: "paper",
+    palette: { bg: "#e9f4f6", bgSunk: "#d5e8ec", ink: "#0e1c1e", inkSoft: "#476064", inkFaint: "#7e9396", rule: "#bcd5da", accent: "#0e7490", accentSoft: "#4aa8bd" },
+  },
+  {
+    id: "galaxy",
+    label: "Ngân hà",
+    group: "ink",
+    palette: { bg: "#0d0f23", bgSunk: "#171a3a", ink: "#e8eaf6", inkSoft: "#9aa1c7", inkFaint: "#5f6584", rule: "#2c3157", accent: "#8b7cf6", accentSoft: "#a5b4fc" },
+  },
+  {
+    id: "ember",
+    label: "Than hồng",
+    group: "ink",
+    palette: { bg: "#170f0d", bgSunk: "#261511", ink: "#f5e9e2", inkSoft: "#a8988d", inkFaint: "#6e5f57", rule: "#3b2b24", accent: "#f97316", accentSoft: "#fca55c" },
+  },
+  {
+    id: "jade",
+    label: "Ngọc bích",
+    group: "ink",
+    palette: { bg: "#0b1512", bgSunk: "#13211a", ink: "#e6f0e9", inkSoft: "#93a89b", inkFaint: "#5f6f65", rule: "#27352c", accent: "#34d399", accentSoft: "#6ee7b7" },
+  },
 ] as const;
 
 const PRESET_BY_ID = new Map(SLIDE_PRESETS.map((preset) => [preset.id, preset]));
@@ -289,7 +325,7 @@ export const SLIDE_THEME_IDS = SLIDE_PRESETS.map((preset) => preset.id);
  *
  * The slide reads its colours only through `var(--slide-*)`, so handing the
  * palette down as variables is enough to restyle a whole deck — which is what
- * lets thirty-six presets exist without thirty-six blocks of CSS, and what lets
+ * lets forty-two presets exist without forty-two blocks of CSS, and what lets
  * the studio preview and the player share one code path.
  */
 export function paletteStyle(id: string | null | undefined): Record<string, string> {
