@@ -7,6 +7,7 @@ import { recordModelTrust } from "@/lib/ai/model-trust";
 import { noteCompactModel, readCompactModel } from "@/lib/server/token-limit";
 import { SCENE_ACCENTS, SCENE_KINDS, SLIDE_BLOCK_KINDS, SLIDE_LAYOUTS, POINTER_TARGETS, iconSetFor, newLessonId, type SlideTheme } from "@/lib/lesson/types";
 import { DEFAULT_SLIDE_PATTERN, DEFAULT_SLIDE_THEME, isSlidePattern } from "@/lib/lesson/themes";
+import { DEFAULT_SLIDE_MOTION, isSlideMotion } from "@/lib/lesson/motion";
 import {
   resolveLessonLength,
   resolvePresentationStyle,
@@ -943,7 +944,8 @@ export async function POST(request: NextRequest) {
     theme?: string;
     /** The background pattern id. Unknown ids fall back to plain. */
     pattern?: string;
-    /**
+    /** The entrance motion id. Unknown ids play still. */
+    motion?: string;    /**
      * The voice the teacher chose by ear in the studio.
      *
      * Carried on the lesson so the player opens speaking in the voice that was
@@ -1762,6 +1764,7 @@ export async function POST(request: NextRequest) {
           fps: 30,
           theme,
           pattern: isSlidePattern(body.pattern) ? body.pattern : DEFAULT_SLIDE_PATTERN,
+          motion: isSlideMotion(body.motion) ? body.motion : DEFAULT_SLIDE_MOTION,
           voice: typeof body.voice === "string" ? body.voice.slice(0, 60) : undefined,
           showPointer: body.showPointer === false ? false : true,
           pointerColor:

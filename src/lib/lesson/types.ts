@@ -475,6 +475,12 @@ export interface Lesson {
    */
   theme?: SlideTheme;
   /**
+   * Entrance motion id, chosen in the studio.
+   *
+   * Absent means still: lessons saved before motions play exactly as before.
+   */
+  motion?: string;
+  /**
    * The background pattern painted in the paper's accent.
    *
    * Absent means plain: every lesson saved before patterns existed renders

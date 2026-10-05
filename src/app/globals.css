@@ -327,6 +327,50 @@
     outline-offset: 4px;
   }
 
+  /*
+   * Motion miniatures for the studio picker: one looping move per preset on
+   * a dot, transform/opacity only so even ten of them stay cheap. The `35%`
+   * hold in each cycle is what makes a 1.8s loop read as a demo rather than
+   * a flicker.
+   */
+  .mq-stage {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 2.25rem;
+    border-radius: 0.5rem;
+    background: rgba(255, 255, 255, 0.03);
+    overflow: hidden;
+  }
+
+  .mq-dot {
+    display: block;
+    width: 0.625rem;
+    height: 0.625rem;
+    border-radius: 0.2rem;
+    background: var(--color-brand-300);
+  }
+
+  .mq-rise { animation: mq-rise 1.8s ease-in-out infinite; }
+  .mq-fade { animation: mq-fade 1.8s ease-in-out infinite; }
+  .mq-pop { animation: mq-pop 1.8s ease-in-out infinite; }
+  .mq-zoom { animation: mq-zoom 1.8s ease-in-out infinite; }
+  .mq-slide-left { animation: mq-slide-left 1.8s ease-in-out infinite; }
+  .mq-slide-right { animation: mq-slide-right 1.8s ease-in-out infinite; }
+  .mq-bounce { animation: mq-bounce 1.8s ease-in-out infinite; }
+  .mq-flip { animation: mq-flip 1.8s ease-in-out infinite; }
+  .mq-blur { animation: mq-blur 1.8s ease-in-out infinite; }
+
+  @keyframes mq-rise { 0% { transform: translateY(9px); opacity: 0; } 35%, 100% { transform: none; opacity: 1; } }
+  @keyframes mq-fade { 0% { opacity: 0; } 35%, 100% { opacity: 1; } }
+  @keyframes mq-pop { 0% { transform: scale(0.4); opacity: 0; } 35%, 100% { transform: scale(1); opacity: 1; } }
+  @keyframes mq-zoom { 0% { transform: scale(1.6); opacity: 0; } 35%, 100% { transform: scale(1); opacity: 1; } }
+  @keyframes mq-slide-left { 0% { transform: translateX(-16px); opacity: 0; } 35%, 100% { transform: none; opacity: 1; } }
+  @keyframes mq-slide-right { 0% { transform: translateX(16px); opacity: 0; } 35%, 100% { transform: none; opacity: 1; } }
+  @keyframes mq-bounce { 0% { transform: translateY(10px); opacity: 0; } 45% { transform: translateY(-3px); opacity: 1; } 70% { transform: translateY(1px); } 100% { transform: none; opacity: 1; } }
+  @keyframes mq-flip { 0% { transform: rotateY(-75deg); opacity: 0; } 35%, 100% { transform: none; opacity: 1; } }
+  @keyframes mq-blur { 0% { filter: blur(3px); opacity: 0; } 35%, 100% { filter: blur(0); opacity: 1; } }
+
   .stage-fullscreen {
     @apply flex w-full items-stretch justify-center bg-ink-950;
   }

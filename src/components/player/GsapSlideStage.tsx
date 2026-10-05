@@ -4,6 +4,7 @@ import { useEffect, useRef } from "react";
 import { ensureGsap } from "@/lib/gsap";
 import type { Timebase } from "@/hooks/useTimebase";
 import { SCENE_KIND_LABEL, defaultSlideLayout, type Lesson, type SlideLayout } from "@/lib/lesson/types";
+import { motionFor } from "@/lib/lesson/motion";
 import { slideIcon } from "@/lib/lesson/slide-icons";
 import { DEFAULT_SLIDE_THEME, isDarkTheme, paletteStyle } from "@/lib/lesson/themes";
 import { InteractiveSimulation } from "./InteractiveSimulation";
@@ -101,6 +102,8 @@ export function GsapSlideStage({
 
     const tl = gsap.timeline({ paused: true, defaults: { ease: "power3.out" } });
 
+    const motion = motionFor(lesson.motion ?? "none");
+
     scenes.forEach((element, index) => {
       const scene = lesson.scenes[index];
       if (!scene) return;
@@ -108,7 +111,6 @@ export function GsapSlideStage({
       const card = element.querySelector(".scene-card");
       const title = element.querySelector(".scene-title");
       const subtitle = element.querySelector(".scene-sub");
-      const bullets = element.querySelectorAll(".scene-bullet");
       const formula = element.querySelector(".scene-formula");
       const table = element.querySelector(".scene-table");
       const bar = element.querySelector(".scene-bar");
@@ -124,34 +126,63 @@ export function GsapSlideStage({
        * the tween's first render lets the "already there" state stand until
        * playback actually moves through it.
        */
-      tl.set(element, { autoAlpha: 1, zIndex: 2 }, at)
-        .set(element, { autoAlpha: 0, zIndex: 1 }, at + scene.duration - 0.001)
-        .fromTo(
+      tl.set(element, { autoAlpha: 1, zIndex: 2 }, at).set(
+        element,
+        { autoAlpha: 0, zIndex: 1 },
+        at + scene.duration - 0.001,
+      );
+      // The studio's entrance motion, one table for the whole deck: the card,
+      // the title and the items each take their "from" from it, and the "to"
+      // is always the natural layout. `none` skips the intros outright — the
+      // progress bar below is the timeline, not an entrance, so it stays.
+      if (!motion.instant) {
+        const rest = {
+          x: 0,
+          y: 0,
+          yPercent: 0,
+          scale: 1,
+          rotationY: 0,
+          transformPerspective: 900,
+          opacity: 1,
+          filter: "blur(0px)",
+          immediateRender: false as const,
+        };
+        const items = [
+          ...Array.from(element.querySelectorAll(".scene-bullet")),
+          ...Array.from(element.querySelectorAll(".scene-step")),
+        ];
+        tl.fromTo(
           card,
-          { y: 26, opacity: 0 },
-          { y: 0, opacity: 1, duration: 0.6, immediateRender: false },
+          motion.card,
+          { ...rest, duration: motion.duration, ease: motion.ease },
           at,
         )
-        .fromTo(
-          title,
-          { yPercent: 60, opacity: 0 },
-          { yPercent: 0, opacity: 1, duration: 0.55, immediateRender: false },
-          at + 0.08,
-        )
-        .fromTo(
-          subtitle,
-          { y: 14, opacity: 0 },
-          { y: 0, opacity: 1, duration: 0.5, immediateRender: false },
-          at + 0.18,
-        )
-        .fromTo(
-          bullets,
-          { x: -18, opacity: 0 },
-          { x: 0, opacity: 1, duration: 0.5, stagger: 0.09, immediateRender: false },
-          at + 0.3,
-        );
+          .fromTo(
+            title,
+            motion.title,
+            { ...rest, duration: motion.duration, ease: motion.ease },
+            at + 0.08,
+          )
+          .fromTo(
+            subtitle,
+            { y: 14, opacity: 0 },
+            { y: 0, opacity: 1, duration: 0.5, immediateRender: false },
+            at + 0.18,
+          )
+          .fromTo(
+            items,
+            motion.item,
+            {
+              ...rest,
+              duration: motion.duration,
+              stagger: motion.stagger,
+              ease: motion.ease,
+            },
+            at + 0.3,
+          );
+      }
 
-      if (formula) {
+      if (!motion.instant && formula) {
         tl.fromTo(
           formula,
           { scale: 0.94, opacity: 0 },
@@ -165,7 +196,7 @@ export function GsapSlideStage({
           at + 0.45,
         );
       }
-      if (table) {
+      if (!motion.instant && table) {
         tl.fromTo(
           table,
           { y: 18, opacity: 0 },

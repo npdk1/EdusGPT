@@ -35,6 +35,7 @@ import {
   resolveSlideTheme,
   type SlideThemePreset,
 } from "@/lib/lesson/themes";
+import { DEFAULT_SLIDE_MOTION, SLIDE_MOTIONS } from "@/lib/lesson/motion";
 import {
   DEFAULT_LESSON_LENGTH,
   DEFAULT_PRESENTATION_STYLE,
@@ -174,6 +175,19 @@ const COPY = {
     patternBands: "Bands",
     patternRings: "Rings",
     patternWaves: "Waves",
+    motionLabel: "Entrance motion",
+    motionMore: "Show {count} more effects",
+    motionLess: "Show fewer effects",
+    motionNone: "Still",
+    motionRise: "Rise",
+    motionFade: "Fade",
+    motionPop: "Pop",
+    motionZoom: "Zoom",
+    motionSlideLeft: "Slide left",
+    motionSlideRight: "Slide right",
+    motionBounce: "Bounce",
+    motionFlip: "Flip",
+    motionBlur: "Blur",
   },
   vi: {
     createLesson: "Tạo bài giảng",
@@ -288,6 +302,19 @@ const COPY = {
     patternBands: "Dải chéo",
     patternRings: "Vòng",
     patternWaves: "Sóng",
+    motionLabel: "Hiệu ứng vào",
+    motionMore: "Xem thêm {count} hiệu ứng",
+    motionLess: "Thu gọn hiệu ứng",
+    motionNone: "Tĩnh",
+    motionRise: "Trồi lên",
+    motionFade: "Mờ dần",
+    motionPop: "Bật ra",
+    motionZoom: "Thu phóng",
+    motionSlideLeft: "Trượt trái",
+    motionSlideRight: "Trượt phải",
+    motionBounce: "Nảy nhẹ",
+    motionFlip: "Lật",
+    motionBlur: "Nhòe",
   },
 };
 
@@ -383,6 +410,84 @@ function patternSwatch(
   }
 }
 
+const TOP_MOTIONS = 4;
+
+/**
+ * Entrance motion picker: four illustrated presets up front, the rest behind
+ * the same expand toggle the voice picker uses. Each miniature loops its own
+ * move on a dot, so the choice is seen rather than imagined.
+ */
+function MotionPicker({
+  value,
+  onChange,
+}: {
+  value: string;
+  onChange: (id: string) => void;
+}) {
+  const t = useCopy(COPY);
+  const [expanded, setExpanded] = useState(false);
+  const names: Record<string, string> = {
+    none: t.motionNone,
+    rise: t.motionRise,
+    fade: t.motionFade,
+    pop: t.motionPop,
+    zoom: t.motionZoom,
+    "slide-left": t.motionSlideLeft,
+    "slide-right": t.motionSlideRight,
+    bounce: t.motionBounce,
+    flip: t.motionFlip,
+    blur: t.motionBlur,
+  };
+  const visible = expanded
+    ? [...SLIDE_MOTIONS]
+    : [
+        ...SLIDE_MOTIONS.slice(0, TOP_MOTIONS),
+        ...SLIDE_MOTIONS.slice(TOP_MOTIONS).filter((id) => id === value),
+      ];
+  const hidden = Math.max(0, SLIDE_MOTIONS.length - TOP_MOTIONS);
+  return (
+    <div>
+      <p className="label">{t.motionLabel}</p>
+      <div className="flex flex-wrap gap-1.5">
+        {visible.map((id) => {
+          const selected = value === id;
+          return (
+            <button
+              key={id}
+              type="button"
+              onClick={() => onChange(id)}
+              aria-pressed={selected}
+              className={`min-w-[4.5rem] flex-1 rounded-xl border p-1.5 transition-colors ${
+                selected
+                  ? "border-brand-500 bg-brand-500/15 text-brand-100"
+                  : "border-ink-700 hover:border-brand-700 hover:text-mist-100"
+              }`}
+            >
+              <span className="mq-stage" aria-hidden="true">
+                <span className={`mq-dot mq-${id}`} />
+              </span>
+              <span className="mt-1 block text-center text-[11px] font-medium">
+                {names[id] ?? id}
+              </span>
+            </button>
+          );
+        })}
+      </div>
+      {hidden > 0 || expanded ? (
+        <button
+          type="button"
+          onClick={() => setExpanded((open) => !open)}
+          aria-expanded={expanded}
+          className="mt-1.5 inline-flex items-center gap-1 text-xs text-brand-200 hover:text-brand-100"
+        >
+          {expanded ? t.motionLess : t.motionMore.replace("{count}", String(hidden))}
+          {expanded ? <ChevronUp className="h-3.5 w-3.5" /> : <ChevronDown className="h-3.5 w-3.5" />}
+        </button>
+      ) : null}
+    </div>
+  );
+}
+
 export function StudioPanel() {
   const t = useCopy(COPY);
   const lang = useLang();
@@ -408,6 +513,8 @@ export function StudioPanel() {
   const [theme, setTheme] = useState<SlideTheme>(DEFAULT_SLIDE_THEME);
   /** Pattern id; the slide resolves it through the registry, like the theme. */
   const [pattern, setPattern] = useState<string>(DEFAULT_SLIDE_PATTERN);
+  /** Entrance motion id; the players resolve it through motionFor. */
+  const [motion, setMotion] = useState<string>(DEFAULT_SLIDE_MOTION);
   /** Whether the theme grid is showing; the dropdown is the collapsed state. */
   const [themeOpen, setThemeOpen] = useState(false);
   // The voice is chosen here rather than in the player, because picking a voice
@@ -538,6 +645,7 @@ export function StudioPanel() {
       language,
       theme,
       pattern,
+      motion,
       voice,
       useImages,
       showPointer,
@@ -545,7 +653,7 @@ export function StudioPanel() {
       style: styleId,
       lessonLength,
     });
-  }, [language, lessonLength, minutes, pattern, pointerColor, referenceText, sceneCount, showPointer, stream, styleId, theme, topic, useImages, voice]);
+  }, [language, lessonLength, minutes, motion, pattern, pointerColor, referenceText, sceneCount, showPointer, stream, styleId, theme, topic, useImages, voice]);
 
   /** Saves to the server library (survives a browser wipe) and mirrors to local. */
   const save = useCallback(async () => {
@@ -826,6 +934,8 @@ export function StudioPanel() {
             })}
           </div>
         </div>
+
+        <MotionPicker value={motion} onChange={setMotion} />
 
         <ImageModeToggle value={useImages} onChange={setUseImages} />
 

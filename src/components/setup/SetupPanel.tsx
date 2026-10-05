@@ -753,7 +753,9 @@ export function SetupPanel() {
       <section className="panel relative z-10 space-y-4 p-5">
         {/* status — one compact row at the top of this card, instead of a
             six-cell grid or a section of its own. */}
-        <div className="flex flex-wrap items-center gap-2">
+        {/* status — one row, scrolled sideways when narrow: wrapping these
+            chips stacks three lines and the summary stops scanning. */}
+        <div className="flex flex-nowrap items-center gap-2 overflow-x-auto [&>*]:shrink-0">
           {status?.configured ? (
             <IconCircleCheck className="h-4 w-4 shrink-0 text-brand-300" />
           ) : (

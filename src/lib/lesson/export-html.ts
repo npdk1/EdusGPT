@@ -634,12 +634,30 @@ const PLAYER_JS = `
     var bar = el.querySelector('.bar');
     var at = scene.start;
     tl.set(el, { autoAlpha: 1, zIndex: 2 }, at)
-      .set(el, { autoAlpha: 0, zIndex: 1 }, at + scene.duration - 0.001)
-      .fromTo(card, { y: 26, opacity: 0 }, { y: 0, opacity: 1, duration: 0.6 }, at);
-    if (title) tl.fromTo(title, { yPercent: 60, opacity: 0 }, { yPercent: 0, opacity: 1, duration: 0.55 }, at + 0.08);
-    if (sub) tl.fromTo(sub, { y: 14, opacity: 0 }, { y: 0, opacity: 1, duration: 0.5 }, at + 0.18);
-    if (rows.length) tl.fromTo(rows, { x: -18, opacity: 0 }, { x: 0, opacity: 1, duration: 0.5, stagger: 0.09 }, at + 0.3);
-    if (formula) tl.fromTo(formula, { scale: 0.94, opacity: 0 }, { scale: 1, opacity: 1, duration: 0.5, ease: 'back.out(1.5)' }, at + 0.45);
+      .set(el, { autoAlpha: 0, zIndex: 1 }, at + scene.duration - 0.001);
+    // The studio's entrance motion, same table as the web player: "to" is
+    // always the natural layout, and a deck without the field plays still.
+    var MOTIONS = {
+      rise: { card: { y: 26, opacity: 0 }, title: { yPercent: 60, opacity: 0 }, item: { x: -18, opacity: 0 }, stagger: 0.09, ease: 'power3.out', duration: 0.55 },
+      fade: { card: { opacity: 0 }, title: { opacity: 0 }, item: { opacity: 0 }, stagger: 0.06, ease: 'power2.out', duration: 0.7 },
+      pop: { card: { y: 10, scale: 0.92, opacity: 0 }, title: { yPercent: 40, scale: 0.96, opacity: 0 }, item: { y: 14, opacity: 0 }, stagger: 0.07, ease: 'back.out(1.6)', duration: 0.5 },
+      zoom: { card: { scale: 1.14, opacity: 0 }, title: { scale: 1.06, opacity: 0 }, item: { opacity: 0 }, stagger: 0.07, ease: 'power2.out', duration: 0.6 },
+      'slide-left': { card: { x: -48, opacity: 0 }, title: { x: -30, opacity: 0 }, item: { x: -30, opacity: 0 }, stagger: 0.09, ease: 'power3.out', duration: 0.55 },
+      'slide-right': { card: { x: 48, opacity: 0 }, title: { x: 30, opacity: 0 }, item: { x: 30, opacity: 0 }, stagger: 0.09, ease: 'power3.out', duration: 0.55 },
+      bounce: { card: { y: 26, opacity: 0 }, title: { yPercent: 50, opacity: 0 }, item: { x: -14, opacity: 0 }, stagger: 0.08, ease: 'bounce.out', duration: 0.75 },
+      flip: { card: { rotationY: -45, transformPerspective: 900, opacity: 0 }, title: { opacity: 0 }, item: { opacity: 0 }, stagger: 0.07, ease: 'power3.out', duration: 0.65 },
+      blur: { card: { filter: 'blur(12px)', opacity: 0 }, title: { filter: 'blur(8px)', opacity: 0 }, item: { opacity: 0 }, stagger: 0.06, ease: 'power2.out', duration: 0.6 }
+    };
+    var motion = MOTIONS[data.motion] || null;
+    if (motion) {
+      var rest = { x: 0, y: 0, yPercent: 0, scale: 1, rotationY: 0, opacity: 1, filter: 'blur(0px)', immediateRender: false };
+      var items = el.querySelectorAll('.body li');
+      tl.fromTo(card, motion.card, Object.assign({}, rest, { duration: motion.duration, ease: motion.ease }), at)
+        .fromTo(title, motion.title, Object.assign({}, rest, { duration: motion.duration, ease: motion.ease }), at + 0.08);
+      if (sub) tl.fromTo(sub, { y: 14, opacity: 0 }, { y: 0, opacity: 1, duration: 0.5, immediateRender: false }, at + 0.18);
+      if (items.length) tl.fromTo(items, motion.item, Object.assign({}, rest, { duration: motion.duration, stagger: motion.stagger, ease: motion.ease }), at + 0.3);
+    }
+    if (motion && formula) tl.fromTo(formula, { scale: 0.94, opacity: 0 }, { scale: 1, opacity: 1, duration: 0.5, ease: 'back.out(1.5)' }, at + 0.45);
     if (figure) tl.fromTo(figure, { opacity: 0, y: 10 }, { opacity: 1, y: 0, duration: 0.5 }, at + 0.5);
     if (cap) tl.fromTo(cap, { opacity: 0, y: 10 }, { opacity: 1, y: 0, duration: 0.5 }, at + Math.min(scene.duration * 0.55, 1.6));
     if (bar) tl.fromTo(bar, { scaleX: 0 }, { scaleX: 1, duration: scene.duration, ease: 'none' }, at);

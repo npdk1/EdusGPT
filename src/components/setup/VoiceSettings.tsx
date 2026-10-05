@@ -310,7 +310,9 @@ export function VoiceSettings() {
 
       {/* What the machine can actually do, and the one button that changes it. */}
       <div className="rounded-xl border border-ink-700 bg-ink-950/50 px-3.5 py-3">
-        <div className="flex flex-wrap items-center gap-2">
+        {/* One row like the provider status above: wrap turns five chips into
+            a stack nobody scans. */}
+        <div className="flex flex-nowrap items-center gap-2 overflow-x-auto [&>*]:shrink-0">
           {local?.ready ? (
             <IconCircleCheck className="h-4 w-4 shrink-0 text-brand-300" />
           ) : (
