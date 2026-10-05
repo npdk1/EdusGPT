@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState, type CSSProperties } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import katex from "katex";
@@ -334,6 +334,54 @@ function PreviewFormula({ formula }: { formula: string }) {
   );
 }
 
+
+/**
+ * The picker's live miniature for one pattern: the same gradients the slide
+ * paints, drawn with the current paper's own accent and sized in px for a
+ * 36px-tall swatch. Higher alphas than the slide itself — at this size the
+ * real 10% washes read as plain paper.
+ */
+function patternSwatch(
+  id: string,
+  palette: { bg: string; accent: string; accentSoft: string; rule: string },
+): CSSProperties {
+  const base = { backgroundColor: palette.bg };
+  switch (id) {
+    case "dots":
+      return {
+        ...base,
+        backgroundImage: `radial-gradient(color-mix(in srgb, ${palette.accentSoft} 65%, transparent) 1.2px, transparent 1.3px)`,
+        backgroundSize: "7px 7px",
+      };
+    case "grid":
+      return {
+        ...base,
+        backgroundImage:
+          `linear-gradient(color-mix(in srgb, ${palette.rule} 80%, transparent) 1px, transparent 1px),` +
+          `linear-gradient(90deg, color-mix(in srgb, ${palette.rule} 80%, transparent) 1px, transparent 1px)`,
+        backgroundSize: "100% 8px, 8px 100%",
+      };
+    case "bands":
+      return {
+        ...base,
+        backgroundImage: `linear-gradient(135deg, transparent 52%, color-mix(in srgb, ${palette.accent} 45%, transparent) 52%, color-mix(in srgb, ${palette.accent} 45%, transparent) 72%, color-mix(in srgb, ${palette.accentSoft} 60%, transparent) 72%)`,
+      };
+    case "rings":
+      return {
+        ...base,
+        backgroundImage: `repeating-radial-gradient(circle at 82% 22%, transparent 0, transparent 7px, color-mix(in srgb, ${palette.accentSoft} 55%, transparent) 7px, color-mix(in srgb, ${palette.accentSoft} 55%, transparent) 8px)`,
+      };
+    case "waves":
+      return {
+        ...base,
+        backgroundImage:
+          `radial-gradient(70% 90% at 12% 100%, color-mix(in srgb, ${palette.accent} 40%, transparent) 0%, transparent 70%),` +
+          `radial-gradient(60% 80% at 90% 0%, color-mix(in srgb, ${palette.accentSoft} 45%, transparent) 0%, transparent 70%)`,
+      };
+    default:
+      return base;
+  }
+}
 
 export function StudioPanel() {
   const t = useCopy(COPY);
@@ -757,13 +805,22 @@ export function StudioPanel() {
                   type="button"
                   onClick={() => setPattern(id)}
                   aria-pressed={active}
-                  className={`chip transition-colors ${
+                  className={`min-w-[4.5rem] flex-1 rounded-xl border p-1.5 transition-colors ${
                     active
                       ? "border-brand-500 bg-brand-500/15 text-brand-100"
-                      : "hover:border-brand-700 hover:text-mist-100"
+                      : "border-ink-700 hover:border-brand-700 hover:text-mist-100"
                   }`}
                 >
-                  {labels[id] ?? id}
+                  {/* Live miniature: the same gradients the slide paints, drawn
+                      with this paper's own accent so the preview never lies. */}
+                  <span
+                    aria-hidden="true"
+                    className="block h-9 w-full rounded-lg border border-ink-700/60"
+                    style={patternSwatch(id, resolveSlideTheme(theme).palette)}
+                  />
+                  <span className="mt-1 block text-center text-[11px] font-medium">
+                    {labels[id] ?? id}
+                  </span>
                 </button>
               );
             })}
