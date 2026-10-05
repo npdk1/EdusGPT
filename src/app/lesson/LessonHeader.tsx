@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { IconFolderOpen, IconKey } from "@tabler/icons-react";
+import { IconFolderOpen, IconKey, IconPlayerPlay } from "@tabler/icons-react";
 import { useCopy } from "@/i18n/provider";
 
 const COPY = {
@@ -33,7 +33,10 @@ export function LessonHeader() {
   return (
     <header className="mb-6 flex flex-col gap-4 lg:mb-1 lg:flex-row lg:items-center lg:justify-between">
       <div className="flex min-w-0 items-baseline gap-4">
-        <h1 className="shrink-0 text-3xl font-bold tracking-tight text-mist-50 lg:text-lg">
+        {/* items-center, not baseline: a baseline-aligned icon sits on the text's
+            baseline and reads as a typo rather than a mark. */}
+        <h1 className="flex shrink-0 items-center gap-2.5 text-3xl font-bold tracking-tight text-mist-50 lg:text-lg">
+          <IconPlayerPlay className="h-7 w-7 shrink-0 text-brand-300 lg:h-5 lg:w-5" />
           {t.lessonTitle}
         </h1>
         {/* The lead is three lines of explanation, which is welcome on a phone and
