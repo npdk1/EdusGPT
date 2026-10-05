@@ -3,7 +3,7 @@
 import { useEffect, useRef } from "react";
 import { ensureGsap } from "@/lib/gsap";
 import type { Timebase } from "@/hooks/useTimebase";
-import { SCENE_KIND_LABEL, type Lesson } from "@/lib/lesson/types";
+import { SCENE_KIND_LABEL, defaultSlideLayout, type Lesson, type SlideLayout } from "@/lib/lesson/types";
 import { slideIcon } from "@/lib/lesson/slide-icons";
 import { DEFAULT_SLIDE_THEME, isDarkTheme, paletteStyle } from "@/lib/lesson/themes";
 import { InteractiveSimulation } from "./InteractiveSimulation";
@@ -438,11 +438,26 @@ export function GsapSlideStage({
         // them in the stylesheet.
         data-theme-dark={isDarkTheme(lesson.theme) ? "" : undefined}
         // The palette arrives as custom properties, which is what keeps one set
-        // of stylesheet rules valid for all thirty-six papers.
+        // of stylesheet rules valid for all forty-two papers.
         style={paletteStyle(lesson.theme)}
       >
         {lesson.scenes.map((scene, index) => {
           const KickerIcon = slideIcon(scene.icon);
+          // The named layout, same rule as the classroom surface: an explicit
+          // choice wins, otherwise the scene's own content decides. The three
+          // structural ones need markup this stage does not build (split
+          // columns, full-bleed figure), so they fall back to the readable
+          // default instead of a class with nothing behind it.
+          const requested: SlideLayout =
+            scene.layout && typeof scene.layout === "string"
+              ? (scene.layout as SlideLayout)
+              : defaultSlideLayout(scene);
+          const layout: SlideLayout =
+            requested === "image-left" ||
+            requested === "image-right" ||
+            requested === "full-figure"
+              ? "statement"
+              : requested;
           return (
           <article
             key={scene.id}
@@ -466,7 +481,7 @@ export function GsapSlideStage({
                   number stays outside it: it is chrome pinned to the corner, and
                   scaling it with the content would move it. */}
               <div
-                className={`scene-fit${
+                className={`scene-fit scene-layout-${layout}${
                   scene.simulation3d || scene.kind === "simulation3d" || scene.quiz
                     ? " scene-has-interactive"
                     : ""

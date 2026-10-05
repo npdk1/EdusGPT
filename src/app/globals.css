@@ -1404,11 +1404,37 @@
     display: none;
   }
 
-  /* The number leads the card here, so it needs its own row, not a baseline. */
+  /* The number leads the card here, so it needs its own row, not a baseline.
+     Catalog process pages (346/347) set the numeral big in the accent: the
+     station reads as "3" first and words second. */
   .scene-layout-flow .scene-bullet-index,
   .scene-layout-flow .scene-step-index {
-    font-size: calc(1.15cqw * var(--slide-fit, 1));
-    letter-spacing: 0.08em;
+    font-size: calc(2.1cqw * var(--slide-fit, 1));
+    font-weight: 800;
+    letter-spacing: 0;
+    color: var(--slide-accent);
+  }
+
+  /* The node where the connector leaves the station: a filled disc at the
+     middle of the gap, so the rail reads as stations on a line rather than
+     cards with a hairline between them. None on the last station — its rail
+     is hidden too, and a floating dot would be a decoration without a job. */
+  .scene-layout-flow .scene-bullet::before,
+  .scene-layout-flow .scene-step::before {
+    content: "";
+    position: absolute;
+    top: 50%;
+    right: -0.975cqw;
+    width: 0.55cqw;
+    height: 0.55cqw;
+    margin-top: -0.275cqw;
+    border-radius: 999px;
+    background: var(--slide-accent);
+  }
+
+  .scene-layout-flow .scene-bullet:last-child::before,
+  .scene-layout-flow .scene-step:last-child::before {
+    display: none;
   }
 
   /*
