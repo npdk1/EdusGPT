@@ -6,7 +6,9 @@ import {
   IconCloud,
   IconCpu,
   IconDownload,
+  IconMicrophone,
   IconLoader2,
+  IconSpeakerphone,
   IconTerminal2,
   IconAlertTriangle,
 } from "@tabler/icons-react";
@@ -211,7 +213,10 @@ export function VoiceSettings() {
   return (
     <section className="panel space-y-4 p-5">
       <div>
-        <h2 className="text-sm font-semibold text-mist-100">{t.heading}</h2>
+        <h2 className="flex items-center gap-2 text-sm font-semibold text-mist-100">
+          <IconMicrophone className="h-4 w-4 text-brand-300" />
+          {t.heading}
+        </h2>
         <p className="mt-1.5 text-xs leading-relaxed text-mist-400">{t.lead}</p>
       </div>
 
@@ -265,7 +270,10 @@ export function VoiceSettings() {
         */}
       <div className="rounded-xl border border-ink-700 bg-ink-950/50 px-3.5 py-3">
         <div>
-          <h3 className="text-sm font-semibold text-mist-100">{t.providersTitle}</h3>
+          <h3 className="flex items-center gap-2 text-sm font-semibold text-mist-100">
+            <IconSpeakerphone className="h-4 w-4 text-brand-300" />
+            {t.providersTitle}
+          </h3>
           <p className="mt-1 text-[11px] leading-relaxed text-mist-400">{t.providersNote}</p>
         </div>
         <div className="mt-2.5 space-y-1.5">

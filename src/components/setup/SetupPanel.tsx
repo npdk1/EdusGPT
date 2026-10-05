@@ -2,14 +2,18 @@
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 import {
+  IconAdjustments,
   IconAlertTriangle,
+  IconBolt,
   IconCircleCheck,
   IconChevronDown,
+  IconCpu,
   IconEye,
   IconEyeOff,
   IconKey,
   IconLoader2,
   IconCloud,
+  IconLock,
   IconSearch,
   IconTerminal2,
   IconRefresh,
@@ -691,7 +695,8 @@ export function SetupPanel() {
   return (
     <div className="space-y-5">
       <header>
-        <h1 className="text-3xl font-bold tracking-tight text-mist-50 sm:text-4xl">
+        <h1 className="flex items-center gap-3 text-3xl font-bold tracking-tight text-mist-50 sm:text-4xl">
+          <IconBolt className="h-7 w-7 shrink-0 text-brand-300 sm:h-8 sm:w-8" />
           {t.headerTitle}
         </h1>
         <p className="mt-3 max-w-2xl text-sm leading-relaxed text-mist-300 sm:text-base">
@@ -714,7 +719,8 @@ export function SetupPanel() {
           .panel has backdrop-blur (a stacking context), so without this the
           next section would paint over the open list and eat its clicks. */}
       <section className="panel relative z-10 space-y-4 p-5">
-        <h2 className="text-sm font-semibold text-mist-100">
+        <h2 className="flex items-center gap-2 text-sm font-semibold text-mist-100">
+          <IconKey className="h-4 w-4 text-brand-300" />
           {t.selectHeading}
         </h2>
 
@@ -808,7 +814,8 @@ export function SetupPanel() {
           </div>
         ) : (
           <div>
-            <label className="label" htmlFor="provider-key">
+            <label className="label flex items-center gap-1.5" htmlFor="provider-key">
+              <IconLock className="h-3.5 w-3.5 text-mist-400" />
               {activeProviderLabel} API key
             </label>
             <div className="flex gap-2">
@@ -846,7 +853,8 @@ export function SetupPanel() {
 
         <div className="grid gap-3 sm:grid-cols-[2fr_1fr]">
           <div>
-            <label className="label" htmlFor="provider-model">
+            <label className="label flex items-center gap-1.5" htmlFor="provider-model">
+              <IconCpu className="h-3.5 w-3.5 text-mist-400" />
               {t.modelDefault}
             </label>
             <div
@@ -955,11 +963,12 @@ export function SetupPanel() {
             point somewhere else. */}
         {!activeIsCli ? (
           <details className="rounded-xl border border-ink-700/70 bg-ink-950/50 px-3.5 py-3">
-            <summary className="cursor-pointer text-xs font-semibold uppercase tracking-wide text-mist-400">
+            <summary className="flex cursor-pointer items-center gap-1.5 text-xs font-semibold uppercase tracking-wide text-mist-400">
+              <IconAdjustments className="h-3.5 w-3.5" />
               {t.advancedBaseUrl}
             </summary>
             <div className="mt-3">
-              <label className="label" htmlFor="provider-base">
+              <label className="label flex items-center gap-1.5" htmlFor="provider-base">
                 {activeProvider === "nvidia" ? "NVIDIA_BASE_URL" : "GROQ_BASE_URL"}
               </label>
               <input
