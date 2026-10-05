@@ -838,7 +838,9 @@
    * scale whose steps are close enough to read as one system.
    */
 
-  /* Cover: one claim, centred, nothing competing with it. */
+  /* Cover: one claim, centred, nothing competing with it. Sample covers set
+     the title near a quarter of the sheet height over a pill kicker and a
+     centred rule — the three marks read as one masthead. */
   .scene-layout-cover .scene-fit {
     gap: 1.6cqw;
   }
@@ -846,6 +848,22 @@
   .scene-layout-cover .scene-head {
     margin-inline: auto;
     text-align: center;
+  }
+
+  .scene-layout-cover .scene-kicker {
+    border-radius: 999px;
+    padding: 0.45cqw 1.4cqw;
+    background: color-mix(in srgb, var(--slide-accent-soft) 22%, transparent);
+    letter-spacing: 0.14em;
+  }
+
+  .scene-layout-cover .scene-title {
+    font-size: calc(8cqw * var(--slide-fit, 1));
+    text-wrap: balance;
+  }
+
+  .scene-layout-cover .scene-sub {
+    font-size: calc(1.9cqw * var(--slide-fit, 1));
   }
 
   .scene-layout-cover .scene-rule {
@@ -1395,8 +1413,10 @@
     top: 50%;
     right: -1.4cqw;
     width: 1.4cqw;
-    height: 1px;
-    background: color-mix(in srgb, var(--slide-rule) 90%, transparent);
+    /* Dashed, like the sample decks' connector lines: a solid hairline reads
+       as a divider, dashes read as a path between stations. */
+    border-top: 2px dashed
+      color-mix(in srgb, var(--slide-accent-soft) 75%, transparent);
   }
 
   .scene-layout-flow .scene-bullet:last-child::after,
