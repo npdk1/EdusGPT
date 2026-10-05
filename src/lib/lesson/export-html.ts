@@ -633,8 +633,14 @@ const PLAYER_JS = `
     var cap = el.querySelector('.cap');
     var bar = el.querySelector('.bar');
     var at = scene.start;
-    tl.set(el, { autoAlpha: 1, zIndex: 2 }, at)
-      .set(el, { autoAlpha: 0, zIndex: 1 }, at + scene.duration - 0.001);
+    tl.set(el, { autoAlpha: 1, zIndex: 2 }, at);
+    // Two-second fade into the next scene, same rule as the web player: the
+    // outgoing slide dissolves across its last two seconds instead of cutting.
+    (function () {
+      var fade = Math.min(2, scene.duration / 2);
+      tl.to(el, { autoAlpha: 0, scale: 0.985, duration: fade, ease: 'power2.inOut' }, at + scene.duration - fade)
+        .set(el, { zIndex: 1 }, at + scene.duration);
+    })();
     // The studio's entrance motion, same table as the web player: "to" is
     // always the natural layout, and a deck without the field plays still.
     var MOTIONS = {
@@ -716,10 +722,10 @@ const PLAYER_JS = `
 
   // --- dead air: a clip shorter than its scene used to leave the deck sitting
   // in silence until the scene's fixed duration ran out. When the clip ends
-  // early, jump to the next scene instead — the timeline, not the recording,
-  // decides how long a slide stays up. Skipped while looping (the loop owns
-  // the playhead there), and tiny remainders are left alone so the boundary
-  // never visibly jumps.
+  // early, land on the fade's doorstep rather than the boundary itself, so
+  // the two-second scene transition still plays instead of being jumped over.
+  // Skipped while looping (the loop owns the playhead there); remainders under
+  // 2.5s are the designed end-of-slide pause, not dead air.
   voice.addEventListener('ended', function () {
     if (!playing) return;
     if (loopOn && loopB > loopA) return;
@@ -728,9 +734,9 @@ const PLAYER_JS = `
     var scene = data.scenes[idx];
     if (!scene || voiceScene !== idx) return;
     var end = scene.start + scene.duration;
-    if (end - current < 0.6) return;
+    if (end - current < 2.5) return;
     if (idx >= data.scenes.length - 1) { seek(total); stop(); return; }
-    seek(end);
+    seek(end - 2);
   });
 
   // --- the caption, read the way the web player reads it.

@@ -126,11 +126,20 @@ export function GsapSlideStage({
        * the tween's first render lets the "already there" state stand until
        * playback actually moves through it.
        */
-      tl.set(element, { autoAlpha: 1, zIndex: 2 }, at).set(
-        element,
-        { autoAlpha: 0, zIndex: 1 },
-        at + scene.duration - 0.001,
-      );
+      tl.set(element, { autoAlpha: 1, zIndex: 2 }, at);
+      // Two-second fade into the next scene: the outgoing slide dissolves
+      // (and settles a touch) across its last two seconds, handing a dark
+      // stage to the incoming entrance instead of a hard cut. Ends exactly
+      // where the cut used to land, which is why scrubbing stays exact and
+      // the total never moves.
+      {
+        const fade = Math.min(2, scene.duration / 2);
+        tl.to(
+          element,
+          { autoAlpha: 0, scale: 0.985, duration: fade, ease: "power2.inOut" },
+          at + scene.duration - fade,
+        ).set(element, { zIndex: 1 }, at + scene.duration);
+      }
       // The studio's entrance motion, one table for the whole deck: the card,
       // the title and the items each take their "from" from it, and the "to"
       // is always the natural layout. `none` skips the intros outright — the

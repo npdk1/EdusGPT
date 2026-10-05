@@ -363,9 +363,11 @@ export function TeacherVoice({
         onVoiceState?.({ status: "idle", sceneIndex: null, sceneTitle: "", voice });
         // Residual silence, skipped: the clip ended but its slide still holds
         // seconds of nothing (the engine read faster than the estimate, or an
-        // older deck was authored under the old 3-words-a-second rate). Jump
-        // to the boundary instead of sitting quiet — the same rule the
-        // exported file follows. The 2.5s floor keeps the designed end-of-slide
+        // older deck was authored under the old 3-words-a-second rate). Land
+        // on the fade's doorstep rather than the boundary itself, so the
+        // two-second scene transition still plays instead of being jumped
+        // over — and mark the frames seen, so the landing does not re-speak
+        // the clip's tail. The 2.5s floor keeps the designed end-of-slide
         // pause: only unintended silence is skipped. Not on the last slide
         // (let it end naturally) and never while looping.
         if (!loopEnabled) {
@@ -377,7 +379,9 @@ export function TeacherVoice({
             sceneEnd < total - 0.3 &&
             now < sceneEnd
           ) {
-            tb.seek(sceneEnd);
+            const target = sceneEnd - 2;
+            lastSeenTimeRef.current = target;
+            tb.seek(target);
           }
         }
       };
