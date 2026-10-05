@@ -63,6 +63,7 @@ const COPY = {
     providerCount: "{count} voices",
     providerInstall: "Install",
     providerInstalling: "Installing…",
+    providerInstalled: "Installed",
     switched: "Switched",
   },
   vi: {
@@ -99,6 +100,7 @@ const COPY = {
     providerCount: "{count} giọng",
     providerInstall: "Cài",
     providerInstalling: "Đang cài…",
+    providerInstalled: "Đã cài",
     switched: "Đã đổi",
   },
 } satisfies Record<string, Record<string, string>>;
@@ -431,19 +433,25 @@ export function VoiceSettings() {
               <span className="chip">
                 {t.providerCount.replace("{count}", String(provider.voices))}
               </span>
-              <button
-                type="button"
-                onClick={() => void install(provider.provider)}
-                className="btn-ghost ml-auto text-xs"
-                disabled={busy !== null}
-              >
-                {busy === "install" ? (
-                  <IconLoader2 className="h-3.5 w-3.5 animate-spin" />
-                ) : (
-                  <IconDownload className="h-3.5 w-3.5" />
-                )}
-                {busy === "install" ? t.providerInstalling : t.providerInstall}
-              </button>
+              {provider.installed ? (
+                <span className="chip ml-auto border-brand-700/60 text-brand-200">
+                  {t.providerInstalled}
+                </span>
+              ) : (
+                <button
+                  type="button"
+                  onClick={() => void install(provider.provider)}
+                  className="btn-ghost ml-auto text-xs"
+                  disabled={busy !== null}
+                >
+                  {busy === "install" ? (
+                    <IconLoader2 className="h-3.5 w-3.5 animate-spin" />
+                  ) : (
+                    <IconDownload className="h-3.5 w-3.5" />
+                  )}
+                  {busy === "install" ? t.providerInstalling : t.providerInstall}
+                </button>
+              )}
               {provider.reason ? (
                 <p className="w-full text-[11px] leading-relaxed text-mist-500">
                   {provider.reason}

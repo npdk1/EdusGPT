@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
-import { IconKey, IconMenu2, IconPlayerPlay, IconSparkles, IconX } from "@tabler/icons-react";
+import { IconMenu2, IconPlayerPlay, IconSparkles, IconX, IconHome, IconLibrary, IconSettings } from "@tabler/icons-react";
 import { AiKeyBadge } from "./AiKeyBadge";
 import { LocaleSwitcher } from "./LocaleSwitcher";
 import { useCopy } from "@/i18n/provider";
@@ -33,12 +33,12 @@ const COPY = {
 
 type CopyKey = keyof typeof COPY.en;
 
-const NAV: { href: string; label: CopyKey }[] = [
-  { href: "/", label: "navOverview" },
-  { href: "/lesson", label: "navLesson" },
-  { href: "/studio", label: "navStudio" },
-  { href: "/library", label: "navLibrary" },
-  { href: "/setup", label: "navSetup" },
+const NAV: { href: string; label: CopyKey; Icon: typeof IconHome }[] = [
+  { href: "/", label: "navOverview", Icon: IconHome },
+  { href: "/lesson", label: "navLesson", Icon: IconPlayerPlay },
+  { href: "/studio", label: "navStudio", Icon: IconSparkles },
+  { href: "/library", label: "navLibrary", Icon: IconLibrary },
+  { href: "/setup", label: "navSetup", Icon: IconSettings },
 ];
 
 export function SiteHeader() {
@@ -79,12 +79,13 @@ export function SiteHeader() {
               <Link
                 key={item.href}
                 href={item.href}
-                className={`rounded-lg px-3 py-2 text-sm font-medium transition-colors ${
+                className={`flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium transition-colors ${
                   active
                     ? "bg-ink-800 text-brand-200"
                     : "text-mist-300 hover:bg-ink-850 hover:text-mist-100"
                 }`}
               >
+                <item.Icon className="h-4 w-4 shrink-0" />
                 {t[item.label]}
               </Link>
             );
@@ -123,11 +124,7 @@ export function SiteHeader() {
                 className="flex items-center justify-between rounded-lg px-3 py-2.5 text-sm font-medium text-mist-200 hover:bg-ink-850"
               >
                 {t[item.label]}
-                {item.href === "/setup" ? (
-                  <IconKey className="h-4 w-4 text-gold-300" />
-                ) : (
-                  <IconPlayerPlay className="h-4 w-4 text-brand-300" />
-                )}
+                <item.Icon className="h-4 w-4 text-brand-300" />
               </Link>
             ))}
           </div>
