@@ -714,12 +714,6 @@ export function SetupPanel() {
           .panel has backdrop-blur (a stacking context), so without this the
           next section would paint over the open list and eat its clicks. */}
       <section className="panel relative z-10 space-y-4 p-5">
-        {status?.lastValidationMessage ? (
-          <p className="text-xs leading-relaxed text-mist-400">
-            {status.lastValidationMessage}
-          </p>
-        ) : null}
-
         <h2 className="text-sm font-semibold text-mist-100">
           {t.selectHeading}
         </h2>

@@ -1,13 +1,12 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import {
   IconCircleCheck,
   IconCloud,
   IconCpu,
   IconDownload,
   IconLoader2,
-  IconPlayerPlay,
   IconTerminal2,
   IconAlertTriangle,
 } from "@tabler/icons-react";
@@ -40,14 +39,7 @@ const COPY = {
       "Microsoft's public Edge read-aloud voice. No key, no account — but it needs the network, and it can rate-limit a long lesson.",
     localReady: "Ready",
     localNotReady: "Not ready",
-    install: "Install the voice",
-    installing: "Installing…",
-    preview: "Hear this engine",
-    previewing: "Reading…",
     logTitle: "Install log",
-    logEmpty: "Nothing to show yet.",
-    fallbackNotice:
-      "The local voice could not read it, so the online voice was used instead.",
     providersTitle: "Voices on this machine",
     providersNote: "Two engines, both free and both running inside this project's own Python environment. Install one, then pick any of its voices in the studio.",
     providerCount: "{count} voices",
@@ -68,14 +60,7 @@ const COPY = {
       "Giọng đọc Edge của Microsoft. Không cần key, không cần tài khoản — nhưng cần mạng, và bài dài có thể bị giới hạn.",
     localReady: "Sẵn sàng",
     localNotReady: "Chưa sẵn sàng",
-    install: "Cài giọng cho máy này",
-    installing: "Đang cài…",
-    preview: "Nghe thử cách này",
-    previewing: "Đang đọc…",
     logTitle: "Nhật ký cài đặt",
-    logEmpty: "Chưa có gì để hiện.",
-    fallbackNotice:
-      "Giọng trên máy không đọc được, đã dùng giọng trên mạng thay thế.",
     providersTitle: "Giọng có trên máy này",
     providersNote: "Hai bộ đọc, đều miễn phí và đều chạy trong môi trường Python riêng của project. Cài bộ nào thì dùng được các giọng của bộ đó trong Studio.",
     providerCount: "{count} giọng",
@@ -120,17 +105,13 @@ interface SettingsPayload {
   providers?: ProviderStatus[];
 }
 
-const SAMPLE = "Bài học hôm nay nói về định luật bảo toàn năng lượng.";
-
 export function VoiceSettings() {
   const t = useCopy(COPY);
   const [engine, setEngine] = useState<Engine | null>(null);
   const [local, setLocal] = useState<LocalStatus | null>(null);
   const [providers, setProviders] = useState<ProviderStatus[]>([]);
-  const [busy, setBusy] = useState<"save" | "install" | "preview" | null>(null);
+  const [busy, setBusy] = useState<"save" | "install" | null>(null);
   const [log, setLog] = useState<string[]>([]);
-  const [note, setNote] = useState<string | null>(null);
-  const audioRef = useRef<HTMLAudioElement | null>(null);
 
   const refresh = useCallback(async () => {
     try {
@@ -179,7 +160,6 @@ export function VoiceSettings() {
   const install = useCallback(async (provider: "piper" | "vieneu" = "piper") => {
     setBusy("install");
     setLog([]);
-    setNote(null);
     try {
       const response = await fetch(`/api/settings/tts/install?package=${provider}`, {
         method: "POST",
@@ -228,37 +208,6 @@ export function VoiceSettings() {
     }
   }, [refresh]);
 
-  /** One sentence through the chosen engine, so the answer is heard not read. */
-  const preview = useCallback(async () => {
-    setBusy("preview");
-    setNote(null);
-    try {
-      const response = await fetch("/api/tts", {
-        method: "POST",
-        headers: { "content-type": "application/json" },
-        body: JSON.stringify({ text: SAMPLE, voice: "vi-VN-HoaiMyNeural" }),
-      });
-      if (!response.ok) {
-        setNote(t.localNotReady);
-        return;
-      }
-      const used = response.headers.get("x-tts-engine");
-      const notice = response.headers.get("x-tts-notice");
-      if (used && used !== engine) setNote(notice ? decodeURIComponent(notice) : t.fallbackNotice);
-      const blob = await response.blob();
-      const url = URL.createObjectURL(blob);
-      audioRef.current?.pause();
-      const audio = new Audio(url);
-      audioRef.current = audio;
-      audio.addEventListener("ended", () => URL.revokeObjectURL(url), { once: true });
-      await audio.play();
-    } catch (error) {
-      setNote(error instanceof Error ? error.message : String(error));
-    } finally {
-      setBusy(null);
-    }
-  }, [engine, t]);
-
   return (
     <section className="panel space-y-4 p-5">
       <div>
@@ -291,51 +240,8 @@ export function VoiceSettings() {
 
       {/* What the machine can actually do, and the one button that changes it. */}
       <div className="rounded-xl border border-ink-700 bg-ink-950/50 px-3.5 py-3">
-        {local?.models.length ? (
-          <div className="mt-2 flex flex-wrap gap-1.5">
-            {local.models.map((model) => (
-              <span key={model.id} className="chip font-mono">
-                {model.id}
-              </span>
-            ))}
-          </div>
-        ) : null}
-
         {local && !local.ready && local.reason ? (
-          <p className="mt-2 text-[11px] leading-relaxed text-mist-500">{local.reason}</p>
-        ) : null}
-
-        <div className="mt-3 flex flex-wrap gap-2">
-          <button
-            type="button"
-            onClick={() => void install()}
-            className="btn-primary"
-            disabled={busy !== null || local?.ready === true}
-          >
-            {busy === "install" ? (
-              <IconLoader2 className="h-4 w-4 animate-spin" />
-            ) : (
-              <IconDownload className="h-4 w-4" />
-            )}
-            {busy === "install" ? t.installing : t.install}
-          </button>
-          <button
-            type="button"
-            onClick={() => void preview()}
-            className="btn-ghost"
-            disabled={busy !== null}
-          >
-            {busy === "preview" ? (
-              <IconLoader2 className="h-4 w-4 animate-spin" />
-            ) : (
-              <IconPlayerPlay className="h-4 w-4" />
-            )}
-            {busy === "preview" ? t.previewing : t.preview}
-          </button>
-        </div>
-
-        {note ? (
-          <p className="mt-2 text-[11px] leading-relaxed text-gold-300">{note}</p>
+          <p className="text-[11px] leading-relaxed text-mist-500">{local.reason}</p>
         ) : null}
 
         {log.length > 0 ? (
