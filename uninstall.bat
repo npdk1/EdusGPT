@@ -17,9 +17,9 @@ rem    - data\courses\*.json  bai gia da sinh
 rem    - data/library-text\   chi muc thu vien
 rem    - data\*.json          trang thai (tts-settings, model-trust,
 rem                           token-limits, course-library)
-rem    - .env                 -> luu lai thanh .env.bak truoc
 rem
 rem  GIU LAI: source, .git, public\logo.png, src\app\icon.png,
+rem           .env (key API cua ban),
 rem           data\ai-settings.json (provider + model ban chon)
 rem
 rem  Sau do: chay run.bat 1 click de cai lai tu dau.
@@ -43,10 +43,10 @@ echo    - data\voices\         mo hinh giong tren may
 echo    - data\tts-cache\      giong da doc
 echo    - data\courses\*.json  BAI GIANG DA SINH
 echo    - data\*.json          trang thai, chi muc thu vien
-echo    - .env                 (luu lai thanh .env.bak)
 echo.
 echo  Se GIU:
 echo    - source + .git, logo, data\ai-settings.json
+echo    - .env                 (key API cua ban)
 echo.
 
 set /p CONFIRM="  Chac chan xoa? Go Y de tiep tuc: "
@@ -75,19 +75,13 @@ if defined BUSY_PID (
   echo  [1/6] Cong 3000 trong
 )
 
-rem --- 2. luu .env ----------------------------------------------------------
-rem  Key API la thu cong phai nhin, mat di thi phai vao vendor lay lai.
-rem  Giu lai mot ban de doi ten nguoc lai duoc.
+rem --- 2. .env ---------------------------------------------------------------
+rem  Giu nguyen: key API la thu cong phai nhin, mat di thi phai vao vendor
+rem  lay lai. App doc .env ngay khi run.bat khoi dong lai.
 if exist ".env" (
-  copy /y ".env" ".env.bak" >nul 2>&1
-  del /q ".env" 2>nul
-  if exist ".env" (
-    echo       [!!] .env chua xoa duoc - kiem tra no co bi khoa khong
-  ) else (
-    echo       [OK] Da luu .env thanh .env.bak va xoa .env ^(doi ten nguoc lai de dung^)
-  )
+  echo  [2/6] Giu .env ^-key API cua ban van dung
 ) else (
-  echo  [2/6] Khong co .env
+  echo  [2/6] Khong co .env - run.bat se tao tu .env.example
 )
 
 rem --- 3. xoa cac thu muc lon ----------------------------------------------
@@ -141,8 +135,6 @@ echo   Con lai source thoi. Chay run.bat de cai lai 1 click.
 echo.
 echo   Giong doc nang (VieNeu-TTS, vai tram MB): cai lai tren web
 echo   tai http://localhost:3000/setup - muc "Giong doc".
-echo.
-echo   Key API: .env.bak, doi ten thanh .env
 echo  ------------------------------------------------------
 echo.
 pause

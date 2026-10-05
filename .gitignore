@@ -14,8 +14,7 @@ next-env.d.ts
 .env
 .env.local
 
-# `uninstall.bat` đặt key của bạn sang đây trước khi xoá `.env`. Cũng là bí mật.
-.env.bak
+# `.env` sống tới khi bạn tự xoá — `uninstall.bat` giữ nguyên nó.
 
 # Generated lesson library index + cached narration rebuild themselves.
 data/library-text/
