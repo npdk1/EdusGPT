@@ -15,12 +15,14 @@
         "check:icons": "node --experimental-strip-types --no-warnings scripts/check-icons.mjs",
         "check:subtitle": "node --experimental-strip-types --no-warnings scripts/check-subtitle.mjs",
         "check:length": "node --experimental-strip-types --no-warnings scripts/check-lesson-length.mjs",
+        "check:pace": "node --experimental-strip-types --no-warnings scripts/check-voice-pace.mjs",
+        "check:quiz": "node --experimental-strip-types --no-warnings scripts/check-quiz-gate.mjs",
         "check:library": "node scripts/index-course-library.mjs --check",
         "index:library": "node scripts/index-course-library.mjs",
         "setup:library": "node scripts/setup-document-library.mjs",
         "agy:permissions": "node scripts/antigravity-permissions.mjs",
         "agy:extract": "node scripts/extract-library-text.mjs",
-        "verify": "npm run check:palette && npm run check:icons && npm run check:subtitle && npm run check:length && npm run typecheck",
+        "verify": "npm run check:palette && npm run check:icons && npm run check:subtitle && npm run check:length && npm run check:pace && npm run check:quiz && npm run typecheck",
         "agy:doctor": "node scripts/antigravity-permissions.mjs --check"
     },
     "dependencies": {
