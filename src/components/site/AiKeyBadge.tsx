@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { TriangleAlert, CircleCheck, Cpu, Sparkles } from "lucide-react";
+import { IconAlertTriangle, IconCircleCheck, IconCpu, IconSparkles } from "@tabler/icons-react";
 import { useCopy } from "@/i18n/provider";
 import type { PublicAiStatus } from "@/lib/ai/config";
 
@@ -79,7 +79,7 @@ export function AiKeyBadge({ compact = false }: { compact?: boolean }) {
   if (loading) {
     return (
       <span className="chip animate-pulse-dot">
-        <Cpu className="h-3.5 w-3.5" />
+        <IconCpu className="h-3.5 w-3.5" />
         {status?.providerKind === "cli" ? t.checkingAgent : t.checkingKey}
       </span>
     );
@@ -95,7 +95,7 @@ export function AiKeyBadge({ compact = false }: { compact?: boolean }) {
         href="/setup"
         className="chip border-gold-500/60 bg-gold-500/10 text-gold-200 transition-colors hover:border-gold-400 hover:text-gold-100"
       >
-        <TriangleAlert className="h-3.5 w-3.5" />
+        <IconAlertTriangle className="h-3.5 w-3.5" />
         {isCli
           ? compact
             ? t.missingAgentShort
@@ -125,7 +125,7 @@ export function AiKeyBadge({ compact = false }: { compact?: boolean }) {
       className="chip border-brand-600/60 bg-brand-500/10 text-brand-200 transition-colors hover:border-brand-400 hover:text-brand-100"
       title={title}
     >
-      <CircleCheck className="h-3.5 w-3.5" />
+      <IconCircleCheck className="h-3.5 w-3.5" />
       {text}
     </Link>
   );
@@ -140,7 +140,7 @@ export function SetupCallout() {
   return (
     <div className="panel flex flex-col gap-4 border-gold-500/40 bg-gold-500/[0.06] p-5 sm:flex-row sm:items-center sm:justify-between">
       <div className="flex items-start gap-3">
-        <Sparkles className="mt-0.5 h-5 w-5 shrink-0 text-gold-300" />
+        <IconSparkles className="mt-0.5 h-5 w-5 shrink-0 text-gold-300" />
         <div>
           <p className="font-semibold text-mist-50">{t.calloutTitle}</p>
           <p className="mt-1 text-sm text-mist-300">

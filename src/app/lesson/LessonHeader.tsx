@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { FolderOpen, KeyRound } from "lucide-react";
+import { IconFolderOpen, IconKey } from "@tabler/icons-react";
 import { useCopy } from "@/i18n/provider";
 
 const COPY = {
@@ -45,10 +45,10 @@ export function LessonHeader() {
       </div>
       <div className="flex flex-wrap gap-2">
         <Link href="/setup" className="btn-ghost">
-          <KeyRound className="h-4 w-4" /> {t.lessonCtaKey}
+          <IconKey className="h-4 w-4" /> {t.lessonCtaKey}
         </Link>
         <Link href="/library" className="btn-ghost">
-          <FolderOpen className="h-4 w-4" /> {t.lessonCtaLibrary}
+          <IconFolderOpen className="h-4 w-4" /> {t.lessonCtaLibrary}
         </Link>
       </div>
     </header>

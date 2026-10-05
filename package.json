@@ -13,7 +13,7 @@
         "typecheck": "tsc --noEmit",
         "check:palette": "node scripts/check-palette.mjs",
         "check:icons": "node --experimental-strip-types --no-warnings scripts/check-icons.mjs",
-    "check:subtitle": "node --experimental-strip-types --no-warnings scripts/check-subtitle.mjs",
+        "check:subtitle": "node --experimental-strip-types --no-warnings scripts/check-subtitle.mjs",
         "check:length": "node --experimental-strip-types --no-warnings scripts/check-lesson-length.mjs",
         "check:library": "node scripts/index-course-library.mjs --check",
         "index:library": "node scripts/index-course-library.mjs",
@@ -24,6 +24,7 @@
         "agy:doctor": "node scripts/antigravity-permissions.mjs --check"
     },
     "dependencies": {
+        "@tabler/icons-react": "^3.48.0",
         "gsap": "^3.15.0",
         "katex": "^0.16.47",
         "lucide-react": "^0.562.0",

@@ -2,20 +2,20 @@
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 import {
-  TriangleAlert,
-  CircleCheck,
-  ChevronDown,
-  Eye,
-  EyeOff,
-  KeyRound,
-  LoaderCircle,
-  Cloud,
-  Search,
-  SquareTerminal,
-  RefreshCw,
-  ShieldCheck,
-  Trash2,
-} from "lucide-react";
+  IconAlertTriangle,
+  IconCircleCheck,
+  IconChevronDown,
+  IconEye,
+  IconEyeOff,
+  IconKey,
+  IconLoader2,
+  IconCloud,
+  IconSearch,
+  IconTerminal2,
+  IconRefresh,
+  IconShieldCheck,
+  IconTrash,
+} from "@tabler/icons-react";
 import type { PublicAiStatus, ProviderId } from "@/lib/ai/config";
 import { formatRelativeTime } from "@/lib/format";
 import { useCopy, useLang } from "@/i18n/provider";
@@ -731,7 +731,7 @@ export function SetupPanel() {
     <div className="space-y-5">
       <header>
         <span className="chip">
-          <KeyRound className="h-3.5 w-3.5 text-gold-300" /> {t.headerChip}
+          <IconKey className="h-3.5 w-3.5 text-gold-300" /> {t.headerChip}
         </span>
         <h1 className="mt-4 text-3xl font-bold tracking-tight text-mist-50 sm:text-4xl">
           {t.headerTitle}
@@ -760,9 +760,9 @@ export function SetupPanel() {
             six-cell grid or a section of its own. */}
         <div className="flex flex-wrap items-center gap-2">
           {status?.configured ? (
-            <CircleCheck className="h-4 w-4 shrink-0 text-brand-300" />
+            <IconCircleCheck className="h-4 w-4 shrink-0 text-brand-300" />
           ) : (
-            <TriangleAlert className="h-4 w-4 shrink-0 text-gold-300" />
+            <IconAlertTriangle className="h-4 w-4 shrink-0 text-gold-300" />
           )}
           <span className="text-sm font-semibold text-mist-100">
             {status?.providerLabel ?? "—"}
@@ -795,9 +795,9 @@ export function SetupPanel() {
             disabled={busy !== null}
           >
             {busy === "status" ? (
-              <LoaderCircle className="h-4 w-4 animate-spin" />
+              <IconLoader2 className="h-4 w-4 animate-spin" />
             ) : (
-              <RefreshCw className="h-4 w-4" />
+              <IconRefresh className="h-4 w-4" />
             )}
             {t.statusRefresh}
           </button>
@@ -816,7 +816,7 @@ export function SetupPanel() {
         {/* Cloud providers — key-based, one card each. */}
         <div>
           <span className="label flex items-center gap-1.5">
-            <Cloud className="h-3.5 w-3.5 text-brand-300" /> {t.cloudGroup}
+            <IconCloud className="h-3.5 w-3.5 text-brand-300" /> {t.cloudGroup}
           </span>
           <div className="grid gap-2 sm:grid-cols-2">
             {cloudProviders.map((item) => (
@@ -834,7 +834,7 @@ export function SetupPanel() {
             the absence reads as "not yet" instead of "you missed a setting". */}
         <div>
           <span className="label flex items-center gap-1.5">
-            <SquareTerminal className="h-3.5 w-3.5 text-mist-400" /> {t.cliGroup}
+            <IconTerminal2 className="h-3.5 w-3.5 text-mist-400" /> {t.cliGroup}
           </span>
           {cliProviders.length === 0 ? (
             <div className="rounded-xl border border-dashed border-ink-700 bg-ink-950/40 px-3.5 py-3">
@@ -889,9 +889,9 @@ export function SetupPanel() {
           <div className="rounded-xl border border-ink-700 bg-ink-950/50 px-3.5 py-3">
             <p className="flex items-center gap-2 text-sm font-semibold text-mist-100">
               {cliReady ? (
-                <CircleCheck className="h-4 w-4 shrink-0 text-brand-300" />
+                <IconCircleCheck className="h-4 w-4 shrink-0 text-brand-300" />
               ) : (
-                <TriangleAlert className="h-4 w-4 shrink-0 text-gold-300" />
+                <IconAlertTriangle className="h-4 w-4 shrink-0 text-gold-300" />
               )}
               {cliReady
                 ? `${t.cliInstalled}${activeProviderInfo?.cli?.version ? ` · ${activeProviderInfo.cli.version}` : ""}`
@@ -926,7 +926,7 @@ export function SetupPanel() {
                 className="btn-icon h-auto w-11 shrink-0"
                 aria-label={reveal ? t.keyHide : t.keyShow}
               >
-                {reveal ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                {reveal ? <IconEyeOff className="h-4 w-4" /> : <IconEye className="h-4 w-4" />}
               </button>
             </div>
             <p className="mt-1.5 text-[11px] text-mist-500">
@@ -953,7 +953,7 @@ export function SetupPanel() {
               }}
             >
               <div className="relative">
-                <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-mist-500" />
+                <IconSearch className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-mist-500" />
                 <input
                   id="provider-model"
                   value={modelQuery ?? model}
@@ -979,7 +979,7 @@ export function SetupPanel() {
                   spellCheck={false}
                   className="field pl-9 pr-9"
                 />
-                <ChevronDown className="pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-mist-500" />
+                <IconChevronDown className="pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-mist-500" />
               </div>
               {modelOpen && modelMatches.length > 0 ? (
                 <ul className="absolute z-20 mt-1 max-h-60 w-full overflow-auto rounded-xl border border-ink-700 bg-ink-900 py-1 shadow-xl">
@@ -1037,9 +1037,9 @@ export function SetupPanel() {
               }
             >
               {busy === "models" ? (
-                <LoaderCircle className="h-4 w-4 animate-spin" />
+                <IconLoader2 className="h-4 w-4 animate-spin" />
               ) : (
-                <RefreshCw className="h-4 w-4" />
+                <IconRefresh className="h-4 w-4" />
               )}
               {t.modelsLoad}
             </button>
@@ -1083,9 +1083,9 @@ export function SetupPanel() {
             disabled={busy !== null}
           >
             {busy === "save" ? (
-              <LoaderCircle className="h-4 w-4 animate-spin" />
+              <IconLoader2 className="h-4 w-4 animate-spin" />
             ) : (
-              <ShieldCheck className="h-4 w-4" />
+              <IconShieldCheck className="h-4 w-4" />
             )}
             {t.keySaveTest}
           </button>
@@ -1096,9 +1096,9 @@ export function SetupPanel() {
             disabled={busy !== null}
           >
             {busy === "check" ? (
-              <LoaderCircle className="h-4 w-4 animate-spin" />
+              <IconLoader2 className="h-4 w-4 animate-spin" />
             ) : (
-              <RefreshCw className="h-4 w-4" />
+              <IconRefresh className="h-4 w-4" />
             )}
             {t.keyTestOnly}
           </button>
@@ -1110,9 +1110,9 @@ export function SetupPanel() {
               disabled={busy !== null}
             >
               {busy === "delete" ? (
-                <LoaderCircle className="h-4 w-4 animate-spin" />
+                <IconLoader2 className="h-4 w-4 animate-spin" />
               ) : (
-                <Trash2 className="h-4 w-4" />
+                <IconTrash className="h-4 w-4" />
               )}
               {t.keyDelete} {activeProviderLabel}
             </button>
@@ -1130,11 +1130,11 @@ export function SetupPanel() {
             }`}
           >
             {message.tone === "ok" ? (
-              <CircleCheck className="mt-0.5 h-4 w-4 shrink-0 text-brand-300" />
+              <IconCircleCheck className="mt-0.5 h-4 w-4 shrink-0 text-brand-300" />
             ) : message.tone === "error" ? (
-              <TriangleAlert className="mt-0.5 h-4 w-4 shrink-0 text-ember-400" />
+              <IconAlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-ember-400" />
             ) : (
-              <KeyRound className="mt-0.5 h-4 w-4 shrink-0 text-gold-300" />
+              <IconKey className="mt-0.5 h-4 w-4 shrink-0 text-gold-300" />
             )}
             <span className="min-w-0 break-words">{message.text}</span>
           </p>

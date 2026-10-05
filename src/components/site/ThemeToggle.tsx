@@ -1,6 +1,6 @@
 "use client";
 
-import { Monitor, Moon, Sun } from "lucide-react";
+import { IconDeviceDesktop, IconMoon, IconSun } from "@tabler/icons-react";
 import { useTheme } from "./ThemeProvider";
 import { useCopy } from "@/i18n/provider";
 import type { Theme } from "@/lib/theme";
@@ -34,14 +34,14 @@ const OPTION_COPY: Record<Theme, { label: CopyKey; hint: CopyKey }> = {
   dark: { label: "darkLabel", hint: "darkHint" },
 };
 
-const OPTIONS: { value: Theme; Icon: typeof Sun }[] = [
+const OPTIONS: { value: Theme; Icon: typeof IconSun }[] = [
   {
     value: "light",
-    Icon: Sun,
+    Icon: IconSun,
   },
   {
     value: "dark",
-    Icon: Moon,
+    Icon: IconMoon,
   },
 ];
 
@@ -60,7 +60,7 @@ export function ThemeToggle() {
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div className="min-w-0">
           <h2 className="flex items-center gap-2 text-sm font-semibold text-mist-100">
-            <Monitor className="h-4 w-4 text-brand-300" /> {t.appearance}
+            <IconDeviceDesktop className="h-4 w-4 text-brand-300" /> {t.appearance}
           </h2>
           <p className="mt-1 text-xs leading-relaxed text-mist-400">
             {t.appearanceHint}

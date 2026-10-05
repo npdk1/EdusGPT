@@ -2,16 +2,16 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import {
-  CircleCheck,
-  Cloud,
-  Cpu,
-  Download,
-  LoaderCircle,
-  Play,
-  RefreshCw,
-  SquareTerminal,
-  TriangleAlert,
-} from "lucide-react";
+  IconCircleCheck,
+  IconCloud,
+  IconCpu,
+  IconDownload,
+  IconLoader2,
+  IconPlayerPlay,
+  IconRefresh,
+  IconTerminal2,
+  IconAlertTriangle,
+} from "@tabler/icons-react";
 import { useCopy } from "@/i18n/provider";
 
 /**
@@ -286,7 +286,7 @@ export function VoiceSettings() {
       <div className="grid gap-2 sm:grid-cols-2">
         <EngineCard
           active={engine === "local"}
-          icon={<Cpu className="h-4 w-4" />}
+          icon={<IconCpu className="h-4 w-4" />}
           title={t.localTitle}
           note={t.localNote}
           badge={local ? (local.ready ? t.localReady : t.localNotReady) : null}
@@ -296,7 +296,7 @@ export function VoiceSettings() {
         />
         <EngineCard
           active={engine === "cloud"}
-          icon={<Cloud className="h-4 w-4" />}
+          icon={<IconCloud className="h-4 w-4" />}
           title={t.cloudTitle}
           note={t.cloudNote}
           badge={null}
@@ -310,9 +310,9 @@ export function VoiceSettings() {
       <div className="rounded-xl border border-ink-700 bg-ink-950/50 px-3.5 py-3">
         <div className="flex flex-wrap items-center gap-2">
           {local?.ready ? (
-            <CircleCheck className="h-4 w-4 shrink-0 text-brand-300" />
+            <IconCircleCheck className="h-4 w-4 shrink-0 text-brand-300" />
           ) : (
-            <TriangleAlert className="h-4 w-4 shrink-0 text-gold-300" />
+            <IconAlertTriangle className="h-4 w-4 shrink-0 text-gold-300" />
           )}
           <span className="text-sm font-semibold text-mist-100">{t.statusTitle}</span>
           <span className="chip">
@@ -341,7 +341,7 @@ export function VoiceSettings() {
             className="btn-ghost ml-auto"
             disabled={busy !== null}
           >
-            <RefreshCw className="h-4 w-4" /> {t.refresh}
+            <IconRefresh className="h-4 w-4" /> {t.refresh}
           </button>
         </div>
 
@@ -367,9 +367,9 @@ export function VoiceSettings() {
             disabled={busy !== null || local?.ready === true}
           >
             {busy === "install" ? (
-              <LoaderCircle className="h-4 w-4 animate-spin" />
+              <IconLoader2 className="h-4 w-4 animate-spin" />
             ) : (
-              <Download className="h-4 w-4" />
+              <IconDownload className="h-4 w-4" />
             )}
             {busy === "install" ? t.installing : t.install}
           </button>
@@ -380,9 +380,9 @@ export function VoiceSettings() {
             disabled={busy !== null}
           >
             {busy === "preview" ? (
-              <LoaderCircle className="h-4 w-4 animate-spin" />
+              <IconLoader2 className="h-4 w-4 animate-spin" />
             ) : (
-              <Play className="h-4 w-4" />
+              <IconPlayerPlay className="h-4 w-4" />
             )}
             {busy === "preview" ? t.previewing : t.preview}
           </button>
@@ -395,7 +395,7 @@ export function VoiceSettings() {
         {log.length > 0 ? (
           <div className="mt-3">
             <p className="font-mono text-[11px] uppercase tracking-widest text-mist-500">
-              <SquareTerminal className="mr-1 inline h-3 w-3" />
+              <IconTerminal2 className="mr-1 inline h-3 w-3" />
               {t.logTitle}
             </p>
             <pre className="mt-1 max-h-40 overflow-y-auto whitespace-pre-wrap break-words rounded-lg bg-ink-950 px-3 py-2 font-mono text-[11px] leading-relaxed text-mist-300">
@@ -423,9 +423,9 @@ export function VoiceSettings() {
               className="flex flex-wrap items-center gap-2 rounded-lg border border-ink-800 px-2.5 py-2"
             >
               {provider.installed ? (
-                <CircleCheck className="h-4 w-4 shrink-0 text-brand-300" />
+                <IconCircleCheck className="h-4 w-4 shrink-0 text-brand-300" />
               ) : (
-                <TriangleAlert className="h-4 w-4 shrink-0 text-mist-500" />
+                <IconAlertTriangle className="h-4 w-4 shrink-0 text-mist-500" />
               )}
               <span className="text-xs font-semibold text-mist-100">{provider.label}</span>
               <span className="chip">
@@ -438,9 +438,9 @@ export function VoiceSettings() {
                 disabled={busy !== null}
               >
                 {busy === "install" ? (
-                  <LoaderCircle className="h-3.5 w-3.5 animate-spin" />
+                  <IconLoader2 className="h-3.5 w-3.5 animate-spin" />
                 ) : (
-                  <Download className="h-3.5 w-3.5" />
+                  <IconDownload className="h-3.5 w-3.5" />
                 )}
                 {busy === "install" ? t.providerInstalling : t.providerInstall}
               </button>

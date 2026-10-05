@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
-import { KeyRound, Menu, CirclePlay, Sparkles, X } from "lucide-react";
+import { IconKey, IconMenu2, IconPlayerPlay, IconSparkles, IconX } from "@tabler/icons-react";
 import { AiKeyBadge } from "./AiKeyBadge";
 import { LocaleSwitcher } from "./LocaleSwitcher";
 import { useCopy } from "@/i18n/provider";
@@ -99,7 +99,7 @@ export function SiteHeader() {
             <AiKeyBadge />
           </div>
           <Link href="/studio" className="btn-primary hidden lg:inline-flex">
-            <Sparkles className="h-4 w-4" /> {t.ctaGenerate}
+            <IconSparkles className="h-4 w-4" /> {t.ctaGenerate}
           </Link>
           <button
             type="button"
@@ -108,7 +108,7 @@ export function SiteHeader() {
             aria-expanded={open}
             className="btn-icon md:hidden"
           >
-            {open ? <X className="h-4 w-4" /> : <Menu className="h-4 w-4" />}
+            {open ? <IconX className="h-4 w-4" /> : <IconMenu2 className="h-4 w-4" />}
           </button>
         </div>
       </div>
@@ -124,9 +124,9 @@ export function SiteHeader() {
               >
                 {t[item.label]}
                 {item.href === "/setup" ? (
-                  <KeyRound className="h-4 w-4 text-gold-300" />
+                  <IconKey className="h-4 w-4 text-gold-300" />
                 ) : (
-                  <CirclePlay className="h-4 w-4 text-brand-300" />
+                  <IconPlayerPlay className="h-4 w-4 text-brand-300" />
                 )}
               </Link>
             ))}
