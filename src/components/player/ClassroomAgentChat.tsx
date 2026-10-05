@@ -1,7 +1,7 @@
 "use client";
 
-import { useState, type ReactNode } from "react";
-import { Bot, Send, User, Sparkles, LoaderCircle } from "lucide-react";
+import { useEffect, useState, type ReactNode } from "react";
+import { Bot, Send, User, Sparkles, LoaderCircle, Maximize2, Minimize2 } from "lucide-react";
 import katex from "katex";
 import type { LessonScene } from "@/lib/lesson/types";
 import { useCopy } from "@/i18n/provider";
@@ -26,6 +26,8 @@ const COPY = {
     agentSubtitle: "Questions about the current scene",
     agentThinking: "The tutor is thinking...",
     agentPlaceholder: 'Ask about "{title}"...',
+    agentExpand: "Expand the tutor",
+    agentCollapse: "Collapse the tutor",
   },
   vi: {
     agentGreeting:
@@ -40,6 +42,8 @@ const COPY = {
     agentSubtitle: "Hỏi đáp theo cảnh học",
     agentThinking: "Trợ giảng đang suy nghĩ câu trả lời...",
     agentPlaceholder: 'Hỏi về "{title}"...',
+    agentExpand: "Phóng to khung trợ giảng",
+    agentCollapse: "Thu nhỏ khung trợ giảng",
   },
 } satisfies Record<string, Record<string, string>>;
 
@@ -124,6 +128,22 @@ export function ClassroomAgentChat({ currentScene, lessonTitle }: ClassroomAgent
     "Giải thích dễ hiểu hơn về phần này",
     "Cho mình 1 ví dụ thực tế liên quan",
   ]);
+  /**
+   * Expanded mode, for a panel that reads too small in the sidebar: the chat
+   * lifts out of the column into a wide floating card on the right, and the
+   * same button (or Escape) puts it back. Nothing unmounts, so the thread and
+   * the input survive the round trip.
+   */
+  const [expanded, setExpanded] = useState(false);
+
+  useEffect(() => {
+    if (!expanded) return;
+    const onKey = (event: KeyboardEvent) => {
+      if (event.key === "Escape") setExpanded(false);
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [expanded]);
 
   const handleSend = async (textToSend?: string) => {
     const text = (textToSend ?? input).trim();
@@ -182,7 +202,13 @@ export function ClassroomAgentChat({ currentScene, lessonTitle }: ClassroomAgent
   };
 
   return (
-    <div className="panel flex h-[480px] flex-col overflow-hidden md:h-auto md:min-h-0 md:flex-1">
+    <div
+      className={
+        expanded
+          ? "panel fixed inset-y-3 right-3 z-[70] flex w-[min(36rem,94vw)] flex-col overflow-hidden shadow-2xl"
+          : "panel flex h-[480px] flex-col overflow-hidden md:h-auto md:min-h-0 md:flex-1"
+      }
+    >
       <div className="flex items-center justify-between border-b border-ink-700/70 bg-ink-950/70 px-4 py-3">
         <div className="flex items-center gap-2">
           <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-brand-500/20 text-brand-300">
@@ -195,7 +221,19 @@ export function ClassroomAgentChat({ currentScene, lessonTitle }: ClassroomAgent
             <p className="text-[10px] text-mist-400">{t.agentSubtitle}</p>
           </div>
         </div>
-        <span className="chip border-brand-700/60 text-[10px]">Multi-Agent</span>
+        <div className="flex items-center gap-1.5">
+          <span className="chip border-brand-700/60 text-[10px]">Multi-Agent</span>
+          <button
+            type="button"
+            onClick={() => setExpanded((value) => !value)}
+            className="btn-icon"
+            title={expanded ? t.agentCollapse : t.agentExpand}
+            aria-label={expanded ? t.agentCollapse : t.agentExpand}
+            aria-pressed={expanded}
+          >
+            {expanded ? <Minimize2 className="h-4 w-4" /> : <Maximize2 className="h-4 w-4" />}
+          </button>
+        </div>
       </div>
 
       <div className="flex-1 space-y-3 overflow-y-auto p-4 text-xs">

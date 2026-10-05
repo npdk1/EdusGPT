@@ -155,6 +155,10 @@ input[type=range]::-moz-range-thumb{width:12px;height:12px;border-radius:999px;b
    owns the screen, and a presenter who cannot reach the play button has no
    controls at all. */
 .wrap:fullscreen{background:var(--ink);padding:16px;overflow:auto}
+/* The exit has to stay reachable: in fullscreen the slide is tall enough to
+   push the transport below the fold, and a presenter scrolling for the shrink
+   button has no controls at all. Pinned to the bottom instead. */
+.wrap:fullscreen .player{position:sticky;bottom:0;z-index:5}
 
 /* The shortcut sheet, opened with \`?\`. Every key here is bound below, so the
    list cannot drift away from what the file actually does. */
@@ -684,6 +688,25 @@ const PLAYER_JS = `
   var voiceOn = true;
   var voiceScene = -1;
 
+  // --- dead air: a clip shorter than its scene used to leave the deck sitting
+  // in silence until the scene's fixed duration ran out. When the clip ends
+  // early, jump to the next scene instead — the timeline, not the recording,
+  // decides how long a slide stays up. Skipped while looping (the loop owns
+  // the playhead there), and tiny remainders are left alone so the boundary
+  // never visibly jumps.
+  voice.addEventListener('ended', function () {
+    if (!playing) return;
+    if (loopOn && loopB > loopA) return;
+    try { voice.pause(); } catch (e) {}
+    var idx = sceneIndexAt(current);
+    var scene = data.scenes[idx];
+    if (!scene || voiceScene !== idx) return;
+    var end = scene.start + scene.duration;
+    if (end - current < 0.6) return;
+    if (idx >= data.scenes.length - 1) { seek(total); stop(); return; }
+    seek(end);
+  });
+
   // --- the caption, read the way the web player reads it.
   //
   // Every sentence of every scene is already in the file, each word carrying its
@@ -799,6 +822,14 @@ const PLAYER_JS = `
       voiceScene = idx;
       try { voice.src = src; } catch (e) {}
     }
+    // The timeline runs at rate and the caption follows it, so the clip has
+    // to as well — without this the words light up at 2x while the voice reads
+    // at 1x and the two part ways within a sentence. Re-applied on every swap:
+    // some browsers drop a custom rate when the source changes.
+    try {
+      voice.playbackRate = rate;
+      if ('preservesPitch' in voice) voice.preservesPitch = true;
+    } catch (e) {}
     if (playing) {
       var off = Math.max(0, current - data.scenes[idx].start);
       try {
@@ -1000,6 +1031,10 @@ const PLAYER_JS = `
     if (at < 0) at = 2;
     rate = RATES[Math.min(RATES.length - 1, Math.max(0, at + direction))];
     rateSelect.value = String(rate);
+    try {
+      voice.playbackRate = rate;
+      if ('preservesPitch' in voice) voice.preservesPitch = true;
+    } catch (e) {}
   }
 
   function stepFrames(count) {
@@ -1018,7 +1053,12 @@ const PLAYER_JS = `
   function syncFullscreen() {
     var on = Boolean(document.fullscreenElement);
     var btn = document.getElementById('fullscreen');
-    btn.querySelector('svg').innerHTML = on ? SHRINK_ICON : FULLSCREEN_ICON;
+    if (!btn) return;
+    // Guarded: if this ever runs before the transport renders, a throw here
+    // would leave the expand icon on screen while already fullscreen — a
+    // player that zooms in with no visible way back.
+    var svg = btn.querySelector('svg');
+    if (svg) svg.innerHTML = on ? SHRINK_ICON : FULLSCREEN_ICON;
     btn.setAttribute('aria-label', on ? 'Thoát toàn màn hình' : 'Toàn màn hình');
     btn.setAttribute('title', on ? 'Thoát toàn màn hình (F hoặc Esc)' : 'Toàn màn hình (F)');
   }
@@ -1128,7 +1168,13 @@ const PLAYER_JS = `
   document.getElementById('forward10').addEventListener('click', function () { seek(current + 10); });
   document.getElementById('stepBack').addEventListener('click', function () { stop(); stepFrames(-1); });
   document.getElementById('stepForward').addEventListener('click', function () { stop(); stepFrames(1); });
-  rateSelect.addEventListener('change', function (event) { rate = parseFloat(event.target.value); });
+  rateSelect.addEventListener('change', function (event) {
+    rate = parseFloat(event.target.value);
+    try {
+      voice.playbackRate = rate;
+      if ('preservesPitch' in voice) voice.preservesPitch = true;
+    } catch (e) {}
+  });
   volInput.addEventListener('input', function (event) {
     volume = parseFloat(event.target.value);
     applyVolume();
@@ -1150,6 +1196,7 @@ const PLAYER_JS = `
     if (event.target === dlg) setHelp(false);
   });
   document.addEventListener('fullscreenchange', syncFullscreen);
+  syncFullscreen();
 
   Array.prototype.forEach.call(document.querySelectorAll('[data-seek]'), function (button) {
     button.addEventListener('click', function () { seek(parseFloat(button.getAttribute('data-seek'))); });
