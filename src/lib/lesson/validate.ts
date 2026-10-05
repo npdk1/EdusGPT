@@ -18,7 +18,7 @@ import {
   type SlideTable,
 } from "./types";
 import { BLOCK_TYPE_CQW, fitBlockText } from "./text-fit";
-import { DEFAULT_SLIDE_THEME } from "./themes";
+import { DEFAULT_SLIDE_PATTERN, DEFAULT_SLIDE_THEME, isSlidePattern } from "./themes";
 import { SLIDE_ICON_NAMES } from "./types";
 import { MAX_LESSON_SCENES } from "./presentation-styles";
 
@@ -385,6 +385,9 @@ export function coerceLesson(input: unknown): Lesson | null {
     // the id through the registry, so passing an unknown one through is safe and
     // a deck written against an older palette keeps the id it was saved with.
     theme: asString(raw.theme).slice(0, 40) || DEFAULT_SLIDE_THEME,
+    // Unknown patterns fall back to plain: a mistyped id must never blank a
+    // slide, the same guarantee the theme above makes.
+    pattern: isSlidePattern(asString(raw.pattern)) ? asString(raw.pattern) : DEFAULT_SLIDE_PATTERN,
     voice: asString(raw.voice).slice(0, 60) || undefined,
     showPointer: raw.showPointer === false ? false : true,
     pointerColor:

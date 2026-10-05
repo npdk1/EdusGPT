@@ -431,6 +431,7 @@ export function GsapSlideStage({
         // when the lesson was written, and it is the one thing that has to be on
         // this node: every colour below resolves through the variables it sets.
         data-theme={lesson.theme ?? DEFAULT_SLIDE_THEME}
+        data-pattern={lesson.pattern ?? "none"}
         // Only dark papers get the fullscreen backdrop. A boolean attribute
         // rather than a name, so the rule keys off the resolved luminance and
         // every one of the dark palettes is covered without naming thirty of
@@ -454,6 +455,12 @@ export function GsapSlideStage({
                 card falls back to the top instead of having its title clipped
                 off. A Tailwind utility here would win the cascade and undo it. */}
             <div className="scene-card relative flex h-full flex-col overflow-hidden">
+              {/* The pattern wash, only when the deck asks for one: the main
+                  player otherwise draws no tint, and adding one unasked would
+                  change every existing deck. */}
+              {lesson.pattern && lesson.pattern !== "none" ? (
+                <div aria-hidden="true" className="scene-wash" />
+              ) : null}
               {/* Everything a viewer reads goes inside this one box, so the fit
                   pass below has a single element to measure and scale. The page
                   number stays outside it: it is chrome pinned to the corner, and

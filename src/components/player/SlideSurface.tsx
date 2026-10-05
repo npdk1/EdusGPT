@@ -92,6 +92,7 @@ export function SlideSurface({
   index,
   lessonId,
   theme,
+  pattern,
   caption,
   channel,
   playing,
@@ -105,6 +106,8 @@ export function SlideSurface({
   lessonId: string;
   /** Slide theme id; the classroom plays the default paper. */
   theme?: string | null;
+  /** Background pattern id; absent means plain, like lessons saved before it. */
+  pattern?: string | null;
   /** Karaoke caption, pinned to the band the slide reserves at the bottom. */
   caption?: ReactNode;
   /**
@@ -428,6 +431,7 @@ export function SlideSurface({
     <div
       className={`slide-fitted overflow-hidden ${className}`}
       data-theme={theme ?? DEFAULT_SLIDE_THEME}
+      data-pattern={pattern ?? "none"}
       data-theme-dark={isDarkTheme(theme) ? "" : undefined}
       style={paletteStyle(theme)}
     >

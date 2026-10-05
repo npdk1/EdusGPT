@@ -1135,6 +1135,107 @@
   }
 
   /*
+   * Background patterns, in the paper's own accent.
+   *
+   * Six treatments from the template sites (Memphis dots, blueprint grid,
+   * duotone bands, corner rings, mesh waves), each drawn only with palette
+   * roles — no colour is named, so one rule serves all forty-two papers.
+   * The base glow rides along as the last layer so a patterned slide keeps
+   * its depth.
+   *
+   * Specificity (0,3,0) beats the layout washes above on purpose: when the
+   * teacher picks a pattern, the pattern is the decoration.
+   */
+  .slide-fitted[data-pattern="dots"] .scene-wash {
+    background:
+      radial-gradient(
+        color-mix(in srgb, var(--slide-accent-soft) 30%, transparent) 1.2px,
+        transparent 1.3px
+      ),
+      radial-gradient(
+        120% 90% at 88% -10%,
+        color-mix(in srgb, var(--slide-accent-soft) 16%, transparent) 0%,
+        transparent 62%
+      );
+    background-size:
+      2.6cqw 2.6cqw,
+      auto;
+  }
+
+  .slide-fitted[data-pattern="grid"] .scene-wash {
+    background:
+      linear-gradient(
+        color-mix(in srgb, var(--slide-rule) 42%, transparent) 1px,
+        transparent 1px
+      ),
+      linear-gradient(
+        90deg,
+        color-mix(in srgb, var(--slide-rule) 42%, transparent) 1px,
+        transparent 1px
+      ),
+      radial-gradient(
+        120% 90% at 88% -10%,
+        color-mix(in srgb, var(--slide-accent-soft) 16%, transparent) 0%,
+        transparent 62%
+      );
+    background-size:
+      100% 3cqw,
+      3cqw 100%,
+      auto;
+  }
+
+  .slide-fitted[data-pattern="bands"] .scene-wash {
+    background:
+      linear-gradient(
+        135deg,
+        transparent 58%,
+        color-mix(in srgb, var(--slide-accent) 16%, transparent) 58%,
+        color-mix(in srgb, var(--slide-accent) 16%, transparent) 74%,
+        color-mix(in srgb, var(--slide-accent-soft) 26%, transparent) 74%
+      ),
+      radial-gradient(
+        120% 90% at 88% -10%,
+        color-mix(in srgb, var(--slide-accent-soft) 16%, transparent) 0%,
+        transparent 62%
+      );
+  }
+
+  .slide-fitted[data-pattern="rings"] .scene-wash {
+    background:
+      repeating-radial-gradient(
+        circle at 88% 6%,
+        transparent 0,
+        transparent 3.1cqw,
+        color-mix(in srgb, var(--slide-accent-soft) 22%, transparent) 3.1cqw,
+        color-mix(in srgb, var(--slide-accent-soft) 22%, transparent) 3.25cqw
+      ),
+      radial-gradient(
+        120% 90% at 88% -10%,
+        color-mix(in srgb, var(--slide-accent-soft) 16%, transparent) 0%,
+        transparent 62%
+      );
+  }
+
+  .slide-fitted[data-pattern="waves"] .scene-wash {
+    background:
+      radial-gradient(
+        55% 48% at 10% 102%,
+        color-mix(in srgb, var(--slide-accent) 14%, transparent) 0%,
+        transparent 70%
+      ),
+      radial-gradient(
+        48% 42% at 92% 4%,
+        color-mix(in srgb, var(--slide-accent-soft) 18%, transparent) 0%,
+        transparent 70%
+      ),
+      radial-gradient(
+        120% 90% at 88% -10%,
+        color-mix(in srgb, var(--slide-accent-soft) 16%, transparent) 0%,
+        transparent 62%
+      );
+  }
+
+  /*
    * A hairline frame. The slide sits inside the room, and this is the edge of
    * the paper itself — one pixel of the theme's own rule colour, so a dark
    * theme gets a light edge and a paper theme a dark one.

@@ -29,6 +29,8 @@ import {
 } from "@/lib/lesson/types";
 import {
   DEFAULT_SLIDE_THEME,
+  SLIDE_PATTERNS,
+  DEFAULT_SLIDE_PATTERN,
   SLIDE_PRESETS,
   resolveSlideTheme,
   type SlideThemePreset,
@@ -165,6 +167,13 @@ const COPY = {
     presetUnit: "presets",
     themeExpanding: "expanding",
     themeTap: "tap to view",
+    patternLabel: "Background pattern",
+    patternNone: "Plain",
+    patternDots: "Dots",
+    patternGrid: "Grid",
+    patternBands: "Bands",
+    patternRings: "Rings",
+    patternWaves: "Waves",
   },
   vi: {
     createLesson: "Tạo bài giảng",
@@ -272,6 +281,13 @@ const COPY = {
     presetUnit: "mẫu",
     themeExpanding: "đang mở",
     themeTap: "chạm để xem",
+    patternLabel: "Họa tiết nền",
+    patternNone: "Trơn",
+    patternDots: "Chấm",
+    patternGrid: "Lưới",
+    patternBands: "Dải chéo",
+    patternRings: "Vòng",
+    patternWaves: "Sóng",
   },
 };
 
@@ -342,6 +358,8 @@ export function StudioPanel() {
   // made before generation and carried on the lesson — a teacher who wants a
   // dark deck should not have to restyle twenty-four slides afterwards.
   const [theme, setTheme] = useState<SlideTheme>(DEFAULT_SLIDE_THEME);
+  /** Pattern id; the slide resolves it through the registry, like the theme. */
+  const [pattern, setPattern] = useState<string>(DEFAULT_SLIDE_PATTERN);
   /** Whether the theme grid is showing; the dropdown is the collapsed state. */
   const [themeOpen, setThemeOpen] = useState(false);
   // The voice is chosen here rather than in the player, because picking a voice
@@ -471,6 +489,7 @@ export function StudioPanel() {
       referenceMaterial: referenceText,
       language,
       theme,
+      pattern,
       voice,
       useImages,
       showPointer,
@@ -478,7 +497,7 @@ export function StudioPanel() {
       style: styleId,
       lessonLength,
     });
-  }, [language, lessonLength, minutes, pointerColor, referenceText, sceneCount, showPointer, stream, styleId, theme, topic, useImages, voice]);
+  }, [language, lessonLength, minutes, pattern, pointerColor, referenceText, sceneCount, showPointer, stream, styleId, theme, topic, useImages, voice]);
 
   /** Saves to the server library (survives a browser wipe) and mirrors to local. */
   const save = useCallback(async () => {
@@ -718,6 +737,38 @@ export function StudioPanel() {
         <LengthPicker value={lessonLength} onChange={setLessonLength} />
 
         <ThemePicker value={theme} onChange={setTheme} open={themeOpen} setOpen={setThemeOpen} />
+
+        <div>
+          <p className="label">{t.patternLabel}</p>
+          <div className="flex flex-wrap gap-1.5">
+            {SLIDE_PATTERNS.map((id) => {
+              const labels: Record<string, string> = {
+                none: t.patternNone,
+                dots: t.patternDots,
+                grid: t.patternGrid,
+                bands: t.patternBands,
+                rings: t.patternRings,
+                waves: t.patternWaves,
+              };
+              const active = pattern === id;
+              return (
+                <button
+                  key={id}
+                  type="button"
+                  onClick={() => setPattern(id)}
+                  aria-pressed={active}
+                  className={`chip transition-colors ${
+                    active
+                      ? "border-brand-500 bg-brand-500/15 text-brand-100"
+                      : "hover:border-brand-700 hover:text-mist-100"
+                  }`}
+                >
+                  {labels[id] ?? id}
+                </button>
+              );
+            })}
+          </div>
+        </div>
 
         <ImageModeToggle value={useImages} onChange={setUseImages} />
 

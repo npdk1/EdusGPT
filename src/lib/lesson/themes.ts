@@ -44,6 +44,26 @@ export interface SlideThemePreset {
 /** The default, and what an unrecognised or missing id falls back to. */
 export const DEFAULT_SLIDE_THEME = "paper";
 
+/**
+ * Background patterns, painted in the paper's own accent.
+ *
+ * A short curated list on purpose: six treatments drawn from what template
+ * sites sell (Memphis dots, blueprint grid, duotone bands, corner rings,
+ * mesh waves) beat forty-two flat colours. The CSS resolves every stroke
+ * through the palette variables, so one rule serves all forty-two papers.
+ */
+export const SLIDE_PATTERNS = ["none", "dots", "grid", "bands", "rings", "waves"] as const;
+
+export type SlidePattern = (typeof SLIDE_PATTERNS)[number];
+
+export const DEFAULT_SLIDE_PATTERN: SlidePattern = "none";
+
+export function isSlidePattern(value: unknown): value is SlidePattern {
+  return (
+    typeof value === "string" &&
+    (SLIDE_PATTERNS as readonly string[]).includes(value)
+  );
+}
 export const SLIDE_PRESETS: readonly SlideThemePreset[] = [
   // --- Giấy: warm off-whites -------------------------------------------------
   {

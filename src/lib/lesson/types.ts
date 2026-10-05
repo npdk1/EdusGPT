@@ -475,6 +475,13 @@ export interface Lesson {
    */
   theme?: SlideTheme;
   /**
+   * The background pattern painted in the paper's accent.
+   *
+   * Absent means plain: every lesson saved before patterns existed renders
+   * exactly as it used to.
+   */
+  pattern?: string;
+  /**
    * The narration voice, chosen in the studio.
    *
    * Carried on the lesson so the player opens speaking in the voice the teacher

@@ -43,6 +43,14 @@ body{background-image:radial-gradient(50rem 32rem at 12% -8%,rgba(36,189,172,.16
 .scene{position:absolute;inset:0;opacity:0;visibility:hidden}
 .card{--slide-fit:1;position:absolute;inset:0;display:flex;flex-direction:column;justify-content:safe center;padding:3.4cqw 5.5cqw 9cqw;overflow:hidden;background-image:linear-gradient(180deg,color-mix(in srgb,var(--ink) 88%,var(--mist5)) 0%,var(--ink) 38%,var(--ink3) 100%)}
 .wash{position:absolute;inset:0;z-index:-1;pointer-events:none;background:radial-gradient(120% 90% at 88% -10%,color-mix(in srgb,var(--brand3) 16%,transparent) 0%,transparent 62%),radial-gradient(90% 80% at 8% 108%,color-mix(in srgb,var(--brand) 10%,transparent) 0%,transparent 60%)}
+/* Same five patterns as the web player, drawn with the export's own accent
+   roles (remapped to the lesson paper in themeCss), so a downloaded deck
+   keeps the backdrop its teacher picked. */
+.card[data-pattern="dots"] .wash{background:radial-gradient(color-mix(in srgb,var(--brand3) 30%,transparent) 1.2px,transparent 1.3px),radial-gradient(120% 90% at 88% -10%,color-mix(in srgb,var(--brand3) 16%,transparent) 0%,transparent 62%);background-size:2.6cqw 2.6cqw,auto}
+.card[data-pattern="grid"] .wash{background:linear-gradient(color-mix(in srgb,var(--line) 55%,transparent) 1px,transparent 1px),linear-gradient(90deg,color-mix(in srgb,var(--line) 55%,transparent) 1px,transparent 1px),radial-gradient(120% 90% at 88% -10%,color-mix(in srgb,var(--brand3) 16%,transparent) 0%,transparent 62%);background-size:100% 3cqw,3cqw 100%,auto}
+.card[data-pattern="bands"] .wash{background:linear-gradient(135deg,transparent 58%,color-mix(in srgb,var(--brand) 16%,transparent) 58%,color-mix(in srgb,var(--brand) 16%,transparent) 74%,color-mix(in srgb,var(--brand3) 26%,transparent) 74%),radial-gradient(120% 90% at 88% -10%,color-mix(in srgb,var(--brand3) 16%,transparent) 0%,transparent 62%)}
+.card[data-pattern="rings"] .wash{background:repeating-radial-gradient(circle at 88% 6%,transparent 0,transparent 3.1cqw,color-mix(in srgb,var(--brand3) 22%,transparent) 3.1cqw,color-mix(in srgb,var(--brand3) 22%,transparent) 3.25cqw),radial-gradient(120% 90% at 88% -10%,color-mix(in srgb,var(--brand3) 16%,transparent) 0%,transparent 62%)}
+.card[data-pattern="waves"] .wash{background:radial-gradient(55% 48% at 10% 102%,color-mix(in srgb,var(--brand) 14%,transparent) 0%,transparent 70%),radial-gradient(48% 42% at 92% 4%,color-mix(in srgb,var(--brand3) 18%,transparent) 0%,transparent 70%),radial-gradient(120% 90% at 88% -10%,color-mix(in srgb,var(--brand3) 16%,transparent) 0%,transparent 62%)}
 .wm{position:absolute;right:6%;bottom:4%;z-index:3;font-family:ui-monospace,monospace;font-size:1.6cqw;font-weight:700;color:color-mix(in srgb,var(--mist5) 70%,transparent)}
 /* The column the fit pass measures: capped at the paper, so nothing spills into
    the caption strip, with the picture as the one thing allowed to give way. */
@@ -403,7 +411,7 @@ function sceneMarkup(
         audio
           ? `<audio data-voice preload="auto" src="${audio}"></audio>`
           : "",
-        `<div class="card">`,
+        `<div class="card" data-pattern="${lesson.pattern && lesson.pattern !== "none" ? escapeHtml(lesson.pattern) : "none"}">`,
         `<div class="wash"></div>`,
         `<div class="fit">`,
         `<header class="head-in">`,

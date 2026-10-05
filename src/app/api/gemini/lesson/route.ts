@@ -6,7 +6,7 @@ import { isQuotaExhausted } from "@/lib/ai/shared";
 import { recordModelTrust } from "@/lib/ai/model-trust";
 import { noteCompactModel, readCompactModel } from "@/lib/server/token-limit";
 import { SCENE_ACCENTS, SCENE_KINDS, SLIDE_BLOCK_KINDS, SLIDE_LAYOUTS, POINTER_TARGETS, iconSetFor, newLessonId, type SlideTheme } from "@/lib/lesson/types";
-import { DEFAULT_SLIDE_THEME } from "@/lib/lesson/themes";
+import { DEFAULT_SLIDE_PATTERN, DEFAULT_SLIDE_THEME, isSlidePattern } from "@/lib/lesson/themes";
 import {
   resolveLessonLength,
   resolvePresentationStyle,
@@ -941,6 +941,8 @@ export async function POST(request: NextRequest) {
     referenceMaterial?: string;
     /** The paper to draw the slides on. Defaults to the light one. */
     theme?: string;
+    /** The background pattern id. Unknown ids fall back to plain. */
+    pattern?: string;
     /**
      * The voice the teacher chose by ear in the studio.
      *
@@ -1759,6 +1761,7 @@ export async function POST(request: NextRequest) {
           language,
           fps: 30,
           theme,
+          pattern: isSlidePattern(body.pattern) ? body.pattern : DEFAULT_SLIDE_PATTERN,
           voice: typeof body.voice === "string" ? body.voice.slice(0, 60) : undefined,
           showPointer: body.showPointer === false ? false : true,
           pointerColor:
