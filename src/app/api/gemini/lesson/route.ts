@@ -1165,19 +1165,24 @@ export async function POST(request: NextRequest) {
   // hears the teacher stop short on every slide. Word count is knowable exactly
   // here, so it is used as the floor.
   //
-  // Measured October 2026, one 55-word narration through every engine: Edge
-  // HoaiMy 11.3-12.5s, Piper 11.4s, VieNeu Nano 11.1s, even the "slow" HoaiMy
-  // 11.7s — about 4.7 words a second across the board, not the 3.0 the old
-  // syllable-timing theory claimed. At 3.0 every scene carried ~12s of dead
-  // air after the voice stopped, which is the silence teachers reported. The
-  // padding is the pause at the end of a slide, not at a sentence.
+  // Every engine is slowed to teaching pace before it leaves the TTS service
+  // (TEACHING_TEMPO in src/lib/server/tts.ts), which is what makes this number
+  // an engine question at all: measured after the stretch, one 55-word
+  // narration reads 15.7s on Edge, 15.1s on Piper, 14.7s on VieNeu — 3.5-3.7
+  // words a second across the board.
   //
-  // The correction also shortens now: a scene whose narration only fills half
-  // its budget gets the smaller duration rather than sitting quiet. The floor
-  // stays 6s and the cap stays proposed*1.8, so a runaway paragraph still
-  // cannot strand the deck around it — and what the rate gets wrong, the
-  // player's skip-silence backstop absorbs at play time.
-  const NARRATION_WORDS_PER_SECOND = 4.7;
+  // The estimate sits below that median on purpose. Passage-to-passage variance
+  // is wider than engine-to-engine variance (the TTS cache holds 2.3-6.4 words/s
+  // at engine pace), and the two errors are not symmetric: too high and the
+  // sentence is cut mid-clause, too low and the slide sits quiet — and the quiet
+  // case is recoverable, because the player skips leftover silence at the end of
+  // a slide. At 3.2 the slowest measured passage still fits inside the player's
+  // 1.3x correction (3.2/1.3 = 2.46 words/s). One constant on purpose: a
+  // per-engine table would be precision theater.
+  //
+  // The floor stays 6s and the cap stays proposed*1.8, so a runaway paragraph
+  // cannot strand the deck around it.
+  const NARRATION_WORDS_PER_SECOND = 3.2;
   const NARRATION_PADDING_SECONDS = 1.5;
   const durationFor = (narration: unknown, proposed: number): number => {
     const text = typeof narration === "string" ? narration.trim() : "";

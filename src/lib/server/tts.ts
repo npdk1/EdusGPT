@@ -1,7 +1,9 @@
 import { MsEdgeTTS, OUTPUT_FORMAT } from "msedge-tts";
+import { execFile } from "node:child_process";
 import { mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
+import { promisify } from "node:util";
 
 /**
  * Speech synthesis, Vietnamese and English first.
@@ -391,6 +393,73 @@ export interface SpeakResult {
 
 const MAX_ATTEMPTS = 3;
 
+/**
+ * Teaching pace, applied once to whatever the engine produced.
+ *
+ * Measured October 2026 on one 55-word Vietnamese narration: Edge 11.3-12.5s,
+ * Piper 11.4s, VieNeu Nano 11.1s — about 4.7 words a second whichever engine
+ * reads it. That is speed-listening, not teaching; a lecturer with a slide
+ * projecter lands near 3.5.
+ *
+ * Every engine's own tempo knob was tried first and none of them delivered:
+ * Edge's SSML rate moved the same line by under 3%, Piper's `length_scale` is
+ * exact, VieNeu's `--speed` slower — yet through the API all three came back
+ * within 5% of before. Post-processing is the one knob that is guaranteed to
+ * mean what it says, because it is applied to finished audio.
+ *
+ * `atempo` and not `asetrate`/`rubberband`: it stretches time without moving
+ * pitch, so the voice is the voice the teacher picked, only unhurried. Anything
+ * under 0.5 needs a chain, hence the guard.
+ */
+const TEACHING_TEMPO = 0.75;
+
+/**
+ * Stretches a finished narration, and its word timings with it.
+ *
+ * Karaoke timings come from the same clock as the audio, so slowing the audio
+ * without slowing the marks would leave every subtitle highlight arriving early.
+ * A machine with no ffmpeg keeps the unslowed bytes rather than failing the
+ * read: fast narration is a lesser fault than no narration.
+ */
+async function atTeachingPace(result: SpeakResult): Promise<SpeakResult> {
+  if (TEACHING_TEMPO <= 0.5 || result.audio.length === 0) return result;
+  const dir = await mkdtemp(join(tmpdir(), TEMP_DIR_PREFIX));
+  const isMp3 = result.contentType === "audio/mpeg";
+  const src = join(dir, isMp3 ? "in.mp3" : "in.wav");
+  const out = join(dir, isMp3 ? "out.mp3" : "out.wav");
+  try {
+    await writeFile(src, result.audio);
+    await execFileAsync("ffmpeg", [
+      "-y",
+      "-loglevel",
+      "error",
+      "-i",
+      src,
+      "-filter:a",
+      `atempo=${TEACHING_TEMPO}`,
+      ...(isMp3 ? ["-codec:a", "libmp3lame", "-b:a", "96k"] : []),
+      out,
+    ]);
+    const audio = await readFile(out);
+    if (audio.length === 0) return result;
+    return {
+      ...result,
+      audio: new Uint8Array(audio),
+      words: result.words.map((mark) => ({
+        ...mark,
+        start: mark.start / TEACHING_TEMPO,
+        end: mark.end / TEACHING_TEMPO,
+      })),
+    };
+  } catch {
+    return result;
+  } finally {
+    await rm(dir, { recursive: true, force: true });
+  }
+}
+
+const execFileAsync = promisify(execFile);
+
 /** The hosted voice service: many voices, and per-word timings it measures. */
 export async function speakCloud(text: string, voice: LessonVoiceId): Promise<SpeakResult> {
   const pieces = splitForSpeech(text);
@@ -422,6 +491,13 @@ export async function speakCloud(text: string, voice: LessonVoiceId): Promise<Sp
  * worth reading: it is the one the teacher can act on.
  */
 export async function speak(text: string, voice: LessonVoiceId): Promise<SpeakResult> {
+  return atTeachingPace(await speakAtEnginePace(text, voice));
+}
+
+/**
+ * The engine's own pace, untouched. `speak` is the only door; this is behind it.
+ */
+async function speakAtEnginePace(text: string, voice: LessonVoiceId): Promise<SpeakResult> {
   // A voice id that names a local engine speaks with that engine whatever the
   // engine setting says: the teacher picked a person, not a machine.
   const named = await localVoiceFor(voice);

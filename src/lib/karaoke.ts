@@ -404,6 +404,29 @@ export function buildTrack(tokens: KaraokeToken[]): KaraokeTrack {
 }
 
 /**
+ * Per-scene playback correction so every slide sounds like the same speed.
+ *
+ * Local engines do not speak at a uniform pace: the same VieNeu voice reads
+ * one 50-word slide in 11.2s and the next in 15.7s, so a fixed playbackRate of
+ * 1x sounds like 1x on one slide and ~1.4x on another. Scaling this clip to
+ * the time its slide actually allows removes that variance and also stops a
+ * long clip being cut off at the scene boundary.
+ *
+ * The ceiling is 1.4, not 1.3, and the reason is arithmetic rather than taste:
+ * teaching pace stretches every engine's audio by 1/0.75 = 1.33, so a deck
+ * generated before that stretch needs that much room just to speak at its own
+ * new pace. Without it those lessons would run their last sentence into the
+ * next slide.
+ */
+export function paceFitRate(audioSeconds: number, slideSeconds: number, baseRate = 1): number {
+  // ponytail: fixed 1.5s end-pause + clamp 0.8-1.4; per-engine measured fit if variance grows
+  if (!(audioSeconds > 0) || !(slideSeconds > 0) || !(baseRate > 0)) return baseRate;
+  const avail = slideSeconds - 1.5;
+  if (!(avail > 1)) return baseRate;
+  return baseRate * Math.min(1.4, Math.max(0.8, audioSeconds / avail));
+}
+
+/**
  * Token index of the word being spoken at `time`, or -1 before the first word.
  *
  * Binary search: called on every animation frame, and a long narration is

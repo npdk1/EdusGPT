@@ -60,6 +60,16 @@ export function useTimebase({
   const rateRef = useRef(rate);
   const loopRef = useRef<LoopRange | undefined>(loop);
   const fpsRef = useRef(fps);
+  /**
+   * A point the playhead may not cross, or `null` for no hold.
+   *
+   * Written by whoever owns the gate, read here: the tick is the only thing in
+   * the player that carries the playhead forward, so a consumer that needs the
+   * deck to stop somewhere cannot do it any other way. `null` is the ordinary
+   * case, and the check costs one comparison on a ref the hot path already
+   * reads.
+   */
+  const holdRef = useRef<number | null>(null);
 
   durationRef.current = duration;
   playingRef.current = playing;
@@ -162,6 +172,18 @@ export function useTimebase({
 
       let time = timeRef.current + delta * rateRef.current;
 
+      // A gate: stop at the hold rather than crossing it. Playback ends here
+      // instead of freezing mid-frame, so the transport reads paused and the
+      // narrator stops with it rather than talking over a deck that is not
+      // moving.
+      const hold = holdRef.current;
+      if (hold !== null && time >= hold) {
+        timeRef.current = hold;
+        setPlaying(false);
+        notify();
+        return;
+      }
+
       // A→B repeat: only fires when playback crosses B going forward, so dragging
       // the playhead anywhere else is never fought by the loop.
       const bounds = loopRef.current;
@@ -194,6 +216,8 @@ export function useTimebase({
     timeRef,
     duration,
     playing,
+    /** Set a number to stop the deck there; `null` to let it run. */
+    holdRef,
     rate,
     volume,
     muted,

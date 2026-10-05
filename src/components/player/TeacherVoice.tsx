@@ -4,7 +4,7 @@ import { useEffect, useRef, useState, useCallback } from "react";
 import { Volume2, VolumeX, LoaderCircle } from "lucide-react";
 import type { Timebase } from "@/hooks/useTimebase";
 import type { Lesson } from "@/lib/lesson/types";
-import { approximateWords, decodeWordMarks, type WordMark } from "@/lib/karaoke";
+import { approximateWords, decodeWordMarks, paceFitRate, type WordMark } from "@/lib/karaoke";
 import { useCopy } from "@/i18n/provider";
 
 const COPY = {
@@ -197,6 +197,8 @@ export function TeacherVoice({
   const rateRef = useRef(timebase.rate);
   const volumeRef = useRef(timebase.volume);
   const mutedRef = useRef(timebase.muted);
+  /** Last per-scene pace correction, so a speed change keeps the fit. */
+  const fitRef = useRef(1);
   rateRef.current = timebase.rate;
   volumeRef.current = timebase.volume;
   mutedRef.current = timebase.muted;
@@ -322,10 +324,12 @@ export function TeacherVoice({
       startAt = 0,
       /** Timeline end of this slide; the silence skip aims at it. */
       sceneEnd = Number.POSITIVE_INFINITY,
+      /** Full length of this slide; the pace fit scales the clip to it. */
+      sceneDuration = Number.POSITIVE_INFINITY,
     ) => {
       const audio = new Audio(entry.url);
       audioRef.current = audio;
-      // The narration follows the timebase's speed.
+      // The narration follows the timebase's speed, fitted to this slide.
       //
       // Without this the deck runs at `rate` while the voice runs at 1x, and the
       // two are wrong by the time the first slide ends. That is not a subtle
@@ -333,7 +337,16 @@ export function TeacherVoice({
       // read, the subtitle highlight is on the wrong line, and the speed
       // control looks like it did nothing. The timebase owns the deck's clock, so it
       // hands the same rate to this element.
-      audio.playbackRate = rateRef.current;
+      //
+      // The fit on top: engines do not speak every slide at the same pace, so
+      // 1x sounds uneven slide to slide. Scaling each clip to its slide keeps
+      // one speed across the deck and stops a long clip overrunning its scene.
+      const audioSeconds =
+        entry.words.length > 0 ? entry.words[entry.words.length - 1].end : 0;
+      const fitted = paceFitRate(audioSeconds, sceneDuration - startAt, rateRef.current);
+      fitRef.current = rateRef.current > 0 ? fitted / rateRef.current : 1;
+      audio.playbackRate = fitted;
+      if ("preservesPitch" in audio) audio.preservesPitch = true;
       // Loudness travels with the timebase's, for the same reason: the mute
       // button silences the deck, and the deck is mostly this audio.
       audio.volume = volumeRef.current;
@@ -449,7 +462,7 @@ export function TeacherVoice({
       abortRef.current = controller;
 
       if (cached) {
-        play(cached, sceneIndex, sceneTitle, text, startAt, sceneEnd);
+        play(cached, sceneIndex, sceneTitle, text, startAt, sceneEnd, sceneSeconds);
         return;
       }
 
@@ -461,7 +474,7 @@ export function TeacherVoice({
         onVoiceState?.({ status: "preparing", sceneIndex, sceneTitle, voice });
         const rode = await waitForWarm(key, controller.signal);
         if (rode) {
-          play(rode, sceneIndex, sceneTitle, text, startAt, sceneEnd);
+          play(rode, sceneIndex, sceneTitle, text, startAt, sceneEnd, sceneSeconds);
           return;
         }
         if (controller.signal.aborted) return;
@@ -505,7 +518,7 @@ export function TeacherVoice({
         const entry: CachedNarration = { url: URL.createObjectURL(blob), words };
         cacheRef.current.set(key, entry);
         release();
-        play(entry, sceneIndex, sceneTitle, text, startAt, sceneEnd);
+        play(entry, sceneIndex, sceneTitle, text, startAt, sceneEnd, sceneSeconds);
       } catch (error) {
         release();
         if (controller.signal.aborted) return;
@@ -717,7 +730,8 @@ export function TeacherVoice({
   useEffect(() => {
     const audio = audioRef.current;
     if (!audio) return;
-    if (audio.playbackRate !== timebase.rate) audio.playbackRate = timebase.rate;
+    const target = timebase.rate * fitRef.current;
+    if (audio.playbackRate !== target) audio.playbackRate = target;
     if (audio.volume !== timebase.volume) audio.volume = timebase.volume;
     if (audio.muted !== timebase.muted) audio.muted = timebase.muted;
   }, [timebase.rate, timebase.volume, timebase.muted]);

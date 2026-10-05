@@ -2031,6 +2031,15 @@
     justify-content: flex-end;
   }
 
+  /* Where the "try again" button used to sit: the wait before the next slide.
+     Same slot, same rhythm, no control to press. */
+  .scene-quiz-auto {
+    font-size: 1.05cqw;
+    font-weight: 600;
+    color: var(--slide-ink-faint);
+    font-variant-numeric: tabular-nums;
+  }
+
   .scene-quiz-button {
     padding: 0.55cqw 1.2cqw;
     border-radius: 0.6cqw;

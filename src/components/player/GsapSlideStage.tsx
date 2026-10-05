@@ -5,6 +5,7 @@ import { ensureGsap } from "@/lib/gsap";
 import type { Timebase } from "@/hooks/useTimebase";
 import { SCENE_KIND_LABEL, defaultSlideLayout, type Lesson, type SlideLayout } from "@/lib/lesson/types";
 import { motionFor } from "@/lib/lesson/motion";
+import { quizHold } from "@/lib/lesson/quiz";
 import { slideIcon } from "@/lib/lesson/slide-icons";
 import { DEFAULT_SLIDE_THEME, isDarkTheme, paletteStyle } from "@/lib/lesson/themes";
 import { InteractiveSimulation } from "./InteractiveSimulation";
@@ -89,6 +90,78 @@ export function GsapSlideStage({
   }, [t]);
 
   const activeSceneData = lesson.scenes[activeScene];
+
+  // --- the quiz gate --------------------------------------------------------
+  /**
+   * Quizzes already answered in this session, by scene id.
+   *
+   * A ref rather than state: the gate is read on every frame, and answering a
+   * question must not re-render the deck. Revisiting an answered quiz leaves it
+   * open — the room already had its turn at it.
+   */
+  const answeredRef = useRef<Set<string>>(new Set());
+  const advanceTimerRef = useRef<number | null>(null);
+  /**
+   * `holdRef` is the same ref object for the life of the timebase, so naming it
+   * here is stable even though the `timebase` object is rebuilt every render.
+   */
+  const holdRef = timebase.holdRef;
+
+  // Arm the gate for the slide on screen, disarm it everywhere else. Keyed on
+  // the scene rather than run per frame: the index changes only when the deck
+  // crosses a boundary, which is the only moment a gate can need arming.
+  useEffect(() => {
+    holdRef.current = quizHold(lesson, activeSceneData?.start ?? 0, answeredRef.current);
+  }, [activeSceneData, holdRef, lesson]);
+
+  // A different lesson is a different set of unanswered quizzes.
+  useEffect(() => {
+    answeredRef.current = new Set();
+  }, [lesson.id]);
+
+  // Nothing left to advance to once the stage is gone.
+  useEffect(
+    () => () => {
+      if (advanceTimerRef.current !== null) window.clearTimeout(advanceTimerRef.current);
+    },
+    [],
+  );
+
+  /**
+   * Answered: let go of the gate, stop the deck, and come back to move on.
+   *
+   * The deck is paused rather than left running because the point of the wait is
+   * reading the explanation. The narrator stops with it — it watches the same
+   * clock — so the room hears nothing over the words it is reading. The timeout
+   * then seeks to the next slide and resumes, so nobody has to press anything.
+   */
+  const handleQuizAnswer = (result: { sceneId: string; readSeconds: number }) => {
+    const { sceneId, readSeconds } = result;
+    answeredRef.current.add(sceneId);
+    holdRef.current = null;
+    timebase.pause();
+    if (advanceTimerRef.current !== null) window.clearTimeout(advanceTimerRef.current);
+
+    const index = lesson.scenes.findIndex((scene) => scene.id === sceneId);
+    const scene = index >= 0 ? lesson.scenes[index] : undefined;
+    const next = scene ? lesson.scenes[index + 1] : undefined;
+    const sceneEnd = scene ? scene.start + scene.duration : Number.POSITIVE_INFINITY;
+
+    // ponytail: real seconds, not deck seconds — the rate slider is the
+    // narrator's, and this wait is for reading.
+    advanceTimerRef.current = window.setTimeout(() => {
+      advanceTimerRef.current = null;
+      // A teacher who pressed play during the wait is already past this quiz;
+      // pulling them back would be worse than letting the timeout lapse.
+      if (timebase.timeRef.current > sceneEnd + 1) return;
+      if (!next) {
+        timebase.seek(lesson.duration || timebase.duration);
+        return;
+      }
+      timebase.seek(next.start + 0.05);
+      timebase.play();
+    }, readSeconds * 1000);
+  };
 
   // --- build the master timeline -------------------------------------------
   useEffect(() => {
@@ -599,8 +672,10 @@ export function GsapSlideStage({
               {scene.kind === "quiz" && scene.quiz ? (
                 <div className="scene-interactive-panel scene-interactive-quiz relative z-10 my-2">
                   <InteractiveQuiz
+                    sceneId={scene.id}
                     question={scene.quiz.question}
                     options={scene.quiz.options}
+                    onAnswer={handleQuizAnswer}
                   />
                 </div>
               ) : null}

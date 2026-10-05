@@ -339,6 +339,7 @@ export function SlideSurface({
       {scene.kind === "quiz" && scene.quiz ? (
         <div className="scene-interactive-panel scene-interactive-quiz relative z-10">
           <InteractiveQuiz
+            sceneId={scene.id}
             question={scene.quiz.question}
             options={scene.quiz.options}
           />

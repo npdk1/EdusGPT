@@ -708,9 +708,9 @@ const PLAYER_JS = `
 
   // --- teacher voice: one narration clip per scene, embedded as data URIs.
   // There is no server here, so every clip rides inside the file. The timeline
-  // stays the master clock: on each paint while playing, a scene change swaps
-  // the clip and seeks it to the playhead offset. A clip shorter than its
-  // scene leaves silence; a longer one is cut at the scene boundary.
+  // stays the master clock for the slides, but each clip is fitted to its
+  // scene (see voiceFit) and the caption follows the clip, not the playhead —
+  // otherwise a fitted clip drifts from the words it is lighting.
   var voiceEls = [];
   for (var vi = 0; vi < data.scenes.length; vi++) {
     var vel = stage.querySelector('[data-scene="' + vi + '"] audio[data-voice]');
@@ -719,6 +719,34 @@ const PLAYER_JS = `
   var voice = document.getElementById('voice');
   var voiceOn = true;
   var voiceScene = -1;
+
+  // Same per-scene fit as the web player's paceFitRate (src/lib/karaoke),
+  // ceiling included — 1.4, because teaching pace stretches every clip by
+  // 1/0.75 and a deck exported before that stretch still has to speak at its
+  // own pace. Engines do not speak every slide at the same pace, so 1x sounds
+  // uneven slide to slide. Mirrored here instead of shared: this file ships
+  // without a bundler. The duration arrives with the clip's metadata, which
+  // lands just after a swap — the listener below re-applies the rate once it
+  // does, and until then the previous clip's fit (or 1x) holds for a few
+  // milliseconds.
+  function voiceFit(idx, consumed) {
+    var scene = data.scenes[idx];
+    var audio = 0;
+    try { audio = voice.duration || 0; } catch (e) {}
+    var slide = (scene && scene.duration) || 0;
+    if (!(audio > 0) || !(slide > 0)) return 1;
+    var avail = slide - (consumed || 0) - 1.5;
+    if (!(avail > 1)) return 1;
+    return Math.min(1.4, Math.max(0.8, audio / avail));
+  }
+  function applyVoiceRate(consumed) {
+    var idx = voiceScene >= 0 ? voiceScene : sceneIndexAt(current);
+    try {
+      voice.playbackRate = rate * voiceFit(idx, consumed);
+      if ('preservesPitch' in voice) voice.preservesPitch = true;
+    } catch (e) {}
+  }
+  voice.addEventListener('loadedmetadata', function () { applyVoiceRate(); });
 
   // --- dead air: a clip shorter than its scene used to leave the deck sitting
   // in silence until the scene's fixed duration ran out. When the clip ends
@@ -854,14 +882,12 @@ const PLAYER_JS = `
       voiceScene = idx;
       try { voice.src = src; } catch (e) {}
     }
-    // The timeline runs at rate and the caption follows it, so the clip has
-    // to as well — without this the words light up at 2x while the voice reads
-    // at 1x and the two part ways within a sentence. Re-applied on every swap:
-    // some browsers drop a custom rate when the source changes.
-    try {
-      voice.playbackRate = rate;
-      if ('preservesPitch' in voice) voice.preservesPitch = true;
-    } catch (e) {}
+    // The timeline runs at rate and the caption follows the voice, so the clip
+    // has to follow both — without this the words light up at 2x while the
+    // voice reads at 1x and the two part ways within a sentence. Re-applied on
+    // every swap: some browsers drop a custom rate when the source changes.
+    // The fit on top (see voiceFit): engines speak unevenly slide to slide.
+    applyVoiceRate(off);
     if (playing) {
       var off = Math.max(0, current - data.scenes[idx].start);
       try {
@@ -908,7 +934,17 @@ const PLAYER_JS = `
       if (row) row.setAttribute('data-current', inside ? 'true' : 'false');
     }
     var idx = sceneIndexAt(current);
-    paintCaption(idx, Math.max(0, current - data.scenes[idx].start));
+    // The caption follows the voice, not the timeline: the per-scene fit means
+    // the clip no longer runs 1:1 with the playhead, so timeline offsets would
+    // light words the teacher has not reached yet. Same rule as the web player.
+    var off = Math.max(0, current - data.scenes[idx].start);
+    if (voiceOn && playing && voiceScene === idx && !voice.paused) {
+      try {
+        var vt = voice.currentTime;
+        if (isFinite(vt) && vt >= 0 && voice.duration > 0 && vt <= voice.duration) off = vt;
+      } catch (e) {}
+    }
+    paintCaption(idx, off);
     if (playing && idx !== voiceScene) syncVoice();
   }
 
@@ -1063,10 +1099,7 @@ const PLAYER_JS = `
     if (at < 0) at = 2;
     rate = RATES[Math.min(RATES.length - 1, Math.max(0, at + direction))];
     rateSelect.value = String(rate);
-    try {
-      voice.playbackRate = rate;
-      if ('preservesPitch' in voice) voice.preservesPitch = true;
-    } catch (e) {}
+    applyVoiceRate();
   }
 
   function stepFrames(count) {
@@ -1202,10 +1235,7 @@ const PLAYER_JS = `
   document.getElementById('stepForward').addEventListener('click', function () { stop(); stepFrames(1); });
   rateSelect.addEventListener('change', function (event) {
     rate = parseFloat(event.target.value);
-    try {
-      voice.playbackRate = rate;
-      if ('preservesPitch' in voice) voice.preservesPitch = true;
-    } catch (e) {}
+    applyVoiceRate();
   });
   volInput.addEventListener('input', function (event) {
     volume = parseFloat(event.target.value);

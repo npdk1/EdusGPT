@@ -3,12 +3,20 @@
 import { useState } from "react";
 import { CircleCheck, CircleX, CircleHelp } from "lucide-react";
 import type { QuizOption } from "@/lib/lesson/types";
+import { quizReadSeconds } from "@/lib/lesson/quiz";
 import { useCopy } from "@/i18n/provider";
 
 interface InteractiveQuizProps {
+  /** The slide this quiz belongs to, so the stage can open its own gate. */
+  sceneId: string;
   question: string;
   options: QuizOption[];
-  onAnswer?: (isCorrect: boolean) => void;
+  onAnswer?: (result: {
+    sceneId: string;
+    isCorrect: boolean;
+    explanation?: string;
+    readSeconds: number;
+  }) => void;
 }
 
 const COPY = {
@@ -16,15 +24,15 @@ const COPY = {
     quizKicker: "Quiz",
     quizCorrect: "Correct.",
     quizWrong: "Not quite.",
-    quizRetry: "Try again",
     quizCheck: "Check answer",
+    quizAutoNext: "Moving to the next slide in {n}s",
   },
   vi: {
     quizKicker: "Trắc nghiệm",
     quizCorrect: "Chính xác.",
     quizWrong: "Chưa đúng.",
-    quizRetry: "Làm lại",
     quizCheck: "Kiểm tra đáp án",
+    quizAutoNext: "Tự chuyển cảnh sau {n} giây",
   },
 };
 
@@ -41,13 +49,21 @@ const COPY = {
  *
  * The options are a two-column grid rather than a stack: four full-width rows of
  * chrome is what made this block tall, and a 16:9 card has the width to spare.
+ *
+ * Answering is final. The slide used to offer "try again", which in a room meant
+ * the question could be argued with for as long as the teacher tolerated it; now
+ * one choice reveals the right answer with its explanation, and the stage holds
+ * the deck for a few seconds so the explanation can be read before it moves on.
  */
-export function InteractiveQuiz({ question, options, onAnswer }: InteractiveQuizProps) {
+export function InteractiveQuiz({ sceneId, question, options, onAnswer }: InteractiveQuizProps) {
   const t = useCopy(COPY);
   const [selected, setSelected] = useState<string | null>(null);
   const [submitted, setSubmitted] = useState(false);
+  /** Set once answered: how long the stage will hold for reading. */
+  const [readSeconds, setReadSeconds] = useState<number | null>(null);
 
   const currentOption = options.find((opt) => opt.id === selected);
+  const correctOption = options.find((opt) => opt.isCorrect);
 
   const handleSelect = (id: string) => {
     if (submitted) return;
@@ -55,14 +71,21 @@ export function InteractiveQuiz({ question, options, onAnswer }: InteractiveQuiz
   };
 
   const handleSubmit = () => {
-    if (!selected) return;
+    if (!selected || readSeconds !== null) return;
     setSubmitted(true);
-    onAnswer?.(currentOption?.isCorrect ?? false);
-  };
-
-  const handleReset = () => {
-    setSelected(null);
-    setSubmitted(false);
+    // The explanation shown is the right answer's, whichever option was picked:
+    // a wrong choice is answered by being told why, not by repeating itself.
+    const explanation = correctOption?.explanation;
+    const seconds = quizReadSeconds(explanation);
+    setReadSeconds(seconds);
+    // The wait travels with the answer so the stage times the same number the
+    // slide just promised on screen.
+    onAnswer?.({
+      sceneId,
+      isCorrect: currentOption?.isCorrect ?? false,
+      explanation,
+      readSeconds: seconds,
+    });
   };
 
   return (
@@ -108,21 +131,21 @@ export function InteractiveQuiz({ question, options, onAnswer }: InteractiveQuiz
         })}
       </div>
 
-      {submitted && currentOption ? (
+      {submitted && correctOption ? (
         <p
           className="scene-quiz-feedback"
-          data-state={currentOption.isCorrect ? "correct" : "wrong"}
+          data-state={currentOption?.isCorrect ? "correct" : "wrong"}
         >
-          <b>{currentOption.isCorrect ? t.quizCorrect : t.quizWrong}</b>{" "}
-          {currentOption.explanation}
+          <b>{currentOption?.isCorrect ? t.quizCorrect : t.quizWrong}</b>{" "}
+          {correctOption.explanation}
         </p>
       ) : null}
 
       <div className="scene-quiz-actions">
-        {submitted ? (
-          <button type="button" onClick={handleReset} className="scene-quiz-button">
-            {t.quizRetry}
-          </button>
+        {readSeconds !== null && onAnswer ? (
+          <span className="scene-quiz-auto">
+            {t.quizAutoNext.replace("{n}", String(readSeconds))}
+          </span>
         ) : (
           <button
             type="button"

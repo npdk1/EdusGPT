@@ -33,7 +33,7 @@ const COPY = {
     libraryScenes: "scenes",
     libraryCreateFailed: "Lesson creation failed",
     libraryStoppedHint: "It may have stopped (the server shut down mid-run)",
-    libraryOpenStudioTitle: "Open the lesson builder to watch and listen to each scene",
+    libraryViewProgressTitle: "Open the live session to watch and listen to each scene",
     libraryViewProgress: "View progress",
     libraryDeleteDraft: "Delete draft {title}",
     libraryDeleteCourse: "Delete {title}",
@@ -66,7 +66,7 @@ const COPY = {
     libraryScenes: "cảnh",
     libraryCreateFailed: "Tạo bài thất bại",
     libraryStoppedHint: "Có thể đã dừng (máy chủ tắt giữa chừng)",
-    libraryOpenStudioTitle: "Mở trang tạo bài để xem và nghe từng cảnh",
+    libraryViewProgressTitle: "Mở phòng học để xem và nghe từng cảnh",
     libraryViewProgress: "Xem tiến độ",
     libraryDeleteDraft: "Xoá bản nháp {title}",
     libraryDeleteCourse: "Xoá {title}",
@@ -319,9 +319,12 @@ export function LibraryPanel() {
               <div className="flex shrink-0 gap-2">
                 {state === "running" ? (
                   <Link
-                    href="/studio"
+                    // The classroom, not the builder: it is the screen that
+                    // shows this run's progress. With no live stream in this tab
+                    // it polls the draft, so the link works from anywhere.
+                    href={`/classroom?id=${encodeURIComponent(draft.id)}`}
                     className="btn-ghost px-3 py-1.5 text-xs"
-                    title={t.libraryOpenStudioTitle}
+                    title={t.libraryViewProgressTitle}
                   >
                     {t.libraryViewProgress}
                   </Link>

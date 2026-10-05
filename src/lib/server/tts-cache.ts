@@ -25,9 +25,14 @@ const MAX_ENTRIES = 2_000;
  * timings are not even the same kind of thing — one measured, one estimated. A
  * key without the engine would hand a lesson the other engine's audio after the
  * teacher switched, and the subtitle would light up on someone else's cadence.
+ *
+ * The trailing version is the teaching tempo: slowing every voice means
+ * yesterday's faster bytes must never serve today's slower request. Bump it
+ * on ANY tempo change (engine rate, length scale, speed, atempo), not just on
+ * format changes — the key carries no trace of the tempo otherwise.
  */
 function keyFor(text: string, voice: string, engine: string): string {
-  return createHash("sha256").update(`${engine}\n${voice}\n${text}`).digest("hex");
+  return createHash("sha256").update(`v4\n${engine}\n${voice}\n${text}`).digest("hex");
 }
 
 export interface CachedNarration {
