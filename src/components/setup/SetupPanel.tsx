@@ -86,7 +86,6 @@ const COPY = {
     cliInstallHint:
       "Install it with PowerShell: powershell -ExecutionPolicy Bypass -File scripts/install-antigravity.ps1 — then run the `agy` command once to log in.",
     // page header
-    headerChip: "Setup runs on your machine",
     headerTitle: "AI provider",
     headerCliLead: "The",
     headerCliTail:
@@ -174,7 +173,6 @@ const COPY = {
       "Agent chạy trên máy bạn, không cần API key. Bấm “Kiểm tra & lưu” để dùng nó làm nhà cung cấp chính.",
     cliInstallHint:
       "Cài bằng PowerShell: powershell -ExecutionPolicy Bypass -File scripts/install-antigravity.ps1 — rồi chạy lệnh `agy` một lần để đăng nhập.",
-    headerChip: "cài đặt chạy trên máy bạn",
     headerTitle: "Nhà cung cấp AI",
     headerCliLead: "Nhà cung cấp",
     headerCliTail:
@@ -730,10 +728,7 @@ export function SetupPanel() {
   return (
     <div className="space-y-5">
       <header>
-        <span className="chip">
-          <IconKey className="h-3.5 w-3.5 text-gold-300" /> {t.headerChip}
-        </span>
-        <h1 className="mt-4 text-3xl font-bold tracking-tight text-mist-50 sm:text-4xl">
+        <h1 className="text-3xl font-bold tracking-tight text-mist-50 sm:text-4xl">
           {t.headerTitle}
         </h1>
         <p className="mt-3 max-w-2xl text-sm leading-relaxed text-mist-300 sm:text-base">
