@@ -1521,6 +1521,71 @@ function LengthPicker({
   );
 }
 
+/**
+ * What a style does to content, at a glance: a miniature slide in the style's
+ * own paper, with the index markers the style actually uses. A swatch told
+ * the palette but not the arrangement — and the arrangement is what the four
+ * choices differ in.
+ */
+function StyleLayoutPreview({ styleId, palette }: {
+  styleId: string;
+  palette: { bg: string; ink: string; inkSoft: string; accent: string };
+}) {
+  const bar = (width: string, color?: string, tall = false) => (
+    <span
+      aria-hidden="true"
+      className={`block rounded-full ${tall ? "h-1.5" : "h-1"}`}
+      style={{ width, background: color ?? palette.inkSoft, opacity: 0.75 }}
+    />
+  );
+  const index = (n: string) => (
+    <span
+      aria-hidden="true"
+      className="font-mono text-[8px] font-bold leading-none"
+      style={{ color: palette.accent }}
+    >
+      {n}
+    </span>
+  );
+  return (
+    <span
+      aria-hidden="true"
+      className="block h-16 w-full space-y-1 overflow-hidden rounded-md border border-ink-700/60 p-1.5"
+      style={{ background: palette.bg }}
+    >
+      {styleId === "minimalist" ? (
+        <span className="block space-y-1 pt-2">
+          {bar("85%", palette.ink, true)}
+          {bar("55%")}
+        </span>
+      ) : styleId === "visual-story" ? (
+        <span className="flex h-full gap-1.5">
+          <span className="block h-full w-1/3 rounded-sm" style={{ background: palette.accent, opacity: 0.55 }} />
+          <span className="block flex-1 space-y-1 pt-1">
+            {bar("90%", palette.ink, true)}
+            {bar("70%")}
+            {bar("80%")}
+          </span>
+        </span>
+      ) : styleId === "classroom" ? (
+        <span className="block space-y-1">
+          {[["01", "88%"], ["02", "76%"], ["03", "82%"]].map(([n, w]) => (
+            <span key={n} className="flex items-center gap-1">
+              {index(n)}
+              {bar(w)}
+            </span>
+          ))}
+        </span>
+      ) : (
+        <span className="block space-y-1 pt-2 text-center">
+          <span className="mx-auto block h-1.5 w-2/3 rounded-full" style={{ background: palette.ink }} />
+          {bar("45%")}
+        </span>
+      )}
+    </span>
+  );
+}
+
 function StylePicker({
   value,
   onChange,
@@ -1551,26 +1616,13 @@ function StylePicker({
                   : "border-ink-700 hover:border-ink-600"
               }`}
             >
-              <span className="flex items-center gap-2">
-                {/* The style's own paper, at swatch size. */}
-                <span
-                  aria-hidden="true"
-                  className="h-7 w-9 shrink-0 rounded"
-                  style={{
-                    background: preset.palette.bg,
-                    border: `1px solid ${preset.palette.rule}`,
-                  }}
-                >
-                  <span
-                    className="mx-auto mt-1.5 block h-1 w-3/4"
-                    style={{ background: preset.palette.ink }}
-                  />
-                  <span
-                    className="mx-auto mt-1 block h-0.5 w-1/2"
-                    style={{ background: preset.palette.accent }}
-                  />
+              <span className="flex items-start gap-2">
+                {/* The style's own paper, arranged the way the style arranges
+                    content — not a colour chip. */}
+                <span className="w-24 shrink-0">
+                  <StyleLayoutPreview styleId={style.id} palette={preset.palette} />
                 </span>
-                <span className="min-w-0 flex-1">
+                <span className="min-w-0 flex-1 pt-0.5">
                   <span className="block truncate text-xs font-semibold text-mist-100">
                     {style.label}
                   </span>
