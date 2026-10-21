@@ -49,7 +49,7 @@ const MIN_OUTPUT_TOKENS = 1400;
  * than it needed to be.
  */
 export function estimateTokens(text: string): number {
-  return Math.ceil(text.length / 3.4);
+  return Math.ceil(text.length / 2.5);
 }
 
 /** `provider/model`, the key a limit belongs to. */
@@ -66,7 +66,7 @@ export function tokenLimitKey(provider: string, model: string): string {
 export function parseTokenCeiling(
   message: string,
 ): { limit: number; requested: number } | null {
-  if (!/too large|tokens per minute|\bTPM\b/i.test(message)) return null;
+  if (!/too large|tokens per minute|\b[IT]PM\b/i.test(message)) return null;
   const limit = /Limit\s+([\d,]+)/i.exec(message);
   const requested = /Requested\s+([\d,]+)/i.exec(message);
   const limitNumber = limit ? Number(limit[1].replace(/,/g, "")) : 0;

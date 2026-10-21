@@ -139,6 +139,10 @@ async function walk(dir) {
 async function main() {
   const check = process.argv.includes("--check");
   if (!existsSync(LIBRARY_DIR)) {
+    if (check) {
+      console.log(`Bỏ qua check: Chưa thiết lập thư viện tài liệu (${path.basename(LIBRARY_DIR)}).`);
+      return;
+    }
     console.error(`Không thấy thư viện: ${LIBRARY_DIR}`);
     console.error("Trỏ sang thư mục khác:  node scripts/index-course-library.mjs --dir <đường dẫn>");
     process.exit(1);

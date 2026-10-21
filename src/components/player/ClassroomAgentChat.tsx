@@ -1,7 +1,7 @@
 "use client";
 
-import { useEffect, useState, type ReactNode } from "react";
-import { Bot, Send, User, Sparkles, LoaderCircle, Maximize2, Minimize2 } from "lucide-react";
+import { useEffect, useRef, useState, type ReactNode } from "react";
+import { Bot, ChevronDown, ChevronUp, Send, User, Sparkles, LoaderCircle, Maximize2, Minimize2 } from "lucide-react";
 import katex from "katex";
 import type { LessonScene } from "@/lib/lesson/types";
 import { useCopy } from "@/i18n/provider";
@@ -19,7 +19,7 @@ const COPY = {
     agentSceneFallback: "the lesson",
     agentLessonFallback: "the lesson",
     agentQuotaHint:
-      "You have used today's free Gemini calls (limit of 20 per day). Add billing in Google AI Studio, or wait for the limit to reset and ask again.",
+      "Daily AI quota or rate limit reached. Please try again in a few minutes or switch providers in Settings.",
     agentErrorHint: "Something went wrong. Try asking again.",
     agentOfflineHint: "The connection dropped or the server did not answer.",
     agentTitle: "Online AI tutor",
@@ -28,6 +28,10 @@ const COPY = {
     agentPlaceholder: 'Ask about "{title}"...',
     agentExpand: "Expand the tutor",
     agentCollapse: "Collapse the tutor",
+    agentOpen: "Open the AI tutor",
+    agentHide: "Hide the AI tutor",
+    suggestExplain: "Explain this part more simply",
+    suggestExample: "Give me a real-world example",
   },
   vi: {
     agentGreeting:
@@ -35,7 +39,7 @@ const COPY = {
     agentSceneFallback: "Bài giảng",
     agentLessonFallback: "bài học",
     agentQuotaHint:
-      "Đã hết lượt gọi Gemini miễn phí hôm nay (hạn mức 20 lần/ngày). Bạn có thể thêm billing trong Google AI Studio, hoặc chờ hạn mức reset rồi hỏi lại.",
+      "Hạn mức gọi AI tạm thời hết hoặc quá tải. Vui lòng thử lại sau ít phút hoặc đổi nhà cung cấp trong Cài đặt.",
     agentErrorHint: "Có lỗi xảy ra. Bạn thử hỏi lại.",
     agentOfflineHint: "Mạng bị ngắt kết nối hoặc server chưa phản hồi.",
     agentTitle: "Trợ giảng AI trực tuyến",
@@ -44,6 +48,10 @@ const COPY = {
     agentPlaceholder: 'Hỏi về "{title}"...',
     agentExpand: "Phóng to khung trợ giảng",
     agentCollapse: "Thu nhỏ khung trợ giảng",
+    agentOpen: "Mở khung trợ giảng AI",
+    agentHide: "Ẩn khung trợ giảng",
+    suggestExplain: "Giải thích dễ hiểu hơn về phần này",
+    suggestExample: "Cho mình 1 ví dụ thực tế liên quan",
   },
 } satisfies Record<string, Record<string, string>>;
 
@@ -125,9 +133,13 @@ export function ClassroomAgentChat({ currentScene, lessonTitle }: ClassroomAgent
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
   const [suggestions, setSuggestions] = useState<string[]>([
-    "Giải thích dễ hiểu hơn về phần này",
-    "Cho mình 1 ví dụ thực tế liên quan",
+    t.suggestExplain,
+    t.suggestExample,
   ]);
+
+  useEffect(() => {
+    setSuggestions([t.suggestExplain, t.suggestExample]);
+  }, [t.suggestExplain, t.suggestExample]);
   /**
    * Expanded mode, for a panel that reads too small in the sidebar: the chat
    * lifts out of the column into a wide floating card on the right, and the
@@ -135,6 +147,25 @@ export function ClassroomAgentChat({ currentScene, lessonTitle }: ClassroomAgent
    * the input survive the round trip.
    */
   const [expanded, setExpanded] = useState(false);
+  /**
+   * The panel starts folded into a title bar. In the lesson player the rail
+   * belongs to the outline; the tutor is a "when you need it" tool, and a
+   * permanently open conversation box beside the outline reads as two
+   * competing panels. Opening is one click, and nothing unmounts — the
+   * thread and the input survive every fold.
+   */
+  const [collapsed, setCollapsed] = useState(true);
+  const panelRef = useRef<HTMLDivElement>(null);
+  /**
+   * Opening the panel scrolls it into view. The rail is one scroller and the
+   * outline can be long, so without this the button sits at the rail's bottom
+   * edge and the panel it opens lands below the fold — a click that appears
+   * to do nothing. `nearest` moves the least amount that shows the panel.
+   */
+  useEffect(() => {
+    if (collapsed || expanded) return;
+    panelRef.current?.scrollIntoView({ block: "nearest" });
+  }, [collapsed, expanded]);
 
   useEffect(() => {
     if (!expanded) return;
@@ -185,9 +216,7 @@ export function ClassroomAgentChat({ currentScene, lessonTitle }: ClassroomAgent
           ...prev,
           {
             role: "assistant",
-            content: quota
-              ? t.agentQuotaHint
-              : data.error || t.agentErrorHint,
+            content: data.error || (quota ? t.agentQuotaHint : t.agentErrorHint),
           },
         ]);
       }
@@ -201,12 +230,44 @@ export function ClassroomAgentChat({ currentScene, lessonTitle }: ClassroomAgent
     }
   };
 
+  // Folded: a title bar that opens the panel. Deliberately not a floating
+  // bubble — it sits in the same column the open panel occupies, so opening
+  // it never covers the outline the teacher is following.
+  if (collapsed && !expanded) {
+    return (
+      <button
+        type="button"
+        onClick={() => setCollapsed(false)}
+        className="panel flex w-full items-center gap-2.5 px-4 py-2.5 text-left transition-colors hover:border-brand-600/70"
+        aria-label={t.agentOpen}
+        aria-expanded={false}
+      >
+        <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-brand-500/20 text-brand-300">
+          <Bot className="h-4 w-4" />
+        </span>
+        <span className="min-w-0 flex-1">
+          <span className="block text-xs font-bold uppercase tracking-wider text-mist-100">
+            {t.agentTitle}
+          </span>
+          <span className="block truncate text-[10px] text-mist-400">{t.agentSubtitle}</span>
+        </span>
+        <ChevronDown className="h-4 w-4 shrink-0 text-mist-400" />
+      </button>
+    );
+  }
+
   return (
     <div
+      ref={panelRef}
       className={
         expanded
           ? "panel fixed inset-y-3 right-3 z-[70] flex w-[min(36rem,94vw)] flex-col overflow-hidden shadow-2xl"
-          : "panel flex h-[480px] flex-col overflow-hidden lg:h-auto lg:min-h-0 lg:flex-1"
+          : // `lg:min-h-[24rem]` rather than `lg:min-h-0`: the outline above is a
+            // natural-height sibling in the same rail, so a `flex-1` tutor with no
+            // floor got squeezed to a 2px strip the moment the outline grew past
+            // the rail. The floor makes the rail (its normal overflow) scroll it
+            // into view instead of clipping it to nothing.
+            "panel flex h-[480px] flex-col overflow-hidden lg:h-auto lg:min-h-[24rem] lg:flex-1"
       }
     >
       <div className="flex items-center justify-between border-b border-ink-700/70 bg-ink-950/70 px-4 py-3">
@@ -222,7 +283,18 @@ export function ClassroomAgentChat({ currentScene, lessonTitle }: ClassroomAgent
           </div>
         </div>
         <div className="flex items-center gap-1.5">
-          <span className="chip border-brand-700/60 text-[10px]">Multi-Agent</span>
+          <button
+            type="button"
+            onClick={() => {
+              setCollapsed(true);
+              setExpanded(false);
+            }}
+            className="btn-icon"
+            title={t.agentHide}
+            aria-label={t.agentHide}
+          >
+            <ChevronUp className="h-4 w-4" />
+          </button>
           <button
             type="button"
             onClick={() => setExpanded((value) => !value)}

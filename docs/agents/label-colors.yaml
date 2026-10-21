@@ -1,0 +1,14 @@
+# 本文件的注释由插件生成；你自己加的注释会在下次写入时被替换。
+# 这一份数据的版本号（核不认识的新版本只读不写）
+version: 1
+bug: d73a4a
+needs-triage: fbca04
+needs-info: "5319e7"
+ready-for-agent: "0e8a16"
+ready-for-human: b60205
+wontfix: ffffff
+"wayfinder:map": "8b5cf6"
+"wayfinder:research": "0ea5e9"
+"wayfinder:prototype": f59e0b
+"wayfinder:grilling": "9d7cd8"
+"wayfinder:task": "10b981"

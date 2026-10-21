@@ -1,283 +1,3526 @@
 <!doctype html>
-<html lang="vi">
+<html lang="en" data-theme="dark">
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>EdusGPT — Soạn bài giảng AI, phát và xuất HTML trong 1 chạm</title>
-<meta name="description" content="EdusGPT soạn bài giảng thành từng cảnh có slide, giọng đọc tiếng Việt và phụ đề karaoke. Mã nguồn mở trên GitHub, chạy trên máy bạn." />
-<meta name="theme-color" content="#0b63e5" />
+<title>EdusGPT — The Open Source AI Lesson Studio & Interactive Classroom</title>
+<meta name="description" content="Turn topics and textbook PDFs into narrated classroom slide decks with natural AI voice-overs, 60fps karaoke subtitles, interactive quizzes, and flashcards. 100% free, local-first." />
+<meta name="theme-color" content="#0078d4" />
 <link rel="icon" type="image/png" href="logo.png" />
+
+<!-- Google Fonts: Inter & JetBrains Mono -->
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet" />
+
+<!-- GSAP 3 & ScrollTrigger CDN -->
+<script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/gsap.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/ScrollTrigger.min.js"></script>
+
 <style>
-:root{
-  --blue:#0b63e5; --blue-dark:#0849ad; --blue-soft:#eaf2ff; --blue-line:#c9ddff;
-  --ink:#0b1b33; --muted:#466083; --line:#e2eaf6; --card:#ffffff; --bg:#ffffff; --bg2:#f4f8ff;
-  --radius:16px; --shadow:0 18px 45px -22px rgba(11,99,229,.28);
-  --font:ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;
+/* --- Design Tokens & Color Ramps (Stripe / Netlify / Obsidian Polish) --- */
+:root {
+  --primary: #0078d4;
+  --primary-hover: #0284c7;
+  --primary-light: #38bdf8;
+  --primary-soft: rgba(0, 120, 212, 0.12);
+  --primary-glow: rgba(0, 120, 212, 0.35);
+  --cyan-glow: rgba(56, 189, 248, 0.25);
+  --gold: #d97706;
+  --gold-soft: rgba(217, 119, 6, 0.14);
+  --emerald: #10b981;
+  --emerald-soft: rgba(16, 185, 129, 0.12);
+  --rose: #ef4444;
+
+  --font-sans: "Inter", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+
+  --radius-xs: 6px;
+  --radius-sm: 10px;
+  --radius-md: 16px;
+  --radius-lg: 24px;
+  --radius-xl: 32px;
+
+  --ease-spring: cubic-bezier(0.16, 1, 0.3, 1);
+  --transition: all 0.24s var(--ease-spring);
 }
-*{box-sizing:border-box}
-html{scroll-behavior:smooth}
-body{margin:0;font-family:var(--font);color:var(--ink);background:var(--bg);line-height:1.6}
-a{color:var(--blue)}
-.wrap{max-width:1120px;margin:0 auto;padding:0 20px}
-section{scroll-margin-top:84px}
-/* header */
-.site-header{position:sticky;top:0;z-index:50;background:rgba(255,255,255,.9);backdrop-filter:blur(10px);border-bottom:1px solid var(--line)}
-.nav{display:flex;align-items:center;gap:16px;height:66px}
-.brand{display:flex;align-items:center;gap:10px;text-decoration:none;color:var(--ink);font-weight:800;font-size:19px}
-.brand img{width:32px;height:32px;border-radius:9px;border:1px solid var(--line);background:#fff}
-.brand small{display:block;font-size:11px;font-weight:600;color:var(--muted);letter-spacing:.02em}
-.nav-links{display:flex;gap:4px;margin-left:8px}
-.nav-links a{text-decoration:none;color:var(--muted);font-weight:600;font-size:14px;padding:8px 12px;border-radius:10px}
-.nav-links a:hover{color:var(--blue);background:var(--blue-soft)}
-.nav-cta{margin-left:auto;display:flex;gap:10px;align-items:center}
-.btn{display:inline-flex;align-items:center;gap:8px;text-decoration:none;font-weight:700;font-size:14px;border-radius:12px;padding:11px 18px;border:1px solid transparent;cursor:pointer}
-.btn-primary{background:var(--blue);color:#fff;box-shadow:0 10px 24px -12px rgba(11,99,229,.7)}
-.btn-primary:hover{background:var(--blue-dark)}
-.btn-ghost{background:#fff;color:var(--blue);border-color:var(--blue-line)}
-.btn-ghost:hover{background:var(--blue-soft)}
-.btn-sm{padding:9px 14px;font-size:13px}
-.gh-icon{width:17px;height:17px;fill:currentColor;flex:none}
-.btn-sm .gh-icon{width:15px;height:15px}
-.menu-btn{display:none;margin-left:auto;background:#fff;border:1px solid var(--line);border-radius:10px;padding:9px 11px;font-size:16px;color:var(--ink)}
-/* hero */
-.hero{background:radial-gradient(900px 420px at 85% -60px,var(--blue-soft),transparent 65%),radial-gradient(700px 380px at 5% 0%,#e7f0ff,transparent 60%),var(--bg);border-bottom:1px solid var(--line)}
-.hero-grid{display:grid;grid-template-columns:1.05fr .95fr;gap:36px;padding:56px 0 52px;align-items:center}
-.badge{display:inline-flex;align-items:center;gap:8px;background:#fff;border:1px solid var(--blue-line);color:var(--blue-dark);font-size:12.5px;font-weight:700;border-radius:999px;padding:7px 13px}
-.badge .dot{width:8px;height:8px;border-radius:50%;background:#16a34a;box-shadow:0 0 0 4px #dcfce7}
-h1{font-size:clamp(32px,4.4vw,52px);line-height:1.08;margin:18px 0 14px;letter-spacing:-.02em}
-h1 .hl{color:var(--blue)}
-.lead{color:var(--muted);font-size:17px;margin:0 0 24px;max-width:56ch}
-.hero-actions{display:flex;gap:12px;flex-wrap:wrap}
-.hero-meta{display:flex;gap:18px;flex-wrap:wrap;margin-top:22px;color:var(--muted);font-size:13.5px;font-weight:600}
-.hero-meta span{display:inline-flex;align-items:center;gap:7px}
-/* mock player */
-.mock{background:#fff;border:1px solid var(--line);border-radius:20px;box-shadow:var(--shadow);overflow:hidden}
-.mock-top{display:flex;align-items:center;gap:8px;padding:12px 14px;border-bottom:1px solid var(--line);font-size:12.5px;font-weight:700;color:var(--muted)}
-.mock-top i{width:10px;height:10px;border-radius:50%;background:#dbe7fb;display:inline-block}
-.mock-slide{padding:26px 26px 18px;background:linear-gradient(180deg,#f7faff,#ffffff)}
-.kicker{display:inline-block;font-size:11px;font-weight:800;letter-spacing:.16em;color:var(--blue);background:var(--blue-soft);border:1px solid var(--blue-line);padding:4px 10px;border-radius:999px}
-.mock-slide h2{margin:12px 0 6px;font-size:26px;line-height:1.2;letter-spacing:-.01em}
-.mock-slide p{margin:0;color:var(--muted);font-size:14px}
-.mock-lines{margin:16px 0 0;padding:0;list-style:none;display:grid;gap:8px}
-.mock-lines li{display:flex;gap:10px;align-items:baseline;background:#f6f9ff;border:1px solid var(--line);border-radius:10px;padding:9px 12px;font-size:13.5px}
-.mock-lines b{color:var(--blue);font-size:12px}
-.mock-cap{margin:14px 0 0;background:#0b1b33;color:#fff;border-radius:12px;padding:12px 14px;font-size:14px}
-.mock-cap .said{color:#9db9e8}.mock-cap .now{color:#fff;background:var(--blue);border-radius:6px;padding:1px 6px;font-weight:700}
-.mock-bar{padding:14px;border-top:1px solid var(--line)}
-.mock-rail{height:8px;border-radius:999px;background:#e3edfd;position:relative;overflow:hidden}
-.mock-rail::after{content:"";position:absolute;inset:0;width:38%;background:linear-gradient(90deg,var(--blue),#4d93ff);border-radius:999px}
-.mock-row{display:flex;align-items:center;gap:10px;margin-top:12px}
-.play{width:38px;height:38px;border-radius:50%;background:var(--blue);color:#fff;display:grid;place-items:center;font-size:14px}
-.chip{font-size:12px;font-weight:700;color:var(--blue-dark);background:var(--blue-soft);border:1px solid var(--blue-line);border-radius:999px;padding:5px 11px}
-/* sections */
-.section{padding:60px 0}
-.section.alt{background:var(--bg2);border-top:1px solid var(--line);border-bottom:1px solid var(--line)}
-.eyebrow{font-size:12px;font-weight:800;letter-spacing:.18em;color:var(--blue);text-transform:uppercase;margin:0 0 10px}
-h2.sec{font-size:clamp(24px,3vw,34px);margin:0 0 10px;letter-spacing:-.015em}
-.sub{color:var(--muted);margin:0 0 28px;max-width:70ch}
-.grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}
-.grid2{display:grid;grid-template-columns:1fr 1fr;gap:16px}
-.card{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);padding:22px;box-shadow:0 8px 24px -18px rgba(11,27,51,.35)}
-.card:hover{border-color:var(--blue-line);box-shadow:var(--shadow)}
-.icon{width:40px;height:40px;border-radius:12px;background:var(--blue-soft);border:1px solid var(--blue-line);display:grid;place-items:center;margin-bottom:12px}
-.icon svg{width:21px;height:21px;stroke:var(--blue);fill:none;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round}
-.card h3{margin:0 0 6px;font-size:16.5px}
-.card p{margin:0;color:var(--muted);font-size:14px}
-.steps{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;counter-reset:step}
-.step{background:#fff;border:1px solid var(--line);border-radius:var(--radius);padding:22px;position:relative}
-.step::before{counter-increment:step;content:"0" counter(step);display:inline-block;font-weight:800;color:var(--blue);background:var(--blue-soft);border:1px solid var(--blue-line);border-radius:10px;padding:3px 10px;font-size:13px;margin-bottom:12px}
-.step h3{margin:0 0 6px;font-size:16px}
-.step p{margin:0;color:var(--muted);font-size:14px}
-.step code{background:#f1f6ff;border:1px solid var(--line);border-radius:7px;padding:1px 7px;font-size:12.5px;color:var(--blue-dark)}
-.keys{display:flex;flex-wrap:wrap;gap:8px;margin-top:16px}
-kbd{background:#fff;border:1px solid var(--line);border-bottom-width:2px;border-radius:8px;padding:3px 9px;font-family:inherit;font-size:12.5px;font-weight:700;color:var(--ink)}
-.dl{background:linear-gradient(135deg,#0b63e5,#0849ad);color:#fff;border-radius:22px;padding:44px 36px;text-align:center;box-shadow:var(--shadow)}
-.dl h2{margin:0 0 10px;font-size:clamp(24px,3.2vw,34px);letter-spacing:-.015em}
-.dl p{margin:0 auto 24px;color:#cfe2ff;max-width:62ch}
-.dl .row{display:flex;gap:12px;justify-content:center;flex-wrap:wrap}
-.btn-white{background:#fff;color:var(--blue-dark)}
-.btn-white:hover{background:#eef4ff}
-.btn-outline-w{background:transparent;color:#fff;border-color:rgba(255,255,255,.5)}
-.btn-outline-w:hover{background:rgba(255,255,255,.12)}
-.fine{margin-top:16px;font-size:12.5px;color:#bcd4fb}
-footer{padding:28px 0 40px;color:var(--muted);font-size:13.5px}
-.foot{display:flex;gap:14px;align-items:center;justify-content:space-between;flex-wrap:wrap;border-top:1px solid var(--line);padding-top:22px}
-.foot a{color:var(--blue);font-weight:600;text-decoration:none}
-@media (max-width:900px){
-  .hero-grid{grid-template-columns:1fr;padding:40px 0}
-  .grid3,.steps{grid-template-columns:1fr}
-  .grid2{grid-template-columns:1fr}
-  .nav-links{display:none;position:absolute;top:66px;left:0;right:0;background:#fff;border-bottom:1px solid var(--line);padding:10px 20px 16px;flex-direction:column}
-  .nav-links.open{display:flex}
-  .menu-btn{display:block}
-  .nav-cta .btn-ghost{display:none}
+
+/* Light Theme (Clean White, Slate & Azure) */
+html[data-theme="light"] {
+  --bg-page: #f8fafc;
+  --bg-panel: #ffffff;
+  --bg-subtle: #f1f5f9;
+  --bg-muted: #e2e8f0;
+  --bg-glass: rgba(255, 255, 255, 0.85);
+  --border-line: #e2e8f0;
+  --border-subtle: rgba(226, 232, 240, 0.8);
+  --border-focus: #0078d4;
+  --text-main: #0f172a;
+  --text-muted: #334155;
+  --text-faint: #64748b;
+  --primary-light: #0078d4;
+  --badge-bg: #ffffff;
+  --badge-border: #cbd5e1;
+  --badge-border-hover: #0078d4;
+  --badge-text: #0f172a;
+  --badge-tag-bg: rgba(0, 120, 212, 0.08);
+  --badge-tag-text: #0066b8;
+  --badge-tag-border: rgba(0, 120, 212, 0.25);
+  --badge-dot: #0078d4;
+  --badge-dot-glow: rgba(0, 120, 212, 0.45);
+  --badge-arrow: #0078d4;
+  --badge-shadow: 0 2px 10px rgba(0, 120, 212, 0.08), 0 1px 3px rgba(15, 23, 42, 0.06);
+  --badge-shadow-hover: 0 4px 18px rgba(0, 120, 212, 0.18);
+  --spec-label-color: #0066b8;
+  --spec-val-color: #0f172a;
+  --hero-glow: radial-gradient(circle at 50% -10%, rgba(0, 120, 212, 0.15) 0%, rgba(248, 250, 252, 0) 70%);
+  --grid-color: rgba(15, 23, 42, 0.04);
+  --window-bar: #f8fafc;
+  --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.04);
+  --shadow-md: 0 14px 34px -10px rgba(0, 0, 0, 0.08);
+  --shadow-lg: 0 25px 65px -15px rgba(0, 120, 212, 0.15);
+  --shadow-glow: 0 0 40px rgba(0, 120, 212, 0.18);
+  --card-gradient: linear-gradient(180deg, rgba(255, 255, 255, 1) 0%, rgba(248, 250, 252, 1) 100%);
+}
+
+/* Dark Theme (Pure Midnight Obsidian & Electric Cyan/Blue, Zero Green Tint) */
+html[data-theme="dark"] {
+  --bg-page: #05080f;
+  --bg-panel: #0a0f1d;
+  --bg-subtle: #0f1628;
+  --bg-muted: #1e293b;
+  --bg-glass: rgba(10, 15, 29, 0.88);
+  --border-line: #1e2b4a;
+  --border-subtle: rgba(30, 43, 74, 0.6);
+  --border-focus: #38bdf8;
+  --text-main: #f0f4f9;
+  --text-muted: #94a3b8;
+  --text-faint: #64748b;
+  --primary-light: #38bdf8;
+  --badge-bg: rgba(15, 23, 42, 0.85);
+  --badge-border: rgba(56, 189, 248, 0.32);
+  --badge-border-hover: #38bdf8;
+  --badge-text: #f8fafc;
+  --badge-tag-bg: rgba(56, 189, 248, 0.14);
+  --badge-tag-text: #38bdf8;
+  --badge-tag-border: rgba(56, 189, 248, 0.35);
+  --badge-dot: #38bdf8;
+  --badge-dot-glow: #38bdf8;
+  --badge-arrow: #38bdf8;
+  --badge-shadow: 0 0 22px rgba(0, 120, 212, 0.25), 0 4px 14px rgba(0, 0, 0, 0.55);
+  --badge-shadow-hover: 0 0 32px rgba(56, 189, 248, 0.38), 0 6px 20px rgba(0, 0, 0, 0.7);
+  --spec-label-color: #38bdf8;
+  --spec-val-color: #f1f5f9;
+  --hero-glow: radial-gradient(circle at 50% -15%, rgba(0, 120, 212, 0.40) 0%, rgba(5, 8, 15, 0) 75%);
+  --grid-color: rgba(255, 255, 255, 0.035);
+  --window-bar: #0a0e1c;
+  --shadow-sm: 0 2px 10px rgba(0, 0, 0, 0.45);
+  --shadow-md: 0 16px 45px -10px rgba(0, 0, 0, 0.7);
+  --shadow-lg: 0 30px 80px -15px rgba(0, 120, 212, 0.38);
+  --shadow-glow: 0 0 50px rgba(0, 120, 212, 0.32);
+  --card-gradient: linear-gradient(180deg, rgba(15, 22, 40, 0.75) 0%, rgba(10, 15, 29, 0.95) 100%);
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+html {
+  scroll-behavior: smooth;
+  scrollbar-width: thin;
+  scrollbar-color: var(--border-line) var(--bg-page);
+}
+::-webkit-scrollbar {
+  width: 9px;
+  height: 9px;
+}
+::-webkit-scrollbar-track {
+  background: var(--bg-page);
+}
+::-webkit-scrollbar-thumb {
+  background: var(--border-line);
+  border-radius: 999px;
+  border: 2px solid var(--bg-page);
+  transition: background 0.2s ease;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--primary);
+}
+
+html {
+  overflow-x: hidden;
+  width: 100%;
+  max-width: 100vw;
+}
+
+body {
+  font-family: var(--font-sans);
+  background-color: var(--bg-page);
+  color: var(--text-main);
+  line-height: 1.6;
+  transition: background-color 0.28s ease, color 0.28s ease;
+  overflow-x: hidden;
+  width: 100%;
+  max-width: 100vw;
+  position: relative;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Ambient Layer Container (Prevents Mobile Horizontal Overflow) */
+.ambient-background-layer {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  overflow: hidden;
+  pointer-events: none;
+  z-index: 0;
+}
+
+a { color: inherit; text-decoration: none; }
+button { font-family: inherit; cursor: pointer; border: none; background: none; }
+
+.container {
+  max-width: 1220px;
+  margin: 0 auto;
+  padding: 0 24px;
+}
+
+/* --- Ambient Grid Background (Stripe / Netlify Style) --- */
+.ambient-grid {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background-size: 40px 40px;
+  background-image: 
+    linear-gradient(to right, var(--grid-color) 1px, transparent 1px),
+    linear-gradient(to bottom, var(--grid-color) 1px, transparent 1px);
+  mask-image: radial-gradient(ellipse 65% 55% at 50% 18%, #000 25%, transparent 80%);
+  -webkit-mask-image: radial-gradient(ellipse 65% 55% at 50% 18%, #000 25%, transparent 80%);
+  z-index: 0;
+}
+
+/* Subtle Aurora Light Orbs */
+.aurora-orb {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(90px);
+  pointer-events: none;
+  z-index: 0;
+  opacity: 0.65;
+  transition: opacity 0.3s ease;
+}
+.orb-1 {
+  top: -120px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: min(700px, 90vw);
+  height: 380px;
+  background: radial-gradient(circle, rgba(0, 120, 212, 0.45) 0%, rgba(56, 189, 248, 0.15) 60%, transparent 80%);
+}
+.orb-2 {
+  top: 400px;
+  right: 0;
+  width: min(450px, 45vw);
+  height: 300px;
+  background: radial-gradient(circle, rgba(56, 189, 248, 0.2) 0%, transparent 70%);
+}
+.orb-3 {
+  top: 1800px;
+  left: 0;
+  width: min(500px, 50vw);
+  height: 350px;
+  background: radial-gradient(circle, rgba(0, 120, 212, 0.22) 0%, transparent 70%);
+}
+
+/* --- Sticky Glass Header (Netlify / Stripe Inspired) --- */
+.site-header {
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  background: var(--bg-glass);
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
+  border-bottom: 1px solid var(--border-line);
+  transition: var(--transition);
+}
+.header-inner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: 68px;
+  gap: 16px;
+}
+.brand-group {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.brand-link {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.brand-logo {
+  width: 34px;
+  height: 34px;
+  border-radius: var(--radius-sm);
+  background: var(--bg-panel);
+  border: 1px solid var(--border-line);
+  object-fit: cover;
+  transition: transform 0.25s ease;
+}
+.brand-link:hover .brand-logo {
+  transform: scale(1.05) rotate(-2deg);
+}
+.brand-title {
+  font-weight: 800;
+  font-size: 19px;
+  letter-spacing: -0.03em;
+  color: var(--text-main);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.brand-tag {
+  font-size: 10.5px;
+  font-weight: 700;
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: var(--badge-tag-bg);
+  color: var(--badge-tag-text);
+  border: 1px solid var(--badge-tag-border);
+  letter-spacing: 0.02em;
+}
+
+.nav-menu {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  margin-left: 28px;
+}
+.nav-link {
+  font-size: 13.5px;
+  font-weight: 600;
+  color: var(--text-muted);
+  padding: 7px 14px;
+  border-radius: var(--radius-sm);
+  transition: var(--transition);
+}
+.nav-link:hover {
+  color: var(--text-main);
+  background: var(--bg-subtle);
+}
+
+.header-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.ctrl-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: 38px;
+  padding: 0 12px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border-line);
+  background: var(--bg-panel);
+  color: var(--text-muted);
+  font-size: 12.5px;
+  font-weight: 600;
+  transition: var(--transition);
+}
+.ctrl-btn:hover {
+  color: var(--text-main);
+  border-color: var(--border-focus);
+  background: var(--bg-subtle);
+}
+.icon-btn {
+  width: 38px;
+  padding: 0;
+}
+.btn-cta-nav {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: linear-gradient(135deg, var(--primary) 0%, #0284c7 100%);
+  color: #ffffff !important;
+  font-size: 13.5px;
+  font-weight: 700;
+  padding: 9px 18px;
+  border-radius: var(--radius-sm);
+  transition: var(--transition);
+  box-shadow: 0 4px 16px rgba(0, 120, 212, 0.35);
+  position: relative;
+  overflow: hidden;
+}
+.btn-cta-nav:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 6px 22px rgba(0, 120, 212, 0.5);
+}
+
+/* --- Hero Section (Stripe / Netlify High-Impact Style) --- */
+.hero {
+  position: relative;
+  padding: 85px 0 75px;
+  text-align: center;
+  z-index: 1;
+}
+
+/* Announcement Pill (Crisp, High-Contrast Modern SaaS Style) */
+.hero-announcement {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  padding: 6px 18px 6px 12px;
+  border-radius: 999px;
+  background: var(--badge-bg);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid var(--badge-border);
+  font-size: 13.5px;
+  font-weight: 600;
+  color: var(--badge-text);
+  margin-bottom: 24px;
+  box-shadow: var(--badge-shadow);
+  transition: all 0.25s var(--ease-spring);
+  text-decoration: none;
+}
+.hero-announcement:hover {
+  border-color: var(--badge-border-hover);
+  box-shadow: var(--badge-shadow-hover);
+  transform: translateY(-2px);
+  color: var(--badge-text);
+}
+.glow-pulse-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--badge-dot);
+  box-shadow: 0 0 10px var(--badge-dot-glow);
+  animation: pulseDot 2s infinite ease-in-out;
+  flex-shrink: 0;
+}
+@keyframes pulseDot {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.5; transform: scale(0.85); }
+}
+.announcement-tag {
+  display: inline-block;
+  padding: 3px 10px;
+  border-radius: 999px;
+  background: var(--badge-tag-bg);
+  border: 1px solid var(--badge-tag-border);
+  color: var(--badge-tag-text);
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  line-height: 1.35;
+}
+.announcement-text {
+  color: var(--badge-text);
+  font-weight: 600;
+  letter-spacing: -0.01em;
+}
+.announcement-arrow {
+  color: var(--badge-arrow);
+  font-size: 14px;
+  font-weight: 700;
+  transition: transform 0.2s ease;
+  margin-left: 2px;
+}
+.hero-announcement:hover .announcement-arrow {
+  transform: translateX(3px);
+}
+
+/* Hero Typography */
+.hero-headline {
+  font-size: clamp(38px, 6vw, 68px);
+  font-weight: 800;
+  line-height: 1.08;
+  letter-spacing: -0.038em;
+  color: var(--text-main);
+  max-width: 940px;
+  margin: 0 auto 20px;
+  text-wrap: balance;
+}
+.hero-gradient-text {
+  background: linear-gradient(135deg, #38bdf8 0%, #0078d4 50%, #60a5fa 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  display: inline-block;
+}
+.hero-lead {
+  font-size: clamp(16px, 1.85vw, 19.5px);
+  color: var(--text-muted);
+  max-width: 660px;
+  margin: 0 auto 36px;
+  line-height: 1.62;
+  text-wrap: balance;
+}
+
+/* Hero CTA Row */
+.hero-cta-group {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+.btn-hero-primary {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  background: linear-gradient(135deg, var(--primary) 0%, #0284c7 100%);
+  color: #ffffff !important;
+  font-size: 15.5px;
+  font-weight: 700;
+  padding: 14px 30px;
+  border-radius: var(--radius-md);
+  box-shadow: 0 10px 30px var(--primary-glow);
+  transition: var(--transition);
+  position: relative;
+  overflow: hidden;
+}
+.btn-hero-primary:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 14px 40px var(--primary-glow);
+}
+.btn-hero-secondary {
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+  background: var(--bg-panel);
+  color: var(--text-main);
+  border: 1px solid var(--border-line);
+  font-size: 15px;
+  font-weight: 600;
+  padding: 14px 24px;
+  border-radius: var(--radius-md);
+  transition: var(--transition);
+  box-shadow: var(--shadow-sm);
+}
+.btn-hero-secondary:hover {
+  border-color: var(--border-focus);
+  background: var(--bg-subtle);
+  transform: translateY(-2px);
+}
+
+/* Quick Install Terminal Box */
+.hero-quick-terminal {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 24px;
+  padding: 7px 14px;
+  background: var(--bg-subtle);
+  border: 1px solid var(--border-line);
+  border-radius: var(--radius-sm);
+  font-family: var(--font-mono);
+  font-size: 13px;
+  color: var(--text-muted);
+  box-shadow: var(--shadow-sm);
+}
+.terminal-prompt {
+  color: var(--primary-light);
+  user-select: none;
+  font-weight: 700;
+}
+.terminal-snippet {
+  color: var(--text-main);
+  user-select: all;
+}
+.terminal-copy-icon {
+  cursor: pointer;
+  padding: 4px;
+  border-radius: 4px;
+  color: var(--text-faint);
+  transition: var(--transition);
+}
+.terminal-copy-icon:hover {
+  color: var(--text-main);
+  background: var(--bg-panel);
+}
+
+/* System Architecture Specs Ribbon (Netlify / Developer-Grade Style — No AI Slop Ticks) */
+.hero-specs-strip {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  margin-top: 32px;
+  flex-wrap: wrap;
+}
+.spec-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 14px;
+  background: var(--bg-panel);
+  border: 1px solid var(--border-line);
+  border-radius: 999px;
+  font-size: 13px;
+  box-shadow: var(--shadow-sm);
+  transition: var(--transition);
+}
+.spec-chip:hover {
+  border-color: var(--border-focus);
+  background: var(--bg-subtle);
+  transform: translateY(-1px);
+}
+.spec-label {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  color: var(--spec-label-color);
+}
+.spec-divider {
+  color: var(--text-faint);
+  font-size: 11px;
+}
+.spec-val {
+  color: var(--spec-val-color);
+  font-weight: 600;
+}
+
+/* --- Interactive Product Sandbox Window (Stripe / Linear Effect) --- */
+.showcase-wrapper {
+  margin-top: 60px;
+  perspective: 1200px;
+}
+.showcase-outer-card {
+  position: relative;
+  border-radius: var(--radius-xl);
+  padding: 10px;
+  background: linear-gradient(135deg, rgba(0, 120, 212, 0.40) 0%, rgba(56, 189, 248, 0.20) 50%, rgba(30, 43, 74, 0.3) 100%);
+  box-shadow: var(--shadow-lg);
+  transition: transform 0.35s ease, box-shadow 0.35s ease;
+}
+.showcase-outer-card:hover {
+  box-shadow: 0 35px 90px -10px rgba(0, 120, 212, 0.45);
+}
+
+.showcase-window {
+  background: var(--bg-panel);
+  border: 1px solid var(--border-line);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  box-shadow: var(--shadow-md);
+  text-align: left;
+}
+.showcase-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: 48px;
+  padding: 0 16px;
+  background: var(--window-bar);
+  border-bottom: 1px solid var(--border-line);
+  gap: 12px;
+}
+.window-dots {
+  display: flex;
+  gap: 7px;
+}
+.window-dot {
+  width: 11px;
+  height: 11px;
+  border-radius: 50%;
+}
+.dot-red { background: #ff5f56; }
+.dot-yellow { background: #ffbd2e; }
+.dot-green { background: #27c93f; }
+
+/* Interactive Showcase Tabs */
+.showcase-tabs {
+  display: flex;
+  gap: 6px;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+.showcase-tabs::-webkit-scrollbar { display: none; }
+.showcase-tab {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 6px 14px;
+  border-radius: 8px;
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--text-muted);
+  border: 1px solid transparent;
+  transition: var(--transition);
+  white-space: nowrap;
+}
+.showcase-tab:hover {
+  color: var(--text-main);
+  background: var(--bg-subtle);
+}
+.showcase-tab.active {
+  background: var(--bg-panel);
+  color: var(--primary-light);
+  border-color: var(--border-line);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+}
+
+/* Feature Spotlight Callout Bar */
+.showcase-spotlight-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 20px;
+  background: var(--bg-subtle);
+  border-bottom: 1px solid var(--border-line);
+  font-size: 13px;
+  color: var(--text-muted);
+  flex-wrap: wrap;
+  gap: 10px;
+}
+.spotlight-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 3px 10px;
+  border-radius: 999px;
+  background: var(--primary-soft);
+  color: var(--primary-light);
+  font-weight: 700;
+  font-size: 11.5px;
+  font-family: var(--font-mono);
+}
+.spotlight-hint {
+  font-size: 12.5px;
+  color: var(--text-muted);
+}
+
+/* Image Swap Container */
+.showcase-body {
+  position: relative;
+  width: 100%;
+  overflow: hidden;
+  background: #000;
+  aspect-ratio: 16 / 9.8;
+}
+.showcase-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+  transition: opacity 0.3s ease, transform 0.3s ease;
+}
+
+/* --- Bento Grid Section (Stripe / Apple / Linear Signature) --- */
+.bento-section {
+  padding: 100px 0 85px;
+  position: relative;
+  z-index: 1;
+}
+.section-header {
+  text-align: center;
+  max-width: 720px;
+  margin: 0 auto 50px;
+}
+.section-eyebrow {
+  display: inline-block;
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--primary-light);
+  margin-bottom: 12px;
+}
+.section-title {
+  font-size: clamp(30px, 3.8vw, 44px);
+  font-weight: 800;
+  letter-spacing: -0.03em;
+  line-height: 1.15;
+  color: var(--text-main);
+  margin-bottom: 14px;
+}
+.section-subtitle {
+  font-size: 16px;
+  color: var(--text-muted);
+  line-height: 1.6;
+}
+
+.bento-grid {
+  display: grid;
+  grid-template-columns: repeat(12, 1fr);
+  gap: 22px;
+}
+
+.bento-card {
+  background: var(--card-gradient);
+  border: 1px solid var(--border-line);
+  border-radius: var(--radius-lg);
+  padding: 32px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  position: relative;
+  overflow: hidden;
+  box-shadow: var(--shadow-sm);
+  transition: var(--transition);
+}
+.bento-card:hover {
+  border-color: var(--border-focus);
+  transform: translateY(-4px);
+  box-shadow: var(--shadow-md);
+}
+
+/* Bento Spans */
+.col-span-8 { grid-column: span 8; }
+.col-span-4 { grid-column: span 4; }
+.col-span-6 { grid-column: span 6; }
+.col-span-12 { grid-column: span 12; }
+
+.bento-icon {
+  width: 48px;
+  height: 48px;
+  border-radius: var(--radius-sm);
+  background: var(--primary-soft);
+  color: var(--primary-light);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 20px;
+  border: 1px solid rgba(56, 189, 248, 0.2);
+}
+.bento-icon.gold {
+  background: var(--gold-soft);
+  color: var(--gold);
+  border-color: rgba(217, 119, 6, 0.3);
+}
+.bento-icon.emerald {
+  background: var(--emerald-soft);
+  color: var(--emerald);
+  border-color: rgba(16, 185, 129, 0.3);
+}
+
+.bento-title {
+  font-size: 21px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  color: var(--text-main);
+  margin-bottom: 10px;
+}
+.bento-desc {
+  font-size: 14.5px;
+  color: var(--text-muted);
+  line-height: 1.62;
+  margin-bottom: 24px;
+}
+
+/* Interactive Audio Scrubbing Simulator Inside Bento 1 */
+.timeline-mockup {
+  background: var(--bg-panel);
+  border: 1px solid var(--border-line);
+  border-radius: var(--radius-md);
+  padding: 20px;
+  margin-top: 10px;
+}
+.timeline-wave-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 14px;
+}
+.wave-bars {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  height: 28px;
+}
+.wave-bar {
+  width: 3.5px;
+  background: var(--primary-light);
+  border-radius: 999px;
+  animation: pulseBar 1.2s infinite ease-in-out;
+}
+.wave-bar:nth-child(2) { animation-delay: 0.15s; height: 60%; }
+.wave-bar:nth-child(3) { animation-delay: 0.3s; height: 90%; }
+.wave-bar:nth-child(4) { animation-delay: 0.45s; height: 40%; }
+.wave-bar:nth-child(5) { animation-delay: 0.2s; height: 100%; }
+.wave-bar:nth-child(6) { animation-delay: 0.35s; height: 75%; }
+.wave-bar:nth-child(7) { animation-delay: 0.5s; height: 50%; }
+.wave-bar:nth-child(8) { animation-delay: 0.1s; height: 85%; }
+
+@keyframes pulseBar {
+  0%, 100% { transform: scaleY(0.4); opacity: 0.4; }
+  50% { transform: scaleY(1); opacity: 1; }
+}
+
+.timeline-track {
+  position: relative;
+  height: 6px;
+  background: var(--bg-subtle);
+  border-radius: 999px;
+  margin-bottom: 12px;
+  overflow: hidden;
+}
+.timeline-fill {
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 48%;
+  background: linear-gradient(90deg, var(--primary) 0%, var(--primary-light) 100%);
+  border-radius: 999px;
+}
+.timeline-sub-preview {
+  font-size: 13.5px;
+  color: var(--text-muted);
+  line-height: 1.5;
+  font-family: var(--font-sans);
+}
+.karaoke-active {
+  color: #38bdf8;
+  font-weight: 700;
+  text-shadow: 0 0 10px rgba(56, 189, 248, 0.4);
+}
+
+/* Standalone HTML Feature Badge Card */
+.export-card-preview {
+  background: var(--bg-panel);
+  border: 1px solid var(--border-line);
+  border-radius: var(--radius-md);
+  padding: 16px;
+  font-family: var(--font-mono);
+  font-size: 12px;
+  color: var(--text-muted);
+}
+.export-line {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 6px 0;
+  border-bottom: 1px solid var(--border-subtle);
+}
+.export-line:last-child { border-bottom: none; }
+.export-val { color: var(--emerald); font-weight: 600; }
+
+/* --- Netlify Signature Feature Cards & Flow Row --- */
+.netlify-cards-section {
+  padding: 65px 0 75px;
+  background: var(--bg-subtle);
+  border-top: 1px solid var(--border-line);
+  border-bottom: 1px solid var(--border-line);
+  position: relative;
+  z-index: 1;
+}
+.flow-stage-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 56px minmax(0, 1fr);
+  gap: 20px;
+  align-items: center;
+}
+.flow-arrow-divider {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  height: 100%;
+}
+.flow-arrow-circle {
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  background: radial-gradient(circle, #082126 0%, #031015 100%);
+  border: 1.5px solid #00dc82;
+  box-shadow: 0 0 20px rgba(0, 220, 130, 0.4), inset 0 0 10px rgba(0, 220, 130, 0.2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #00dc82;
+  transition: transform 0.25s ease, box-shadow 0.25s ease;
+  animation: pulse-flow-arrow 2.4s infinite ease-in-out;
+}
+.flow-arrow-circle:hover {
+  transform: scale(1.1);
+  box-shadow: 0 0 30px rgba(0, 220, 130, 0.65);
+}
+.flow-arrow-svg {
+  width: 22px;
+  height: 22px;
+  display: block;
+}
+@keyframes pulse-flow-arrow {
+  0%, 100% {
+    box-shadow: 0 0 16px rgba(0, 220, 130, 0.35);
+    transform: translateX(0);
+  }
+  50% {
+    box-shadow: 0 0 28px rgba(0, 220, 130, 0.65), 0 0 40px rgba(56, 189, 248, 0.3);
+    transform: translateX(4px);
+  }
+}
+@media (max-width: 992px) {
+  .flow-stage-row {
+    grid-template-columns: 1fr;
+    gap: 16px;
+  }
+  .flow-arrow-divider {
+    height: 48px;
+    margin: 6px 0;
+  }
+  .flow-arrow-circle {
+    transform: rotate(90deg);
+    animation: pulse-flow-arrow-down 2.4s infinite ease-in-out;
+  }
+}
+@keyframes pulse-flow-arrow-down {
+  0%, 100% {
+    box-shadow: 0 0 16px rgba(0, 220, 130, 0.35);
+    transform: rotate(90deg) translateX(0);
+  }
+  50% {
+    box-shadow: 0 0 28px rgba(0, 220, 130, 0.65);
+    transform: rotate(90deg) translateX(4px);
+  }
+}
+html[data-theme="light"] .flow-arrow-circle {
+  background: #ffffff;
+  border-color: #0078d4;
+  color: #0078d4;
+  box-shadow: 0 4px 16px rgba(0, 120, 212, 0.25);
+}
+.flow-stage-row > .netlify-feature-card {
+  height: 100%;
+}
+.netlify-feature-card {
+  background: radial-gradient(circle at 12% 20%, rgba(56, 189, 248, 0.06) 0%, rgba(6, 16, 26, 0.96) 100%);
+  border: 1px solid rgba(56, 189, 248, 0.22);
+  border-radius: var(--radius-xl);
+  padding: 28px 24px;
+  margin-bottom: 0;
+  box-shadow: 0 20px 60px -15px rgba(0, 0, 0, 0.6), inset 0 1px 0 rgba(255, 255, 255, 0.08);
+  transition: border-color 0.3s ease, box-shadow 0.3s ease, transform 0.3s ease;
+  display: flex;
+  flex-direction: column;
+}
+.netlify-feature-card:hover {
+  border-color: rgba(56, 189, 248, 0.45);
+  box-shadow: 0 25px 70px -15px rgba(0, 120, 212, 0.22), inset 0 1px 0 rgba(255, 255, 255, 0.12);
+  transform: translateY(-3px);
+}
+.netlify-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  height: 100%;
+}
+.netlify-grid.reversed {
+  direction: ltr;
+}
+.netlify-grid.reversed > * {
+  direction: ltr;
+}
+.netlify-vector-wrapper {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(3, 11, 20, 0.75);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: var(--radius-md);
+  padding: 14px;
+  overflow: hidden;
+  box-shadow: inset 0 2px 8px rgba(0,0,0,0.5);
+  min-height: 200px;
+  max-height: 220px;
+}
+.netlify-vector-art {
+  width: 100%;
+  height: auto;
+  max-width: 100%;
+  max-height: 200px;
+  display: block;
+  object-fit: contain;
+}
+.netlify-content-side {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  justify-content: space-between;
+}
+.netlify-eyebrow {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: #38bdf8;
+  margin-bottom: 8px;
+}
+.netlify-title {
+  font-size: clamp(19px, 1.55vw, 22px);
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  color: #ffffff;
+  line-height: 1.25;
+  margin-bottom: 8px;
+}
+.netlify-desc {
+  font-size: 13.5px;
+  color: #cbd5e1;
+  line-height: 1.52;
+  margin-bottom: 14px;
+}
+.netlify-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+  margin-bottom: 18px;
+}
+.netlify-stack-item {
+  padding: 8px 12px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.10);
+  border-radius: var(--radius-sm);
+  font-size: 12.5px;
+  font-weight: 500;
+  color: #f8fafc;
+  transition: all 0.22s ease;
+  display: flex;
+  align-items: center;
+  line-height: 1.38;
+}
+.netlify-stack-item:hover {
+  background: rgba(56, 189, 248, 0.10);
+  border-color: rgba(56, 189, 248, 0.45);
+  transform: translateX(3px);
+  color: #ffffff;
+}
+.netlify-action-link {
+  margin-top: auto;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: #38bdf8;
+  font-size: 13px;
+  font-weight: 700;
+  text-decoration: underline;
+  text-underline-offset: 4px;
+  transition: var(--transition);
+}
+.netlify-action-link:hover {
+  color: #ffffff;
+  gap: 8px;
+}
+
+html[data-theme="light"] .netlify-feature-card {
+  background: #ffffff;
+  border-color: #cbd5e1;
+  box-shadow: 0 10px 30px -8px rgba(0, 0, 0, 0.07);
+}
+html[data-theme="light"] .netlify-vector-wrapper {
+  background: #061622;
+}
+html[data-theme="light"] .netlify-title {
+  color: #0f172a;
+}
+html[data-theme="light"] .netlify-desc {
+  color: #475569;
+}
+html[data-theme="light"] .netlify-stack-item {
+  background: #f8fafc;
+  border-color: #e2e8f0;
+  color: #1e293b;
+}
+html[data-theme="light"] .netlify-stack-item:hover {
+  background: rgba(0, 120, 212, 0.08);
+  border-color: #0078d4;
+  color: #0f172a;
+}
+
+/* --- Feature Deep-Dive Sections --- */
+.feature-section {
+  padding: 95px 0;
+  border-bottom: 1px solid var(--border-line);
+}
+.feature-grid {
+  display: grid;
+  grid-template-columns: 1fr 1.15fr;
+  gap: 56px;
+  align-items: center;
+}
+.feature-grid.reversed {
+  grid-template-columns: 1.15fr 1fr;
+}
+.feature-text {
+  max-width: 520px;
+}
+.feature-title {
+  font-size: clamp(28px, 3.4vw, 42px);
+  font-weight: 800;
+  line-height: 1.14;
+  letter-spacing: -0.025em;
+  color: var(--text-main);
+  margin-bottom: 18px;
+}
+.feature-desc {
+  font-size: 15.5px;
+  color: var(--text-muted);
+  line-height: 1.65;
+  margin-bottom: 26px;
+}
+.feature-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14.5px;
+  font-weight: 700;
+  color: var(--primary-light);
+  transition: var(--transition);
+}
+.feature-link:hover {
+  text-decoration: underline;
+  gap: 11px;
+}
+
+.feature-preview {
+  position: relative;
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  border: 1px solid var(--border-line);
+  box-shadow: var(--shadow-md);
+  background: var(--bg-panel);
+}
+
+/* --- Comparison Matrix Section (Stripe / Vercel Style) --- */
+.compare-section {
+  padding: 100px 0;
+  border-bottom: 1px solid var(--border-line);
+}
+.compare-table-wrapper {
+  margin-top: 45px;
+  background: var(--bg-panel);
+  border: 1px solid var(--border-line);
+  border-radius: var(--radius-lg);
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  box-shadow: var(--shadow-sm);
+  position: relative;
+}
+.compare-table {
+  width: 100%;
+  min-width: 640px;
+  border-collapse: collapse;
+  text-align: left;
+}
+.compare-table th,
+.compare-table td {
+  padding: 18px 24px;
+  font-size: 14px;
+  border-bottom: 1px solid var(--border-line);
+}
+.compare-table th {
+  background: var(--bg-subtle);
+  font-weight: 700;
+  font-size: 13.5px;
+  color: var(--text-muted);
+}
+.compare-table th.col-highlight {
+  color: var(--primary-light);
+  background: var(--primary-soft);
+}
+.compare-table tr:last-child td {
+  border-bottom: none;
+}
+.td-highlight {
+  background: rgba(0, 120, 212, 0.04);
+  font-weight: 600;
+  color: var(--text-main);
+}
+.table-badge-good {
+  color: var(--primary-light);
+  font-weight: 700;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+.table-badge-muted {
+  color: var(--text-faint);
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+/* --- Interactive FAQ Accordion Section (Netlify Style) --- */
+.faq-section {
+  padding: 100px 0;
+  background: var(--bg-subtle);
+  border-bottom: 1px solid var(--border-line);
+}
+.faq-grid {
+  max-width: 820px;
+  margin: 40px auto 0;
+  display: grid;
+  gap: 16px;
+}
+.faq-item {
+  background: var(--bg-panel);
+  border: 1px solid var(--border-line);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  transition: var(--transition);
+}
+.faq-item:hover {
+  border-color: var(--border-focus);
+}
+.faq-question {
+  width: 100%;
+  padding: 22px 24px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--text-main);
+  text-align: left;
+}
+.faq-chevron {
+  width: 20px;
+  height: 20px;
+  color: var(--text-muted);
+  transition: transform 0.25s ease;
+  flex-shrink: 0;
+}
+.faq-item.open .faq-chevron {
+  transform: rotate(180deg);
+  color: var(--primary-light);
+}
+.faq-answer {
+  max-height: 0;
+  overflow: hidden;
+  transition: max-height 0.3s cubic-bezier(0.16, 1, 0.3, 1), padding 0.3s ease;
+  padding: 0 24px;
+  font-size: 14.5px;
+  color: var(--text-muted);
+  line-height: 1.65;
+}
+.faq-item.open .faq-answer {
+  max-height: 250px;
+  padding-bottom: 22px;
+}
+
+/* --- High-Impact Bottom CTA Banner (Stripe Radiant Glow) --- */
+.bottom-cta-section {
+  padding: 95px 0 110px;
+  position: relative;
+  z-index: 1;
+}
+.cta-banner {
+  background: linear-gradient(135deg, rgba(0, 120, 212, 0.35) 0%, rgba(56, 189, 248, 0.15) 50%, rgba(10, 15, 29, 0.95) 100%);
+  border: 1px solid rgba(56, 189, 248, 0.3);
+  border-radius: var(--radius-xl);
+  padding: 60px 48px;
+  text-align: center;
+  box-shadow: var(--shadow-lg);
+  position: relative;
+  overflow: hidden;
+}
+.cta-headline {
+  font-size: clamp(32px, 4.5vw, 50px);
+  font-weight: 800;
+  line-height: 1.15;
+  letter-spacing: -0.03em;
+  color: var(--text-main);
+  margin-bottom: 16px;
+}
+.cta-lead {
+  font-size: 17px;
+  color: var(--text-muted);
+  max-width: 650px;
+  margin: 0 auto 36px;
+  line-height: 1.6;
+}
+
+/* --- Footer --- */
+.site-footer {
+  padding: 60px 0 45px;
+  background: var(--bg-page);
+  font-size: 13.5px;
+  color: var(--text-faint);
+  border-top: 1px solid var(--border-line);
+}
+.footer-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 20px;
+}
+.footer-links {
+  display: flex;
+  gap: 24px;
+  flex-wrap: wrap;
+}
+.footer-link:hover { color: var(--text-main); }
+
+/* SVG Icons inline */
+.icon { width: 18px; height: 18px; stroke-width: 2; stroke: currentColor; fill: none; stroke-linecap: round; stroke-linejoin: round; }
+.gh-mark { width: 18px; height: 18px; fill: currentColor; }
+
+/* --- What Students Say Section (9router / Netlify Style Marquee) --- */
+.students-say-section {
+  padding: 100px 0 60px;
+  overflow: hidden;
+  position: relative;
+}
+.marquee-wall {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  width: 100%;
+  margin-top: 48px;
+  position: relative;
+  mask-image: linear-gradient(90deg, transparent, #000 6%, #000 94%, transparent);
+  -webkit-mask-image: linear-gradient(90deg, transparent, #000 6%, #000 94%, transparent);
+}
+.marquee-row {
+  display: flex;
+  width: 100%;
+  overflow: hidden;
+  user-select: none;
+}
+.marquee-track {
+  display: flex;
+  gap: 18px;
+  width: max-content;
+  will-change: transform;
+}
+.marquee-track-left {
+  animation: marqueeScrollLeft 48s linear infinite;
+}
+.marquee-track-right {
+  animation: marqueeScrollRight 48s linear infinite;
+}
+.marquee-row:hover .marquee-track {
+  animation-play-state: paused;
+}
+@keyframes marqueeScrollLeft {
+  0% { transform: translateX(0); }
+  100% { transform: translateX(-50%); }
+}
+@keyframes marqueeScrollRight {
+  0% { transform: translateX(-50%); }
+  100% { transform: translateX(0); }
+}
+.say-card {
+  width: 380px;
+  background: var(--bg-card);
+  border: 1px solid var(--border-line);
+  border-radius: var(--radius-md);
+  padding: 22px 24px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  position: relative;
+  box-shadow: var(--shadow-sm);
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  flex-shrink: 0;
+}
+.say-card:hover {
+  border-color: rgba(56, 189, 248, 0.45);
+  box-shadow: 0 12px 30px -8px rgba(0, 0, 0, 0.35), 0 0 0 1px rgba(56, 189, 248, 0.25);
+  transform: translateY(-3px);
+}
+.say-quote-mark {
+  position: absolute;
+  top: 14px;
+  right: 18px;
+  font-family: Georgia, serif;
+  font-size: 34px;
+  line-height: 1;
+  color: var(--primary-light);
+  opacity: 0.35;
+  pointer-events: none;
+}
+.say-quote {
+  font-size: 14.5px;
+  line-height: 1.62;
+  color: var(--text-main);
+  margin-bottom: 16px;
+  font-weight: 450;
+  padding-right: 16px;
+}
+.say-author {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-top: 12px;
+  border-top: 1px solid var(--border-faint);
+}
+.say-handle {
+  font-family: var(--font-mono);
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--primary-light);
+}
+.say-role {
+  font-size: 12px;
+  color: var(--text-muted);
+  font-weight: 500;
+}
+
+/* --- Global Responsive Grid & Multi-Device Architecture --- */
+.mobile-only { display: none !important; }
+.desktop-only { display: inline-flex !important; }
+
+/* Mobile Navigation Drawer */
+.mobile-nav-drawer {
+  display: none;
+  position: fixed;
+  top: 68px;
+  left: 0;
+  right: 0;
+  background: var(--bg-glass);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  border-bottom: 1px solid var(--border-line);
+  padding: 16px 20px 24px;
+  z-index: 99;
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.55);
+}
+.mobile-nav-drawer.open {
+  display: block;
+  animation: slideDownMobileNav 0.24s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+@keyframes slideDownMobileNav {
+  from { opacity: 0; transform: translateY(-12px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.mobile-nav-links {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.mobile-nav-item {
+  padding: 12px 16px;
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--text-main);
+  border-radius: var(--radius-sm);
+  background: var(--bg-panel);
+  border: 1px solid var(--border-line);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  transition: var(--transition);
+}
+.mobile-nav-item:hover, .mobile-nav-item:active {
+  background: var(--primary-soft);
+  color: var(--primary-light);
+  border-color: rgba(56, 189, 248, 0.35);
+}
+.mobile-nav-divider {
+  height: 1px;
+  background: var(--border-line);
+  margin: 6px 0;
+}
+.mobile-nav-cta {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 13px 20px;
+  font-size: 14.5px;
+  font-weight: 700;
+  background: linear-gradient(135deg, var(--primary) 0%, #0284c7 100%);
+  color: #ffffff !important;
+  border-radius: var(--radius-sm);
+  box-shadow: 0 6px 20px rgba(0, 120, 212, 0.4);
+}
+
+/* Mobile Scroll Hint for Tables */
+.table-scroll-hint {
+  display: none;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--primary-light);
+  margin-bottom: 10px;
+  text-align: center;
+}
+
+/* ========================================================
+   BREAKPOINT 1: Large Laptops & Desktops (<= 1200px)
+   ======================================================== */
+@media (max-width: 1200px) {
+  .container { max-width: 1080px; padding: 0 20px; }
+  .flow-stage-row { gap: 14px; }
+  .netlify-feature-card { padding: 24px 20px; }
+}
+
+/* ========================================================
+   BREAKPOINT 2: Tablets Landscape & Small Laptops (<= 1024px)
+   ======================================================== */
+@media (max-width: 1024px) {
+  /* Bento Grid: 2-column dashboard layout on tablets */
+  .bento-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 16px;
+  }
+  .col-span-8 { grid-column: span 2; }
+  .col-span-4 { grid-column: span 1; }
+  .col-span-6 { grid-column: span 1; }
+  .col-span-12 { grid-column: span 2; }
+  
+  /* Steps Grid */
+  .steps-grid { grid-template-columns: repeat(2, 1fr); gap: 20px; }
+  
+  /* Feature Grid */
+  .feature-grid, .feature-grid.reversed { grid-template-columns: 1fr; gap: 36px; }
+  
+  /* Flow Stage Row: switches to vertical stack with animated down arrow */
+  .flow-stage-row {
+    grid-template-columns: 1fr;
+    gap: 16px;
+  }
+  .flow-arrow-divider {
+    height: 48px;
+    margin: 4px 0;
+  }
+  .flow-arrow-circle {
+    transform: rotate(90deg);
+    animation: pulse-flow-arrow-down 2.4s infinite ease-in-out;
+  }
+}
+
+/* ========================================================
+   BREAKPOINT 2.5: Small Desktop / Laptops (993px - 1120px)
+   ======================================================== */
+@media (max-width: 1120px) and (min-width: 993px) {
+  .nav-menu { margin-left: 10px; gap: 2px; }
+  .nav-link { padding: 6px 8px; font-size: 13px; }
+  .btn-cta-nav { padding: 8px 13px; font-size: 13px; }
+  .header-inner { gap: 8px; }
+}
+
+/* ========================================================
+   BREAKPOINT 3: Tablets Portrait & Phablets (<= 992px)
+   ======================================================== */
+@media (max-width: 992px) {
+  .nav-menu { display: none; }
+  .mobile-only { display: inline-flex !important; }
+  .desktop-only { display: none !important; }
+  .header-inner { gap: 8px; }
+  .table-scroll-hint { display: flex; }
+}
+
+/* ========================================================
+   BREAKPOINT 4: Standard Mobile & Small Tablets (<= 768px)
+   ======================================================== */
+@media (max-width: 768px) {
+  .container { padding: 0 18px; }
+  
+  /* Hero adjustments */
+  .hero { padding: 55px 0 45px; }
+  .hero-headline { font-size: clamp(28px, 6vw, 42px); line-height: 1.15; }
+  .hero-lead { font-size: 15px; margin-bottom: 26px; }
+  .hero-specs-strip { gap: 8px; margin-top: 24px; }
+  .hero-quick-terminal { display: none; }
+  
+  /* Bento Grid: 1 column on mobile */
+  .bento-grid { grid-template-columns: 1fr; gap: 14px; }
+  .col-span-8, .col-span-4, .col-span-6, .col-span-12 { grid-column: span 1; }
+  .bento-card { padding: 24px 20px; }
+  
+  .steps-grid { grid-template-columns: 1fr; }
+  .cta-banner { padding: 40px 22px; }
+  
+  /* Comparison Table */
+  .compare-table th, .compare-table td { padding: 12px 14px; font-size: 13px; }
+  
+  /* Testimonials Marquee */
+  .say-card { width: min(340px, 85vw); padding: 18px; }
+  
+  /* Footer */
+  .footer-row {
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    gap: 18px;
+  }
+  .footer-links { justify-content: center; gap: 18px; }
+}
+
+/* ========================================================
+   BREAKPOINT 5: Compact Mobile Phones (<= 480px)
+   ======================================================== */
+@media (max-width: 480px) {
+  .container { padding: 0 16px; }
+  
+  /* Header */
+  .site-header { height: 60px; }
+  .header-inner { height: 60px; gap: 6px; }
+  .mobile-nav-drawer { top: 60px; padding: 14px 16px 20px; }
+  .brand-logo { width: 30px; height: 30px; }
+  .brand-title { font-size: 16.5px; }
+  .brand-tag { display: none; }
+  .ctrl-btn { height: 34px; padding: 0 8px; font-size: 11.5px; }
+  .icon-btn { width: 34px; }
+  .btn-cta-nav { padding: 7px 11px; font-size: 12px; gap: 5px; }
+  
+  /* Hero */
+  .hero { padding: 38px 0 28px; }
+  .hero-announcement {
+    padding: 5px 12px;
+    font-size: 11.5px;
+    gap: 6px;
+    max-width: 100%;
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+  .announcement-tag { padding: 2px 7px; font-size: 10.5px; }
+  .hero-headline { font-size: clamp(24px, 7vw, 30px); line-height: 1.18; margin-bottom: 14px; }
+  .hero-lead { font-size: 13.5px; line-height: 1.5; margin-bottom: 20px; }
+  .hero-cta-group { flex-direction: column; width: 100%; gap: 10px; }
+  .btn-hero-primary, .btn-hero-secondary {
+    width: 100%;
+    justify-content: center;
+    padding: 12px 18px;
+    font-size: 14px;
+  }
+  .hero-specs-strip { gap: 6px; margin-top: 18px; }
+  .spec-chip { padding: 4px 8px; font-size: 11px; gap: 5px; }
+  .spec-label { font-size: 8.5px; }
+  .spec-val { font-size: 11px; }
+  
+  /* Showcase Sandbox */
+  .showcase-wrapper { margin-top: 24px; perspective: none; }
+  .showcase-outer-card { padding: 4px; }
+  .showcase-header { height: auto; min-height: 40px; padding: 6px 8px; }
+  .window-dots { display: none; }
+  .showcase-tab { padding: 4px 8px; font-size: 11px; gap: 4px; }
+  .showcase-spotlight-bar { padding: 6px 8px; font-size: 11px; gap: 6px; }
+  .spotlight-pill { font-size: 10px; padding: 2px 6px; }
+  
+  /* Sections */
+  .section-header { margin-bottom: 24px; }
+  .section-title { font-size: clamp(22px, 6.5vw, 28px); }
+  .section-subtitle { font-size: 13px; }
+  
+  /* Flow Stage Row & Feature Cards */
+  .flow-stage-row { gap: 10px; }
+  .netlify-feature-card { padding: 18px 14px; }
+  .netlify-vector-wrapper { min-height: 130px; max-height: 155px; padding: 6px; }
+  .netlify-eyebrow { font-size: 10px; }
+  .netlify-title { font-size: 16px; }
+  .netlify-desc { font-size: 12.5px; margin-bottom: 10px; }
+  .netlify-stack { gap: 5px; margin-bottom: 12px; }
+  .netlify-stack-item { padding: 5px 8px; font-size: 11px; }
+  .flow-arrow-divider { height: 32px; }
+  .flow-arrow-circle { width: 36px; height: 36px; }
+  .flow-arrow-svg { width: 18px; height: 18px; }
+  
+  /* Bento Cards */
+  .bento-card { padding: 18px 14px; }
+  .bento-title { font-size: 16.5px; }
+  .bento-desc { font-size: 13px; margin-bottom: 16px; }
+  .timeline-mockup { padding: 12px; }
+  .export-card-preview { padding: 10px; font-size: 10.5px; }
+  
+  /* Comparison Table */
+  .compare-section { padding: 45px 0; }
+  .compare-table { min-width: 520px; }
+  .compare-table th, .compare-table td { padding: 8px 10px; font-size: 11.5px; }
+  .table-badge-good, .table-badge-muted { font-size: 11px; gap: 3px; }
+  
+  /* Testimonials */
+  .students-say-section { padding: 45px 0 25px; }
+  .say-card { width: min(260px, 78vw); padding: 14px 12px; }
+  .say-quote { font-size: 12px; }
+  .say-avatar { width: 30px; height: 30px; font-size: 11.5px; }
+  .say-author-name { font-size: 12px; }
+  .say-role { font-size: 10.5px; }
+  
+  /* FAQ */
+  .faq-section { padding: 45px 0; }
+  .faq-question { padding: 12px 12px; font-size: 13.5px; }
+  .faq-answer p { padding: 0 12px 12px; font-size: 12.5px; }
+  
+  /* CTA Banner */
+  .cta-section { padding: 45px 0; }
+  .cta-banner { padding: 24px 14px; }
+  .cta-title { font-size: 21px; }
+  .cta-desc { font-size: 13px; margin-bottom: 18px; }
+  .cta-actions { flex-direction: column; width: 100%; gap: 8px; }
+  .cta-actions a { width: 100%; justify-content: center; padding: 12px 16px; font-size: 13.5px; }
+  
+  /* Footer */
+  .site-footer { padding: 30px 0 20px; font-size: 11.5px; }
+  .footer-links { gap: 10px; font-size: 11.5px; }
+}
+
+/* ========================================================
+   BREAKPOINT 6: Ultra-Compact Phones (<= 360px)
+   ======================================================== */
+@media (max-width: 360px) {
+  .btn-cta-nav span { display: none; }
+  .brand-title { font-size: 15px; }
+  .say-card { width: 230px; }
 }
 </style>
 </head>
 <body>
+
+<!-- Ambient Lighting Effects (Guarded inside overflow-hidden container) -->
+<div class="ambient-background-layer" aria-hidden="true">
+  <div class="ambient-grid"></div>
+  <div class="aurora-orb orb-1"></div>
+  <div class="aurora-orb orb-2"></div>
+  <div class="aurora-orb orb-3"></div>
+</div>
+
+<!-- Header -->
 <header class="site-header">
-  <div class="wrap nav">
-    <a class="brand" href="#top">
-      <img src="logo.png" alt="Logo EdusGPT" onerror="this.style.display='none'" />
-      <span>EdusGPT<small>Bài giảng AI trên máy bạn</small></span>
-    </a>
-    <nav class="nav-links" id="navLinks" aria-label="Điều hướng">
-      <a href="#tinh-nang">Tính năng</a>
-      <a href="#cach-dung">Cách dùng</a>
-      <a href="#phim-tat">Phím tắt</a>
-      <a href="#yeu-cau">Yêu cầu</a>
-    </nav>
-    <div class="nav-cta">
-      <a class="btn btn-primary btn-sm" href="https://github.com/npdk1/EdusGPT" target="_blank" rel="noopener"><svg class="gh-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 .297c-6.63 0-12 5.373-12 12 0 5.303 3.438 9.8 8.205 11.385.6.113.82-.258.82-.577 0-.285-.01-1.04-.015-2.04-3.338.724-4.042-1.61-4.042-1.61C4.422 18.07 3.633 17.7 3.633 17.7c-1.087-.744.084-.729.084-.729 1.205.084 1.838 1.236 1.838 1.236 1.07 1.835 2.809 1.305 3.495.998.108-.776.417-1.305.76-1.605-2.665-.3-5.466-1.332-5.466-5.93 0-1.31.465-2.38 1.235-3.22-.135-.303-.54-1.523.105-3.176 0 0 1.005-.322 3.3 1.23.96-.267 1.98-.399 3-.405 1.02.006 2.04.138 3 .405 2.28-1.552 3.285-1.23 3.285-1.23.645 1.653.24 2.873.12 3.176.765.84 1.23 1.91 1.23 3.22 0 4.61-2.805 5.625-5.475 5.92.42.36.81 1.096.81 2.22 0 1.606-.015 2.896-.015 3.286 0 .315.21.69.825.57C20.565 22.092 24 17.592 24 12.297c0-6.627-5.373-12-12-12"/></svg>GitHub</a>
+  <div class="container header-inner">
+    <div class="brand-group">
+      <a href="/" class="brand-link">
+        <img src="logo.png" alt="EdusGPT Logo" class="brand-logo" />
+        <span class="brand-title">EdusGPT <span class="brand-tag">v2.0</span></span>
+      </a>
+      <nav class="nav-menu">
+        <a href="#features" class="nav-link" data-i18n="navFeatures">Features</a>
+        <a href="#capabilities" class="nav-link" data-i18n="navCapabilities">Capabilities</a>
+        <a href="#workflow" class="nav-link" data-i18n="navWorkflow">Workflow</a>
+        <a href="#comparison" class="nav-link" data-i18n="navComparison">Comparison</a>
+        <a href="#testimonials" class="nav-link" data-i18n="navTestimonials">Students</a>
+        <a href="#faq" class="nav-link" data-i18n="navFaq">FAQ</a>
+      </nav>
     </div>
-    <button class="menu-btn" id="menuBtn" aria-label="Mở menu" aria-expanded="false">☰</button>
+
+    <div class="header-actions">
+      <!-- Language Switcher: EN default, toggle VI -->
+      <button type="button" id="lang-toggle" class="ctrl-btn" title="Switch Language / Đổi ngôn ngữ">
+        <span id="lang-label" style="font-weight: 800;">VI</span>
+      </button>
+
+      <!-- Dark / Light Mode Toggle -->
+      <button type="button" id="theme-toggle" class="ctrl-btn icon-btn" title="Toggle Dark/Light Mode">
+        <svg id="theme-moon" class="icon" viewBox="0 0 24 24"><path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"></path></svg>
+        <svg id="theme-sun" class="icon" style="display:none;" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"></circle><path d="M12 2v2"></path><path d="M12 20v2"></path><path d="m4.93 4.93 1.41 1.41"></path><path d="m17.66 17.66 1.41 1.41"></path><path d="M2 12h2"></path><path d="M20 12h2"></path><path d="m6.34 17.66-1.41 1.41"></path><path d="m19.07 4.93-1.41 1.41"></path></svg>
+      </button>
+
+      <!-- GitHub Link (Desktop Header) -->
+      <a href="https://github.com/npdk1/EdusGPT" target="_blank" rel="noreferrer" class="ctrl-btn icon-btn desktop-only" title="GitHub Repository">
+        <svg class="gh-mark" viewBox="0 0 24 24"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0 0 24 12c0-6.63-5.37-12-12-12Z"/></svg>
+      </a>
+
+      <!-- Launch Studio CTA -->
+      <a href="https://github.com/npdk1/EdusGPT" target="_blank" rel="noreferrer" class="btn-cta-nav">
+        <svg class="icon" viewBox="0 0 24 24"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
+        <span data-i18n="launchApp">Launch Studio</span>
+      </a>
+
+      <!-- Mobile Menu Toggle Button -->
+      <button type="button" id="mobile-menu-btn" class="ctrl-btn icon-btn mobile-only" aria-label="Toggle navigation" aria-expanded="false">
+        <svg id="menu-icon-bars" class="icon" viewBox="0 0 24 24"><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg>
+        <svg id="menu-icon-close" class="icon" style="display:none;" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+      </button>
+    </div>
   </div>
 </header>
 
-<main id="top">
-  <div class="hero">
-    <div class="wrap hero-grid">
-      <div>
-        <span class="badge"><span class="dot"></span>Chạy 100% trên máy bạn · Windows 1 chạm</span>
-        <h1>Soạn <span class="hl">bài giảng AI</span> thành từng cảnh, phát và xuất HTML</h1>
-        <p class="lead">Nhập chủ đề là có slide, giọng đọc tiếng Việt và phụ đề karaoke chạy theo từng chữ. Tua tới lui từng giây, lặp đoạn A→B, rồi gói cả bài vào một file HTML độc lập.</p>
-        <div class="hero-actions">
-          <a class="btn btn-primary" href="https://github.com/npdk1/EdusGPT" target="_blank" rel="noopener"><svg class="gh-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 .297c-6.63 0-12 5.373-12 12 0 5.303 3.438 9.8 8.205 11.385.6.113.82-.258.82-.577 0-.285-.01-1.04-.015-2.04-3.338.724-4.042-1.61-4.042-1.61C4.422 18.07 3.633 17.7 3.633 17.7c-1.087-.744.084-.729.084-.729 1.205.084 1.838 1.236 1.838 1.236 1.07 1.835 2.809 1.305 3.495.998.108-.776.417-1.305.76-1.605-2.665-.3-5.466-1.332-5.466-5.93 0-1.31.465-2.38 1.235-3.22-.135-.303-.54-1.523.105-3.176 0 0 1.005-.322 3.3 1.23.96-.267 1.98-.399 3-.405 1.02.006 2.04.138 3 .405 2.28-1.552 3.285-1.23 3.285-1.23.645 1.653.24 2.873.12 3.176.765.84 1.23 1.91 1.23 3.22 0 4.61-2.805 5.625-5.475 5.92.42.36.81 1.096.81 2.22 0 1.606-.015 2.896-.015 3.286 0 .315.21.69.825.57C20.565 22.092 24 17.592 24 12.297c0-6.627-5.373-12-12-12"/></svg>Xem EdusGPT trên GitHub</a>
-          <a class="btn btn-ghost" href="#tinh-nang">Khám phá tính năng</a>
-        </div>
-        <div class="hero-meta">
-          <span>✓ Không Docker</span>
-          <span>✓ Nhấp đúp <b>&nbsp;run.bat</b></span>
-          <span>✓ Mở tại localhost:3000</span>
-        </div>
+<!-- Mobile Navigation Drawer -->
+<div id="mobile-nav-drawer" class="mobile-nav-drawer" aria-hidden="true">
+  <div class="container">
+    <nav class="mobile-nav-links">
+      <a href="#features" class="mobile-nav-item" data-i18n="navFeatures">Features</a>
+      <a href="#capabilities" class="mobile-nav-item" data-i18n="navCapabilities">Capabilities</a>
+      <a href="#workflow" class="mobile-nav-item" data-i18n="navWorkflow">Workflow</a>
+      <a href="#comparison" class="mobile-nav-item" data-i18n="navComparison">Comparison</a>
+      <a href="#testimonials" class="mobile-nav-item" data-i18n="navTestimonials">Students</a>
+      <a href="#faq" class="mobile-nav-item" data-i18n="navFaq">FAQ</a>
+      <a href="https://github.com/npdk1/EdusGPT" target="_blank" rel="noreferrer" class="mobile-nav-item">
+        <span style="display:flex;align-items:center;gap:8px;">
+          <svg class="gh-mark" viewBox="0 0 24 24"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0 0 24 12c0-6.63-5.37-12-12-12Z"/></svg>
+          GitHub Repository
+        </span>
+        <span style="color:var(--text-muted);font-size:12px;">↗</span>
+      </a>
+      <div class="mobile-nav-divider"></div>
+      <a href="https://github.com/npdk1/EdusGPT" target="_blank" rel="noreferrer" class="mobile-nav-cta">
+        <svg class="icon" viewBox="0 0 24 24"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
+        <span data-i18n="launchApp">Launch Studio</span>
+      </a>
+    </nav>
+  </div>
+</div>
+
+<!-- Hero Section -->
+<section class="hero">
+  <div class="container">
+    <!-- Announcement Pill -->
+    <a href="https://github.com/npdk1/EdusGPT" target="_blank" rel="noreferrer" class="hero-announcement gsap-hero-badge">
+      <span class="glow-pulse-dot"></span>
+      <span class="announcement-tag">EdusGPT 2.0</span>
+      <span data-i18n="heroBadgeText" class="announcement-text">Built for Active Self-Study</span>
+      <span class="announcement-arrow">→</span>
+    </a>
+
+    <!-- Main Headline -->
+    <h1 class="hero-headline gsap-hero-title" data-i18n="heroHeadline">
+      Stop Reading Walls of Text. <span class="hero-gradient-text">Study with Interactive Lessons.</span>
+    </h1>
+
+    <!-- Subtitle / Value Prop -->
+    <p class="hero-lead gsap-hero-lead" data-i18n="heroLead">
+      Turn any topic, syllabus, or PDF into visual slides with natural voice narration, active quizzes, and 3D flashcards. 100% free, runs offline on your machine.
+    </p>
+
+    <!-- CTAs -->
+    <div class="hero-cta-group gsap-hero-cta">
+      <a href="https://github.com/npdk1/EdusGPT" target="_blank" rel="noreferrer" class="btn-hero-primary">
+        <svg class="icon" viewBox="0 0 24 24"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
+        <span data-i18n="heroBtnCreate">Generate Your First Lesson</span>
+      </a>
+      <a href="https://github.com/npdk1/EdusGPT" target="_blank" rel="noreferrer" class="btn-hero-secondary">
+        <svg class="gh-mark" viewBox="0 0 24 24"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0 0 24 12c0-6.63-5.37-12-12-12Z"/></svg>
+        <span data-i18n="heroBtnGithub">GitHub · MIT Licensed</span>
+      </a>
+    </div>
+
+    <!-- Quick Terminal Clone Snippet -->
+    <div>
+      <div class="hero-quick-terminal gsap-hero-meta">
+        <span class="terminal-prompt">$</span>
+        <span class="terminal-snippet">git clone https://github.com/npdk1/EdusGPT.git &amp;&amp; cd EdusGPT &amp;&amp; npm run dev</span>
+        <span id="quick-copy-trigger" class="terminal-copy-icon" title="Copy command">
+          <svg class="icon" style="width:14px; height:14px;" viewBox="0 0 24 24"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"></rect><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"></path></svg>
+        </span>
       </div>
-      <div class="mock" aria-hidden="true">
-        <div class="mock-top"><i></i><i></i><i></i>&nbsp;/lesson — trình phát</div>
-        <div class="mock-slide">
-          <span class="kicker">ĐỊNH LUẬT II NEWTON</span>
-          <h2>Lực làm đổi vận tốc, khối lượng chống lại điều đó</h2>
-          <p>Hiểu F = m·a qua ví dụ đẩy xe hàng siêu thị</p>
-          <ul class="mock-lines">
-            <li><b>01</b>Xe càng nặng, đẩy càng khó</li>
-            <li><b>02</b>Đẩy càng mạnh, xe vọt càng nhanh</li>
-          </ul>
-          <p class="mock-cap"><span class="said">Hãy tưởng tượng bạn đẩy</span> <span class="now">một chiếc xe hàng</span> <span class="said">trong siêu thị…</span></p>
-        </div>
-        <div class="mock-bar">
-          <div class="mock-rail"></div>
-          <div class="mock-row"><span class="play">▶</span><span class="chip">01:34.7 / 02:24.0</span><span class="chip">A→B</span><span class="chip">1×</span></div>
+    </div>
+
+    <!-- System Architecture Specs Ribbon (Netlify / Developer Style — No AI Slop Ticks) -->
+    <div class="hero-specs-strip gsap-hero-meta">
+      <div class="spec-chip">
+        <span class="spec-label">STORAGE</span>
+        <span class="spec-divider">/</span>
+        <span class="spec-val" data-i18n="metaNoDb">Zero Database (Local JSON)</span>
+      </div>
+      <div class="spec-chip">
+        <span class="spec-label">VOICE</span>
+        <span class="spec-divider">/</span>
+        <span class="spec-val" data-i18n="metaLocalVoice">Edge &amp; Local Neural Voice</span>
+      </div>
+      <div class="spec-chip">
+        <span class="spec-label">DELIVERY</span>
+        <span class="spec-divider">/</span>
+        <span class="spec-val" data-i18n="metaExport">100% Offline Standalone HTML</span>
+      </div>
+      <div class="spec-chip">
+        <span class="spec-label">MODELS</span>
+        <span class="spec-divider">/</span>
+        <span class="spec-val" data-i18n="metaAiModels">DeepSeek, Groq &amp; NVIDIA</span>
+      </div>
+    </div>
+
+    <!-- Centerpiece Interactive Product Sandbox (Stripe / Linear Effect) -->
+    <div class="showcase-wrapper gsap-hero-showcase">
+      <div class="showcase-outer-card">
+        <div class="showcase-window">
+          <div class="showcase-header">
+            <div class="window-dots">
+              <span class="window-dot dot-red"></span>
+              <span class="window-dot dot-yellow"></span>
+              <span class="window-dot dot-green"></span>
+            </div>
+            
+            <!-- Interactive Mode Tabs -->
+            <div class="showcase-tabs">
+              <button type="button" class="showcase-tab active" data-tab="hero">
+                <span>🎓</span> <span data-i18n="tabPlayer">Lesson Player</span>
+              </button>
+              <button type="button" class="showcase-tab" data-tab="studio">
+                <span>🪄</span> <span data-i18n="tabStudio">AI Studio</span>
+              </button>
+              <button type="button" class="showcase-tab" data-tab="quiz">
+                <span>📝</span> <span data-i18n="tabQuiz">Exam Practice</span>
+              </button>
+              <button type="button" class="showcase-tab" data-tab="flashcard">
+                <span>🗂️</span> <span data-i18n="tabFlashcard">Flashcards</span>
+              </button>
+            </div>
+            
+            <div style="width: 32px;"></div>
+          </div>
+
+          <!-- Feature Spotlight Callout Bar -->
+          <div class="showcase-spotlight-bar">
+            <span id="spotlight-badge" class="spotlight-pill">60 FPS TIMELINE</span>
+            <span id="spotlight-text" class="spotlight-hint" data-i18n="spotlightHintHero">Seek second-by-second backward and forward with zero audio desynchronization.</span>
+          </div>
+
+          <!-- Active Screenshot -->
+          <div class="showcase-body">
+            <img id="main-showcase-img" src="assets/hero-player-en.png" alt="EdusGPT Product Preview" class="showcase-img" />
+          </div>
         </div>
       </div>
     </div>
   </div>
+</section>
 
-  <section class="section" id="tinh-nang">
-    <div class="wrap">
-      <p class="eyebrow">Tính năng</p>
-      <h2 class="sec">Một công cụ, trọn vòng đời bài giảng</h2>
-      <p class="sub">Từ ý tưởng tới lớp học: sinh nội dung, đọc thành tiếng, phát tương tác và mang đi đâu cũng được.</p>
-      <div class="grid3">
-        <div class="card">
-          <div class="icon"><svg viewBox="0 0 24 24"><path d="M12 3v3M12 18v3M3 12h3M18 12h3M5.6 5.6l2.1 2.1M16.3 16.3l2.1 2.1M18.4 5.6l-2.1 2.1M7.7 16.3l-2.1 2.1"/></svg></div>
-          <h3>Sinh bài theo từng cảnh</h3>
-          <p>Dàn ý hiện sau vài giây, từng cảnh viết tiếp ngay khi xong. Cảnh lỗi giữ khung tối giản, cả bài không sập theo.</p>
+<!-- Bento Grid Capabilities Matrix (Stripe / Apple / Linear Signature) -->
+<section id="capabilities" class="bento-section gsap-reveal">
+  <div class="container">
+    <div class="section-header">
+      <span class="section-eyebrow" data-i18n="bentoEyebrow">Core Architecture</span>
+      <h2 class="section-title" data-i18n="bentoTitle">Engineered for Pedagogy, Speed &amp; Privacy</h2>
+      <p class="section-subtitle" data-i18n="bentoSubtitle">Everything runs locally on your computer. Zero telemetry, no monthly subscriptions, zero vendor lock-in.</p>
+    </div>
+
+    <div class="bento-grid">
+      <!-- Bento 1: Spotlight (Span 8) Interactive Timeline & Karaoke -->
+      <div class="bento-card col-span-8">
+        <div>
+          <div class="bento-icon">
+            <svg class="icon" viewBox="0 0 24 24"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
+          </div>
+          <h3 class="bento-title" data-i18n="bento1Title">60 FPS Continuous Scrubbing &amp; Word-Level Karaoke</h3>
+          <p class="bento-desc" data-i18n="bento1Desc">
+            Every scene is pegged to deterministic start timestamps. Scrub forward, rewind, or loop a difficult concept without audio drift. Edge Neural TTS delivers millisecond-accurate word boundaries rendered in 60fps requestAnimationFrame.
+          </p>
         </div>
-        <div class="card">
-          <div class="icon"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M10 8.5l5 3.5-5 3.5z"/></svg></div>
-          <h3>Trình phát tua 2 chiều</h3>
-          <p>Kéo về giây thứ 3 vẫn ra đúng cảnh đúng khung. Lặp đoạn A→B, bước từng khung hình, đổi tốc độ giữ cao độ.</p>
+
+        <!-- Live Simulated Audio Player Mockup -->
+        <div class="timeline-mockup">
+          <div class="timeline-wave-header">
+            <div style="display:flex; align-items:center; gap:10px;">
+              <span style="font-size:12px; font-weight:700; color:var(--primary-light);">VOICE SYNTH</span>
+              <span style="font-size:11px; font-family:var(--font-mono); color:var(--text-faint);">vi-VN-NamMinhNeural (0.75x)</span>
+            </div>
+            <div class="wave-bars">
+              <span class="wave-bar"></span>
+              <span class="wave-bar"></span>
+              <span class="wave-bar"></span>
+              <span class="wave-bar"></span>
+              <span class="wave-bar"></span>
+              <span class="wave-bar"></span>
+              <span class="wave-bar"></span>
+              <span class="wave-bar"></span>
+            </div>
+          </div>
+          <div class="timeline-track">
+            <div class="timeline-fill"></div>
+          </div>
+          <div style="display:flex; justify-content:space-between; font-size:11.5px; font-family:var(--font-mono); color:var(--text-faint); margin-bottom:8px;">
+            <span>00:14.2</span>
+            <span>01:20.0</span>
+          </div>
+          <p class="timeline-sub-preview">
+            "Vận tốc của vật <span class="karaoke-active">tỉ lệ thuận</span> với hợp lực tác dụng và có cùng hướng với lực đó."
+          </p>
         </div>
-        <div class="card">
-          <div class="icon"><svg viewBox="0 0 24 24"><path d="M4 18V8l8-4 8 4v10"/><path d="M4 18h16M9 12h6"/></svg></div>
-          <h3>Phụ đề karaoke từng chữ</h3>
-          <p>Giọng đọc chạy theo slide, từng chữ sáng đúng lúc giọng nói tới. Công thức và đồ thị bấm để phóng to.</p>
+      </div>
+
+      <!-- Bento 2: Standalone HTML Export (Span 4) -->
+      <div class="bento-card col-span-4">
+        <div>
+          <div class="bento-icon emerald">
+            <svg class="icon" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"></circle><line x1="2" x2="22" y1="12" y2="12"></line><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path></svg>
+          </div>
+          <h3 class="bento-title" data-i18n="bento2Title">1-File Standalone HTML</h3>
+          <p class="bento-desc" data-i18n="bento2Desc">
+            Export the complete lesson into a single self-contained HTML file. Includes embedded neural audio, GSAP animation, KaTeX math, and quizzes. Plays offline anywhere.
+          </p>
         </div>
-        <div class="card">
-          <div class="icon"><svg viewBox="0 0 24 24"><path d="M12 3v12M7 10l5 5 5-5"/><path d="M4 19h16"/></svg></div>
-          <h3>Xuất HTML độc lập</h3>
-          <p>Một file duy nhất mở bằng trình duyệt là xem được ngay. Kèm JSON kịch bản phẳng cho công cụ render khác.</p>
+
+        <div class="export-card-preview">
+          <div class="export-line">
+            <span>Dependencies:</span>
+            <span class="export-val">0 (Self-Contained)</span>
+          </div>
+          <div class="export-line">
+            <span>Audio Payload:</span>
+            <span class="export-val">Inline Base64</span>
+          </div>
+          <div class="export-line">
+            <span>Math Rendering:</span>
+            <span class="export-val">KaTeX Built-in</span>
+          </div>
+          <div class="export-line">
+            <span>Offline Capable:</span>
+            <span class="export-val">100% True</span>
+          </div>
         </div>
-        <div class="card">
-          <div class="icon"><svg viewBox="0 0 24 24"><path d="M12 3a7 7 0 0 1 4 12.7V18a1 1 0 0 1-1 1h-6a1 1 0 0 1-1-1v-2.3A7 7 0 0 1 12 3z"/><path d="M9 21h6"/></svg></div>
-          <h3>Giọng đọc trên máy</h3>
-          <p>Piper, VieNeu-TTS và Edge. Âm thanh lưu cache theo câu, phát lại không tốn thời gian tạo lại.</p>
+      </div>
+
+      <!-- Bento 3: Multi-Engine Voice (Span 4) -->
+      <div class="bento-card col-span-4">
+        <div>
+          <div class="bento-icon gold">
+            <svg class="icon" viewBox="0 0 24 24"><path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z"></path><path d="M19 10v2a7 7 0 0 1-14 0v-2"></path><line x1="12" x2="12" y1="19" y2="22"></line></svg>
+          </div>
+          <h3 class="bento-title" data-i18n="bento3Title">Comfortable Audio Study Pace</h3>
+          <p class="bento-desc" data-i18n="bento3Desc">
+            Narration is tuned to comprehension pace (3.2 words/sec, 0.75x tempo). Fast enough to stay engaging, gentle enough so you can listen, absorb, and take notes without mental fatigue.
+          </p>
         </div>
-        <div class="card">
-          <div class="icon"><svg viewBox="0 0 24 24"><path d="M12 3l1.9 4.6L18.5 9l-3.4 3.1.9 4.7L12 14.2 8 16.8l.9-4.7L5.5 9l4.6-1.4z"/></svg></div>
-          <h3>Trợ giảng AI cạnh mục lục</h3>
-          <p>Trả lời theo cảnh đang học, hiển thị được công thức. Groq và NVIDIA đều có gói free không cần thẻ.</p>
+      </div>
+
+      <!-- Bento 4: Zero Database Local Storage (Span 4) -->
+      <div class="bento-card col-span-4">
+        <div>
+          <div class="bento-icon">
+            <svg class="icon" viewBox="0 0 24 24"><rect width="18" height="18" x="3" y="3" rx="2"></rect><path d="m9 12 2 2 4-4"></path></svg>
+          </div>
+          <h3 class="bento-title" data-i18n="bento4Title">Zero Cloud Database</h3>
+          <p class="bento-desc" data-i18n="bento4Desc">
+            Lessons live as portable, human-readable JSON files in your local data directory. Atomic file-system writes (.tmp -> rename) guarantee zero data loss.
+          </p>
+        </div>
+      </div>
+
+      <!-- Bento 5: Universal AI Adapter (Span 4) -->
+      <div class="bento-card col-span-4">
+        <div>
+          <div class="bento-icon emerald">
+            <svg class="icon" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"></circle><path d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20"></path><path d="M2 12h20"></path></svg>
+          </div>
+          <h3 class="bento-title" data-i18n="bento5Title">Universal LLM Engine</h3>
+          <p class="bento-desc" data-i18n="bento5Desc">
+            Zero vendor lock-in. Connect Token Harbor (DeepSeek V3 Free), Groq Cloud, NVIDIA NIM, or your local Antigravity CLI with smart token-budget learning.
+          </p>
         </div>
       </div>
     </div>
-  </section>
+  </div>
+</section>
 
-  <section class="section alt" id="cach-dung">
-    <div class="wrap">
-      <p class="eyebrow">Cách dùng</p>
-      <h2 class="sec">Từ tải về tới lớp học trong 3 bước</h2>
-      <p class="sub">Không cài đặt lòng vòng: script tự kiểm tra Node, tải ffmpeg, dựng Python riêng và mở trình duyệt.</p>
-      <div class="steps">
-        <div class="step"><h3>Tải và chạy 1 chạm</h3><p>Giải nén rồi nhấp đúp <code>run.bat</code> (Windows) hoặc <code>./run.sh</code> (macOS/Linux). App mở tại <code>localhost:3000</code>.</p></div>
-        <div class="step"><h3>Dán key, sinh bài</h3><p>Mở <code>/setup</code> dán key Groq hoặc NVIDIA, sang <code>/studio</code> nhập chủ đề, môn, lớp và số cảnh.</p></div>
-        <div class="step"><h3>Phát và mang đi</h3><p>Mở bài tại <code>/lesson</code>, tua và lặp đoạn cần dạy, rồi xuất HTML gửi học sinh.</p></div>
-      </div>
+<!-- Netlify Signature Showcase: Workflow & Platform (From Image m01936) -->
+<section id="workflow" class="netlify-cards-section gsap-reveal">
+  <div class="container">
+    <div class="section-header">
+      <span class="section-eyebrow" data-i18n="workEyebrow">Pipelined Workflow</span>
+      <h2 class="section-title" data-i18n="workTitle">From Raw Material to Classroom in Seconds</h2>
+      <p class="section-subtitle" data-i18n="workSubtitle">How EdusGPT transforms any curriculum into interactive multi-sensory lessons.</p>
     </div>
-  </section>
 
-  <section class="section" id="phim-tat">
-    <div class="wrap">
-      <p class="eyebrow">Trình phát</p>
-      <h2 class="sec">Phím tắt thuộc là dạy nhanh gấp đôi</h2>
-      <p class="sub">Mọi thao tác tua đều chạy trên timeline thật của bài giảng.</p>
-      <div class="keys">
-        <kbd>Space / K</kbd><kbd>← / → ±5s</kbd><kbd>J / L ±10s</kbd><kbd>, / . từng khung</kbd><kbd>[ ] \ lặp A→B</kbd><kbd>0–9 nhảy %</kbd><kbd>− / + tốc độ</kbd><kbd>F toàn màn hình</kbd>
-      </div>
-    </div>
-  </section>
-
-  <section class="section alt" id="yeu-cau">
-    <div class="wrap">
-      <p class="eyebrow">Yêu cầu</p>
-      <h2 class="sec">Nhẹ hơn bạn tưởng</h2>
-      <div class="grid2">
-        <div class="card"><h3>Windows</h3><p>Nhấp đúp <b>run.bat</b> — tự lo Node 22+, <b>npm install</b>, <b>.env</b>, ffmpeg, Python + giọng Việt, giải phóng cổng 3000.</p></div>
-        <div class="card"><h3>macOS / Linux</h3><p>Chạy <b>./run.sh</b> với đúng các bước đó. Không Docker, không cài gì lên máy ngoài thư mục dự án.</p></div>
-      </div>
-    </div>
-  </section>
-
-  <section class="section" id="tai">
-    <div class="wrap">
-      <div class="dl">
-        <h2>Mã nguồn mở trên GitHub</h2>
-        <p>Clone repo về, nhấp đúp <b>run.bat</b> là dạy được ngay. Mọi thứ chạy trên máy bạn, không Docker.</p>
-        <div class="row">
-          <a class="btn btn-white" href="https://github.com/npdk1/EdusGPT" target="_blank" rel="noopener"><svg class="gh-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 .297c-6.63 0-12 5.373-12 12 0 5.303 3.438 9.8 8.205 11.385.6.113.82-.258.82-.577 0-.285-.01-1.04-.015-2.04-3.338.724-4.042-1.61-4.042-1.61C4.422 18.07 3.633 17.7 3.633 17.7c-1.087-.744.084-.729.084-.729 1.205.084 1.838 1.236 1.838 1.236 1.07 1.835 2.809 1.305 3.495.998.108-.776.417-1.305.76-1.605-2.665-.3-5.466-1.332-5.466-5.93 0-1.31.465-2.38 1.235-3.22-.135-.303-.54-1.523.105-3.176 0 0 1.005-.322 3.3 1.23.96-.267 1.98-.399 3-.405 1.02.006 2.04.138 3 .405 2.28-1.552 3.285-1.23 3.285-1.23.645 1.653.24 2.873.12 3.176.765.84 1.23 1.91 1.23 3.22 0 4.61-2.805 5.625-5.475 5.92.42.36.81 1.096.81 2.22 0 1.606-.015 2.896-.015 3.286 0 .315.21.69.825.57C20.565 22.092 24 17.592 24 12.297c0-6.627-5.373-12-12-12"/></svg>npdk1/EdusGPT</a>
+    <div class="flow-stage-row">
+      <!-- Netlify Card 1: WORKFLOW (Image m01936 Top Block) -->
+      <div class="netlify-feature-card">
+      <div class="netlify-grid">
+        <div class="netlify-vector-wrapper">
+          <svg class="netlify-vector-art" viewBox="0 0 540 380" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <defs>
+              <filter id="glow-cyan" x="-20%" y="-20%" width="140%" height="140%">
+                <feGaussianBlur stdDeviation="5" result="blur" />
+                <feComposite in="SourceGraphic" in2="blur" operator="over" />
+              </filter>
+            </defs>
+            <!-- Circuit traces -->
+            <path d="M 120 190 C 120 100, 240 70, 310 70" stroke="#00dc82" stroke-width="2" stroke-linecap="round" stroke-dasharray="4 4" opacity="0.6"/>
+            <path d="M 390 140 C 440 140, 460 210, 410 260" stroke="#38bdf8" stroke-width="2" stroke-linecap="round" opacity="0.5"/>
+            <path d="M 190 310 C 230 350, 320 340, 360 290" stroke="#00dc82" stroke-width="2" stroke-linecap="round" opacity="0.4"/>
+            <!-- Editor window -->
+            <rect x="80" y="50" width="310" height="240" rx="16" stroke="#00dc82" stroke-width="2.2" fill="#041215" fill-opacity="0.9" filter="url(#glow-cyan)"/>
+            <path d="M 80 100 L 390 100" stroke="#00dc82" stroke-width="1.5" opacity="0.4"/>
+            <text x="110" y="82" fill="#00dc82" font-family="monospace" font-size="18" font-weight="bold">&lt;/&gt;</text>
+            <circle cx="340" cy="76" r="4" fill="#00dc82" opacity="0.6"/>
+            <circle cx="355" cy="76" r="4" fill="#00dc82" opacity="0.6"/>
+            <circle cx="370" cy="76" r="4" fill="#00dc82" opacity="0.6"/>
+            <!-- Code lines -->
+            <line x1="110" y1="130" x2="270" y2="130" stroke="#38bdf8" stroke-width="3" stroke-linecap="round" opacity="0.8"/>
+            <line x1="110" y1="155" x2="330" y2="155" stroke="#00dc82" stroke-width="2.5" stroke-linecap="round" opacity="0.5"/>
+            <line x1="110" y1="180" x2="210" y2="180" stroke="#00dc82" stroke-width="2.5" stroke-linecap="round" opacity="0.5"/>
+            <line x1="110" y1="205" x2="290" y2="205" stroke="#38bdf8" stroke-width="2.5" stroke-linecap="round" opacity="0.7"/>
+            <line x1="110" y1="230" x2="240" y2="230" stroke="#00dc82" stroke-width="2.5" stroke-linecap="round" opacity="0.4"/>
+            <line x1="110" y1="255" x2="190" y2="255" stroke="#00dc82" stroke-width="2.5" stroke-linecap="round" opacity="0.3"/>
+            <!-- Floating node: AI Planner -->
+            <g transform="translate(360, 30)">
+              <rect width="64" height="64" rx="14" fill="#061c20" stroke="#38bdf8" stroke-width="2" />
+              <path d="M 22 32 C 22 24, 42 24, 42 32 C 42 40, 22 40, 22 48" stroke="#38bdf8" stroke-width="2" stroke-linecap="round"/>
+              <circle cx="32" cy="20" r="3" fill="#38bdf8"/>
+              <circle cx="32" cy="48" r="2.5" fill="#00dc82"/>
+            </g>
+            <!-- Floating node: TTS Audio Wave -->
+            <g transform="translate(40, 240)">
+              <rect width="60" height="60" rx="14" fill="#061c20" stroke="#00dc82" stroke-width="2" />
+              <path d="M 18 30 L 24 30 L 30 20 L 36 40 L 42 30 L 46 30" stroke="#00dc82" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+            </g>
+            <!-- Floating node: HTML package -->
+            <g transform="translate(410, 160)">
+              <rect width="72" height="72" rx="14" fill="#061c20" stroke="#00dc82" stroke-width="2" />
+              <rect x="22" y="22" width="28" height="28" rx="6" stroke="#38bdf8" stroke-width="2" stroke-dasharray="2 2" fill="none"/>
+              <text x="25" y="40" fill="#38bdf8" font-family="monospace" font-size="10" font-weight="bold">HTML</text>
+            </g>
+          </svg>
         </div>
-        <p class="fine">github.com/npdk1/EdusGPT · MIT · chạy tại localhost:3000</p>
+
+        <div class="netlify-content-side">
+          <span class="netlify-eyebrow" data-i18n="net1Eyebrow">WORKFLOW</span>
+          <h3 class="netlify-title" data-i18n="net1Title">Drop your syllabus. Get a private audio lecture.</h3>
+          <p class="netlify-desc" data-i18n="net1Desc">
+            Paste an exam topic or upload lecture slides &amp; textbook PDFs. EdusGPT structures the material into progressive visual slides and narrates them with clear, human-like voice explanations.
+          </p>
+          <div class="netlify-stack">
+            <div class="netlify-stack-item">
+              <span data-i18n="net1Item1">Turn dry lecture notes into engaging multi-slide presentations</span>
+            </div>
+            <div class="netlify-stack-item">
+              <span data-i18n="net1Item2">Listen while looking at clean LaTeX equations and diagrams</span>
+            </div>
+            <div class="netlify-stack-item">
+              <span data-i18n="net1Item3">Auto-repairs legacy Vietnamese PDF fonts so you never miss a formula</span>
+            </div>
+            <div class="netlify-stack-item">
+              <span data-i18n="net1Item4">Scrub backward anytime to re-listen to tricky concepts at 60fps</span>
+            </div>
+          </div>
+          <a href="https://github.com/npdk1/EdusGPT" target="_blank" rel="noreferrer" class="netlify-action-link">
+            <span data-i18n="net1Link">Explore the study workflow on GitHub</span> ↗
+          </a>
+        </div>
       </div>
     </div>
-  </section>
-</main>
 
-<footer>
-  <div class="wrap foot">
-    <span>© <span id="year">2026</span> EdusGPT — soạn bài giảng AI cho lớp học.</span>
-    <span><a href="https://github.com/npdk1/EdusGPT" target="_blank" rel="noopener">GitHub</a> · Mã nguồn mở MIT</span>
+    <!-- Arrow Divider: Left to Right Flow -->
+    <div class="flow-arrow-divider" aria-hidden="true">
+      <div class="flow-arrow-circle" title="Automated pipeline">
+        <svg class="flow-arrow-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round">
+          <line x1="4" y1="12" x2="20" y2="12"></line>
+          <polyline points="13 5 20 12 13 19"></polyline>
+        </svg>
+      </div>
+    </div>
+
+    <!-- Netlify Card 2: PLATFORM (Image m01936 Bottom Block) -->
+    <div class="netlify-feature-card">
+      <div class="netlify-grid reversed">
+        <div class="netlify-vector-wrapper">
+          <svg class="netlify-vector-art" viewBox="0 0 540 380" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <defs>
+              <filter id="glow-cyan-2" x="-20%" y="-20%" width="140%" height="140%">
+                <feGaussianBlur stdDeviation="5" result="blur" />
+                <feComposite in="SourceGraphic" in2="blur" operator="over" />
+              </filter>
+            </defs>
+            <!-- Browser window wireframe -->
+            <rect x="50" y="50" width="410" height="260" rx="18" stroke="#00dc82" stroke-width="2.2" fill="#041215" fill-opacity="0.9" filter="url(#glow-cyan-2)"/>
+            <circle cx="80" cy="74" r="5" stroke="#00dc82" stroke-width="1.8" fill="none"/>
+            <circle cx="98" cy="74" r="5" stroke="#00dc82" stroke-width="1.8" fill="none"/>
+            <circle cx="116" cy="74" r="5" stroke="#00dc82" stroke-width="1.8" fill="none"/>
+            <line x1="50" y1="96" x2="460" y2="96" stroke="#00dc82" stroke-width="1.5" opacity="0.4"/>
+            <!-- Chart box inside browser -->
+            <rect x="80" y="120" width="160" height="100" rx="10" stroke="#38bdf8" stroke-width="1.8" fill="#061c20" fill-opacity="0.8"/>
+            <polyline points="96,190 120,170 145,178 175,145 200,150 224,135" stroke="#00dc82" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+            <circle cx="96" cy="190" r="3.5" fill="#38bdf8"/>
+            <circle cx="120" cy="170" r="3.5" fill="#38bdf8"/>
+            <circle cx="145" cy="178" r="3.5" fill="#38bdf8"/>
+            <circle cx="175" cy="145" r="3.5" fill="#38bdf8"/>
+            <circle cx="200" cy="150" r="3.5" fill="#38bdf8"/>
+            <circle cx="224" cy="135" r="4" fill="#00dc82"/>
+            <!-- Keyhole privacy shield -->
+            <rect x="270" y="115" width="80" height="90" rx="10" stroke="#00dc82" stroke-width="1.8" fill="#061c20" fill-opacity="0.8"/>
+            <circle cx="310" cy="145" r="9" stroke="#38bdf8" stroke-width="2" fill="none"/>
+            <path d="M 307 151 L 305 172 L 315 172 L 313 151" stroke="#38bdf8" stroke-width="2" fill="#061c20"/>
+            <!-- Formula badge -->
+            <rect x="365" y="130" width="75" height="75" rx="10" stroke="#38bdf8" stroke-width="1.8" fill="#061c20" fill-opacity="0.8"/>
+            <text x="375" y="172" fill="#00dc82" font-family="serif" font-size="19" font-style="italic">E=mc²</text>
+            <!-- Interactive Scrubber & Cable Plug -->
+            <g transform="translate(190, 235)">
+              <rect width="130" height="50" rx="10" stroke="#00dc82" stroke-width="2" fill="#061c20"/>
+              <line x1="210" y1="260" x2="280" y2="260" stroke="#38bdf8" stroke-width="3" stroke-linecap="round"/>
+              <circle cx="250" cy="260" r="7" fill="#00dc82"/>
+            </g>
+            <path d="M 300 285 C 300 320, 360 340, 390 310 C 420 280, 430 250, 440 230" stroke="#00dc82" stroke-width="2.2" stroke-linecap="round" fill="none"/>
+            <rect x="370" y="270" width="18" height="24" rx="4" stroke="#38bdf8" stroke-width="2" fill="#061c20"/>
+            <line x1="376" y1="264" x2="376" y2="270" stroke="#38bdf8" stroke-width="2"/>
+            <line x1="382" y1="264" x2="382" y2="270" stroke="#38bdf8" stroke-width="2"/>
+          </svg>
+        </div>
+
+        <div class="netlify-content-side">
+          <span class="netlify-eyebrow" data-i18n="net2Eyebrow">PLATFORM</span>
+          <h3 class="netlify-title" data-i18n="net2Title">Test your recall. Master the material offline.</h3>
+          <p class="netlify-desc" data-i18n="net2Desc">
+            Active learning beats passive reading. Reinforce what you just listened to with built-in checkpoint quizzes and 3D spaced-repetition flashcards.
+          </p>
+          <div class="netlify-stack">
+            <div class="netlify-stack-item">
+              <span data-i18n="net2Item1">Self-paced checkpoint quizzes right in the lesson timeline</span>
+            </div>
+            <div class="netlify-stack-item">
+              <span data-i18n="net2Item2">Full exam simulator with 5-column question palette &amp; instant grading</span>
+            </div>
+            <div class="netlify-stack-item">
+              <span data-i18n="net2Item3">3D flip flashcards with audio pronunciation and keyboard shortcuts</span>
+            </div>
+            <div class="netlify-stack-item">
+              <span data-i18n="net2Item4">Export to single offline HTML: study on your laptop or phone anywhere</span>
+            </div>
+          </div>
+          <a href="https://github.com/npdk1/EdusGPT" target="_blank" rel="noreferrer" class="netlify-action-link">
+            <span data-i18n="net2Link">Explore the study platform on GitHub</span> ↗
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+</section>
+
+<!-- Interactive Study Tools: Exam Simulator & 3D Flashcards (Netlify Wireframe Style) -->
+<section id="features" class="netlify-cards-section gsap-reveal">
+  <div class="container">
+    <div class="section-header">
+      <span class="section-eyebrow" data-i18n="featSectionEyebrow">Active Recall &amp; Mastery</span>
+      <h2 class="section-title" data-i18n="featSectionTitle">Practice Makes Perfect. Test Yourself In-Place.</h2>
+      <p class="section-subtitle" data-i18n="featSectionSubtitle">Move away from passive reading. Solidify comprehension through real-time exam simulations and 3D spaced repetition flashcards.</p>
+    </div>
+
+    <div class="flow-stage-row">
+      <!-- Feature Card 1: EXAM SIMULATOR (5-Column Grid Vector Art) -->
+      <div class="netlify-feature-card">
+      <div class="netlify-grid">
+        <div class="netlify-vector-wrapper">
+          <svg class="netlify-vector-art" viewBox="0 0 540 380" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <defs>
+              <filter id="glow-quiz" x="-20%" y="-20%" width="140%" height="140%">
+                <feGaussianBlur stdDeviation="5" result="blur" />
+                <feComposite in="SourceGraphic" in2="blur" operator="over" />
+              </filter>
+            </defs>
+            <!-- Ambient Circuit Traces -->
+            <path d="M 60 40 L 60 15 C 60 8, 120 8, 120 15 L 120 40" stroke="#00dc82" stroke-width="1.8" stroke-dasharray="3 3" opacity="0.4"/>
+            <path d="M 440 340 C 470 370, 500 340, 520 280 L 520 120" stroke="#38bdf8" stroke-width="1.8" opacity="0.4"/>
+            <circle cx="520" cy="120" r="4" fill="#38bdf8"/>
+
+            <!-- Main Exam Browser Window -->
+            <rect x="35" y="35" width="470" height="310" rx="16" stroke="#00dc82" stroke-width="2.2" fill="#041215" fill-opacity="0.95" filter="url(#glow-quiz)"/>
+            
+            <!-- Window Header -->
+            <circle cx="55" cy="55" r="4.5" stroke="#00dc82" stroke-width="1.8" fill="none"/>
+            <circle cx="69" cy="55" r="4.5" stroke="#00dc82" stroke-width="1.8" fill="none"/>
+            <circle cx="83" cy="55" r="4.5" stroke="#00dc82" stroke-width="1.8" fill="none"/>
+            <line x1="35" y1="75" x2="505" y2="75" stroke="#00dc82" stroke-width="1.5" opacity="0.35"/>
+            <text x="105" y="59" fill="#38bdf8" font-family="monospace" font-size="10.5" font-weight="bold" letter-spacing="1">EXAM SIMULATOR // 5-COLUMN PALETTE</text>
+
+            <!-- Left Side: Active Question & Multiple Choice Options -->
+            <rect x="55" y="92" width="100" height="22" rx="6" stroke="#38bdf8" stroke-width="1.5" fill="#061c20"/>
+            <text x="65" y="107" fill="#38bdf8" font-family="monospace" font-size="10" font-weight="bold">QUESTION 07</text>
+
+            <!-- Question stem lines -->
+            <line x1="55" y1="128" x2="275" y2="128" stroke="#ffffff" stroke-width="2.5" stroke-linecap="round" opacity="0.9"/>
+            <line x1="55" y1="144" x2="235" y2="144" stroke="#ffffff" stroke-width="2" stroke-linecap="round" opacity="0.65"/>
+
+            <!-- Choice A -->
+            <rect x="55" y="165" width="225" height="30" rx="7" stroke="rgba(255,255,255,0.15)" stroke-width="1.2" fill="#06161b"/>
+            <circle cx="70" cy="180" r="6" stroke="rgba(255,255,255,0.3)" stroke-width="1.5" fill="none"/>
+            <text x="68" y="183" fill="rgba(255,255,255,0.6)" font-family="sans-serif" font-size="8.5" font-weight="bold">A</text>
+            <line x1="88" y1="180" x2="240" y2="180" stroke="rgba(255,255,255,0.4)" stroke-width="2" stroke-linecap="round"/>
+
+            <!-- Choice B (Correct & Selected) -->
+            <rect x="55" y="203" width="225" height="30" rx="7" stroke="#00dc82" stroke-width="2" fill="rgba(0,220,130,0.15)"/>
+            <circle cx="70" cy="218" r="6.5" fill="#00dc82"/>
+            <path d="M 67 218 L 69.5 220.5 L 73.5 215.5" stroke="#041215" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+            <line x1="88" y1="218" x2="255" y2="218" stroke="#00dc82" stroke-width="2.2" stroke-linecap="round"/>
+
+            <!-- Choice C -->
+            <rect x="55" y="241" width="225" height="30" rx="7" stroke="rgba(255,255,255,0.15)" stroke-width="1.2" fill="#06161b"/>
+            <circle cx="70" cy="256" r="6" stroke="rgba(255,255,255,0.3)" stroke-width="1.5" fill="none"/>
+            <text x="68" y="259" fill="rgba(255,255,255,0.6)" font-family="sans-serif" font-size="8.5" font-weight="bold">C</text>
+            <line x1="88" y1="256" x2="210" y2="256" stroke="rgba(255,255,255,0.4)" stroke-width="2" stroke-linecap="round"/>
+
+            <!-- Choice D -->
+            <rect x="55" y="279" width="225" height="30" rx="7" stroke="rgba(255,255,255,0.15)" stroke-width="1.2" fill="#06161b"/>
+            <circle cx="70" cy="294" r="6" stroke="rgba(255,255,255,0.3)" stroke-width="1.5" fill="none"/>
+            <text x="68" y="297" fill="rgba(255,255,255,0.6)" font-family="sans-serif" font-size="8.5" font-weight="bold">D</text>
+            <line x1="88" y1="294" x2="230" y2="294" stroke="rgba(255,255,255,0.4)" stroke-width="2" stroke-linecap="round"/>
+
+            <!-- Right Side: 5-Column Question Grid -->
+            <g transform="translate(305, 92)">
+              <rect width="180" height="235" rx="10" stroke="#38bdf8" stroke-width="1.6" fill="#061c20" fill-opacity="0.9"/>
+              <text x="14" y="24" fill="#38bdf8" font-family="monospace" font-size="10" font-weight="bold" letter-spacing="1">QUESTION GRID</text>
+              <rect x="122" y="12" width="46" height="18" rx="5" fill="rgba(0,220,130,0.2)" stroke="#00dc82" stroke-width="1"/>
+              <text x="129" y="24" fill="#00dc82" font-family="monospace" font-size="9" font-weight="bold">10/15</text>
+
+              <!-- Grid rows (5 cols x 3 rows = 15 tiles) -->
+              <!-- Row 1 -->
+              <rect x="14" y="44" width="26" height="26" rx="5" fill="#00dc82"/><text x="23" y="60" fill="#041215" font-family="monospace" font-size="10" font-weight="bold">1</text>
+              <rect x="46" y="44" width="26" height="26" rx="5" fill="#00dc82"/><text x="55" y="60" fill="#041215" font-family="monospace" font-size="10" font-weight="bold">2</text>
+              <rect x="78" y="44" width="26" height="26" rx="5" fill="#00dc82"/><text x="87" y="60" fill="#041215" font-family="monospace" font-size="10" font-weight="bold">3</text>
+              <rect x="110" y="44" width="26" height="26" rx="5" fill="#00dc82"/><text x="119" y="60" fill="#041215" font-family="monospace" font-size="10" font-weight="bold">4</text>
+              <rect x="142" y="44" width="26" height="26" rx="5" stroke="#ef4444" stroke-width="1.5" fill="rgba(239,68,68,0.2)"/><text x="151" y="60" fill="#ef4444" font-family="monospace" font-size="10" font-weight="bold">5</text>
+
+              <!-- Row 2 -->
+              <rect x="14" y="76" width="26" height="26" rx="5" fill="#00dc82"/><text x="23" y="92" fill="#041215" font-family="monospace" font-size="10" font-weight="bold">6</text>
+              <rect x="46" y="76" width="26" height="26" rx="5" fill="rgba(56,189,248,0.35)" stroke="#38bdf8" stroke-width="2.4"/>
+              <text x="55" y="92" fill="#38bdf8" font-family="monospace" font-size="10" font-weight="bold">7</text>
+              <rect x="78" y="76" width="26" height="26" rx="5" fill="#00dc82"/><text x="87" y="92" fill="#041215" font-family="monospace" font-size="10" font-weight="bold">8</text>
+              <rect x="110" y="76" width="26" height="26" rx="5" fill="#00dc82"/><text x="119" y="92" fill="#041215" font-family="monospace" font-size="10" font-weight="bold">9</text>
+              <rect x="142" y="76" width="26" height="26" rx="5" fill="#00dc82"/><text x="148" y="92" fill="#041215" font-family="monospace" font-size="9" font-weight="bold">10</text>
+
+              <!-- Row 3 (Pending) -->
+              <rect x="14" y="108" width="26" height="26" rx="5" stroke="rgba(255,255,255,0.2)" stroke-width="1.2" fill="#041215"/><text x="20" y="124" fill="rgba(255,255,255,0.4)" font-family="monospace" font-size="9">11</text>
+              <rect x="46" y="108" width="26" height="26" rx="5" stroke="rgba(255,255,255,0.2)" stroke-width="1.2" fill="#041215"/><text x="52" y="124" fill="rgba(255,255,255,0.4)" font-family="monospace" font-size="9">12</text>
+              <rect x="78" y="108" width="26" height="26" rx="5" stroke="rgba(255,255,255,0.2)" stroke-width="1.2" fill="#041215"/><text x="84" y="124" fill="rgba(255,255,255,0.4)" font-family="monospace" font-size="9">13</text>
+              <rect x="110" y="108" width="26" height="26" rx="5" stroke="rgba(255,255,255,0.2)" stroke-width="1.2" fill="#041215"/><text x="116" y="124" fill="rgba(255,255,255,0.4)" font-family="monospace" font-size="9">14</text>
+              <rect x="142" y="108" width="26" height="26" rx="5" stroke="rgba(255,255,255,0.2)" stroke-width="1.2" fill="#041215"/><text x="148" y="124" fill="rgba(255,255,255,0.4)" font-family="monospace" font-size="9">15</text>
+
+              <!-- Submit button wireframe -->
+              <rect x="14" y="152" width="154" height="34" rx="7" fill="#00dc82" stroke="#00dc82" stroke-width="1.5"/>
+              <text x="36" y="173" fill="#041215" font-family="monospace" font-size="10.5" font-weight="bold" letter-spacing="1">FINISH &amp; SCORE</text>
+              <text x="24" y="206" fill="rgba(255,255,255,0.5)" font-family="monospace" font-size="8.5">TIMER: 14:28 REMAINING</text>
+            </g>
+
+            <!-- Top floating status badge -->
+            <g transform="translate(385, 12)">
+              <rect width="105" height="32" rx="8" fill="#061c20" stroke="#00dc82" stroke-width="1.8"/>
+              <circle cx="16" cy="16" r="4" fill="#00dc82"/>
+              <text x="26" y="20" fill="#00dc82" font-family="monospace" font-size="9.5" font-weight="bold">PASS 93.3%</text>
+            </g>
+          </svg>
+        </div>
+
+        <div class="netlify-content-side">
+          <span class="netlify-eyebrow" data-i18n="feat1Eyebrow">Interactive Examination</span>
+          <h3 class="netlify-title" data-i18n="feat1Title">Dedicated quiz practice with live question palette</h3>
+          <p class="netlify-desc" data-i18n="feat1Desc">
+            Turn passive listening into active recall. Every lesson generates comprehensive checkpoints and closing test banks. A dedicated two-column test environment lets students freely jump between questions, highlights answered numbers, and grades with green/red feedback plus detailed explanations.
+          </p>
+          <div class="netlify-stack">
+            <div class="netlify-stack-item">
+              <span data-i18n="feat1P1">5-column interactive question palette with instant smooth jump</span>
+            </div>
+            <div class="netlify-stack-item">
+              <span data-i18n="feat1P2">Blank &amp; halfway submission support with smart confirmation dialog</span>
+            </div>
+            <div class="netlify-stack-item">
+              <span data-i18n="feat1P3">Instant scoring: correct answers turn green, errors turn red with full reasoning</span>
+            </div>
+          </div>
+          <a href="https://github.com/npdk1/EdusGPT" target="_blank" rel="noreferrer" class="netlify-action-link">
+            <span data-i18n="feat1Link">Try an interactive exam</span> ↗
+          </a>
+        </div>
+      </div>
+    </div>
+
+    <!-- Arrow Divider: Left to Right Flow -->
+    <div class="flow-arrow-divider" aria-hidden="true">
+      <div class="flow-arrow-circle" title="Exam practice to flashcard recall">
+        <svg class="flow-arrow-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round">
+          <line x1="4" y1="12" x2="20" y2="12"></line>
+          <polyline points="13 5 20 12 13 19"></polyline>
+        </svg>
+      </div>
+    </div>
+
+    <!-- Feature Card 2: 3D FLASHCARDS (Active Recall Vector Art) -->
+    <div class="netlify-feature-card">
+      <div class="netlify-grid reversed">
+        <div class="netlify-vector-wrapper">
+          <svg class="netlify-vector-art" viewBox="0 0 540 380" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <defs>
+              <filter id="glow-flashcard" x="-20%" y="-20%" width="140%" height="140%">
+                <feGaussianBlur stdDeviation="5" result="blur" />
+                <feComposite in="SourceGraphic" in2="blur" operator="over" />
+              </filter>
+            </defs>
+
+            <!-- Exponential Forgetting / Retention Curve in Background -->
+            <path d="M 60 310 Q 180 180 320 140 T 480 120" stroke="#00dc82" stroke-width="2.2" stroke-dasharray="4 4" opacity="0.35"/>
+            <path d="M 60 310 Q 140 280 240 290 T 480 300" stroke="#ef4444" stroke-width="1.5" stroke-dasharray="2 3" opacity="0.25"/>
+
+            <!-- Perspective Flipped Back Card -->
+            <g transform="rotate(-6 240 180)">
+              <rect x="70" y="65" width="370" height="215" rx="18" stroke="#38bdf8" stroke-width="1.6" stroke-dasharray="3 3" fill="#030d12" fill-opacity="0.8" opacity="0.5"/>
+            </g>
+
+            <!-- Main Front 3D Flashcard Stage -->
+            <rect x="75" y="45" width="390" height="235" rx="20" stroke="#00dc82" stroke-width="2.4" fill="#041215" fill-opacity="0.96" filter="url(#glow-flashcard)"/>
+
+            <!-- Card Top Bar: Deck Name & Pronunciation Speaker -->
+            <rect x="98" y="66" width="90" height="22" rx="6" stroke="#38bdf8" stroke-width="1.4" fill="#061c20"/>
+            <text x="108" y="81" fill="#38bdf8" font-family="monospace" font-size="10" font-weight="bold">CARD 04 / 24</text>
+            
+            <rect x="198" y="66" width="80" height="22" rx="6" stroke="rgba(255,255,255,0.18)" stroke-width="1" fill="#061c20"/>
+            <text x="207" y="81" fill="rgba(255,255,255,0.7)" font-family="monospace" font-size="9.5">PHYSICS XI</text>
+
+            <!-- Audio Wave Icon -->
+            <g transform="translate(415, 68)">
+              <path d="M 0 8 L 5 8 L 10 3 L 10 15 L 5 10 L 0 10 Z" fill="#00dc82"/>
+              <path d="M 13 5 C 16 7, 16 11, 13 13" stroke="#00dc82" stroke-width="1.6" stroke-linecap="round" fill="none"/>
+              <path d="M 16 2 C 21 5, 21 13, 16 16" stroke="#38bdf8" stroke-width="1.6" stroke-linecap="round" fill="none"/>
+            </g>
+
+            <!-- Front Card Content: Kinetic Energy LaTeX Formula -->
+            <text x="100" y="145" fill="#38bdf8" font-family="serif" font-size="34" font-style="italic" font-weight="bold">E<tspan font-size="20" dy="8">k</tspan><tspan dy="-8"> = </tspan><tspan font-size="28">½</tspan>mv²</text>
+            
+            <line x1="100" y1="172" x2="420" y2="172" stroke="#00dc82" stroke-width="2" opacity="0.6"/>
+            <text x="100" y="196" fill="#f8fafc" font-family="sans-serif" font-size="13" font-weight="600">Kinetic energy of a body of mass m with velocity v</text>
+            <text x="100" y="218" fill="rgba(255,255,255,0.5)" font-family="monospace" font-size="11">[SI Unit: Joule (J) = kg · m²/s²]</text>
+
+            <!-- 3D Card Flip Hint (center bottom of card) -->
+            <g transform="translate(230, 246)">
+              <circle cx="15" cy="15" r="13" fill="#061c20" stroke="#38bdf8" stroke-width="1.4"/>
+              <path d="M 8 15 C 8 11, 19 11, 21 15 M 19 13 L 22 15 L 20 18" stroke="#38bdf8" stroke-width="1.4" fill="none" stroke-linecap="round"/>
+            </g>
+
+            <!-- Keyboard Dock Buttons (Space / 1 / 2) -->
+            <g transform="translate(65, 302)">
+              <!-- Space Key -->
+              <rect x="0" y="0" width="135" height="38" rx="9" fill="#061c20" stroke="#38bdf8" stroke-width="2"/>
+              <rect x="10" y="8" width="46" height="22" rx="5" fill="rgba(56,189,248,0.2)"/>
+              <text x="17" y="23" fill="#38bdf8" font-family="monospace" font-size="10.5" font-weight="bold">SPACE</text>
+              <text x="64" y="23" fill="#ffffff" font-family="sans-serif" font-size="11" font-weight="bold">3D Flip</text>
+
+              <!-- Key 1 (Review) -->
+              <rect x="148" y="0" width="125" height="38" rx="9" fill="#061c20" stroke="#ef4444" stroke-width="1.8"/>
+              <rect x="158" y="8" width="24" height="22" rx="5" fill="rgba(239,68,68,0.2)"/>
+              <text x="166" y="23" fill="#ef4444" font-family="monospace" font-size="11" font-weight="bold">1</text>
+              <text x="190" y="23" fill="#ef4444" font-family="sans-serif" font-size="11" font-weight="bold">Again</text>
+
+              <!-- Key 2 (Mastered) -->
+              <rect x="285" y="0" width="125" height="38" rx="9" fill="#061c20" stroke="#00dc82" stroke-width="2"/>
+              <rect x="295" y="8" width="24" height="22" rx="5" fill="rgba(0,220,130,0.25)"/>
+              <text x="303" y="23" fill="#00dc82" font-family="monospace" font-size="11" font-weight="bold">2</text>
+              <text x="327" y="23" fill="#00dc82" font-family="sans-serif" font-size="11" font-weight="bold">Mastered</text>
+            </g>
+
+            <!-- Floating Spaced Repetition Indicator -->
+            <g transform="translate(390, 15)">
+              <rect width="115" height="38" rx="10" fill="#061c20" stroke="#00dc82" stroke-width="1.8"/>
+              <circle cx="18" cy="19" r="6" stroke="#00dc82" stroke-width="2" fill="none"/>
+              <path d="M 18 13 A 6 6 0 1 1 12 19" stroke="#38bdf8" stroke-width="2.2" fill="none"/>
+              <text x="32" y="23" fill="#00dc82" font-family="monospace" font-size="10.5" font-weight="bold">RECALL 96%</text>
+            </g>
+          </svg>
+        </div>
+
+        <div class="netlify-content-side">
+          <span class="netlify-eyebrow" data-i18n="feat2Eyebrow">Smart Flashcards</span>
+          <h3 class="netlify-title" data-i18n="feat2Title">Active recall flashcards with preview &amp; practice modes</h3>
+          <p class="netlify-desc" data-i18n="feat2Desc">
+            Study with dual-mode flashcards: browse the complete catalog of core definitions, formulas, and worked examples in preview mode with audio pronunciation, then launch interactive 3D flip cards with spaced repetition keyboard shortcuts.
+          </p>
+          <div class="netlify-stack">
+            <div class="netlify-stack-item">
+              <span data-i18n="feat2P1">Pre-reading catalog showing terms, LaTeX equations, and AI audio pronunciation</span>
+            </div>
+            <div class="netlify-stack-item">
+              <span data-i18n="feat2P2">3D flip animation: Space to flip, 1 to mark review, 2 to mark mastered</span>
+            </div>
+            <div class="netlify-stack-item">
+              <span data-i18n="feat2P3">Smart mastery report with one-click filter to drill unmastered cards</span>
+            </div>
+          </div>
+          <a href="https://github.com/npdk1/EdusGPT" target="_blank" rel="noreferrer" class="netlify-action-link">
+            <span data-i18n="feat2Link">Preview flashcard deck</span> ↗
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+</section>
+
+<!-- Comparison Table Section (Stripe / Vercel Style) -->
+<section id="comparison" class="compare-section gsap-reveal">
+  <div class="container">
+    <div class="section-header">
+      <span class="section-eyebrow" data-i18n="compEyebrow">Smart Study Comparison</span>
+      <h2 class="section-title" data-i18n="compTitle">Why Interactive Audio Lessons Beat Plain Chatbots</h2>
+      <p class="section-subtitle" data-i18n="compSubtitle">Conventional AI chatbots give you walls of text. Passive videos can't be interacted with. EdusGPT gives you the ultimate study cockpit.</p>
+    </div>
+
+    <div class="table-scroll-hint mobile-only">
+      <svg class="icon" style="width:14px;height:14px;" viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"></polyline></svg>
+      <span data-i18n="tableScrollHint">Swipe horizontally to compare</span>
+      <svg class="icon" style="width:14px;height:14px;" viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"></polyline></svg>
+    </div>
+
+    <div class="compare-table-wrapper">
+      <table class="compare-table">
+        <thead>
+          <tr>
+            <th data-i18n="colDim">Dimension</th>
+            <th class="col-highlight" data-i18n="colEdus">EdusGPT Interactive Deck</th>
+            <th data-i18n="colChatbot">Standard AI Chatbot (ChatGPT/Claude)</th>
+            <th data-i18n="colVideo">Passive Video / Slides PDF</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong data-i18n="compRow1">Study Format</strong></td>
+            <td class="td-highlight"><span class="table-badge-good" data-i18n="compR1C1">Multi-Sensory: Visual Slides + Voice + Subtitles</span></td>
+            <td><span class="table-badge-muted" data-i18n="compR1C2">Dense wall of text (high eye fatigue)</span></td>
+            <td><span class="table-badge-muted" data-i18n="compR1C3">Passive video or silent slides</span></td>
+          </tr>
+          <tr>
+            <td><strong data-i18n="compRow2">Memory Retention</strong></td>
+            <td class="td-highlight"><span class="table-badge-good" data-i18n="compR2C1">Active Recall: Checkpoint Quizzes + 3D Flashcards</span></td>
+            <td><span class="table-badge-muted" data-i18n="compR2C2">Passive reading (forget in 10 minutes)</span></td>
+            <td><span class="table-badge-muted" data-i18n="compR2C3">No built-in quizzes or flashcards</span></td>
+          </tr>
+          <tr>
+            <td><strong data-i18n="compRow3">Review &amp; Navigation</strong></td>
+            <td class="td-highlight"><span class="table-badge-good" data-i18n="compR3C1">60 FPS Scrubbing: Jump to any concept instantly</span></td>
+            <td><span class="table-badge-muted" data-i18n="compR3C2">Endless scrolling through chat history</span></td>
+            <td><span class="table-badge-muted" data-i18n="compR3C3">Clunky video seeking or page flipping</span></td>
+          </tr>
+          <tr>
+            <td><strong data-i18n="compRow4">Portability &amp; Focus</strong></td>
+            <td class="td-highlight"><span class="table-badge-good" data-i18n="compR4C1">1-File HTML: 100% Offline, Zero Distractions</span></td>
+            <td><span class="table-badge-muted" data-i18n="compR4C2">Requires constant internet &amp; account login</span></td>
+            <td><span class="table-badge-muted" data-i18n="compR4C3">Heavy files (50-300MB), no interactivity</span></td>
+          </tr>
+          <tr>
+            <td><strong data-i18n="compRow5">Cost &amp; Limits</strong></td>
+            <td class="td-highlight"><span class="table-badge-good" data-i18n="compR5C1">100% Free &amp; Local-First (Zero Cloud DB)</span></td>
+            <td><span class="table-badge-muted" data-i18n="compR5C2">Monthly subscription or strict rate limits</span></td>
+            <td><span class="table-badge-muted" data-i18n="compR5C3">Requires video production subscriptions</span></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</section>
+
+<!-- What Students Say Marquee Section (Stripe / 9router Style) -->
+<section id="testimonials" class="students-say-section gsap-reveal">
+  <div class="container">
+    <div class="section-header">
+      <span class="section-eyebrow" data-i18n="sayEyebrow">Community &amp; Social Proof</span>
+      <h2 class="section-title">
+        <span data-i18n="sayTitleMain">What Students</span> <span class="hero-gradient-text" data-i18n="sayTitleAccent">Say</span>
+      </h2>
+      <p class="section-subtitle" data-i18n="saySubtitle">Real students. Real self-learners. Zero wall of text.</p>
+    </div>
+  </div>
+
+  <div class="marquee-wall">
+    <!-- Row 1: Leftward Scrolling -->
+    <div class="marquee-row">
+      <div class="marquee-track marquee-track-left">
+        <!-- Card 1 -->
+        <div class="say-card">
+          <span class="say-quote-mark">”</span>
+          <p class="say-quote" data-i18n="sayQ1">The visual slides with synced neural voice and karaoke subtitles helped me master Physics in 15 minutes instead of struggling through 20 textbook pages.</p>
+          <div class="say-author">
+            <span class="say-handle" data-i18n="sayA1">@alex_m_cs</span>
+            <span class="say-role" data-i18n="sayR1">CS Undergrad</span>
+          </div>
+        </div>
+
+        <!-- Card 2 -->
+        <div class="say-card">
+          <span class="say-quote-mark">”</span>
+          <p class="say-quote" data-i18n="sayQ2">Dropped a 40-page PDF into EdusGPT and got an interactive deck with checkpoint quizzes. Exported single HTML file and studied offline at the library.</p>
+          <div class="say-author">
+            <span class="say-handle" data-i18n="sayA2">@sarah_k_bio</span>
+            <span class="say-role" data-i18n="sayR2">Pre-Med Student</span>
+          </div>
+        </div>
+
+        <!-- Card 3 -->
+        <div class="say-card">
+          <span class="say-quote-mark">”</span>
+          <p class="say-quote" data-i18n="sayQ3">The 3D Flashcards with AI pronunciation and Space/1/2 keyboard shortcuts make memorizing complex vocabulary effortless compared to plain Notion notes.</p>
+          <div class="say-author">
+            <span class="say-handle" data-i18n="sayA3">@kevin_l_ielts</span>
+            <span class="say-role" data-i18n="sayR3">Self-Taught Polyglot</span>
+          </div>
+        </div>
+
+        <!-- Card 4 -->
+        <div class="say-card">
+          <span class="say-quote-mark">”</span>
+          <p class="say-quote" data-i18n="sayQ4">Normal AI chatbots bury formulas in endless chat logs. EdusGPT's 60 FPS scrubber lets me jump straight to the algorithm slide in one second.</p>
+          <div class="say-author">
+            <span class="say-handle" data-i18n="sayA4">@david_t_swe</span>
+            <span class="say-role" data-i18n="sayR4">Junior Developer</span>
+          </div>
+        </div>
+
+        <!-- Card 5 -->
+        <div class="say-card">
+          <span class="say-quote-mark">”</span>
+          <p class="say-quote" data-i18n="sayQ5">The 5-column exam grid looks and feels like real university entrance test software. Instant green/red scoring with step-by-step reasoning.</p>
+          <div class="say-author">
+            <span class="say-handle" data-i18n="sayA5">@emily_w_senior</span>
+            <span class="say-role" data-i18n="sayR5">High School Senior</span>
+          </div>
+        </div>
+
+        <!-- Card 6 -->
+        <div class="say-card">
+          <span class="say-quote-mark">”</span>
+          <p class="say-quote" data-i18n="sayQ6">Love that it runs completely on my laptop with zero cloud DB. No message caps, no surprise subscriptions, just pure distraction-free learning.</p>
+          <div class="say-author">
+            <span class="say-handle" data-i18n="sayA6">@ryan_c_econ</span>
+            <span class="say-role" data-i18n="sayR6">Econ Major</span>
+          </div>
+        </div>
+
+        <!-- Duplicate Card 1-6 for seamless infinite loop -->
+        <div class="say-card">
+          <span class="say-quote-mark">”</span>
+          <p class="say-quote" data-i18n="sayQ1">The visual slides with synced neural voice and karaoke subtitles helped me master Physics in 15 minutes instead of struggling through 20 textbook pages.</p>
+          <div class="say-author">
+            <span class="say-handle" data-i18n="sayA1">@alex_m_cs</span>
+            <span class="say-role" data-i18n="sayR1">CS Undergrad</span>
+          </div>
+        </div>
+        <div class="say-card">
+          <span class="say-quote-mark">”</span>
+          <p class="say-quote" data-i18n="sayQ2">Dropped a 40-page PDF into EdusGPT and got an interactive deck with checkpoint quizzes. Exported single HTML file and studied offline at the library.</p>
+          <div class="say-author">
+            <span class="say-handle" data-i18n="sayA2">@sarah_k_bio</span>
+            <span class="say-role" data-i18n="sayR2">Pre-Med Student</span>
+          </div>
+        </div>
+        <div class="say-card">
+          <span class="say-quote-mark">”</span>
+          <p class="say-quote" data-i18n="sayQ3">The 3D Flashcards with AI pronunciation and Space/1/2 keyboard shortcuts make memorizing complex vocabulary effortless compared to plain Notion notes.</p>
+          <div class="say-author">
+            <span class="say-handle" data-i18n="sayA3">@kevin_l_ielts</span>
+            <span class="say-role" data-i18n="sayR3">Self-Taught Polyglot</span>
+          </div>
+        </div>
+        <div class="say-card">
+          <span class="say-quote-mark">”</span>
+          <p class="say-quote" data-i18n="sayQ4">Normal AI chatbots bury formulas in endless chat logs. EdusGPT's 60 FPS scrubber lets me jump straight to the algorithm slide in one second.</p>
+          <div class="say-author">
+            <span class="say-handle" data-i18n="sayA4">@david_t_swe</span>
+            <span class="say-role" data-i18n="sayR4">Junior Developer</span>
+          </div>
+        </div>
+        <div class="say-card">
+          <span class="say-quote-mark">”</span>
+          <p class="say-quote" data-i18n="sayQ5">The 5-column exam grid looks and feels like real university entrance test software. Instant green/red scoring with step-by-step reasoning.</p>
+          <div class="say-author">
+            <span class="say-handle" data-i18n="sayA5">@emily_w_senior</span>
+            <span class="say-role" data-i18n="sayR5">High School Senior</span>
+          </div>
+        </div>
+        <div class="say-card">
+          <span class="say-quote-mark">”</span>
+          <p class="say-quote" data-i18n="sayQ6">Love that it runs completely on my laptop with zero cloud DB. No message caps, no surprise subscriptions, just pure distraction-free learning.</p>
+          <div class="say-author">
+            <span class="say-handle" data-i18n="sayA6">@ryan_c_econ</span>
+            <span class="say-role" data-i18n="sayR6">Econ Major</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Row 2: Rightward Scrolling -->
+    <div class="marquee-row">
+      <div class="marquee-track marquee-track-right">
+        <!-- Card 7 -->
+        <div class="say-card">
+          <span class="say-quote-mark">”</span>
+          <p class="say-quote" data-i18n="sayQ7">Self-studying Calculus with crisp vector KaTeX math equations that never blur. The natural voice-over makes hard derivations actually click.</p>
+          <div class="say-author">
+            <span class="say-handle" data-i18n="sayA7">@marcus_v_math</span>
+            <span class="say-role" data-i18n="sayR7">Math Major</span>
+          </div>
+        </div>
+
+        <!-- Card 8 -->
+        <div class="say-card">
+          <span class="say-quote-mark">”</span>
+          <p class="say-quote" data-i18n="sayQ8">The closing mindmap recap branches every key takeaway into a clean tree. Perfect for a 2-minute refresher right before walking into an exam.</p>
+          <div class="say-author">
+            <span class="say-handle" data-i18n="sayA8">@claire_d_med</span>
+            <span class="say-role" data-i18n="sayR8">Medical Student</span>
+          </div>
+        </div>
+
+        <!-- Card 9 -->
+        <div class="say-card">
+          <span class="say-quote-mark">”</span>
+          <p class="say-quote" data-i18n="sayQ9">I used to juggle 5 tabs: PDF, YouTube, dictionary, and flashcard apps. EdusGPT unifies all of them into one distraction-free study deck.</p>
+          <div class="say-author">
+            <span class="say-handle" data-i18n="sayA9">@joshua_p_eng</span>
+            <span class="say-role" data-i18n="sayR9">Engineering Student</span>
+          </div>
+        </div>
+
+        <!-- Card 10 -->
+        <div class="say-card">
+          <span class="say-quote-mark">”</span>
+          <p class="say-quote" data-i18n="sayQ10">The AI pedagogy is surprisingly sound: hooks the concept first, breaks down the formula, then gates progress with quizzes. Not raw AI slop.</p>
+          <div class="say-author">
+            <span class="say-handle" data-i18n="sayA10">@olivia_b_ed</span>
+            <span class="say-role" data-i18n="sayR10">EdTech Researcher</span>
+          </div>
+        </div>
+
+        <!-- Card 11 -->
+        <div class="say-card">
+          <span class="say-quote-mark">”</span>
+          <p class="say-quote" data-i18n="sayQ11">Used free DeepSeek API to build a 10-lesson study series without spending a penny. Sent standalone HTML files to my study group and everyone loved it.</p>
+          <div class="say-author">
+            <span class="say-handle" data-i18n="sayA11">@nathan_k_columbia</span>
+            <span class="say-role" data-i18n="sayR11">Study Group Lead</span>
+          </div>
+        </div>
+
+        <!-- Card 12 -->
+        <div class="say-card">
+          <span class="say-quote-mark">”</span>
+          <p class="say-quote" data-i18n="sayQ12">Keyboard shortcuts for everything: J/K to skip slides, Space to pause, F for fullscreen. Feels like a refined pro tool rather than a toy.</p>
+          <div class="say-author">
+            <span class="say-handle" data-i18n="sayA12">@brian_s_gatech</span>
+            <span class="say-role" data-i18n="sayR12">CS Student</span>
+          </div>
+        </div>
+
+        <!-- Duplicate Card 7-12 for seamless infinite loop -->
+        <div class="say-card">
+          <span class="say-quote-mark">”</span>
+          <p class="say-quote" data-i18n="sayQ7">Self-studying Calculus with crisp vector KaTeX math equations that never blur. The natural voice-over makes hard derivations actually click.</p>
+          <div class="say-author">
+            <span class="say-handle" data-i18n="sayA7">@marcus_v_math</span>
+            <span class="say-role" data-i18n="sayR7">Math Major</span>
+          </div>
+        </div>
+        <div class="say-card">
+          <span class="say-quote-mark">”</span>
+          <p class="say-quote" data-i18n="sayQ8">The closing mindmap recap branches every key takeaway into a clean tree. Perfect for a 2-minute refresher right before walking into an exam.</p>
+          <div class="say-author">
+            <span class="say-handle" data-i18n="sayA8">@claire_d_med</span>
+            <span class="say-role" data-i18n="sayR8">Medical Student</span>
+          </div>
+        </div>
+        <div class="say-card">
+          <span class="say-quote-mark">”</span>
+          <p class="say-quote" data-i18n="sayQ9">I used to juggle 5 tabs: PDF, YouTube, dictionary, and flashcard apps. EdusGPT unifies all of them into one distraction-free study deck.</p>
+          <div class="say-author">
+            <span class="say-handle" data-i18n="sayA9">@joshua_p_eng</span>
+            <span class="say-role" data-i18n="sayR9">Engineering Student</span>
+          </div>
+        </div>
+        <div class="say-card">
+          <span class="say-quote-mark">”</span>
+          <p class="say-quote" data-i18n="sayQ10">The AI pedagogy is surprisingly sound: hooks the concept first, breaks down the formula, then gates progress with quizzes. Not raw AI slop.</p>
+          <div class="say-author">
+            <span class="say-handle" data-i18n="sayA10">@olivia_b_ed</span>
+            <span class="say-role" data-i18n="sayR10">EdTech Researcher</span>
+          </div>
+        </div>
+        <div class="say-card">
+          <span class="say-quote-mark">”</span>
+          <p class="say-quote" data-i18n="sayQ11">Used free DeepSeek API to build a 10-lesson study series without spending a penny. Sent standalone HTML files to my study group and everyone loved it.</p>
+          <div class="say-author">
+            <span class="say-handle" data-i18n="sayA11">@nathan_k_columbia</span>
+            <span class="say-role" data-i18n="sayR11">Study Group Lead</span>
+          </div>
+        </div>
+        <div class="say-card">
+          <span class="say-quote-mark">”</span>
+          <p class="say-quote" data-i18n="sayQ12">Keyboard shortcuts for everything: J/K to skip slides, Space to pause, F for fullscreen. Feels like a refined pro tool rather than a toy.</p>
+          <div class="say-author">
+            <span class="say-handle" data-i18n="sayA12">@brian_s_gatech</span>
+            <span class="say-role" data-i18n="sayR12">CS Student</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Interactive FAQ Accordion Section (Netlify Style) -->
+<section id="faq" class="faq-section gsap-reveal">
+  <div class="container">
+    <div class="section-header">
+      <span class="section-eyebrow" data-i18n="faqEyebrow">Frequently Asked Questions</span>
+      <h2 class="section-title" data-i18n="faqTitle">Everything You Need to Know</h2>
+      <p class="section-subtitle" data-i18n="faqSubtitle">Clear answers about local execution, data privacy, and standalone exports.</p>
+    </div>
+
+    <div class="faq-grid">
+      <!-- FAQ 1 -->
+      <div class="faq-item">
+        <button type="button" class="faq-question">
+          <span data-i18n="faq1Q">Does EdusGPT really run without a database or cloud account?</span>
+          <svg class="icon faq-chevron" viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"></polyline></svg>
+        </button>
+        <div class="faq-answer">
+          <p data-i18n="faq1A">Yes, 100%. EdusGPT is strictly local-first. All generated lessons are stored as atomic, human-readable JSON files directly in your computer's <code>data/courses/</code> folder. There is no PostgreSQL, no SQLite, no user tracking, and no external database required.</p>
+        </div>
+      </div>
+
+      <!-- FAQ 2 -->
+      <div class="faq-item">
+        <button type="button" class="faq-question">
+          <span data-i18n="faq2Q">Do I need an expensive dedicated GPU to run EdusGPT?</span>
+          <svg class="icon faq-chevron" viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"></polyline></svg>
+        </button>
+        <div class="faq-answer">
+          <p data-i18n="faq2A">No GPU is required! EdusGPT leverages cloud inference (such as DeepSeek-V3 via Token Harbor free tier, Groq, or NVIDIA) or local CPU-friendly models. Voice synthesis runs over Edge Neural TTS or lightweight CPU Piper models.</p>
+        </div>
+      </div>
+
+      <!-- FAQ 3 -->
+      <div class="faq-item">
+        <button type="button" class="faq-question">
+          <span data-i18n="faq3Q">How does the Standalone HTML export work offline?</span>
+          <svg class="icon faq-chevron" viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"></polyline></svg>
+        </button>
+        <div class="faq-answer">
+          <p data-i18n="faq3A">When you export to Standalone HTML, the server packs all slide layouts, GSAP timeline choreography, KaTeX math renderer, interactive quizzes, and neural narration audio into one single <code>.html</code> file. You can put it on a USB stick or email it, and it will play on any device without internet.</p>
+        </div>
+      </div>
+
+      <!-- FAQ 4 -->
+      <div class="faq-item">
+        <button type="button" class="faq-question">
+          <span data-i18n="faq4Q">Which AI providers and models can I use?</span>
+          <svg class="icon faq-chevron" viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"></polyline></svg>
+        </button>
+        <div class="faq-answer">
+          <p data-i18n="faq4A">EdusGPT supports Token Harbor (DeepSeek-V3 free tier), Groq Cloud (Llama 3.3 70B &amp; Qwen), NVIDIA NIM, Antigravity local CLI, and local Ollama endpoints. You can add or swap keys anytime from <code>/setup</code> in your browser.</p>
+        </div>
+      </div>
+
+      <!-- FAQ 5 -->
+      <div class="faq-item">
+        <button type="button" class="faq-question">
+          <span data-i18n="faq5Q">Can I upload Vietnamese textbook PDFs with older fonts?</span>
+          <svg class="icon faq-chevron" viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"></polyline></svg>
+        </button>
+        <div class="faq-answer">
+          <p data-i18n="faq5A">Yes! The extraction pipeline includes an automated encoding repair module (<code>vietnamese.ts</code>) that automatically converts legacy VNI-Times, TCVN3, and Unicode composite diacritics into standard UTF-8 text so formulas and Vietnamese tones are never corrupted.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- High-Impact Bottom CTA Banner (Stripe Radiant Glow) -->
+<section class="bottom-cta-section gsap-reveal">
+  <div class="container">
+    <div class="cta-banner">
+      <h2 class="cta-headline" data-i18n="ctaTitle">Ready to Study Without Walls of Text?</h2>
+      <p class="cta-lead" data-i18n="ctaLead">Free, open source, and local-first. No database, no accounts, and zero distractions.</p>
+      
+      <div class="hero-cta-group">
+        <a href="https://github.com/npdk1/EdusGPT" target="_blank" rel="noreferrer" class="btn-hero-primary">
+          <svg class="icon" viewBox="0 0 24 24"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
+          <span data-i18n="ctaBtnStart">Start Studying for Free</span>
+        </a>
+        <a href="https://github.com/npdk1/EdusGPT" target="_blank" rel="noreferrer" class="btn-hero-secondary">
+          <svg class="gh-mark" viewBox="0 0 24 24"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0 0 24 12c0-6.63-5.37-12-12-12Z"/></svg>
+          <span data-i18n="ctaBtnGithub">GitHub · Star Project</span>
+        </a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Footer -->
+<footer class="site-footer">
+  <div class="container">
+    <div class="footer-row">
+      <div class="brand-group">
+        <img src="logo.png" alt="EdusGPT Logo" class="brand-logo" style="width:26px; height:26px;" />
+        <span style="font-weight: 700; color: var(--text-main);">EdusGPT</span>
+        <span>· MIT License · Free &amp; Open Source</span>
+      </div>
+
+      <div class="footer-links">
+        <a href="https://github.com/npdk1/EdusGPT" target="_blank" rel="noreferrer" class="footer-link" data-i18n="footStudio">Studio</a>
+        <a href="https://github.com/npdk1/EdusGPT" target="_blank" rel="noreferrer" class="footer-link" data-i18n="footLibrary">Library</a>
+        <a href="https://github.com/npdk1/EdusGPT" target="_blank" rel="noreferrer" class="footer-link" data-i18n="footQuiz">Quiz</a>
+        <a href="https://github.com/npdk1/EdusGPT" target="_blank" rel="noreferrer" class="footer-link" data-i18n="footCards">Flashcards</a>
+        <a href="https://github.com/npdk1/EdusGPT" target="_blank" rel="noreferrer" class="footer-link">GitHub</a>
+      </div>
+    </div>
   </div>
 </footer>
+
 <script>
-document.getElementById('year').textContent = new Date().getFullYear();
-(function(){
-  var btn = document.getElementById('menuBtn'), nav = document.getElementById('navLinks');
-  btn.addEventListener('click', function(){
-    var open = nav.classList.toggle('open');
-    btn.setAttribute('aria-expanded', open ? 'true' : 'false');
+// --- Realtime i18n Dictionary (English default, Vietnamese on toggle) ---
+const I18N = {
+  en: {
+    navFeatures: "Features",
+    navCapabilities: "Capabilities",
+    navWorkflow: "Workflow",
+    navComparison: "Comparison",
+    navTestimonials: "Students",
+    navFaq: "FAQ",
+    launchApp: "Launch Studio",
+    heroBadgeText: "Built for Active Self-Study",
+    heroHeadline: 'Stop Reading Walls of Text. <span class="hero-gradient-text">Study with Interactive Lessons.</span>',
+    heroLead: "Turn any topic, syllabus, or PDF into visual slides with natural voice narration, active quizzes, and 3D flashcards. 100% free, runs offline on your machine.",
+    heroBtnCreate: "Generate Your First Lesson",
+    heroBtnGithub: "GitHub · MIT Licensed",
+    metaNoDb: "100% Free & Local-First (Zero DB)",
+    metaLocalVoice: "Natural Neural Voice & Subtitles",
+    metaExport: "Distraction-Free Offline HTML",
+    metaAiModels: "Runs on DeepSeek, Groq & NVIDIA",
+    tabPlayer: "Lesson Player",
+    tabStudio: "AI Studio",
+    tabQuiz: "Exam Practice",
+    tabFlashcard: "Flashcards",
+    spotlightHintHero: "Seek second-by-second backward and forward with zero audio desynchronization.",
+    spotlightHintStudio: "Two-stage planning: structural curriculum outline + parallel slide synthesis.",
+    spotlightHintQuiz: "Active recall practice with 5-column navigation palette and instant scoring.",
+    spotlightHintFlashcard: "Spaced repetition with 3D flip cards, KaTeX formulas and AI audio pronunciation.",
+    bentoEyebrow: "Active Learning Platform",
+    bentoTitle: "Engineered for Students Who Learn by Listening & Doing",
+    bentoSubtitle: "Stop reading walls of plain text. Retain concepts 3x better with synchronized voiceover, animated slides, and instant recall checkpoints.",
+    bento1Title: "60 FPS Continuous Scrubbing & Word-Level Karaoke",
+    bento1Desc: "Every scene is pegged to deterministic start timestamps. Scrub forward, rewind, or loop a difficult concept without audio drift. Edge Neural TTS delivers millisecond-accurate word boundaries rendered in 60fps requestAnimationFrame.",
+    bento2Title: "1-File Standalone HTML",
+    bento2Desc: "Export the complete lesson into a single self-contained HTML file. Includes embedded neural audio, GSAP animation, KaTeX math, and quizzes. Plays offline anywhere.",
+    bento3Title: "Comfortable Audio Study Pace",
+    bento3Desc: "Narration is tuned to comprehension pace (3.2 words/sec, 0.75x tempo). Fast enough to stay engaging, gentle enough so you can listen, absorb, and take notes without mental fatigue.",
+    bento4Title: "Zero Cloud Database",
+    bento4Desc: "Lessons live as portable, human-readable JSON files in your local data directory. Atomic file-system writes (.tmp -> rename) guarantee zero data loss.",
+    bento5Title: "Universal LLM Engine",
+    bento5Desc: "Zero vendor lock-in. Connect Token Harbor (DeepSeek V3 Free), Groq Cloud, NVIDIA NIM, or your local Antigravity CLI with smart token-budget learning.",
+    workEyebrow: "Instant Study Deck",
+    workTitle: "From Dense Textbook to Guided Audio Lesson in Seconds",
+    workSubtitle: "How EdusGPT replaces boring chatbot conversations with engaging multi-sensory self-study.",
+    net1Eyebrow: "WORKFLOW",
+    net1Title: "Drop your syllabus. Get a private audio lecture.",
+    net1Desc: "Paste an exam topic or upload lecture slides & textbook PDFs. EdusGPT structures the material into progressive visual slides and narrates them with clear, human-like voice explanations.",
+    net1Item1: "Turn dry lecture notes into engaging multi-slide presentations",
+    net1Item2: "Listen while looking at clean LaTeX equations and diagrams",
+    net1Item3: "Auto-repairs legacy Vietnamese PDF fonts so you never miss a formula",
+    net1Item4: "Scrub backward anytime to re-listen to tricky concepts at 60fps",
+    net1Link: "Explore the study workflow on GitHub",
+    net2Eyebrow: "PLATFORM",
+    net2Title: "Test your recall. Master the material offline.",
+    net2Desc: "Active learning beats passive reading. Reinforce what you just listened to with built-in checkpoint quizzes and 3D spaced-repetition flashcards.",
+    net2Item1: "Self-paced checkpoint quizzes right in the lesson timeline",
+    net2Item2: "Full exam simulator with 5-column question palette & instant grading",
+    net2Item3: "3D flip flashcards with audio pronunciation and keyboard shortcuts",
+    net2Item4: "Export to single offline HTML: study on your laptop or phone anywhere",
+    net2Link: "Explore the study platform on GitHub",
+    featSectionEyebrow: "Active Recall & Mastery",
+    featSectionTitle: "Practice Makes Perfect. Test Yourself In-Place.",
+    featSectionSubtitle: "Move away from passive reading. Solidify comprehension through real-time exam simulations and 3D spaced repetition flashcards.",
+    feat1Eyebrow: "Interactive Examination",
+    feat1Title: "Dedicated quiz practice with live question palette",
+    feat1Desc: "Turn passive listening into active recall. Every lesson generates comprehensive checkpoints and closing test banks. A dedicated two-column test environment lets students freely jump between questions, highlights answered numbers, and grades with green/red feedback plus detailed explanations.",
+    feat1P1: "5-column interactive question palette with instant smooth jump",
+    feat1P2: "Blank & halfway submission support with smart confirmation dialog",
+    feat1P3: "Instant scoring: correct answers turn green, errors turn red with full reasoning",
+    feat1Link: "Try an interactive exam",
+    feat2Eyebrow: "Smart Flashcards",
+    feat2Title: "Active recall flashcards with preview & practice modes",
+    feat2Desc: "Study with dual-mode flashcards: browse the complete catalog of core definitions, formulas, and worked examples in preview mode with audio pronunciation, then launch interactive 3D flip cards with spaced repetition keyboard shortcuts.",
+    feat2P1: "Pre-reading catalog showing terms, LaTeX equations, and AI audio pronunciation",
+    feat2P2: "3D flip animation: Space to flip, 1 to mark review, 2 to mark mastered",
+    feat2P3: "Smart mastery report with one-click filter to drill unmastered cards",
+    feat2Link: "Preview flashcard deck",
+    tableScrollHint: "Scroll horizontally to compare",
+    compEyebrow: "Smart Study Comparison",
+    compTitle: "Why Interactive Audio Lessons Beat Plain Chatbots",
+    compSubtitle: "Conventional AI chatbots give you walls of text. Passive videos can't be interacted with. EdusGPT gives you the ultimate study cockpit.",
+    colDim: "Dimension",
+    colEdus: "EdusGPT Interactive Deck",
+    colChatbot: "Standard AI Chatbot (ChatGPT/Claude)",
+    colVideo: "Passive Video / Slides PDF",
+    compRow1: "Study Format",
+    compR1C1: "Multi-Sensory: Visual Slides + Voice + Subtitles",
+    compR1C2: "Dense wall of text (high eye fatigue)",
+    compR1C3: "Passive video or silent slides",
+    compRow2: "Memory Retention",
+    compR2C1: "Active Recall: Checkpoint Quizzes + 3D Flashcards",
+    compR2C2: "Passive reading (forget in 10 minutes)",
+    compR2C3: "No built-in quizzes or flashcards",
+    compRow3: "Review & Navigation",
+    compR3C1: "60 FPS Scrubbing: Jump to any concept instantly",
+    compR3C2: "Endless scrolling through chat history",
+    compR3C3: "Clunky video seeking or page flipping",
+    compRow4: "Portability & Focus",
+    compR4C1: "1-File HTML: 100% Offline, Zero Distractions",
+    compR4C2: "Requires constant internet & account login",
+    compR4C3: "Heavy files (50-300MB), no interactivity",
+    compRow5: "Cost & Limits",
+    compR5C1: "100% Free & Local-First (Zero Cloud DB)",
+    compR5C2: "Monthly subscription or strict rate limits",
+    compR5C3: "Requires video production subscriptions",
+    sayEyebrow: "Community & Social Proof",
+    sayTitleMain: "What Students",
+    sayTitleAccent: "Say",
+    saySubtitle: "Real students. Real self-learners. Zero wall of text.",
+    sayQ1: "The visual slides with synced neural voice and karaoke subtitles helped me master Physics in 15 minutes instead of struggling through 20 textbook pages.",
+    sayA1: "@alex_m_cs",
+    sayR1: "CS Undergrad",
+    sayQ2: "Dropped a 40-page PDF into EdusGPT and got an interactive deck with checkpoint quizzes. Exported single HTML file and studied offline at the library.",
+    sayA2: "@sarah_k_bio",
+    sayR2: "Pre-Med Student",
+    sayQ3: "The 3D Flashcards with AI pronunciation and Space/1/2 keyboard shortcuts make memorizing complex vocabulary effortless compared to plain Notion notes.",
+    sayA3: "@kevin_l_ielts",
+    sayR3: "Self-Taught Polyglot",
+    sayQ4: "Normal AI chatbots bury formulas in endless chat logs. EdusGPT's 60 FPS scrubber lets me jump straight to the algorithm slide in one second.",
+    sayA4: "@david_t_swe",
+    sayR4: "Junior Developer",
+    sayQ5: "The 5-column exam grid looks and feels like real university entrance test software. Instant green/red scoring with step-by-step reasoning.",
+    sayA5: "@emily_w_senior",
+    sayR5: "High School Senior",
+    sayQ6: "Love that it runs completely on my laptop with zero cloud DB. No message caps, no surprise subscriptions, just pure distraction-free learning.",
+    sayA6: "@ryan_c_econ",
+    sayR6: "Econ Major",
+    sayQ7: "Self-studying Calculus with crisp vector KaTeX math equations that never blur. The natural voice-over makes hard derivations actually click.",
+    sayA7: "@marcus_v_math",
+    sayR7: "Math Major",
+    sayQ8: "The closing mindmap recap branches every key takeaway into a clean tree. Perfect for a 2-minute refresher right before walking into an exam.",
+    sayA8: "@claire_d_med",
+    sayR8: "Medical Student",
+    sayQ9: "I used to juggle 5 tabs: PDF, YouTube, dictionary, and flashcard apps. EdusGPT unifies all of them into one distraction-free study deck.",
+    sayA9: "@joshua_p_eng",
+    sayR9: "Engineering Student",
+    sayQ10: "The AI pedagogy is surprisingly sound: hooks the concept first, breaks down the formula, then gates progress with quizzes. Not raw AI slop.",
+    sayA10: "@olivia_b_ed",
+    sayR10: "EdTech Researcher",
+    sayQ11: "Used free DeepSeek API to build a 10-lesson study series without spending a penny. Sent standalone HTML files to my study group and everyone loved it.",
+    sayA11: "@nathan_k_columbia",
+    sayR11: "Study Group Lead",
+    sayQ12: "Keyboard shortcuts for everything: J/K to skip slides, Space to pause, F for fullscreen. Feels like a refined pro tool rather than a toy.",
+    sayA12: "@brian_s_gatech",
+    sayR12: "CS Student",
+    faqEyebrow: "Frequently Asked Questions",
+    faqTitle: "Everything You Need to Know",
+    faqSubtitle: "Clear answers about local execution, data privacy, and standalone exports.",
+    faq1Q: "Does EdusGPT really run without a database or cloud account?",
+    faq1A: "Yes, 100%. EdusGPT is strictly local-first. All generated lessons are stored as atomic, human-readable JSON files directly in your computer's <code>data/courses/</code> folder. There is no PostgreSQL, no SQLite, no user tracking, and no external database required.",
+    faq2Q: "Do I need an expensive dedicated GPU to run EdusGPT?",
+    faq2A: "No GPU is required! EdusGPT leverages cloud inference (such as DeepSeek-V3 via Token Harbor free tier, Groq, or NVIDIA) or local CPU-friendly models. Voice synthesis runs over Edge Neural TTS or lightweight CPU Piper models.",
+    faq3Q: "How does the Standalone HTML export work offline?",
+    faq3A: "When you export to Standalone HTML, the server packs all slide layouts, GSAP timeline choreography, KaTeX math renderer, interactive quizzes, and neural narration audio into one single <code>.html</code> file. You can put it on a USB stick or email it, and it will play on any device without internet.",
+    faq4Q: "Which AI providers and models can I use?",
+    faq4A: "EdusGPT supports Token Harbor (DeepSeek-V3 free tier), Groq Cloud (Llama 3.3 70B & Qwen), NVIDIA NIM, Antigravity local CLI, and local Ollama endpoints. You can add or swap keys anytime from <code>/setup</code> in your browser.",
+    faq5Q: "Can I upload Vietnamese textbook PDFs with older fonts?",
+    faq5A: "Yes! The extraction pipeline includes an automated encoding repair module (<code>vietnamese.ts</code>) that automatically converts legacy VNI-Times, TCVN3, and Unicode composite diacritics into standard UTF-8 text so formulas and Vietnamese tones are never corrupted.",
+    ctaTitle: "Ready to Study Without Walls of Text?",
+    ctaLead: "Free, open source, and local-first. No database, no accounts, and zero distractions.",
+    ctaBtnStart: "Start Studying for Free",
+    ctaBtnGithub: "GitHub · Star Project",
+    footStudio: "Studio",
+    footLibrary: "Library",
+    footQuiz: "Quiz",
+    footCards: "Flashcards"
+  },
+  vi: {
+    navFeatures: "Tính năng",
+    navCapabilities: "Công nghệ",
+    navWorkflow: "Quy trình",
+    navComparison: "So sánh",
+    navTestimonials: "Người học",
+    navFaq: "Hỏi đáp",
+    launchApp: "Mở Studio",
+    heroBadgeText: "Dành cho tự học chủ động",
+    heroHeadline: 'Đừng Đọc Chữ Dài Mỏi Mắt. <span class="hero-gradient-text">Học Qua Bài Giảng Tương Tác.</span>',
+    heroLead: "Biến đề cương hay PDF thành slide trực quan kèm giọng đọc, bài tập trắc nghiệm và flashcards tự ôn. Miễn phí, chạy offline ngay trên máy bạn.",
+    heroBtnCreate: "Tạo bài học đầu tiên",
+    heroBtnGithub: "Mã nguồn GitHub · Giấy phép MIT",
+    metaNoDb: "100% Miễn Phí & Lưu Trên Máy (Zero DB)",
+    metaLocalVoice: "Giọng Thuyết Minh & Phụ Đề Karaoke",
+    metaExport: "Học Offline Tập Trung (File HTML)",
+    metaAiModels: "Hỗ Trợ DeepSeek, Groq & NVIDIA",
+    tabPlayer: "Trình phát bài giảng",
+    tabStudio: "Xưởng AI Studio",
+    tabQuiz: "Phòng thi trắc nghiệm",
+    tabFlashcard: "Thẻ ghi nhớ",
+    spotlightHintHero: "Tua tới, tua lui từng giây mượt mà không bao giờ bị lệch giọng đọc và phụ đề.",
+    spotlightHintStudio: "Quy trình 2 giai đoạn: phác thảo dàn ý sư phạm chặt chẽ + sinh song song từng slide.",
+    spotlightHintQuiz: "Luyện thi chủ động với bảng lưới 5 cột nhảy câu và chấm điểm giải thích chi tiết.",
+    spotlightHintFlashcard: "Khắc sâu kiến thức với lật thẻ 3D, công thức KaTeX và phát âm AI chuẩn.",
+    bentoEyebrow: "Phương Pháp Học Chủ Động",
+    bentoTitle: "Thiết Kế Cho Người Học Muốn Nghe, Nhìn & Thực Hành",
+    bentoSubtitle: "Nói không với hàng dài chữ khô khan. Ghi nhớ kiến thức sâu gấp 3 lần nhờ kết hợp giọng thuyết minh rõ ràng, slide trực quan và các chặng dừng luyện tập.",
+    bento1Title: "Tua 60 FPS Hai Chiều & Phụ Đề Karaoke Từng Từ",
+    bento1Desc: "Mỗi cảnh bài giảng đều có mốc thời gian độc lập. Thoải mái tua nhanh, tua lui hoặc lặp một đoạn khó mà không lo trôi giọng. Giọng Edge Neural TTS đồng bộ chính xác từng mili-giây và hiển thị mượt mà 60fps.",
+    bento2Title: "1 File HTML Tự Chạy Offline",
+    bento2Desc: "Xuất trọn vẹn bài giảng thành một file HTML duy nhất tự chứa đầy đủ giọng đọc AI base64, hoạt ảnh GSAP, công thức KaTeX và bài tập trắc nghiệm. Mở mọi nơi mà không cần mạng.",
+    bento3Title: "Nhịp Điệu Giọng Đọc Dễ Tiếp Thu",
+    bento3Desc: "Căn chỉnh ở tốc độ 3.2 từ/giây (0.75x tempo). Đủ nhanh để cuốn hút, đủ từ tốn để bạn vừa nghe giảng, vừa hiểu công thức và ghi chép mà không bị ngợp.",
+    bento4Title: "Không cần Database đám mây",
+    bento4Desc: "Bài giảng lưu thành các file JSON gọn nhẹ trong thư mục data của máy. Ghi tệp nguyên tử (.tmp -> rename) loại bỏ hoàn toàn nguy cơ mất dữ liệu.",
+    bento5Title: "Tự do chọn mô hình AI",
+    bento5Desc: "Không phụ thuộc nhà cung cấp. Hỗ trợ mượt mà Token Harbor (DeepSeek V3 Miễn phí), Groq Cloud, NVIDIA NIM hoặc Antigravity CLI local.",
+    workEyebrow: "Tự Học Hiệu Quả",
+    workTitle: "Từ Trang Sách Dày Cộm Đến Bài Giảng AI Trong Vài Giây",
+    workSubtitle: "Cách EdusGPT thay thế những đoạn chat chữ nhàm chán bằng trải nghiệm tự học đa giác quan.",
+    net1Eyebrow: "QUY TRÌNH",
+    net1Title: "Thả đề cương vào. Có ngay gia sư AI giảng bài.",
+    net1Desc: "Nhập một chủ đề thi hoặc tải lên file slide bài giảng, giáo trình PDF. EdusGPT tự động tóm lược thành các slide mạch lạc và thuyết minh rõ ràng từng luận điểm như có thầy cô đang kèm bên cạnh.",
+    net1Item1: "Biến tài liệu ôn thi dài dòng thành chuỗi slide cô đọng, dễ hiểu",
+    net1Item2: "Vừa nghe giảng vừa theo dõi công thức toán KaTeX và biểu đồ",
+    net1Item3: "Tự động sửa lỗi font tiếng Việt cũ (VNI, TCVN3) từ giáo trình PDF",
+    net1Item4: "Tua lại 60fps bất cứ lúc nào để nghe lại đoạn khó hiểu",
+    net1Link: "Xem chi tiết quy trình trên GitHub",
+    net2Eyebrow: "NỀN TẢNG",
+    net2Title: "Kiểm tra độ hiểu bài. Tự ôn thi offline mọi lúc.",
+    net2Desc: "Học chủ động luôn thắng đọc thụ động. Củng cố ngay kiến thức vừa nghe bằng câu hỏi trắc nghiệm chặng dừng và bộ thẻ ghi nhớ 3D lặp lại ngắt quãng.",
+    net2Item1: "Câu hỏi trắc nghiệm chặng dừng tích hợp ngay trong timeline bài học",
+    net2Item2: "Phòng luyện thi trắc nghiệm độc lập với bảng 5 cột nhảy câu thông minh",
+    net2Item3: "Thẻ ghi nhớ flashcard 3D có phát âm AI và phím tắt Space ôn bài cực nhanh",
+    net2Item4: "Xuất 1 file HTML duy nhất: mang đi học trên laptop, điện thoại không cần mạng",
+    net2Link: "Khám phá mã nguồn nền tảng trên GitHub",
+    featSectionEyebrow: "Công Cụ Ôn Luyện Chủ Động",
+    featSectionTitle: "Thực Hành Khắc Sâu. Tự Kiểm Tra Mọi Lúc.",
+    featSectionSubtitle: "Chuyển từ nghe thụ động sang ghi nhớ chủ động qua phòng thi mô phỏng và bộ thẻ ghi nhớ lật 3D.",
+    feat1Eyebrow: "Luyện thi trắc nghiệm tương tác",
+    feat1Title: "Trang đề thi trắc nghiệm với bảng điều hướng nhảy câu",
+    feat1Desc: "Chuyển từ nghe thụ động sang ôn tập chủ động. Mỗi bài giảng đều có ngân hàng câu hỏi chặng dừng và tổng kết. Giao diện đề thi 2 cột độc lập cho phép thoải mái nhảy câu, tô màu câu đã làm, và tự động chấm điểm xanh lá/tô đỏ kèm lời giải chi tiết.",
+    feat1P1: "Bảng lưới 5 cột nhảy câu tức thì, tự động đánh dấu câu đã làm",
+    feat1P2: "Hỗ trợ nộp trắng hoặc nộp giữa chừng kèm cảnh báo xác nhận thông minh",
+    feat1P3: "Chấm điểm chuẩn xác: câu đúng hiện xanh lá, câu sai hiện tô đỏ kèm giải thích",
+    feat1Link: "Làm thử đề thi trắc nghiệm",
+    feat2Eyebrow: "Thẻ ghi nhớ Flashcard thông minh",
+    feat2Title: "Khắc sâu kiến thức với chế độ xem trước & lật thẻ 3D",
+    feat2Desc: "Học tập hiệu quả với flashcards 2 giai đoạn: xem trước toàn bộ danh sách khái niệm, công thức và ví dụ kèm loa phát âm AI; sau đó bật chế độ luyện tập lật thẻ 3D với phím tắt Space và phím đánh dấu đã thuộc.",
+    feat2P1: "Danh mục xem trước đầy đủ định nghĩa, công thức KaTeX và phát âm AI",
+    feat2P2: "Hiệu ứng lật thẻ 3D: phím Space lật mặt sau, phím 1 cần xem lại, phím 2 đã thuộc",
+    feat2P3: "Báo cáo độ ghi nhớ và nút 1 chạm để luyện lại đúng các thẻ chưa thuộc",
+    feat2Link: "Xem trước bộ thẻ ghi nhớ",
+    tableScrollHint: "Vuốt ngang để xem toàn bộ bảng",
+    compEyebrow: "So Sánh Phương Pháp Học",
+    compTitle: "Tại Sao Học Tương Tác Vượt Trội Chatbot Chữ Truyền Thống?",
+    compSubtitle: "Chatbot thông thường chỉ tuôn ra văn bản dài mỏi mắt. Video xem thụ động khó tương tác. EdusGPT mang đến không gian tự học toàn diện nhất.",
+    colDim: "Tiêu chí",
+    colEdus: "Bài Giảng Tương Tác EdusGPT",
+    colChatbot: "Chatbot AI Thông Thường (ChatGPT/Claude)",
+    colVideo: "Video Thụ Động / Slide PDF Tĩnh",
+    compRow1: "Trải nghiệm học tập",
+    compR1C1: "Đa giác quan: Slide trực quan + Giọng nói + Karaoke",
+    compR1C2: "Hàng dài chữ khô khan (rất nhanh mỏi mắt)",
+    compR1C3: "Xem video thụ động hoặc tự đọc slide tĩnh",
+    compRow2: "Độ ghi nhớ kiến thức",
+    compR2C1: "Chủ động: Quiz chặng dừng + Thẻ 3D flashcards",
+    compR2C2: "Đọc lướt thụ động (quên sau 10 phút)",
+    compR2C3: "Không có công cụ chấm điểm, kiểm tra",
+    compRow3: "Tua bài & Ôn tập",
+    compR3C1: "Tua mượt 60 FPS: Nhảy ngay đến đoạn kiến thức khó",
+    compR3C2: "Cuộn tìm mỏi tay trong lịch sử chat dài ngoằng",
+    compR3C3: "Tua video bị giật hoặc lật từng trang PDF",
+    compRow4: "Tập trung & Tiện lợi",
+    compR4C1: "1 File HTML: Chạy offline 100%, không xao nhãng",
+    compR4C2: "Cần mạng liên tục, dễ xao nhãng mạng xã hội",
+    compR4C3: "File video rất nặng (50MB - 300MB)",
+    compRow5: "Chi phí & Giới hạn",
+    compR5C1: "100% Miễn phí & Chạy trên máy bạn (Không cần DB)",
+    compR5C2: "Giới hạn số tin nhắn hoặc tốn phí hàng tháng",
+    compR5C3: "Cần phần mềm phát video chuyên dụng",
+    sayEyebrow: "Người Học Nói Gì",
+    sayTitleMain: "Sinh Viên & Người Tự Học",
+    sayTitleAccent: "Nói Gì",
+    saySubtitle: "Học sinh & sinh viên thật. Học tập chủ động. Không còn nỗi sợ đọc chữ dài.",
+    sayQ1: "Slide tóm tắt kèm giọng đọc và karaoke chạy từng chữ giúp mình hiểu bài Vật lý 11 trong 15 phút, thay vì ngồi đọc 20 trang sách dài ngoằng.",
+    sayA1: "@viet_bach_uet",
+    sayR1: "Sinh viên CNTT UET",
+    sayQ2: "Ném giáo trình PDF 40 trang vào là ra ngay bài giảng có checkpoint quiz để ôn thi. Xuất file HTML mang lên thư viện không cần mạng vẫn học ngon lành.",
+    sayA2: "@thu_trang_hust",
+    sayR2: "Sinh viên ĐHBK Hà Nội",
+    sayQ3: "Học từ vựng IELTS qua thẻ Flashcard 3D có phát âm AI và phím tắt Space/1/2 cực cuốn, cảm giác nhớ sâu hơn hẳn đọc chay trên Notion.",
+    sayA3: "@nam_ielts_80",
+    sayR3: "Tự học IELTS 8.0",
+    sayQ4: "Chatbot bình thường cuộn tìm lại công thức mỏi tay. EdusGPT có thanh tua 60 FPS nhảy thẳng đến slide giải thuật tìm kiếm, đỡ mất thời gian kinh khủng.",
+    sayA4: "@hoang_long_dev",
+    sayR4: "Fresher Frontend",
+    sayQ5: "Giao diện phòng thi trắc nghiệm 5 cột giống y hệt thi đánh giá năng lực online. Làm xong có chấm điểm xanh đỏ kèm giải thích chi tiết.",
+    sayA5: "@mai_anh_k12",
+    sayR5: "Học sinh Lớp 12 Ôn Thi ĐH",
+    sayQ6: "Thích nhất là 100% miễn phí và chạy trực tiếp trên laptop của mình. Không phải lo giới hạn tin nhắn hay hết token như dùng mấy app trả phí.",
+    sayA6: "@quoc_huy_neu",
+    sayR6: "Sinh viên Kinh tế Quốc dân",
+    sayQ7: "Tự học Giải tích 1 qua slide có công thức KaTeX sắc nét, không bị lỗi font hay vỡ hình. Giọng đọc tiếng Việt tự nhiên chứ không bị máy móc.",
+    sayA7: "@minh_duc_ptit",
+    sayR7: "Sinh viên PTIT",
+    sayQ8: "Phần recap mindmap tổng kết cuối bài giảng gom hết các ý chính lại theo nhánh cây. Trước khi vào phòng thi chỉ cần mở xem lại 2 phút là tự tin.",
+    sayA8: "@lan_huong_yhn",
+    sayR8: "Sinh viên ĐH Y Hà Nội",
+    sayQ9: "Trước đây ôn thi toàn phải mở 5 tab: tài liệu, YouTube, từ điển, quizlet. Giờ EdusGPT gom hết vào một màn hình học tập duy nhất.",
+    sayA9: "@duc_thang_vnu",
+    sayR9: "ĐHQG TP.HCM",
+    sayQ10: "Kịch bản bài giảng do AI soạn có sư phạm rõ ràng: đặt vấn đề, phân tích công thức rồi mới cho bài tập, không bị cụt lủn như prompt ChatGPT.",
+    sayA10: "@phuong_thao_supham",
+    sayR10: "SV ĐH Sư Phạm",
+    sayQ11: "Dùng Token Harbor free tier với model DeepSeek tạo nguyên khoá học 10 bài không tốn 1 xu. Xuất file HTML gửi qua nhóm học ai cũng khen.",
+    sayA11: "@tuan_kiet_k67",
+    sayR11: "Lớp trưởng K67 Bách Khoa",
+    sayQ12: "Chế độ phím tắt J/K lùi tiến slide, Space dừng phát âm thanh, F toàn màn hình. Cảm giác dùng như công cụ chuyên nghiệp chứ không phải đồ chơi web.",
+    sayA12: "@hai_dang_hcmus",
+    sayR12: "Sinh viên KHTN",
+    faqEyebrow: "Câu hỏi thường gặp",
+    faqTitle: "Tất Cả Những Gì Bạn Cần Biết",
+    faqSubtitle: "Giải đáp rõ ràng về cách chạy cục bộ, quyền riêng tư dữ liệu và xuất bài giảng.",
+    faq1Q: "EdusGPT có thực sự chạy mà không cần database hay tài khoản đám mây?",
+    faq1A: "Hoàn toàn đúng! EdusGPT hoạt động cục bộ 100%. Tất cả bài giảng được lưu thành file JSON trong thư mục <code>data/courses/</code> trên máy của bạn. Không cần cài MySQL, PostgreSQL, không thu thập dữ liệu người dùng.",
+    faq2Q: "Tôi có cần máy tính cấu hình khủng hay GPU đắt tiền không?",
+    faq2A: "Hoàn toàn không cần GPU! EdusGPT sử dụng mô hình AI đám mây thông qua API (như DeepSeek-V3 miễn phí qua Token Harbor, Groq, NVIDIA) hoặc mô hình nhẹ trên CPU. Giọng đọc chạy qua Edge Neural TTS cực mượt.",
+    faq3Q: "Bản xuất Standalone HTML hoạt động offline như thế nào?",
+    faq3A: "Khi bạn chọn xuất HTML, hệ thống sẽ nhúng toàn bộ slide, hoạt ảnh GSAP, bộ render KaTeX, đề trắc nghiệm và toàn bộ file âm thanh base64 vào duy nhất 1 file <code>.html</code>. Bạn có thể copy ra USB, gửi Zalo/Email cho học sinh xem offline thoải mái.",
+    faq4Q: "Tôi có thể sử dụng những mô hình AI nào?",
+    faq4A: "Hỗ trợ DeepSeek V3 (miễn phí qua Token Harbor), Groq Cloud (Llama 3.3 70B & Qwen), NVIDIA NIM, Antigravity CLI local hoặc Ollama. Bạn có thể cài hoặc đổi key dễ dàng ngay tại trang <code>/setup</code>.",
+    faq5Q: "Có đọc được giáo trình PDF tiếng Việt font chữ cũ không?",
+    faq5A: "Được chứ! EdusGPT tích hợp sẵn bộ chuyển đổi mã font (<code>vietnamese.ts</code>) tự động nhận diện và sửa lỗi font VNI-Times, TCVN3 và Unicode tổ hợp thành UTF-8 chuẩn xác, không bị lỗi dấu.",
+    ctaTitle: "Sẵn Sàng Tự Học Chủ Động?",
+    ctaLead: "Mã nguồn mở và chạy trực tiếp trên máy bạn. Không cần tài khoản, không cần database.",
+    ctaBtnStart: "Bắt đầu học miễn phí",
+    ctaBtnGithub: "Mã nguồn GitHub · Star Dự Án",
+    footStudio: "Xưởng Soạn",
+    footLibrary: "Thư Viện",
+    footQuiz: "Trắc Nghiệm",
+    footCards: "Thẻ Ghi Nhớ"
+  }
+};
+
+// --- Showcase Image Mapping ---
+const SHOWCASE_DATA = {
+  hero: {
+    badge: "60 FPS TIMELINE",
+    en: { img: "assets/hero-player-en.png", hint: I18N.en.spotlightHintHero },
+    vi: { img: "assets/hero-player-vi.png", hint: I18N.vi.spotlightHintHero }
+  },
+  studio: {
+    badge: "TWO-STAGE AI",
+    en: { img: "assets/feature-studio-en.png", hint: I18N.en.spotlightHintStudio },
+    vi: { img: "assets/feature-studio-vi.png", hint: I18N.vi.spotlightHintStudio }
+  },
+  quiz: {
+    badge: "5-COL PALETTE",
+    en: { img: "assets/feature-quiz-en.png", hint: I18N.en.spotlightHintQuiz },
+    vi: { img: "assets/feature-quiz-vi.png", hint: I18N.vi.spotlightHintQuiz }
+  },
+  flashcard: {
+    badge: "SPACED RECALL",
+    en: { img: "assets/feature-flashcard-en.png", hint: I18N.en.spotlightHintFlashcard },
+    vi: { img: "assets/feature-flashcard-vi.png", hint: I18N.vi.spotlightHintFlashcard }
+  }
+};
+
+let currentTab = "hero";
+let currentLang = localStorage.getItem("edusgpt_landing_lang") || "en";
+
+function setTab(tabKey) {
+  currentTab = tabKey;
+  document.querySelectorAll(".showcase-tab").forEach(tab => {
+    tab.classList.toggle("active", tab.getAttribute("data-tab") === tabKey);
   });
-  nav.addEventListener('click', function(e){
-    if (e.target.tagName === 'A') nav.classList.remove('open');
+
+  const tabInfo = SHOWCASE_DATA[tabKey];
+  const langData = tabInfo[currentLang];
+  const imgEl = document.getElementById("main-showcase-img");
+  const badgeEl = document.getElementById("spotlight-badge");
+  const hintEl = document.getElementById("spotlight-text");
+
+  badgeEl.textContent = tabInfo.badge;
+  hintEl.textContent = langData.hint;
+
+  if (imgEl && imgEl.getAttribute("src") !== langData.img) {
+    if (window.gsap) {
+      gsap.to(imgEl, {
+        opacity: 0.35,
+        scale: 0.985,
+        duration: 0.16,
+        onComplete: () => {
+          imgEl.src = langData.img;
+          gsap.to(imgEl, { opacity: 1, scale: 1, duration: 0.25, ease: "power2.out" });
+        }
+      });
+    } else {
+      imgEl.src = langData.img;
+    }
+  }
+}
+
+// Bind tab clicks
+document.querySelectorAll(".showcase-tab").forEach(tab => {
+  tab.addEventListener("click", () => {
+    const tabKey = tab.getAttribute("data-tab");
+    setTab(tabKey);
   });
-})();
+});
+
+function applyLanguage(lang) {
+  currentLang = lang;
+  localStorage.setItem("edusgpt_landing_lang", lang);
+  document.documentElement.lang = lang;
+  document.getElementById("lang-label").textContent = lang === "en" ? "VI" : "EN";
+
+  document.querySelectorAll("[data-i18n]").forEach((el) => {
+    const key = el.getAttribute("data-i18n");
+    if (I18N[lang] && I18N[lang][key]) {
+      el.innerHTML = I18N[lang][key];
+    }
+  });
+
+  // Update sandbox preview
+  setTab(currentTab);
+}
+
+document.getElementById("lang-toggle").addEventListener("click", () => {
+  applyLanguage(currentLang === "en" ? "vi" : "en");
+});
+
+// --- Theme Toggle (Dark / Light) ---
+const themeToggle = document.getElementById("theme-toggle");
+const themeMoon = document.getElementById("theme-moon");
+const themeSun = document.getElementById("theme-sun");
+
+function setTheme(theme) {
+  document.documentElement.setAttribute("data-theme", theme);
+  localStorage.setItem("eduai.theme.v1", theme);
+  if (theme === "dark") {
+    themeMoon.style.display = "block";
+    themeSun.style.display = "none";
+  } else {
+    themeMoon.style.display = "none";
+    themeSun.style.display = "block";
+  }
+}
+
+themeToggle.addEventListener("click", () => {
+  const cur = document.documentElement.getAttribute("data-theme");
+  setTheme(cur === "dark" ? "light" : "dark");
+});
+
+// Initial Theme & Language Setup (Default English)
+const savedTheme = localStorage.getItem("eduai.theme.v1") || "dark";
+setTheme(savedTheme);
+applyLanguage(currentLang);
+
+// Copy Command Trigger
+const copyTrigger = document.getElementById("quick-copy-trigger");
+if (copyTrigger) {
+  copyTrigger.addEventListener("click", () => {
+    const cmd = "git clone https://github.com/npdk1/EdusGPT.git && cd EdusGPT && npm run dev";
+    navigator.clipboard.writeText(cmd).then(() => {
+      copyTrigger.style.color = "var(--emerald)";
+      setTimeout(() => { copyTrigger.style.color = ""; }, 1800);
+    });
+  });
+}
+
+// Interactive FAQ Accordion Logic
+document.querySelectorAll(".faq-item").forEach(item => {
+  const btn = item.querySelector(".faq-question");
+  btn.addEventListener("click", () => {
+    const isOpen = item.classList.contains("open");
+    document.querySelectorAll(".faq-item").forEach(other => other.classList.remove("open"));
+    if (!isOpen) {
+      item.classList.add("open");
+    }
+  });
+});
+
+// --- Mobile Menu Toggle & Navigation Drawer ---
+const mobileMenuBtn = document.getElementById("mobile-menu-btn");
+const mobileNavDrawer = document.getElementById("mobile-nav-drawer");
+const menuIconBars = document.getElementById("menu-icon-bars");
+const menuIconClose = document.getElementById("menu-icon-close");
+
+if (mobileMenuBtn && mobileNavDrawer) {
+  function toggleMobileMenu(forceClose = false) {
+    const shouldOpen = forceClose ? false : !mobileNavDrawer.classList.contains("open");
+    if (shouldOpen) {
+      mobileNavDrawer.classList.add("open");
+      mobileNavDrawer.setAttribute("aria-hidden", "false");
+      mobileMenuBtn.setAttribute("aria-expanded", "true");
+      menuIconBars.style.display = "none";
+      menuIconClose.style.display = "block";
+    } else {
+      mobileNavDrawer.classList.remove("open");
+      mobileNavDrawer.setAttribute("aria-hidden", "true");
+      mobileMenuBtn.setAttribute("aria-expanded", "false");
+      menuIconBars.style.display = "block";
+      menuIconClose.style.display = "none";
+    }
+  }
+
+  mobileMenuBtn.addEventListener("click", () => toggleMobileMenu());
+
+  // Close mobile drawer when any link is clicked
+  mobileNavDrawer.querySelectorAll("a").forEach(link => {
+    link.addEventListener("click", () => toggleMobileMenu(true));
+  });
+
+  // Close when clicking outside
+  document.addEventListener("click", (e) => {
+    if (mobileNavDrawer.classList.contains("open") &&
+        !mobileNavDrawer.contains(e.target) &&
+        !mobileMenuBtn.contains(e.target)) {
+      toggleMobileMenu(true);
+    }
+  });
+}
+
+// --- GSAP Entrance & ScrollTrigger Choreography ---
+window.addEventListener("DOMContentLoaded", () => {
+  if (typeof gsap === "undefined") return;
+
+  if (typeof ScrollTrigger !== "undefined") {
+    gsap.registerPlugin(ScrollTrigger);
+  }
+
+  // Header Entrance
+  gsap.from(".site-header", {
+    y: -30,
+    opacity: 0,
+    duration: 0.7,
+    ease: "power3.out"
+  });
+
+  // Hero Staggered Animation
+  const heroTl = gsap.timeline({ defaults: { ease: "power3.out" } });
+  heroTl
+    .from(".gsap-hero-badge", { opacity: 0, y: 15, duration: 0.5, delay: 0.1 })
+    .from(".gsap-hero-title", { opacity: 0, y: 25, duration: 0.7 }, "-=0.3")
+    .from(".gsap-hero-lead", { opacity: 0, y: 20, duration: 0.6 }, "-=0.4")
+    .from(".gsap-hero-cta a", { opacity: 0, y: 15, stagger: 0.1, duration: 0.5 }, "-=0.35")
+    .from(".gsap-hero-meta", { opacity: 0, y: 12, stagger: 0.08, duration: 0.45 }, "-=0.3")
+    .from(".gsap-hero-showcase", {
+      opacity: 0,
+      y: 45,
+      scale: 0.96,
+      duration: 0.9,
+      ease: "power2.out"
+    }, "-=0.35");
+
+  // ScrollTrigger reveals for all major sections
+  if (typeof ScrollTrigger !== "undefined") {
+    gsap.utils.toArray(".gsap-reveal").forEach((section) => {
+      const header = section.querySelector(".section-header");
+      const cards = section.querySelectorAll(".bento-card, .step-card, .faq-item, .cta-banner, .compare-table-wrapper");
+      const featText = section.querySelector(".feature-text");
+      const featPrev = section.querySelector(".feature-preview");
+
+      const tl = gsap.timeline({
+        scrollTrigger: {
+          trigger: section,
+          start: "top 85%",
+          once: true
+        },
+        defaults: { ease: "power3.out", duration: 0.65 }
+      });
+
+      if (header) {
+        tl.fromTo(header, { opacity: 0, y: 25 }, { opacity: 1, y: 0, clearProps: "opacity,transform" });
+      }
+      if (cards.length > 0) {
+        tl.fromTo(cards, { opacity: 0, y: 24 }, { opacity: 1, y: 0, stagger: 0.08, clearProps: "opacity,transform" }, "-=0.4");
+      }
+      if (featText) {
+        tl.fromTo(featText, { opacity: 0, y: 25 }, { opacity: 1, y: 0, clearProps: "opacity,transform" }, "-=0.4");
+      }
+      if (featPrev) {
+        tl.fromTo(featPrev, { opacity: 0, y: 30, scale: 0.97 }, { opacity: 1, y: 0, scale: 1, clearProps: "opacity,transform" }, "-=0.5");
+      }
+    });
+
+    window.addEventListener("load", () => {
+      ScrollTrigger.refresh();
+    });
+  }
+});
 </script>
+
 </body>
 </html>

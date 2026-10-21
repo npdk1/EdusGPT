@@ -118,10 +118,10 @@ export function voiceForLanguage(language: string): LessonVoiceId {
  * text decides, so nobody has to remember to switch voices by hand.
  */
 export function pickVoice(preferred: unknown, text: string): LessonVoiceId {
-  const language = detectLessonLanguage(text);
-  if (isVoiceId(preferred) && isVietnameseVoice(preferred) === (language === "vi")) {
+  if (isVoiceId(preferred)) {
     return preferred;
   }
+  const language = detectLessonLanguage(text);
   return voiceForLanguage(language);
 }
 

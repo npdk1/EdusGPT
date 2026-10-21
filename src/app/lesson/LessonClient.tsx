@@ -46,6 +46,8 @@ type LoadErrorKey = keyof typeof COPY.en;
 interface LessonClientProps {
   /** Resolved on the server from `?c=<id>`; null on the plain /lesson route. */
   courseId: string | null;
+  /** Initial modal mode: "quiz" or "flashcard" */
+  initialMode?: "quiz" | "flashcard" | null;
 }
 
 /**
@@ -54,7 +56,7 @@ interface LessonClientProps {
  * server-side on the plain `/lesson` route — using `useSearchParams` here would
  * force the whole player behind a Suspense fallback on first paint.
  */
-export default function LessonClient({ courseId }: LessonClientProps) {
+export default function LessonClient({ courseId, initialMode }: LessonClientProps) {
   const t = useCopy(COPY);
   const [lesson, setLesson] = useState<Lesson>(SAMPLE_LESSON);
   const [loading, setLoading] = useState(Boolean(courseId));
@@ -128,6 +130,7 @@ export default function LessonClient({ courseId }: LessonClientProps) {
       ) : null}
       <LessonPlayer
         initialLesson={lesson}
+        initialMode={initialMode}
         samples={SAMPLE_LESSONS.filter((item) => item.id !== lesson.id)}
       />
       {runLog.length > 0 ? (

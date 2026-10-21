@@ -189,22 +189,22 @@
   html[data-theme="dark"] {
     color-scheme: dark;
 
-    /* ink — the paper, now the dark end of the ramp. */
-    --color-ink-950: #0a1116;
-    --color-ink-900: #101a20;
-    --color-ink-850: #16222a;
-    --color-ink-800: #1d2c34;
-    --color-ink-700: #27383f;
-    --color-ink-600: #35484f;
-    --color-ink-500: #45585f;
+    /* ink — deep midnight black with pure navy blue undertones (no green/teal). */
+    --color-ink-950: #05080f;
+    --color-ink-900: #0a0f1d;
+    --color-ink-850: #0f1628;
+    --color-ink-800: #151e36;
+    --color-ink-700: #1e2b4a;
+    --color-ink-600: #2b3c64;
+    --color-ink-500: #3b4f7e;
 
-    /* mist — text, now the light end. */
-    --color-mist-50: #eaf1f4;
-    --color-mist-100: #d6e1e5;
-    --color-mist-200: #bcc9ce;
-    --color-mist-300: #9db0b7;
-    --color-mist-400: #7f939b;
-    --color-mist-500: #6a7f88;
+    /* mist — text, crisp cool slate and ice-white (no murky green). */
+    --color-mist-50: #f0f4f9;
+    --color-mist-100: #dce4f0;
+    --color-mist-200: #c0cde0;
+    --color-mist-300: #9cb0cb;
+    --color-mist-400: #7b90b0;
+    --color-mist-500: #5f7394;
 
     /* brand — the same blue, stepped so light type stays legible on it:
        500 carries the primary buttons, which is why it is the deep step. */
@@ -647,6 +647,27 @@
     border-radius: 0.35em;
     background: color-mix(in srgb, var(--slide-ink) 8%, transparent);
     color: var(--slide-ink);
+  }
+
+  /* KaTeX formula typography: always inherit container text color */
+  .katex {
+    color: inherit !important;
+  }
+  .katex-display {
+    margin: 0.5em 0 !important;
+    overflow-x: auto;
+    overflow-y: hidden;
+  }
+  .scene-inline-math {
+    display: inline-block;
+    vertical-align: baseline;
+    line-height: normal;
+  }
+  .scene-inline-math-block {
+    display: block;
+    overflow-x: auto;
+    text-align: center;
+    margin: 0.5rem 0;
   }
 
   /* The kicker: small caps, wide tracking, the one place the accent appears in
@@ -1667,8 +1688,8 @@
     /* Bigger than the body copy and rounded: the caption is read as it is spoken,
        at a glance, from a seat — it is closer to a teleprompter than to a
        footnote, and the old 1.25cqw sat below the bullet size. */
-    font-size: 1.75cqw;
-    line-height: 1.32;
+    font-size: 1.65cqw;
+    line-height: 1.34;
     font-weight: 500;
     letter-spacing: 0.005em;
     color: var(--slide-ink);
@@ -1689,17 +1710,18 @@
    * depends on the text any more, so the hand-over only ever changes colour.
    */
   .scene-caption-stack {
-    /* One row of caption type: 1.75cqw of type at a 1.32 line-height. */
-    --caption-row: 2.31cqw;
-    min-height: calc(var(--caption-row) * 2 + 0.6cqw);
+    /* One row of caption type: 1.65cqw of type at a 1.34 line-height. */
+    --caption-row: 2.21cqw;
+    min-height: calc(var(--caption-row) * 2 + 0.5cqw);
+    padding-bottom: 0.3cqw;
   }
 
   /* The sentence coming next. Faint rather than small, so the hand-over does not
      move anything: same size, less weight, and it is replaced rather than
      resized when its turn comes. */
   .scene-narration-next {
-    font-size: 1.75cqw;
-    line-height: 1.32;
+    font-size: 1.65cqw;
+    line-height: 1.34;
     font-weight: 500;
     letter-spacing: 0.005em;
     color: var(--slide-ink-faint);
@@ -1754,6 +1776,36 @@
    */
   .scene-narration span[data-state="now"] {
     color: var(--slide-accent);
+  }
+
+  /* Floating Subtitle Card: replicates the crisp white pill caption from the lesson presentation sample */
+  .floating-subtitle-card {
+    display: inline-block;
+    max-width: 92%;
+    background-color: rgba(255, 255, 255, 0.96);
+    border: 1px solid rgba(226, 232, 240, 0.9);
+    border-radius: 1.25rem;
+    padding: 0.75cqw 2cqw;
+    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.3), 0 8px 10px -6px rgba(0, 0, 0, 0.2);
+    backdrop-filter: blur(8px);
+  }
+
+  .floating-subtitle-card .scene-narration {
+    color: #0f172a;
+    font-weight: 600;
+  }
+
+  .floating-subtitle-card .scene-narration span[data-state="idle"] {
+    color: #64748b;
+  }
+
+  .floating-subtitle-card .scene-narration span[data-state="said"] {
+    color: #0f172a;
+  }
+
+  .floating-subtitle-card .scene-narration span[data-state="now"] {
+    color: #0284c7;
+    text-shadow: 0 0 1px rgba(2, 132, 199, 0.4);
   }
 
   /*
@@ -2061,6 +2113,130 @@
     cursor: not-allowed;
   }
 
+  .scene-quiz-steps {
+    display: flex;
+    gap: 0.35cqw;
+  }
+
+  .scene-quiz-step {
+    height: 0.5cqw;
+    flex: 1;
+    border-radius: 999px;
+    background: var(--slide-rule);
+  }
+
+  .scene-quiz-step[data-state="current"] {
+    background: var(--slide-accent-soft);
+  }
+
+  .scene-quiz-step[data-state="done-correct"] {
+    background: var(--slide-accent);
+  }
+
+  .scene-quiz-step[data-state="done-wrong"] {
+    background: var(--slide-ink-faint);
+  }
+
+  .scene-quiz-score {
+    display: flex;
+    flex-direction: column;
+    gap: 0.3cqw;
+    font-size: 1.5cqw;
+    font-weight: 700;
+  }
+
+  .scene-quiz-praise {
+    font-size: 1.1cqw;
+    font-weight: 400;
+    color: var(--slide-ink-soft);
+  }
+
+  .scene-quiz-count {
+    margin-left: auto;
+    font-size: 1.05cqw;
+    font-weight: 600;
+    color: var(--slide-ink-faint);
+    font-variant-numeric: tabular-nums;
+  }
+
+  .scene-mindmap {
+    width: 100%;
+    max-width: 86%;
+    display: flex;
+    flex-direction: column;
+    gap: 1cqw;
+    color: var(--slide-ink);
+  }
+
+  .scene-mindmap-kicker {
+    font-size: 1.05cqw;
+    font-weight: 600;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--slide-accent);
+  }
+
+  .scene-mindmap-tree {
+    display: flex;
+    flex-direction: column;
+    gap: 0.6cqw;
+    margin-left: 0.4cqw;
+  }
+
+  .scene-mindmap-branch {
+    display: flex;
+    gap: 0.7cqw;
+    position: relative;
+    padding-left: 1.1cqw;
+  }
+
+  .scene-mindmap-dot {
+    position: absolute;
+    left: 0;
+    top: 0.42cqw;
+    width: 0.55cqw;
+    height: 0.55cqw;
+    border-radius: 999px;
+    background: var(--slide-rule);
+  }
+
+  .scene-mindmap-branch[data-fresh="true"] .scene-mindmap-dot {
+    background: var(--slide-accent);
+  }
+
+  .scene-mindmap-body {
+    min-width: 0;
+    flex: 1;
+  }
+
+  .scene-mindmap-label {
+    font-size: 1.25cqw;
+    font-weight: 600;
+    line-height: 1.25;
+  }
+
+  .scene-mindmap-branch[data-fresh="true"] .scene-mindmap-label {
+    color: var(--slide-accent);
+  }
+
+  .scene-mindmap-items {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.25cqw 1.1cqw;
+    margin-top: 0.25cqw;
+    font-size: 1cqw;
+    color: var(--slide-ink-soft);
+  }
+
+  .scene-mindmap-items li::before {
+    content: "• ";
+    color: var(--slide-accent-soft);
+  }
+
+  .scene-mindmap-branch[data-fresh="true"] .scene-mindmap-items {
+    color: var(--slide-ink);
+  }
+
   .scene-table {
     font-size: 1.35cqw;
     color: var(--slide-ink-soft);
@@ -2295,24 +2471,40 @@
    */
   .scene-fit.scene-has-interactive {
     display: grid;
-    grid-template-columns: minmax(0, 1fr) auto;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1.15fr);
     grid-template-rows: auto minmax(0, 1fr);
-    column-gap: 3cqw;
+    column-gap: 3.5cqw;
     align-items: start;
-    /*
-     * Fill the card rather than size to content.
-     *
-     * Left as `auto` the second row was exactly as tall as the taller column —
-     * three bullets — which left the model 95px tall on a full-size slide and
-     * 37px of canvas inside it. A slide with something to operate in it wants the
-     * leftover height handed to the control, which is the whole arrangement.
-     */
     height: 100%;
   }
 
   .scene-fit.scene-has-interactive > .scene-head {
     grid-column: 1 / -1;
-    max-width: none;
+    text-align: left;
+    margin-inline: 0;
+    max-width: 100%;
+  }
+
+  .scene-fit.scene-has-interactive .scene-title {
+    font-size: calc(3.4cqw * var(--slide-fit, 1));
+    line-height: 1.18;
+    text-align: left;
+  }
+
+  .scene-fit.scene-has-interactive .scene-sub {
+    font-size: calc(1.4cqw * var(--slide-fit, 1));
+    text-align: left;
+  }
+
+  .scene-fit.scene-has-interactive .scene-kicker {
+    margin-left: 0;
+    margin-right: auto;
+  }
+
+  .scene-fit.scene-has-interactive .scene-rule {
+    margin-left: 0;
+    margin-right: auto;
+    width: 100%;
   }
 
   .scene-fit.scene-has-interactive > .scene-body,
@@ -2320,7 +2512,10 @@
     grid-column: 1;
     grid-row: 2;
     align-self: start;
-    max-width: none;
+    grid-template-columns: 1fr !important;
+    max-width: 100% !important;
+    width: 100% !important;
+    margin-inline: 0;
   }
 
   /* The panel cell. `stretch` is what gives the model the full height of the
@@ -2331,22 +2526,19 @@
     grid-row: 2;
     align-self: stretch;
     display: flex;
+    flex-direction: column;
     margin-block: 0;
-    /*
-     * A share of the slide's width, no percentage cap: the percentage resolved
-     * against the grid column this very width had just sized, and clamped the
-     * panel to half of what it asked for — a 286px cell holding a 149px model.
-     */
-    width: calc(36cqw * var(--slide-fit, 1));
+    width: 100%;
+    max-width: 100%;
     min-width: 18cqw;
     min-height: calc(14cqw * var(--slide-fit, 1));
+    max-height: calc(100% - 1cqw);
   }
 
-  /* An answer list is text, so it needs a wider cell than a picture does. */
+  /* An answer list is text, so it takes the full width of its column. */
   .scene-has-interactive > .scene-interactive-quiz {
-    width: calc(44cqw * var(--slide-fit, 1));
-    /* A long answer list scrolls inside its cell rather than growing the row and
-       pushing the slide back into an overflow. */
+    width: 100%;
+    max-width: 100%;
     max-height: 100%;
     overflow-y: auto;
   }

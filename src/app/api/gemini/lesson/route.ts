@@ -1,19 +1,22 @@
 import { NextResponse, type NextRequest } from "next/server";
-import { resolveProvider } from "@/lib/ai/config";
+import { PROVIDERS, resolveProvider } from "@/lib/ai/config";
 import { credentialGate } from "@/lib/ai/readiness";
 import { AiError, generateJson } from "@/lib/ai/llm";
 import { isQuotaExhausted } from "@/lib/ai/shared";
 import { recordModelTrust } from "@/lib/ai/model-trust";
 import { noteCompactModel, readCompactModel } from "@/lib/server/token-limit";
-import { SCENE_ACCENTS, SCENE_KINDS, SLIDE_BLOCK_KINDS, SLIDE_LAYOUTS, POINTER_TARGETS, iconSetFor, newLessonId, type SlideTheme } from "@/lib/lesson/types";
+import { SCENE_ACCENTS, SCENE_KINDS, SLIDE_BLOCK_KINDS, SLIDE_LAYOUTS, POINTER_TARGETS, iconSetFor, newLessonId, type QuizQuestion, type SlideTheme } from "@/lib/lesson/types";
 import { DEFAULT_SLIDE_PATTERN, DEFAULT_SLIDE_THEME, isSlidePattern } from "@/lib/lesson/themes";
 import { DEFAULT_SLIDE_MOTION, isSlideMotion } from "@/lib/lesson/motion";
 import {
+  MAX_LESSON_SCENES,
   resolveLessonLength,
   resolvePresentationStyle,
 } from "@/lib/lesson/presentation-styles";
 import { resolveLessonLanguage } from "@/lib/lesson/lesson-languages";
 import { coerceLesson } from "@/lib/lesson/validate";
+import { quizQuestionTarget, splitBankQuestions, spreadCorrectAnswers } from "@/lib/lesson/quiz";
+import { mindmapSnapshot, type MindmapBranch } from "@/lib/lesson/mindmap";
 import {
   sceneNeedsExcerpt,
   sceneSolvesExercise,
@@ -21,7 +24,7 @@ import {
   sliceForScene,
 } from "@/lib/lesson/reference-skim";
 import { clientKey, rateLimit, rejectRemote } from "@/lib/server/guard";
-import { deleteDraft, saveDraft } from "@/lib/server/course-store";
+import { saveCourse, saveDraft } from "@/lib/server/course-store";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -315,6 +318,8 @@ const SLIDE_QUALITY_RULES = `YÊU CẦU CHẤT LƯỢNG SLIDE (bắt buộc):
    - TUYỆT ĐỐI cấm: tiêu đề toàn in hoa, dấu chấm than, emoji, ký tự trang trí,
      câu hỏi tu từ ("Bạn có biết...?"), và cụm từ sáo rỗng ("rất quan trọng",
      "có nhiều ứng dụng", "đơn giản").
+   - TUYỆT ĐỐI không để ký tự Hán/Nhật/Hàn lọt vào câu chữ (ví dụ sai: "số原子");
+     viết "số nguyên tử". Chỉ bài học về chính ngôn ngữ đó mới được phép có.
    - Con số là hình ảnh mạnh nhất. Khi bài có số hay, đưa SỐ ĐÓ vào tiêu đề hoặc
      gạch đầu dòng thay vì chỉ nhắc chữ "nhiều" hay "lớn".
 2. BẢNG chỉ dùng ĐÚNG MỘT LẦN trong cả bài, ở cảnh "example" dành riêng cho nó.
@@ -442,41 +447,7 @@ const SLIDE_DESIGN_RULES = `QUY TẮC BỐ CỤC SLIDE (bắt buộc — đây l
     - Trong một bài, hãy phân bố: 1 "cover", vài "spotlight"/"quote" cho ý cốt lõi,
       1-2 "flow" cho quy trình, phần còn lại "statement"/"two-col"/"cards"/
       "image-right" tuỳ nội dung. Đừng để 3 slide liền nhau cùng một layout.
-9. "blocks" — TỰ DO ĐẶT KHỐI, dùng khi layout không vừa:
-    Đây là lưới 1000 x 562.5 (rộng 1000, cao 562.5). Mỗi khối có "kind", "x", "y"
-    (góc trên-trái), "w", "h" (kích thước) — tất cả tính trên lưới đó, KHÔNG phải
-    pixel. Khối có thể là: "title", "subtitle", "text", "card", "formula", "image",
-     "shape" (một khung nền bo góc, KHÔNG có chữ) hoặc "rule" (một đường kẻ ngang,
-     KHÔNG có chữ).
-     - Dùng "shape" khi muốn có một tấm thẻ nền để tiêu đề hoặc một đoạn ngắn nằm
-       lên; dùng "rule" khi muốn một đường kẻ ngăn hai phần với nhau. Chúng là
-       hình học thuần, không mang chữ — nhờ vậy một ô chữ có thể nằm lên chúng.
-    - CHỈ dùng "blocks" cho tối đa 1/3 số cảnh, và chỉ khi bố cục thật sự khác
-      (ví dụ: ảnh lớn ở nửa trên, ba thẻ xếp dọc bên dưới; hoặc hai khối lệch
-      nhau về hai phía). Cảnh nào không chắc thì BỎ "blocks", để "layout" lo.
-    - "image" phải có "imagePrompt" (tiếng Anh, không chữ) hoặc "imageQuery".
-    - Chữ trong khối dưới 20 từ; số ký tự trên một dòng ≈ (w - 20) / (cỡ chữ ×
-      10) để không tràn dòng.
-    - Lề an toàn: mọi khối nằm trong x từ 50 đến 950, y từ 30 đến 500 (dải dưới
-      500-562 là chỗ phụ đề đè lên, đừng đặt chữ vào đó).
-    - Hai khối không được chồng lấn; khe hở giữa hai khối tối thiểu 20.
-    - Muốn nói chuyện với người xem bằng cách sắp xếp, hãy sắp xếp: một khối
-      "text" ngắn giữa slide trống đọc mạnh hơn một câu dài kèm tiêu đề.
-10. BẢNG TRA CHIỀU CAO CHỮ (dùng để không chữ nào bị tràn khung):
-    Khi bạn đặt khối chữ bằng "blocks", chiều cao phải tra bảng này theo CỠ CHỮ LỚN NHẤT
-    trong khối, KHÔNG tự ước lượng. Giá trị là chiều cao (px) cho 1 / 2 / 3 / 4 / 5 dòng:
-    14px: 43/64/85/106/127 | 16px: 46/70/94/118/142 | 18px: 49/76/103/130/157
-    20px: 52/82/112/142/172 | 24px: 58/94/130/166/202 | 28px: 64/106/148/190/232
-    32px: 70/118/166/214/262 | 36px: 76/130/184/238/292.
-    Cách tính số dòng: characters_per_line = (chiều rộng khối - 20) / cỡ chữ; số dòng của
-    một đoạn = ceil(số ký tự / characters_per_line); tổng số dòng của khối = tổng các
-    đoạn + 0.8 (làm tròn lên).
-11. CHECKLIST P0 — BẮT BUỘC TRƯỚC KHI TRẢ LỜI (tự kiểm, không được sai mục nào):
-    [chiều cao] mọi khối chữ đã lấy chiều cao từ bảng tra cứu ở mục 10;
-    [chiều rộng] mọi khối chữ thỏa char_count <= (chiều rộng - 20) / cỡ chữ;
-    [căn giữa] khối nào căn giữa thì tâm lệch nhau dưới 2px;
-    [lề] mọi khối nằm trong lề 50px mỗi cạnh (x 50-950, y 30-500);
-    [không tràn] không khối nào chồng lấn khối khác, và không khối nào chạm mép.`;
+9. "blocks" — TỰ DO ĐẶT KHỐI: chỉ dùng khi cần bố cục đặc biệt (lưới 1000x562.5, x: 50-950, y: 30-500, các khối không chồng lấn). Cảnh bình thường BỎ "blocks", để "layout" tự sắp xếp chuẩn nhất.`;
 
 const OUTLINE_SYSTEM = `Bạn là giáo viên KINH NGHIỆM lâu năm, tự thiết kế bài giảng cho học sinh phổ thông Việt Nam.
 Trả về DUY NHẤT một JSON đúng schema, không kèm giải thích, không markdown.
@@ -518,7 +489,7 @@ không người học sẽ rơi ngay ở chỗ đó.
   thêm 1 cảnh mà "goal" ghi rõ "vẽ và đọc đồ thị ...", để bước sau điền
   trường "graph" (điểm mẫu + tiệm cận) thay vì kể bằng chữ.
 - Phần "cạm bẫy": 1-2 cảnh sai thường gặp.
-- Phần "luyện": đúng 1 cảnh "quiz".
+- Phần "luyện" và sơ đồ tóm tắt: theo "Kế hoạch luyện + sơ đồ" ở cuối đề bài.
 - Cảnh cuối (kind="summary"): tóm tắt + gợi ý bài tiếp theo.
 - Nếu chủ đề có hình học/vật lý/sinh học thì thêm 1 cảnh "simulation3d".
 - Cân bằng loại cảnh, đừng dồn toàn bộ "concept".
@@ -533,11 +504,152 @@ không người học sẽ rơi ngay ở chỗ đó.
 - "duration": 6-25 giây mỗi cảnh, TỔNG đúng bằng thời lượng yêu cầu.
 - Cảnh "example" bắt buộc có nếu bài có BẢNG THỐNG KÊ (bảng nhân/chia, bảng hệ số,
   bảng so sánh, danh sách) — dành riêng một cảnh cho bảng đó.
-- Khi có khối TÀI LIỆU THAM KHẢO: dàn ý đi theo đúng thứ tự mục trong tài liệu
-  (dùng mốc "> Trang N/T" để chia), và dành cảnh "example" riêng cho từng bài
-  tập có số thứ tự trong tài liệu.
+- Khi có khối TÀI LIỆU THAM KHẢO:
+  + Nếu chủ đề người dùng nhập là yêu cầu chung (như "dạy tôi chi tiết bài này", "dạy bài này", "giảng tài liệu này"):
+    BẮT BUỘC đọc TÀI LIỆU THAM KHẢO để xác định CHÍNH XÁC tên môn học và tiêu đề bài học thật để điền vào "title" và "subject". TUYỆT ĐỐI không để title là "dạy tôi chi tiết bài này".
+  + Khi yêu cầu "dạy chi tiết": dàn ý phải bám sát toàn bộ mạch kiến thức của tài liệu từ đầu đến cuối, đi sâu vào cơ chế hoạt động, nguyên lý, các công thức và bài tập ví dụ số liệu thực tế. Phân bố cân đối giữa các loại cảnh: "concept" (khái niệm cốt lõi), "compare" (so sánh đối lập), "flow" (quy trình/chu trình), "example" (ví dụ tính toán/ứng dụng), "quiz" và "diagram".
+  + Dàn ý đi theo đúng thứ tự mục trong tài liệu (dùng mốc "> Trang N/T" để chia), và dành cảnh "example" riêng cho từng bài tập có số thứ tự trong tài liệu.`;
 
-${SLIDE_QUALITY_RULES}`;
+/**
+ * Sizes the practice-and-recap pass to the deck.
+ *
+ * The counts must agree with `quizQuestionTarget` — the player reads the same
+ * numbers for the progress bar — and the diagrams are cumulative by
+ * definition: each one repeats the earlier branches and adds what just came,
+ * so the last one is the full map.
+ */
+function learningPlanRules(sceneCount: number): string {
+  const lines = [
+    "",
+    "# Kế hoạch luyện + sơ đồ (bắt buộc)",
+    "- Các cảnh quiz và sơ đồ NẰM TRONG số cảnh yêu cầu ở trên, không cộng thêm.",
+  ];
+  if (sceneCount > 15) {
+    lines.push(
+      '- HAI cảnh "quiz" chặng ngắn (3 câu), chia đều bài — khoảng một phần ba và hai phần ba.',
+      '- Ngay SAU mỗi quiz chặng là 1 cảnh "diagram" với goal bắt đầu bằng "vẽ sơ đồ tóm tắt phần đã học".',
+      '- 1 cảnh "diagram" cuối (goal "vẽ sơ đồ tóm tắt toàn bài") ngay trước quiz tổng kết.',
+      '- 1 cảnh "quiz" tổng kết (20 câu) ngay trước cảnh cuối cùng.',
+    );
+  } else if (sceneCount >= 6) {
+    lines.push(
+      '- Một cảnh "quiz" chặng ngắn (3 câu) ngay sau cụm lý thuyết đầu tiên, hỏi đúng phần vừa học.',
+      '- Ngay SAU quiz chặng là 1 cảnh "diagram" với goal bắt đầu bằng "vẽ sơ đồ tóm tắt phần đã học".',
+      '- 1 cảnh "diagram" cuối (goal "vẽ sơ đồ tóm tắt toàn bài") ngay trước quiz tổng kết.',
+      '- 1 cảnh "quiz" tổng kết (15 câu) ngay trước cảnh cuối cùng.',
+    );
+  } else {
+    lines.push('- Đúng 1 cảnh "quiz" tổng kết (10 câu) ngay trước cảnh cuối cùng.');
+    if (sceneCount >= 5) {
+      lines.push('- 1 cảnh "diagram" (goal "vẽ sơ đồ tóm tắt toàn bài") ngay trước quiz tổng kết.');
+    }
+  }
+  lines.push(
+    "- Sơ đồ tính CỘNG DỒN: cảnh diagram sau nhiều nhánh hơn cảnh trước, cảnh cuối phủ cả bài.",
+  );
+  return lines.join("\n");
+}
+
+/**
+ * Stage 3's brief: one call turns the finished deck into practice questions
+ * and the recap diagram's branches.
+ *
+ * The answer comes back as a single FLAT list — checkpoint questions first,
+ * then the closing ones — because the response schema subset cannot nest
+ * arrays, so position is the contract the splitter relies on.
+ */
+const BANK_SYSTEM = `Bạn là giáo viên soạn câu hỏi tự kiểm tra cho một bài giảng đã viết xong.
+
+Bạn nhận được bối cảnh bài học và danh sách cảnh theo đúng thứ tự học. Câu hỏi phải bám đúng nội dung các cảnh — người học vừa học phần đó và sẽ tự trả lời ngay, không tra cứu gì thêm.
+
+# Quy tắc câu hỏi
+1. Mỗi câu có 3-4 lựa chọn, đúng MỘT đáp án — và vị trí đáp án đúng phải thay đổi giữa các câu, TUYỆT ĐỐI không dồn về lựa chọn đầu.
+2. Các đáp án sai phải hợp lý — đúng những lỗi học sinh hay mắc, không đánh đố.
+3. Giải thích ngắn (1-2 câu) vì sao đáp án đúng hoặc sai, giọng thân thiện như đang chữa bài.
+4. Câu hỏi kiểm tra HIỂU, không hỏi vẹt số liệu hay chi tiết vụn.
+5. Trả về MỘT danh sách phẳng: câu quiz chặng trước (mỗi chặng đúng số câu được yêu cầu, liền nhau), rồi đến câu tổng kết.
+6. TUYỆT ĐỐI không để ký tự Hán/Nhật/Hàn lọt vào câu chữ (ví dụ sai: "số原子" — đúng: "số nguyên tử").
+7. CÔNG THỨC TOÁN, LÝ, HÓA, BIỂU THỨC: BẮT BUỘC định dạng chuẩn LaTeX và LUÔN bao quanh bằng ký hiệu $ (inline) hoặc $$ (display) trong cả câu hỏi, các phương án lựa chọn và phần giải thích.
+   - Ví dụ chuẩn: "$f(x) = x^2$", "$f'(a)$", "$\\lim_{h \\to 0} \\frac{(a+h)^2 - a^2}{h}$", "$\\sqrt{x}$", "$e^{a}$", "$x = 3$", "$\\frac{1}{4}$".
+   - Tuyệt đối KHÔNG viết công thức cẩu thả dạng "lim_{h→0} ( (a+h)^2 - a^2 ) / h" hay "x^2" trần trụi không có dấu $.
+
+# Quy tắc sơ đồ
+- 4-6 nhánh, mỗi nhánh là một phần chính của bài, theo thứ tự học.
+- Nhãn nhánh ngắn 2-5 từ; mỗi nhánh 2-4 gạch đầu dòng dưới 60 ký tự.
+- Cả sơ đồ phải kể được cả bài khi nhìn vào.`;
+
+const bankSchema: Record<string, unknown> = {
+  type: "object",
+  properties: {
+    questions: {
+      type: "array",
+      items: {
+        type: "object",
+        properties: {
+          question: { type: "string" },
+          options: {
+            type: "array",
+            items: {
+              type: "object",
+              properties: {
+                text: { type: "string" },
+                isCorrect: { type: "boolean" },
+                explanation: { type: "string" },
+              },
+              required: ["text", "isCorrect"],
+            },
+          },
+        },
+        required: ["question", "options"],
+      },
+    },
+    branches: {
+      type: "array",
+      items: {
+        type: "object",
+        properties: {
+          label: { type: "string" },
+          items: { type: "array", items: { type: "string" } },
+        },
+        required: ["label", "items"],
+      },
+    },
+  },
+  required: ["questions"],
+};
+
+/** The stage-3 prompt: the lesson's own scenes are the whole context. */
+function bankPrompt(
+  lessonContext: string,
+  scenes: Array<Record<string, unknown>>,
+  checkpointCount: number,
+  finalTarget: number,
+): string {
+  const outline = scenes
+    .map((scene, index) => {
+      const kind = typeof scene.kind === "string" ? scene.kind : "concept";
+      const title = typeof scene.title === "string" ? scene.title : "";
+      const subtitle = typeof scene.subtitle === "string" ? scene.subtitle : "";
+      return `${index + 1}. [${kind}] ${title}${subtitle ? ` — ${subtitle}` : ""}`;
+    })
+    .join("\n");
+  const checkpointRules =
+    checkpointCount > 0
+      ? `- ${checkpointCount * 3} câu đầu là câu quiz chặng: mỗi chặng 3 câu liền nhau, hỏi đúng phần đã học tính đến cảnh quiz đó${
+          checkpointCount > 1 ? " (chặng 1 đầu bài, chặng 2 giữa bài)" : ""
+        }.\n`
+      : "";
+  return [
+    lessonContext,
+    "",
+    "# Dàn cảnh của bài, theo đúng thứ tự học:",
+    outline,
+    "",
+    "# Yêu cầu cho lượt này",
+    `${checkpointRules}- ${finalTarget} câu tiếp theo là quiz TỔNG KẾT, trải đều cả bài.`,
+    "- Sơ đồ: 4-6 nhánh phủ cả bài theo thứ tự học, nhãn 2-5 từ, mỗi nhánh 2-4 gạch đầu dòng ngắn.",
+  ].join("\n");
+}
 
 /**
  * Extra slide rules layered on when the teacher asks for illustrations.
@@ -605,30 +717,35 @@ trong bài giảng mà bạn tự thiết kế. Trả về DUY NHẤT JSON đún
 
 # Cách viết một slide
 Hãy bắt đầu bằng câu hỏi: "Học sinh đang thắc mắc gì ở đây?" — rồi trả lời đúng câu
-hỏi đó. Đây là cách giảng thật, và nó giữ slide khỏi thành danh sách sáo rỗng.
-Slide phải đứng được một mình: đọc slide này mà không có slide trước thì vẫn hiểu.
+hỏi đó bằng một bài giảng sâu sắc, dễ hiểu. Slide phải đứng được một mình: đọc slide này
+mà không có slide trước thì vẫn hiểu trọn vẹn.
 
-- "title": câu khẳng định có nghĩa, không phải chủ đề chung chung
-  (vd "Lực hút làm vật tốc đổi" thay vì "Trọng lực").
-- "subtitle": dưới 90 ký tự, bổ sung ngữ cảnh cụ thể.
-- "bullets": 2-4 gạch đầu dòng ngắn, cụ thể, KHÔNG sáo rỗng. Mỗi gạch đầu dòng
-  phải mang thêm thông tin so với tiêu đề, không lặp lại tiêu đề.
-- "narration": 3-4 câu văn nói tự nhiên để đọc bằng giọng Việt — đây là lời thầy
-  nói thật, nên viết như đang giảng: dẫn dắt, giải thích, ví dụ, hỏi lại học sinh.
-  Không markdown, không LaTeX, không đọc ký hiệu. TUYỆT ĐỐI không lặp lại cụm từ.
-  Nếu "duration" của cảnh dài hơn 12 giây, viết dài hơn — đừng viết ngắn cho xong.
-- Nếu loại cảnh là "quiz": BẮT BUỘC trả "quiz" gồm câu hỏi + đúng 4 phương án,
-  mỗi phương án có isCorrect và explanation. Câu hỏi phải kiểm tra đúng phần vừa
-  dạy, không hỏi lại thứ đã nói ở đầu bài.
+- "title": câu khẳng định có nghĩa đúc kết bản chất, KHÔNG dùng câu hỏi ("... là gì?")
+  và KHÔNG dùng nhãn chung chung (vd "Máy tính nối nhau để chia sẻ tài nguyên" thay vì "Mạng máy tính là gì?").
+- "subtitle": dưới 90 ký tự, bổ sung ngữ cảnh hoặc góc nhìn thực tiễn cụ thể.
+- "bullets": 2-4 gạch đầu dòng ngắn, súc tích, giàu thông tin (có thuật ngữ khoa học chính xác,
+  nguyên lý, số liệu). Mỗi gạch phải mang thêm thông tin so với tiêu đề, không lặp lại tiêu đề.
+- "narration": 3-5 câu văn nói tự nhiên, truyền cảm như thầy cô tâm huyết đang giảng trực tiếp cho học sinh.
+  + TUYỆT ĐỐI KHÔNG mở đầu kiểu người ngoài quan sát ("Học sinh thắc mắc...", "Slide này nói về...").
+  + Mở đầu trực diện, dùng ẩn dụ gần gũi (analogy) giúp học sinh hiểu ngay bản chất kỹ thuật.
+  + Giải thích CƠ CHẾ hoạt động (nó vận hành từng bước thế nào?) và VÌ SAO cần (ý nghĩa thực tế).
+  + Không markdown, không LaTeX, không đọc ký hiệu vụn. TUYỆT ĐỐI không lặp lại cụm từ.
+  + Nếu "duration" dài hơn 12 giây, giảng giải kỹ càng, chi tiết — đừng nói vắn tắt cho xong.
+- Nếu loại cảnh là "quiz": BẮT BUỘC trả "quiz" gồm câu hỏi kiểm tra độ hiểu sâu + đúng 4 phương án,
+  mỗi phương án có isCorrect và explanation chi tiết như lời thầy giải thích. Mọi công thức toán/lý/hóa trong câu hỏi, đáp án và giải thích phải định dạng chuẩn LaTeX kẹp trong $...$ (ví dụ: "$f'(x)=2x$", "$\\frac{a}{b}$", "$\\lim_{h \\to 0}$").
 - Nếu loại cảnh là "simulation3d": BẮT BUỘC trả "simulation3d" với "type" hợp lệ.
 
 # Cách dùng hình thức trình bày
-Chọn đúng MỘT hình thức đúng nhất cho ý này, đừng nhồi tất cả:
+Chọn đúng MỘT hình thức phù hợp nhất để làm nổi bật nội dung:
+- So sánh hai khái niệm (đúng/sai, gói vs mạch, LAN vs WAN) → layout "compare".
+- Chu trình hoặc các bước tuần tự (hành trình dữ liệu, bắt tay TCP) → layout "flow".
+- Có phân loại nhiều nhánh (kiểu truyền, các loại trễ) → layout "cards".
 - Có số liệu so sánh nhiều mục → "data" (biểu đồ cột).
-- Có bảng thống kê thật → "table".
-- Có công thức cần học thuộc → "formula".
+- Có bảng thống kê thật từ tài liệu → "table".
+- Có công thức toán/lý/tin cần nhớ → "formula".
 - Cần minh hoạ bằng hình vẽ → "imagePrompt" (xem quy tắc bên dưới).
-- Không có gì để hình ưu → cứ để trống, đừng bịa.
+- Khái niệm cốt lõi, chân lý đáng nhớ → layout "spotlight" hoặc "quote".
+- Cảnh bình thường → layout "statement" hoặc "two-col".
 
 # Giọng điệu khi viết narration
 - Xưng "chúng ta" khi cùng khám phá, "bạn" khi hướng dẫn trực tiếp.
@@ -783,8 +900,13 @@ function pictureFromTitle(title: string): string {
 }
 
 /** The system prompt for one scene, with the picture mode folded in. */
-function sceneSystem(withImages: boolean): string {
-  return SCENE_SYSTEM + REFERENCE_RULES + SOLUTION_RULES + GRAPH_RULES + POINTER_RULES + (withImages ? IMAGE_MODE_RULES : NO_IMAGE_MODE_RULES);
+function sceneSystem(withImages: boolean, kind?: string, isMathGraph = false): string {
+  let prompt = SCENE_SYSTEM + REFERENCE_RULES;
+  if (kind === "example") prompt += SOLUTION_RULES;
+  if (isMathGraph) prompt += GRAPH_RULES;
+  prompt += POINTER_RULES;
+  prompt += withImages ? IMAGE_MODE_RULES : NO_IMAGE_MODE_RULES;
+  return prompt;
 }
 
 interface OutlineScene {
@@ -825,7 +947,13 @@ function ensureClosingScenes(
 ): void {
   const has = (kind: string) => scenes.some((scene) => scene.kind === kind);
 
-  if (!has("quiz")) {
+  // A quiz scene that lost its body in generation is invisible to the player
+  // (no UI mounts, no gate arms), so it must not count as "the quiz exists".
+  const hasQuiz = scenes.some(
+    (scene) => scene.kind === "quiz" && Boolean((scene as { quiz?: unknown }).quiz),
+  );
+
+  if (!hasQuiz) {
     scenes.push({
       kind: "quiz",
       accent: "gold",
@@ -1113,18 +1241,30 @@ export async function POST(request: NextRequest) {
     '  ("như đã nói ở trên", "bạn cần nhớ kỹ điều này") — đó là lời thầy dạy rở.',
   ].join("\n");
 
-  const context = [
+  const outlineContext = (compact = false) =>
+    [
+      `Chủ đề: ${topic}`,
+      subject ? `Môn: ${subject}` : "",
+      grade ? `Trình độ/khối: ${grade}` : "",
+      `Ngôn ngữ: ${language}`,
+      languageRule,
+      body.notes?.trim() ? `Yêu cầu thêm: ${body.notes.trim()}` : "",
+      reference
+        ? `\n--- TÀI LIỆU THAM KHẢO (giữ tiêu đề/bảng/mốc trang) ---\n${skimReference(reference, compact ? 2200 : 4500)}\n--- HẾT TÀI LIỆU ---`
+        : "",
+    ]
+      .filter(Boolean)
+      .join("\n");
+
+  const sceneContext = [
     `Chủ đề: ${topic}`,
-    `Môn: ${subject}`,
+    subject ? `Môn: ${subject}` : "",
     grade ? `Trình độ/khối: ${grade}` : "",
     `Ngôn ngữ: ${language}`,
     languageRule,
     "",
     SLIDE_DESIGN_RULES,
     body.notes?.trim() ? `Yêu cầu thêm: ${body.notes.trim()}` : "",
-    reference
-      ? `\n--- TÀI LIỆU THAM KHẢO (markdown, giữ tiêu đề/bảng/mốc trang) ---\n${skimReference(reference)}\n--- HẾT TÀI LIỆU ---`
-      : "",
   ]
     .filter(Boolean)
     .join("\n");
@@ -1140,7 +1280,7 @@ export async function POST(request: NextRequest) {
    */
   const shortContext = [
     `Chủ đề: ${topic}`,
-    `Môn: ${subject}`,
+    subject ? `Môn: ${subject}` : "",
     grade ? `Trình độ/khối: ${grade}` : "",
     `Ngôn ngữ: ${language}`,
     body.notes?.trim() ? `Yêu cầu thêm: ${body.notes.trim()}` : "",
@@ -1197,8 +1337,18 @@ export async function POST(request: NextRequest) {
 
   const stream = new ReadableStream<Uint8Array>({
     async start(controller) {
+      // A classroom that reloaded or closed leaves a dead pipe behind.
+      // Enqueueing there throws, and that throw must not kill a run that is
+      // mid-write: every scene still lands in the draft file, and the deck
+      // files itself server-side, so the run outlives whoever was watching.
+      let pipeClosed = false;
       const send = (event: StreamEvent) => {
-        controller.enqueue(encoder.encode(`data: ${JSON.stringify(event)}\n\n`));
+        if (pipeClosed) return;
+        try {
+          controller.enqueue(encoder.encode(`data: ${JSON.stringify(event)}\n\n`));
+        } catch {
+          pipeClosed = true;
+        }
       };
 
       // Draft identity, hoisted so the catch block can mark the draft failed
@@ -1230,55 +1380,48 @@ export async function POST(request: NextRequest) {
         });
 
         const outlineStart = Date.now();
-        const outlineResult = await generateJson<Outline>(creds, {
-          model: modelOverride,
-          system: OUTLINE_SYSTEM,
-          prompt: `${context}\nSố cảnh: ${sceneCount}. Tổng thời lượng: ${totalSeconds}s.${length.rules}\nĐây là bài DÀNH, đã tách nhỏ từng phần để học sinh tự học được.\n\nBẮT BUỘC liệt kê ĐÚNG ${sceneCount} mục trong "scenes", đánh số từ 1 đến ${sceneCount}. Hãy đếm lại trước khi trả lời — thiếu mục nào cũng tính là sai, và câu trả lời sẽ bị làm lại.\n\nCách lấy đủ ${sceneCount} mục khi chủ đề nghe như chỉ có vài ý:\n- Tách MỖI ý lớn thành nhiều mục nhỏ hơn (định nghĩa một mục, ý nghĩa một mục, ví dụ một mục).\n- Mỗi ví dụ trong bài là một mục riêng, đừng gộp ba ví dụ vào một mục.\n- Thêm các mục "vì sao cần", "cạm bẫy thường gặp", "khi nào không dùng được", "bài tập tự làm", "tóm tắt".\n- ĐỪNG tách nhỏ đến mức vô nghĩa: một dãy phép tính cùng loại (cả bảng nhân) thì gộp\n  thành MỘT mục, vì tách từng dòng ra sẽ thành 9 slide giống hệt nhau.\n- KHÔNG được lặp lại cùng một ý để lấp số. Mỗi mục phải dạy một điều khác đi.\n\nChỉ trả về tiêu đề và mục tiêu từng cảnh, chưa viết nội dung chi tiết.`,
-          schema: OUTLINE_SCHEMA,
-          temperature: 0.6,
-          // Scaled, not fixed. An outline entry is a kind, a title and a goal —
-          // roughly forty tokens with the punctuation — so the 4096 that used to
-          // sit here was comfortable for a dozen scenes and nowhere near enough
-          // for the ninety-five the long preset asks for. A truncated outline is
-          // not a short outline: it is unparseable JSON, and stage 2 never runs.
-          maxOutputTokens: Math.min(32_000, 2048 + sceneCount * 64),
-          // Also scaled, for the same reason. A ninety-five scene outline is
-          // several thousand tokens of generation, and a fixed ninety seconds
-          // would abort it partway through — after which the retry starts the
-          // same long generation and times out again. The base covers a short
-          // outline, the per-scene term covers the long one.
-          //
-          // The base is much larger than the cloud providers need because the
-          // CLI provider spends it on tools: an agent that has to open a 308-page
-          // slide deck, find the pages it wants and read them back takes ~80s
-          // before it writes a word, and `--print-timeout` cuts the turn dead
-          // with an empty `response` when it overruns. Measured: the outline for
-          // "định nghĩa tích phân Riemann" was killed at 82s with 225k input
-          // tokens spent and nothing to show for it.
-          // Raised from a 300s ceiling: a Vietnamese outline of 16 scenes runs
-          // about 3k output tokens, and when that gets truncated the retry asks
-          // for twice the room — measured at ~60s per 3k tokens on the 550B
-          // NVIDIA model. A 300s cap stopped the retry mid-answer.
-          totalTimeoutMs: Math.min(480_000, 180_000 + sceneCount * 12_000),
-          // Only a missing goal is treated as a failure worth retrying. A missing
-          // goal means stage 2 has nothing but a title to work from, and every
-          // scene it writes comes out thin — there is no way to salvage that
-          // downstream.
-          //
-          // A short outline is deliberately NOT rejected. The model answered
-          // "five good scenes" to "give me fourteen" three times in a row, and
-          // retrying it for that burns the whole attempt budget and returns
-          // nothing at all. A ten-scene lesson is worth far more than an error
-          // message, so the count stays a soft goal: the prompt pushes for it,
-          // and the shape is finished off by `ensureClosingScenes`.
-          validate: (data) => {
-            const scenes = (data as Outline).scenes ?? [];
-            if (scenes.length > 0 && scenes.every((scene) => !scene.goal?.trim())) {
-              return "dàn ý thiếu \"goal\" cho mọi cảnh.";
-            }
-            return null;
-          },
-        });
+        const runOutline = (isCompact = false) =>
+          generateJson<Outline>(creds, {
+            model: modelOverride,
+            system: OUTLINE_SYSTEM,
+            prompt: `${outlineContext(isCompact)}\nSố cảnh: ${sceneCount}. Tổng thời lượng: ${totalSeconds}s.${length.rules}\nĐây là bài DÀNH, đã tách nhỏ từng phần để học sinh tự học được.\n\nBẮT BUỘC liệt kê ĐÚNG ${sceneCount} mục trong "scenes", đánh số từ 1 đến ${sceneCount}. Hãy đếm lại trước khi trả lời — thiếu mục nào cũng tính là sai, và câu trả lời sẽ bị làm lại.\n\nCách lấy đủ ${sceneCount} mục khi chủ đề nghe như chỉ có vài ý:\n- Tách MỖI ý lớn thành nhiều mục nhỏ hơn (định nghĩa một mục, ý nghĩa một mục, ví dụ một mục).\n- Mỗi ví dụ trong bài là một mục riêng, đừng gộp ba ví dụ vào một mục.\n- Thêm các mục "vì sao cần", "cạm bẫy thường gặp", "khi nào không dùng được", "bài tập tự làm", "tóm tắt".\n- ĐỪNG tách nhỏ đến mức vô nghĩa: một dãy phép tính cùng loại (cả bảng nhân) thì gộp\n  thành MỘT mục, vì tách từng dòng ra sẽ thành 9 slide giống hệt nhau.\n- KHÔNG được lặp lại cùng một ý để lấp số. Mỗi mục phải dạy một điều khác đi.\n\n${learningPlanRules(sceneCount)}
+
+Chỉ trả về tiêu đề và mục tiêu từng cảnh, chưa viết nội dung chi tiết.`,
+            schema: OUTLINE_SCHEMA,
+            temperature: 0.6,
+            maxOutputTokens: isCompact
+              ? Math.min(3072, 1024 + sceneCount * 36)
+              : Math.min(8192, 1024 + sceneCount * 48),
+            totalTimeoutMs: Math.min(480_000, 180_000 + sceneCount * 12_000),
+            validate: (data) => {
+              const scenes = (data as Outline).scenes ?? [];
+              if (scenes.length > 0 && scenes.every((scene) => !scene.goal?.trim())) {
+                return 'dàn ý thiếu "goal" cho mọi cảnh.';
+              }
+              return null;
+            },
+          });
+
+        let outlineResult: { data: Outline; model: string };
+        try {
+          outlineResult = await runOutline(false);
+        } catch (error) {
+          const msg = error instanceof Error ? error.message : String(error);
+          const tooBig =
+            /too large|tokens per minute|\b[IT]PM\b|reduce your message size/i.test(msg);
+          if (tooBig) {
+            send({
+              type: "stage",
+              stage: "outline",
+              message: "Dàn ý vượt giới hạn token — đang rút gọn tài liệu và thử lại…",
+              progress: 10,
+              provider: creds.provider,
+            });
+            outlineResult = await runOutline(true);
+          } else {
+            throw error;
+          }
+        }
         const outline = outlineResult.data;
 
         const planned = (outline.scenes ?? []).slice(0, sceneCount);
@@ -1315,6 +1458,12 @@ export async function POST(request: NextRequest) {
         draftTitle = String(outline.title ?? topic).slice(0, 200);
         draftSubject = String(outline.subject ?? subject ?? "").slice(0, 120);
         plannedTotal = planned.length;
+        // Raw scene bodies as they finish. Streamed to the classroom, and at
+        // the same time kept here: the draft file is what a viewer without
+        // the live stream (second tab, reload) replays slide by slide.
+        // Declared before writeDraft because its body reads this array.
+        const scenes: Array<Record<string, unknown>> = [];
+        const chosenVoice = typeof body.voice === "string" ? body.voice.slice(0, 80) : undefined;
         const writeDraft = (message: string, error?: string) =>
           saveDraft({
             id: lessonId,
@@ -1324,6 +1473,8 @@ export async function POST(request: NextRequest) {
             done: draftDone,
             message: message.slice(0, 300),
             updatedAt: new Date().toISOString(),
+            scenes: scenes.filter((scene) => scene != null),
+            voice: chosenVoice,
             error,
           }).catch(() => {
             // A draft is a courtesy, not the lesson: never fail the run over it.
@@ -1331,7 +1482,6 @@ export async function POST(request: NextRequest) {
         await writeDraft(`Dàn ý xong: ${planned.length} cảnh. Bắt đầu viết chi tiết…`);
 
         // ---------- stage 2: one call per scene, streamed as it lands ----------
-        const scenes: Array<Record<string, unknown>> = [];
         // Starts as the model that was asked for; overwritten by the first scene
         // that comes back, so a lesson finished by a backup model is labelled
         // with the backup rather than with a model that never wrote it.
@@ -1377,11 +1527,6 @@ export async function POST(request: NextRequest) {
           }
         >();
         const perSceneSeconds = perScene(planned.length);
-        // The system prompt is identical for every scene call (and its
-        // retry), so build it once. Concatenating the same string N times
-        // burns CPU but never tokens — still, no reason to burn it.
-        const sceneSystemPrompt =
-          sceneSystem(useImages) + style.rules + iconRules(iconNames);
 
         /**
          * Writes one scene. Split out from the loop because the loop is batched,
@@ -1401,14 +1546,19 @@ export async function POST(request: NextRequest) {
           let retried = false;
           // The scene's own excerpt: the numbered exercise (or passage) this
           // scene teaches, lifted out of the shared skim so the working comes
-          // from the book instead of memory. Empty when nothing matches, in
-          // which case the scene falls back to the full skim in `context`.
-          const excerpt =
-            reference?.trim() &&
-            plannedScene.goal &&
-            sceneNeedsExcerpt(sceneTitle, plannedScene.goal)
-              ? sliceForScene(reference, sceneTitle, plannedScene.goal)
-              : "";
+          // from the book instead of memory.
+          const excerpt = reference?.trim()
+            ? (sliceForScene(reference, sceneTitle, plannedScene.goal ?? "", 2200) ||
+               skimReference(reference, 2200))
+            : "";
+
+          const isMathGraph =
+            kind === "concept" &&
+            /(đồ thị|hàm số|tiệm cận|\bcurve\b|\bgraph\b)/i.test(`${plannedScene.goal ?? ""} ${sceneTitle}`);
+
+          const system = compact
+            ? sceneSystem(useImages, kind, isMathGraph)
+            : sceneSystem(useImages, kind, isMathGraph) + style.rules + iconRules(iconNames);
 
           const sceneRequest = {
             model: modelOverride,
@@ -1416,16 +1566,14 @@ export async function POST(request: NextRequest) {
             // guide and the icon rules are worth a thousand tokens, and on a
             // provider with an 8000-token-per-minute budget they are the
             // difference between a written scene and a refused request.
-            system: compact ? sceneSystem(useImages) : sceneSystemPrompt,
-            prompt: `${compact ? shortContext : context}\n\nBài: "${outline.title ?? topic}"\nCảnh ${
+            system,
+            prompt: `${compact ? shortContext : sceneContext}\n\nBài: "${outline.title ?? topic}"\nCảnh ${
               index + 1
             }/${planned.length}: loại "${kind}", tiêu đề "${sceneTitle}"${
               plannedScene.subtitle ? `, phụ đề "${plannedScene.subtitle}"` : ""
             }.${plannedScene.goal ? `\nMỤC TIÊU CẢNH NÀY: ${plannedScene.goal}` : ""}${
               excerpt
-                ? kind === "example"
-                  ? `\nĐOẠN TÀI LIỆU RIÊNG CHO CẢNH NÀY (đề bài nằm đây — đọc kỹ rồi mới viết "steps", giữ đề nguyên văn ở "subtitle"):\n${excerpt}\n---`
-                  : `\nĐOẠN TÀI LIỆU RIÊNG CHO CẢNH NÀY (đoạn mô tả hàm số/đường cong — đọc kỹ rồi mới điền "graph", tiệm cận ghi vào vlines/hlines):\n${excerpt}\n---`
+                ? `\nĐOẠN TÀI LIỆU CHO CẢNH NÀY (đọc kỹ để giảng đúng trọng tâm và số liệu):\n${excerpt}\n---`
                 : ""
             }${
               typeof plannedScene.buildsOn === "number" && plannedScene.buildsOn >= 0 && plannedScene.buildsOn < index
@@ -1441,8 +1589,8 @@ export async function POST(request: NextRequest) {
             // temperature turns arithmetic into confabulation, and 49–99
             // graph points plus six steps do not fit a 2048-token budget
             // without truncating the narration the voice still has to read.
-            temperature: kind === "example" ? 0.5 : 0.85,
-            maxOutputTokens: kind === "example" ? 3072 : 2048,
+            temperature: kind === "example" ? 0.5 : 0.8,
+            maxOutputTokens: kind === "example" ? 1400 : 900,
             validate: (data: unknown) => {
               const scene = data as Record<string, unknown>;
               if (Array.isArray(scene.bullets) && scene.bullets.length === 0) {
@@ -1691,21 +1839,43 @@ export async function POST(request: NextRequest) {
           });
           void writeDraft(`Đã xong ${draftDone}/${planned.length} cảnh.`);
         };
-        // Scenes are written strictly one after another: the classroom plays
-        // each finished slide with its voice-over before the next one is even
-        // requested, so the deck grows exactly the way it is watched. Slower
-        // wall-clock than parallel batches — a deliberate trade, chosen so a
-        // long lesson never looks stalled while six calls fight upstream.
-        for (let index = 0; index < planned.length; index += 1) {
+        // Scene 0 is written first and reported immediately so the student
+        // lands straight into the first slide and its voice-over without waiting.
+        if (planned.length > 0) {
           send({
             type: "stage",
             stage: "scene",
-            message: `Đang viết cảnh ${index + 1}/${planned.length}`,
-            progress: Math.round(25 + (index / planned.length) * 70),
+            message: `Đang viết cảnh 1/${planned.length}`,
+            progress: 25,
           });
-          const result = await writeScene(index);
-          reportScene(index, result);
+          const first = await writeScene(0);
+          reportScene(0, first);
         }
+
+        // Remaining scenes are written with a concurrency of 2: each call fits
+        // comfortably within the token budget while halving the total wait time.
+        const CONCURRENCY = 2;
+        let nextSceneIndex = 1;
+
+        const runWorker = async () => {
+          while (nextSceneIndex < planned.length) {
+            const index = nextSceneIndex++;
+            send({
+              type: "stage",
+              stage: "scene",
+              message: `Đang viết cảnh ${index + 1}/${planned.length}`,
+              progress: Math.round(25 + (draftDone / planned.length) * 70),
+            });
+            const result = await writeScene(index);
+            reportScene(index, result);
+          }
+        };
+
+        const workers = Array.from(
+          { length: Math.min(CONCURRENCY, Math.max(0, planned.length - 1)) },
+          () => runWorker(),
+        );
+        await Promise.all(workers);
 
         // ---------- enforce the shape, whatever the outline said ----------
         // The prompt asks for an opener, a quiz and a summary, and usually gets
@@ -1713,7 +1883,129 @@ export async function POST(request: NextRequest) {
         // practice before the recap, and no recap at all. Both are cheap to
         // append and impossible to skip afterwards, so they are appended here
         // rather than trusted to the model.
+        // The close scene rides past the cap: reserve room for quiz, recap and
+        // summary so a full deck never loses its tail to the coerce slice.
+        if (scenes.length > MAX_LESSON_SCENES - 3) scenes.length = MAX_LESSON_SCENES - 3;
         ensureClosingScenes(scenes, perScene(planned.length));
+
+        // ---------- stage 3: the practice banks and the recap diagram ----------
+        // One extra call turns the finished deck into exercises: every question
+        // answers to text the student actually read. A failure is survivable by
+        // design — without a plan the deck still plays, the closing quiz just
+        // keeps its single fallback question.
+        // Counted from the scenes that survived generation, not the outline: a
+        // quiz whose body never landed must not shift its checkpoint questions
+        // onto the closing quiz.
+        const quizScenes = scenes.filter((scene) => scene.kind === "quiz" && scene.quiz && typeof scene.quiz === "object");
+        const checkpointCount = Math.max(0, quizScenes.length - 1);
+        const finalTarget = quizQuestionTarget(planned.length);
+        const questionTotal = checkpointCount * 3 + finalTarget;
+        let bankPlan: { questions: QuizQuestion[]; branches: MindmapBranch[] } | null = null;
+        send({
+          type: "stage",
+          stage: "quiz",
+          message: `Đang viết ${questionTotal} câu hỏi kiểm tra và sơ đồ tóm tắt…`,
+          progress: 95,
+        });
+        try {
+          const bank = await generateJson<{
+            questions: QuizQuestion[];
+            branches: MindmapBranch[];
+          }>(creds, {
+            model: modelOverride,
+            system: BANK_SYSTEM,
+            prompt: bankPrompt(shortContext, scenes, checkpointCount, finalTarget),
+            schema: bankSchema,
+            temperature: 0.5,
+            maxOutputTokens: Math.min(12_288, 2048 + questionTotal * 200),
+            totalTimeoutMs: Math.min(300_000, 60_000 + questionTotal * 6_000),
+          });
+          bankPlan = {
+            questions: Array.isArray(bank.data.questions) ? bank.data.questions : [],
+            branches: Array.isArray(bank.data.branches) ? bank.data.branches : [],
+          };
+        } catch {
+          bankPlan = null;
+        }
+
+        // ---------- graft the banks and the recap onto the deck ----------
+        // The closing quiz exists by now, whatever the outline said, so the
+        // last quiz scene is always the closing one. Checkpoint banks land in
+        // outline order; the diagram scenes carry cumulatively more branches,
+        // so the recap grows as the lesson walks. `plan` is a const so the
+        // narrowing survives into the callbacks.
+        const plan = bankPlan;
+        if (plan) {
+          const checkpointSlots = quizScenes.slice(0, -1);
+          // The model put every correct answer first in a real run (18/18) —
+          // a bank anyone beats by always pressing A. Rotate before the split;
+          // the rotation index follows the flat list's order.
+          const { checkpoints, final } = splitBankQuestions(
+            spreadCorrectAnswers(plan.questions),
+            checkpointSlots.map(() => 3),
+            finalTarget,
+          );
+          checkpointSlots.forEach((scene, index) => {
+            const bank = checkpoints[index] ?? [];
+            if (bank.length > 0) {
+              (scene.quiz as { questions?: QuizQuestion[] }).questions = bank;
+            }
+          });
+          const closing = quizScenes[quizScenes.length - 1];
+          if (closing && final.length > 0) {
+            (closing.quiz as { questions?: QuizQuestion[] }).questions = final;
+          }
+
+          // The recap the deck always ends on: a full diagram immediately
+          // before the closing quiz. The outline is asked for one and usually
+          // writes it; a model run that skipped it shipped a lesson ending on
+          // a quiz with its last map stranded mid-deck (a real 10-scene run
+          // did exactly this), so the slot is enforced here — costing at most
+          // the one scene the cap above reserved for it.
+          const closingIndex = closing ? scenes.indexOf(closing) : -1;
+          const beforeClosing = closingIndex > 0 ? scenes[closingIndex - 1] : undefined;
+          const hasRecap = scenes.some((scene) => scene.kind === "diagram");
+          if (plan.branches.length > 0 && closingIndex >= 0 && beforeClosing?.kind !== "diagram") {
+            scenes.splice(closingIndex, 0, {
+              kind: "diagram",
+              accent: "brand",
+              title: "Sơ đồ tóm tắt toàn bài",
+              subtitle: "Nhìn một lượt để thấy các phần của bài nối với nhau thế nào.",
+              bullets: [
+                "Mỗi nhánh là một phần chính của bài học.",
+                "Nhìn sơ đồ rồi tự kể lại bài theo từng nhánh.",
+              ],
+              narration:
+                "Đây là sơ đồ tóm tắt cả bài. Mỗi nhánh là một phần chính, nhìn từ trái sang phải là đúng thứ tự mình đã học. Bạn thử dừng lại một chút và kể lại bài theo sơ đồ xem đã nhớ hết chưa nhé.",
+              duration: perScene(planned.length),
+            });
+          } else if (plan.branches.length > 0 && closingIndex < 0 && !hasRecap) {
+            // No closing quiz to anchor to (the closing scene above normally
+            // guarantees one): the recap still goes out, at the very end.
+            scenes.push({
+              kind: "diagram",
+              accent: "brand",
+              title: "Sơ đồ tóm tắt toàn bài",
+              subtitle: "Nhìn một lượt để thấy các phần của bài nối với nhau thế nào.",
+              bullets: [
+                "Mỗi nhánh là một phần chính của bài học.",
+                "Nhìn sơ đồ rồi tự kể lại bài theo từng nhánh.",
+              ],
+              narration:
+                "Đây là sơ đồ tóm tắt cả bài. Mỗi nhánh là một phần chính, nhìn từ trái sang phải là đúng thứ tự mình đã học. Bạn thử dừng lại một chút và kể lại bài theo sơ đồ xem đã nhớ hết chưa nhé.",
+              duration: perScene(planned.length),
+            });
+          }
+
+          if (plan.branches.length > 0) {
+            const diagramScenes = scenes.filter((scene) => scene.kind === "diagram");
+            diagramScenes.forEach((scene, index) => {
+              scene.mindmap = {
+                branches: mindmapSnapshot(plan.branches, index, diagramScenes.length).branches,
+              };
+            });
+          }
+        }
 
         // A table is a page of screen. The model reuses the same one across
         // scenes whenever the topic has a table at all, which turns a lesson
@@ -1771,7 +2063,7 @@ export async function POST(request: NextRequest) {
           theme,
           pattern: isSlidePattern(body.pattern) ? body.pattern : DEFAULT_SLIDE_PATTERN,
           motion: isSlideMotion(body.motion) ? body.motion : DEFAULT_SLIDE_MOTION,
-          voice: typeof body.voice === "string" ? body.voice.slice(0, 60) : undefined,
+          voice: typeof body.voice === "string" ? body.voice.slice(0, 100) : undefined,
           showPointer: body.showPointer === false ? false : true,
           pointerColor:
             typeof body.pointerColor === "string" &&
@@ -1808,6 +2100,12 @@ export async function POST(request: NextRequest) {
           ),
         });
 
+        // The deck files itself before the classroom is told "done": a viewer
+        // that reloaded mid-run never files its own copy, so the lesson has
+        // to land server-side. The client save stays idempotent (same id,
+        // same body); saveCourse already clears the "Đang tạo…" draft card.
+        await saveCourse(lesson);
+
         send({
           type: "done",
           message: `${lesson.scenes.length} cảnh, ${lesson.duration}s.`,
@@ -1817,9 +2115,6 @@ export async function POST(request: NextRequest) {
           model: generatedModel,
           elapsedMs: Date.now() - outlineStart,
         });
-        // The finished lesson replaces the draft card under the same id; the
-        // client save is idempotent, so deleting here cannot strand the deck.
-        await deleteDraft(lessonId).catch(() => null);
       } catch (error) {
         const detail =
           error instanceof AiError || error instanceof Error
@@ -1829,8 +2124,9 @@ export async function POST(request: NextRequest) {
         // blob. Lead with what happened and when it clears, then keep the raw
         // line for anything the user recognises.
         const quota = isQuotaExhausted(detail);
+        const providerLabel = PROVIDERS[creds.provider]?.label ?? creds.provider;
         const message = quota
-          ? `Hết hạn mức dùng của Antigravity CLI. ${detail}`
+          ? `Hết hạn mức dùng của ${providerLabel}. ${detail}`
           : detail;
         // Leave the failure on the draft card instead of silently withdrawing
         // it: the library shows what went wrong, and the card can be deleted.
@@ -1854,7 +2150,13 @@ export async function POST(request: NextRequest) {
           quota,
         });
       } finally {
-        controller.close();
+        // Closing an already-closed pipe throws; the stream is gone either
+        // way, so swallowing this one keeps the tail quiet.
+        try {
+          controller.close();
+        } catch {
+          /* client already gone */
+        }
       }
     },
   });

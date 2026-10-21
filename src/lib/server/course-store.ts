@@ -1,4 +1,4 @@
-﻿import fs from "node:fs/promises";
+import fs from "node:fs/promises";
 import path from "node:path";
 import type { Lesson } from "@/lib/lesson/types";
 import { coerceLesson } from "@/lib/lesson/validate";
@@ -67,6 +67,14 @@ export interface GenerationDraft {
   updatedAt: string;
   /** Set when the run failed instead of finishing. */
   error?: string;
+  /** Voice chosen by user in studio. */
+  voice?: string;
+  /**
+   * Finished scene bodies, in deck order. A classroom watching without the
+   * live stream — a second tab, a reload, the draft card in /library — can
+   * only replay what is written here, so the slides ride along from scene one.
+   */
+  scenes?: unknown[];
 }
 
 function draftFor(id: string): string {
@@ -98,20 +106,39 @@ function toSummary(lesson: Lesson, updatedAt: string): CourseSummary {
   };
 }
 
+interface CachedSummary {
+  mtimeMs: number;
+  summary: CourseSummary;
+}
+const summaryCache = new Map<string, CachedSummary>();
+
 export async function listCourses(): Promise<CourseSummary[]> {
   await ensureDir();
-  const files = (await fs.readdir(COURSES_DIR)).filter(
+  const fileNames = (await fs.readdir(COURSES_DIR)).filter(
     (name) => name.endsWith(".json") && !name.endsWith(".draft.json"),
   );
+  const currentSet = new Set(fileNames);
+  for (const name of summaryCache.keys()) {
+    if (!currentSet.has(name)) summaryCache.delete(name);
+  }
 
   const summaries = await Promise.all(
-    files.map(async (name) => {
+    fileNames.map(async (name) => {
+      const filePath = path.join(COURSES_DIR, name);
       try {
-        const raw = await fs.readFile(path.join(COURSES_DIR, name), "utf8");
+        const stats = await fs.stat(filePath);
+        const cached = summaryCache.get(name);
+        if (cached && cached.mtimeMs === stats.mtimeMs) {
+          return cached.summary;
+        }
+
+        const raw = await fs.readFile(filePath, "utf8");
         const parsed = JSON.parse(raw) as { lesson: unknown; updatedAt?: string };
         const lesson = coerceLesson(parsed.lesson);
         if (!lesson) return null;
-        return toSummary(lesson, parsed.updatedAt ?? lesson.createdAt);
+        const summary = toSummary(lesson, parsed.updatedAt ?? lesson.createdAt);
+        summaryCache.set(name, { mtimeMs: stats.mtimeMs, summary });
+        return summary;
       } catch {
         // A corrupt file must not take the whole library down.
         return null;

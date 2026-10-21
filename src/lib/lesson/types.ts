@@ -8,6 +8,8 @@
  * self-contained GSAP timeline rendered to MP4) but adds live scrubbing.
  */
 
+import type { MindmapSnapshot } from "./mindmap.ts";
+
 /**
  * The Lucide icons a generated slide is allowed to use.
  *
@@ -156,12 +158,18 @@ export function defaultSlideLayout(
     table?: unknown;
     graph?: unknown;
     simulation3d?: unknown;
+    mindmap?: unknown;
   },
 ): SlideLayout {
   const bullets = Array.isArray(scene.bullets) ? scene.bullets.length : 0;
   const steps = Array.isArray(scene.steps) ? scene.steps.length : 0;
   const hasFigure = Boolean(
-    scene.formula || scene.data || scene.table || scene.graph || scene.simulation3d,
+    scene.formula ||
+      scene.data ||
+      scene.table ||
+      scene.graph ||
+      scene.mindmap ||
+      scene.simulation3d,
   );
   const hasPicture = Boolean(
     (typeof scene.imagePrompt === "string" && scene.imagePrompt.trim()) ||
@@ -248,6 +256,12 @@ export interface QuizOption {
   text: string;
   isCorrect: boolean;
   explanation?: string;
+}
+
+/** One question of a bank: several ride a single quiz slide. */
+export interface QuizQuestion {
+  question: string;
+  options: QuizOption[];
 }
 
 /**
@@ -394,6 +408,12 @@ export interface LessonScene {
   /** A lookup/spec table. Preferred over `data` for repeated patterns. */
   table?: SlideTable;
   /**
+   * The cumulative recap diagram. Each mindmap slide carries the branches
+   * learned so far — later slides repeat earlier ones and add more, so the
+   * picture grows with the lesson. Drawn as SVG; no image is generated.
+   */
+  mindmap?: MindmapSnapshot;
+  /**
    * Search terms for a real illustration of this slide. English, because that is
    * what the open image archives are indexed in. Resolved to a URL at render
    * time, so a lesson stays valid when the chosen picture disappears.
@@ -444,6 +464,8 @@ export interface LessonScene {
   quiz?: {
     question: string;
     options: QuizOption[];
+    /** A question bank: several questions on one quiz slide, walked in order. */
+    questions?: QuizQuestion[];
   };
   simulation3d?: Simulation3DConfig;
   /** Start time in seconds on the lesson timeline. */
@@ -517,7 +539,7 @@ export interface Lesson {
   createdAt: string;
 }
 
-export const SCENE_KIND_LABEL: Record<SceneKind, string> = {
+export const SCENE_KIND_LABEL_VI: Record<SceneKind, string> = {
   cover: "Mở đầu",
   concept: "Khái niệm",
   formula: "Công thức",
@@ -527,6 +549,23 @@ export const SCENE_KIND_LABEL: Record<SceneKind, string> = {
   quiz: "Trắc nghiệm tương tác",
   summary: "Tổng kết",
 };
+
+export const SCENE_KIND_LABEL_EN: Record<SceneKind, string> = {
+  cover: "Introduction",
+  concept: "Concept",
+  formula: "Formula",
+  diagram: "Diagram",
+  simulation3d: "3D Simulation",
+  example: "Example",
+  quiz: "Interactive Quiz",
+  summary: "Summary",
+};
+
+export const SCENE_KIND_LABEL = SCENE_KIND_LABEL_VI;
+
+export function sceneKindLabel(kind: SceneKind, lang: "en" | "vi" = "vi"): string {
+  return (lang === "en" ? SCENE_KIND_LABEL_EN : SCENE_KIND_LABEL_VI)[kind] || kind;
+}
 
 export function lessonDuration(lesson: Lesson): number {
   if (lesson.scenes.length === 0) return 0;

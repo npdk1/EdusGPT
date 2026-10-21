@@ -25,7 +25,7 @@ export interface SlideImage {
 }
 
 const USER_AGENT = "EdusGPT/0.1 (classroom slide images; local install)";
-const TIMEOUT_MS = 6_000;
+const TIMEOUT_MS = 10_000;
 /** Anything smaller than this is an icon, not an illustration. */
 const MIN_SIDE = 200;
 

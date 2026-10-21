@@ -33,7 +33,7 @@ import {
 } from "lucide-react";
 import type { PublicAiStatus } from "@/lib/ai/config";
 import {
-  SCENE_KIND_LABEL,
+  sceneKindLabel,
   type Lesson,
   type SlideTheme,
 } from "@/lib/lesson/types";
@@ -127,6 +127,7 @@ const COPY = {
     voicePreviewFailed:
       "Could not preview this voice. You can still use it when the lesson plays.",
     voicePreview: "Preview voice",
+    voicePreviewText: "Hello, this is the narration voice for the lesson.",
     voiceLocalTempo:
       "Reading from this machine: the names below are tempos, not different people — one installed voice, sped or slowed to suit the slide.",
     voiceLocalMissing:
@@ -198,6 +199,7 @@ const COPY = {
     motionBounce: "Bounce",
     motionFlip: "Flip",
     motionBlur: "Blur",
+    presetTopics: "Conservation of energy;Derivative by definition;For loops in Python;Present perfect tense;Chemical equilibrium;Overfitting in machine learning",
   },
   vi: {
     createLesson: "Tạo bài giảng",
@@ -256,6 +258,7 @@ const COPY = {
     voiceLoadFailed: "Không tải được danh sách giọng đọc.",
     voicePreviewFailed: "Không nghe thử được giọng này. Bạn vẫn có thể dùng nó khi phát bài.",
     voicePreview: "Nghe thử giọng",
+    voicePreviewText: "Xin chào, đây là giọng đọc của bài giảng.",
     voiceLocalTempo:
       "Đang đọc bằng giọng trên máy: các tên bên dưới là tốc độ, không phải người khác nhau — một giọng đã cài, nhanh hoặc chậm theo từng slide.",
     voiceLocalMissing:
@@ -325,19 +328,11 @@ const COPY = {
     motionBounce: "Nảy nhẹ",
     motionFlip: "Lật",
     motionBlur: "Nhòe",
+    presetTopics: "Định luật bảo toàn năng lượng;Đạo hàm theo định nghĩa;Vòng lặp for trong Python;Thì hiện tại hoàn thành;Cân bằng phương trình hoá học;Overfitting trong học máy",
   },
 };
 
 type CopyKey = keyof typeof COPY.en;
-
-const PRESETS = [
-  "Định luật bảo toàn năng lượng",
-  "Đạo hàm theo định nghĩa",
-  "Vòng lặp for trong Python",
-  "Thì hiện tại hoàn thành",
-  "Cân bằng phương trình hoá học",
-  "Overfitting trong học máy",
-];
 
 /** Topic → Gemini → editable timeline. The generated lesson opens in /lesson. */
 function PreviewFormula({ formula }: { formula: string }) {
@@ -504,8 +499,13 @@ function MotionPicker({
 export function StudioPanel() {
   const t = useCopy(COPY);
   const lang = useLang();
+  const presets = useMemo(() => t.presetTopics.split(";"), [t.presetTopics]);
   const [status, setStatus] = useState<PublicAiStatus | null>(null);
-  const [topic, setTopic] = useState(PRESETS[0]);
+  const [topic, setTopic] = useState("");
+
+  useEffect(() => {
+    if (!topic) setTopic(presets[0]);
+  }, [presets, topic]);
   // How long the lesson should run. Kept beside the style rather than folded into
   // it, because the two are independent: a long minimalist lecture and a short
   // visual story are both reasonable, and a preset that hard-coded both would
@@ -600,7 +600,8 @@ export function StudioPanel() {
     } catch {
       /* the classroom falls back to the default voice */
     }
-    router.push(`/classroom?id=${encodeURIComponent(runLessonId)}`);
+    const voiceParam = voice ? `&voice=${encodeURIComponent(voice)}` : "";
+    router.push(`/classroom?id=${encodeURIComponent(runLessonId)}${voiceParam}`);
   }, [runLessonId, runDone, router, voice]);
   // The final lesson arrives on the stream's `done` event; mirror it into the
   // panel so the preview/save/open buttons light up.
@@ -886,7 +887,7 @@ export function StudioPanel() {
             placeholder={t.topicPlaceholder}
           />
           <div className="mt-2 flex flex-wrap gap-1.5">
-            {PRESETS.map((preset) => (
+            {presets.map((preset) => (
               <button
                 key={preset}
                 type="button"
@@ -1071,6 +1072,7 @@ export function StudioPanel() {
             scenes={stream.progress.liveScenes}
             voice={voice}
             running={busy}
+            autostart={busy}
             done={stream.progress.done}
             progress={stream.progress.percent}
             lessonId={stream.progress.lessonId ?? ""}
@@ -1141,7 +1143,7 @@ export function StudioPanel() {
               >
                 <div className="flex flex-wrap items-center gap-2">
                   <span className="chip border-brand-700/60 bg-brand-500/10 text-brand-200">
-                    {SCENE_KIND_LABEL[scene.kind]}
+                    {sceneKindLabel(scene.kind, lang)}
                   </span>
                   <span className="font-mono text-[11px] text-mist-500">
                     {formatClock(scene.start, false)} →{" "}
@@ -1333,7 +1335,7 @@ function VoiceChooser({
         method: "POST",
         headers: { "content-type": "application/json" },
         body: JSON.stringify({
-          text: topic.trim().slice(0, 240) || "Xin chào, đây là giọng đọc của bài giảng.",
+          text: topic.trim().slice(0, 240) || t.voicePreviewText,
           voice: id,
         }),
       });

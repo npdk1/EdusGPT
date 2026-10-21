@@ -12,7 +12,10 @@ interface ClassroomPageProps {
 }
 
 export default async function ClassroomPage({ searchParams }: ClassroomPageProps) {
-  const raw = (await searchParams).id;
-  const sessionId = typeof raw === "string" && raw ? raw : null;
-  return <ClassroomClient sessionId={sessionId} />;
+  const params = await searchParams;
+  const rawId = params.id;
+  const rawVoice = params.voice;
+  const sessionId = typeof rawId === "string" && rawId ? rawId : null;
+  const initialVoice = typeof rawVoice === "string" && rawVoice ? rawVoice : null;
+  return <ClassroomClient sessionId={sessionId} initialVoice={initialVoice} />;
 }

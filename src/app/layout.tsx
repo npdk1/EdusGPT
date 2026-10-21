@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import "./globals.css";
+import "katex/dist/katex.min.css";
 import { SiteHeader } from "@/components/site/SiteHeader";
 import { SiteFooter } from "@/components/site/SiteFooter";
 import { ScrollProgressBar } from "@/components/motion/Reveal";
@@ -34,12 +35,17 @@ export default function RootLayout({
 }: Readonly<{ children: React.ReactNode }>) {
   return (
     <html lang="en" suppressHydrationWarning>
-      <head>
+      <head suppressHydrationWarning>
         {/* The stored theme and language, applied before the first paint:
             without these the page paints light and English, then flips, which
             reads as a glitch. */}
-        <script dangerouslySetInnerHTML={{ __html: THEME_BOOTSTRAP_SCRIPT }} />
-        <script dangerouslySetInnerHTML={{ __html: LANG_BOOTSTRAP_SCRIPT }} />
+        <script
+          id="edusgpt-bootstrap"
+          suppressHydrationWarning
+          dangerouslySetInnerHTML={{
+            __html: `${THEME_BOOTSTRAP_SCRIPT}\n${LANG_BOOTSTRAP_SCRIPT}`,
+          }}
+        />
       </head>
       <body className="min-h-screen bg-ink-950 font-sans text-mist-100 antialiased">
         <ThemeProvider>

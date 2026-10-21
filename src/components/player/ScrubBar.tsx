@@ -28,9 +28,6 @@ const COPY = {
     scrubScenes: "scenes",
     scrubChapters: "chapters",
     scrubDragging: "scrubbing… release to stop here",
-    scrubSeek5: "seek 5s",
-    scrubSeek1: "seek 1s",
-    scrubFrame: "frame step",
   },
   vi: {
     scrubOf: "trên",
@@ -41,9 +38,6 @@ const COPY = {
     scrubScenes: "cảnh",
     scrubChapters: "chương",
     scrubDragging: "đang tua… thả chuột để dừng ở vị trí này",
-    scrubSeek5: "tua 5s",
-    scrubSeek1: "tua 1s",
-    scrubFrame: "từng khung hình",
   },
 };
 
@@ -280,13 +274,13 @@ export function ScrubBar({ lesson, timebase, loop }: ScrubBarProps) {
 
       <div className="flex flex-wrap items-center justify-between gap-2 font-mono text-[11px] text-mist-500">
         <span>
-          {lesson.scenes.length} {t.scrubScenes} · {lesson.chapters.length} {t.scrubChapters}
+          {lesson.scenes.length} {t.scrubScenes} · {lesson.chapters.length} {t.scrubChapters} ·{" "}
+          {lesson.fps} fps
         </span>
-        <span aria-live="polite">
-          {dragging
-            ? t.scrubDragging
-            : `← / → ${t.scrubSeek5} · Shift + ←/→ ${t.scrubSeek1} · , / . ${t.scrubFrame}`}
-        </span>
+        {/* The keyboard cheatsheet lives in the "?" dialog; a permanent hint
+            line under an already-dense timeline was noise. The live region
+            stays so dragging is still announced. */}
+        <span aria-live="polite">{dragging ? t.scrubDragging : null}</span>
       </div>
     </div>
   );

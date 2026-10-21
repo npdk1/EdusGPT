@@ -11,8 +11,13 @@ import {
   IconSpeakerphone,
   IconTerminal2,
   IconAlertTriangle,
+  IconAdjustments,
+  IconGauge,
+  IconKey,
+  IconChevronDown,
 } from "@tabler/icons-react";
 import { useCopy } from "@/i18n/provider";
+import { CollapsibleCard } from "./CollapsibleCard";
 
 /**
  * Which voice reads the narration: this machine, or a free API.
@@ -49,6 +54,21 @@ const COPY = {
     providerInstalling: "Installing…",
     providerInstalled: "Installed",
     switched: "Switched",
+    rateTitle: "Default speech rate",
+    rateNote: "Adjust how fast the voice reads your slides (0.8x unhurried to 1.3x energetic).",
+    rateNormal: "1.0x (Standard natural)",
+    rateSlow: "Unhurried, easy to follow",
+    rateFast: "Energetic, crisp",
+    rateReset: "Reset 1.0x",
+    sttTitle: "Speech-to-Text & Subtitles (Groq Whisper STT)",
+    sttNote: "Used for millisecond-exact subtitle alignment when exporting SRT files.",
+    sttAutoHint: "Auto-synced from Groq API key",
+    sttKeyPlaceholder: "Paste custom Groq key or leave blank for default",
+    sttCustomPlaceholder: "Change custom Groq API key...",
+    sttSave: "Save",
+    sttSaved: "Saved",
+    collapse: "Collapse",
+    expand: "Expand",
   },
   vi: {
     heading: "Giọng đọc",
@@ -70,6 +90,21 @@ const COPY = {
     providerInstalling: "Đang cài…",
     providerInstalled: "Đã cài",
     switched: "Đã đổi",
+    rateTitle: "Tốc độ giọng đọc mặc định",
+    rateNote: "Chỉnh tốc độ giọng đọc slide (0.8x thong thả đến 1.3x nhanh nhẹn).",
+    rateNormal: "1.0x (Tự nhiên chuẩn)",
+    rateSlow: "Chậm rãi, dễ theo dõi",
+    rateFast: "Nhanh nhẹn, dứt khoát",
+    rateReset: "Đặt lại 1.0x",
+    sttTitle: "Chuyển giọng nói & Phụ đề SRT (Groq Whisper STT)",
+    sttNote: "Dùng để đồng bộ phụ đề chính xác mili-giây khi xuất file SRT.",
+    sttAutoHint: "Tự động liên kết từ cấu hình Groq API key",
+    sttKeyPlaceholder: "Nhập key Groq riêng hoặc để trống để dùng mặc định",
+    sttCustomPlaceholder: "Thay đổi Groq API key riêng...",
+    sttSave: "Lưu",
+    sttSaved: "Đã lưu",
+    collapse: "Thu gọn",
+    expand: "Mở rộng",
   },
 } satisfies Record<string, Record<string, string>>;
 
@@ -103,6 +138,9 @@ interface ProviderStatus {
 interface SettingsPayload {
   engine: Engine;
   default: Engine;
+  speechRate?: number;
+  sttApiKey?: string;
+  sttKeyHint?: string;
   local: LocalStatus;
   providers?: ProviderStatus[];
 }
@@ -112,6 +150,10 @@ export function VoiceSettings() {
   const [engine, setEngine] = useState<Engine | null>(null);
   const [local, setLocal] = useState<LocalStatus | null>(null);
   const [providers, setProviders] = useState<ProviderStatus[]>([]);
+  const [speechRate, setSpeechRate] = useState<number>(1.0);
+  const [sttKey, setSttKey] = useState<string>("");
+  const [sttKeyHint, setSttKeyHint] = useState<string>("");
+  const [sttSaved, setSttSaved] = useState<boolean>(false);
   const [busy, setBusy] = useState<"save" | "install" | null>(null);
   const [log, setLog] = useState<string[]>([]);
 
@@ -123,6 +165,8 @@ export function VoiceSettings() {
       setEngine(payload.engine);
       setLocal(payload.local);
       setProviders(payload.providers ?? []);
+      if (typeof payload.speechRate === "number") setSpeechRate(payload.speechRate);
+      if (payload.sttKeyHint) setSttKeyHint(payload.sttKeyHint);
     } catch {
       /* the panel keeps the last answer */
     }
@@ -131,6 +175,39 @@ export function VoiceSettings() {
   useEffect(() => {
     void refresh();
   }, [refresh]);
+
+  const changeSpeechRate = useCallback(async (rate: number) => {
+    setSpeechRate(rate);
+    try {
+      await fetch("/api/settings/tts", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ speechRate: rate }),
+      });
+    } catch {
+      /* retry on next interaction */
+    }
+  }, []);
+
+  const saveSttKey = useCallback(async () => {
+    setBusy("save");
+    try {
+      const response = await fetch("/api/settings/tts", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ sttApiKey: sttKey }),
+      });
+      if (response.ok) {
+        setSttSaved(true);
+        setTimeout(() => setSttSaved(false), 2500);
+        void refresh();
+      }
+    } catch {
+      /* retry later */
+    } finally {
+      setBusy(null);
+    }
+  }, [refresh, sttKey]);
 
   const choose = useCallback(async (next: Engine) => {
     setEngine(next);
@@ -210,115 +287,207 @@ export function VoiceSettings() {
     }
   }, [refresh]);
 
+  const [openMain, setOpenMain] = useState<boolean>(true);
+
   return (
     <section className="panel space-y-4 p-5">
-      <div>
-        <h2 className="flex items-center gap-2 text-sm font-semibold text-mist-100">
-          <IconMicrophone className="h-4 w-4 text-brand-300" />
-          {t.heading}
-        </h2>
-        <p className="mt-1.5 text-xs leading-relaxed text-mist-400">{t.lead}</p>
-      </div>
-
-      <div className="grid gap-2 sm:grid-cols-2">
-        <EngineCard
-          active={engine === "local"}
-          icon={<IconCpu className="h-4 w-4" />}
-          title={t.localTitle}
-          note={t.localNote}
-          badge={local ? (local.ready ? t.localReady : t.localNotReady) : null}
-          badgeTone={local?.ready ? "good" : "warn"}
-          disabled={busy !== null}
-          onSelect={() => void choose("local")}
-        />
-        <EngineCard
-          active={engine === "cloud"}
-          icon={<IconCloud className="h-4 w-4" />}
-          title={t.cloudTitle}
-          note={t.cloudNote}
-          badge={null}
-          badgeTone="warn"
-          disabled={busy !== null}
-          onSelect={() => void choose("cloud")}
-        />
-      </div>
-
-      {/* What the machine can actually do, and the one button that changes it. */}
-      <div className="rounded-xl border border-ink-700 bg-ink-950/50 px-3.5 py-3">
-        {local && !local.ready && local.reason ? (
-          <p className="text-[11px] leading-relaxed text-mist-500">{local.reason}</p>
-        ) : null}
-
-        {log.length > 0 ? (
-          <div className="mt-3">
-            <p className="font-mono text-[11px] uppercase tracking-widest text-mist-500">
-              <IconTerminal2 className="mr-1 inline h-3 w-3" />
-              {t.logTitle}
-            </p>
-            <pre className="mt-1 max-h-40 overflow-y-auto whitespace-pre-wrap break-words rounded-lg bg-ink-950 px-3 py-2 font-mono text-[11px] leading-relaxed text-mist-300">
-              {log.join("\n")}
-            </pre>
-          </div>
-        ) : null}
-      </div>
-      {/*
-        * The two local engines. Piper is the one this project started with and
-        * the smallest; VieNeu-TTS brings the choice of speakers that a single
-        * voice cannot. Each row installs on its own, because the sizes are wildly
-        * different and nobody should download hundreds of megabytes to try a
-        * voice they do not like.
-        */}
-      <div className="rounded-xl border border-ink-700 bg-ink-950/50 px-3.5 py-3">
-        <div>
-          <h3 className="flex items-center gap-2 text-sm font-semibold text-mist-100">
-            <IconSpeakerphone className="h-4 w-4 text-brand-300" />
-            {t.providersTitle}
-          </h3>
-          <p className="mt-1 text-[11px] leading-relaxed text-mist-400">{t.providersNote}</p>
+      <div className="flex items-center justify-between gap-3">
+        <div className="min-w-0">
+          <h2 className="flex items-center gap-2 text-sm font-semibold text-mist-100">
+            <IconMicrophone className="h-4 w-4 text-brand-300" />
+            {t.heading}
+          </h2>
+          <p className="mt-1 text-xs leading-relaxed text-mist-400">{t.lead}</p>
         </div>
-        <div className="mt-2.5 space-y-1.5">
-          {providers.map((provider) => (
-            <div
-              key={provider.provider}
-              className="flex flex-wrap items-center gap-2 rounded-lg border border-ink-800 px-2.5 py-2"
-            >
-              {provider.installed ? (
-                <IconCircleCheck className="h-4 w-4 shrink-0 text-brand-300" />
-              ) : (
-                <IconAlertTriangle className="h-4 w-4 shrink-0 text-mist-500" />
-              )}
-              <span className="text-xs font-semibold text-mist-100">{provider.label}</span>
-              <span className="chip">
-                {t.providerCount.replace("{count}", String(provider.voices))}
+        <button
+          type="button"
+          onClick={() => setOpenMain((prev) => !prev)}
+          className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-lg border border-ink-700 bg-ink-900/60 text-mist-400 transition-transform duration-200 hover:text-mist-100 ${
+            openMain ? "rotate-0 text-mist-200" : "-rotate-90 text-mist-500"
+          }`}
+          title={openMain ? t.collapse : t.expand}
+          aria-expanded={openMain}
+        >
+          <IconChevronDown className="h-4 w-4" />
+        </button>
+      </div>
+
+      {openMain ? (
+        <div className="space-y-4">
+          {/* Khung 1: Bộ đọc chính (Piper / Edge) */}
+          <CollapsibleCard
+            title={engine === "local" ? t.localTitle : t.cloudTitle}
+            subtitle={engine === "local" ? t.localNote : t.cloudNote}
+            icon={engine === "local" ? <IconCpu className="h-4 w-4" /> : <IconCloud className="h-4 w-4" />}
+            badge={
+              <span className={`chip text-[11px] ${local?.ready ? "text-brand-200" : "text-gold-300"}`}>
+                {engine === "local" ? (local?.ready ? t.localReady : t.localNotReady) : "API"}
               </span>
-              {provider.installed ? (
-                <span className="chip ml-auto border-brand-700/60 text-brand-200">
-                  {t.providerInstalled}
-                </span>
-              ) : (
-                <button
-                  type="button"
-                  onClick={() => void install(provider.provider)}
-                  className="btn-ghost ml-auto text-xs"
-                  disabled={busy !== null}
-                >
-                  {busy === "install" ? (
-                    <IconLoader2 className="h-3.5 w-3.5 animate-spin" />
-                  ) : (
-                    <IconDownload className="h-3.5 w-3.5" />
-                  )}
-                  {busy === "install" ? t.providerInstalling : t.providerInstall}
-                </button>
-              )}
-              {provider.reason ? (
-                <p className="w-full text-[11px] leading-relaxed text-mist-500">
-                  {provider.reason}
-                </p>
-              ) : null}
+            }
+            defaultOpen={true}
+          >
+            <div className="grid gap-2 sm:grid-cols-2">
+              <EngineCard
+                active={engine === "local"}
+                icon={<IconCpu className="h-4 w-4" />}
+                title={t.localTitle}
+                note={t.localNote}
+                badge={local ? (local.ready ? t.localReady : t.localNotReady) : null}
+                badgeTone={local?.ready ? "good" : "warn"}
+                disabled={busy !== null}
+                onSelect={() => void choose("local")}
+              />
+              <EngineCard
+                active={engine === "cloud"}
+                icon={<IconCloud className="h-4 w-4" />}
+                title={t.cloudTitle}
+                note={t.cloudNote}
+                badge={null}
+                badgeTone="warn"
+                disabled={busy !== null}
+                onSelect={() => void choose("cloud")}
+              />
             </div>
-          ))}
+
+            {local && !local.ready && local.reason ? (
+              <p className="mt-2 text-[11px] leading-relaxed text-mist-500">{local.reason}</p>
+            ) : null}
+
+            {log.length > 0 ? (
+              <div className="mt-3">
+                <p className="font-mono text-[11px] uppercase tracking-widest text-mist-500">
+                  <IconTerminal2 className="mr-1 inline h-3 w-3" />
+                  {t.logTitle}
+                </p>
+                <pre className="mt-1 max-h-40 overflow-y-auto whitespace-pre-wrap break-words rounded-lg bg-ink-950 px-3 py-2 font-mono text-[11px] leading-relaxed text-mist-300">
+                  {log.join("\n")}
+                </pre>
+              </div>
+            ) : null}
+          </CollapsibleCard>
+
+          {/* Khung 2: Tốc độ giọng đọc mặc định */}
+          <CollapsibleCard
+            title={t.rateTitle}
+            subtitle={t.rateNote}
+            icon={<IconGauge className="h-4 w-4 text-brand-300" />}
+            badge={
+              <span className="chip font-mono text-xs font-semibold text-brand-300">
+                {speechRate.toFixed(2)}x
+              </span>
+            }
+            defaultOpen={true}
+          >
+            <div className="flex items-center gap-3">
+              <span className="font-mono text-xs text-mist-400">0.8x</span>
+              <input
+                type="range"
+                min="0.8"
+                max="1.3"
+                step="0.05"
+                value={speechRate}
+                onChange={(e) => void changeSpeechRate(parseFloat(e.target.value))}
+                className="h-1.5 flex-1 cursor-pointer appearance-none rounded-lg bg-ink-700 accent-brand-500"
+              />
+              <span className="font-mono text-xs text-mist-400">1.3x</span>
+            </div>
+            <div className="mt-2 flex items-center justify-between text-[11px] text-mist-500">
+              <span>{speechRate <= 0.85 ? t.rateSlow : speechRate >= 1.15 ? t.rateFast : t.rateNormal}</span>
+              <button
+                type="button"
+                onClick={() => void changeSpeechRate(1.0)}
+                className="text-[11px] text-brand-400 hover:underline"
+              >
+                {t.rateReset}
+              </button>
+            </div>
+          </CollapsibleCard>
+
+          {/* Khung 3: Groq Whisper STT & Phụ đề chuẩn xác */}
+          <CollapsibleCard
+            title={t.sttTitle}
+            subtitle={t.sttNote}
+            icon={<IconKey className="h-4 w-4 text-brand-300" />}
+            badge={sttKeyHint ? <span className="chip text-[10px] text-brand-200">Auto-sync</span> : null}
+            defaultOpen={true}
+          >
+            {sttKeyHint ? (
+              <div className="mb-2 flex items-center gap-2 rounded-lg bg-ink-900/60 px-2.5 py-1.5 text-xs text-mist-300">
+                <IconCircleCheck className="h-4 w-4 text-brand-300 shrink-0" />
+                <span className="font-mono text-[11px] text-brand-200">{sttKeyHint}</span>
+              </div>
+            ) : null}
+            <div className="flex flex-wrap items-center gap-2">
+              <input
+                type="password"
+                value={sttKey}
+                onChange={(e) => setSttKey(e.target.value)}
+                placeholder={sttKeyHint ? t.sttCustomPlaceholder : t.sttKeyPlaceholder}
+                className="min-w-[14rem] flex-1 rounded-lg border border-ink-700 bg-ink-900 px-3 py-1.5 text-xs text-mist-100 placeholder:text-mist-500 focus:border-brand-500 focus:outline-none"
+              />
+              <button
+                type="button"
+                onClick={() => void saveSttKey()}
+                disabled={busy !== null || !sttKey.trim()}
+                className="btn btn-primary text-xs py-1.5 px-3"
+              >
+                {sttSaved ? t.sttSaved : t.sttSave}
+              </button>
+            </div>
+          </CollapsibleCard>
+
+          {/* Khung 4: Giọng có trên máy này */}
+          <CollapsibleCard
+            title={t.providersTitle}
+            subtitle={t.providersNote}
+            icon={<IconSpeakerphone className="h-4 w-4 text-brand-300" />}
+            defaultOpen={true}
+          >
+            <div className="space-y-1.5">
+              {providers.map((provider) => (
+                <div
+                  key={provider.provider}
+                  className="flex flex-wrap items-center gap-2 rounded-lg border border-ink-800 px-2.5 py-2"
+                >
+                  {provider.installed ? (
+                    <IconCircleCheck className="h-4 w-4 shrink-0 text-brand-300" />
+                  ) : (
+                    <IconAlertTriangle className="h-4 w-4 shrink-0 text-mist-500" />
+                  )}
+                  <span className="text-xs font-semibold text-mist-100">{provider.label}</span>
+                  <span className="chip">
+                    {t.providerCount.replace("{count}", String(provider.voices))}
+                  </span>
+                  {provider.installed ? (
+                    <span className="chip ml-auto border-brand-700/60 text-brand-200">
+                      {t.providerInstalled}
+                    </span>
+                  ) : (
+                    <button
+                      type="button"
+                      onClick={() => void install(provider.provider)}
+                      className="btn-ghost ml-auto text-xs"
+                      disabled={busy !== null}
+                    >
+                      {busy === "install" ? (
+                        <IconLoader2 className="h-3.5 w-3.5 animate-spin" />
+                      ) : (
+                        <IconDownload className="h-3.5 w-3.5" />
+                      )}
+                      {busy === "install" ? t.providerInstalling : t.providerInstall}
+                    </button>
+                  )}
+                  {provider.reason ? (
+                    <p className="w-full text-[11px] leading-relaxed text-mist-500">
+                      {provider.reason}
+                    </p>
+                  ) : null}
+                </div>
+              ))}
+            </div>
+          </CollapsibleCard>
         </div>
-      </div>
+      ) : null}
     </section>
   );
 }

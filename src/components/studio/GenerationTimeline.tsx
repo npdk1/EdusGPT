@@ -2,7 +2,17 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { CircleCheck, Circle, LoaderCircle } from "lucide-react";
-import type { Lesson, SlideBlock } from "@/lib/lesson/types";
+import type {
+  DataPoint,
+  Lesson,
+  QuizOption,
+  Simulation3DConfig,
+  SlideBlock,
+  SlideGraph,
+  SlideIconName,
+  SlideTable,
+} from "@/lib/lesson/types";
+import type { MindmapSnapshot } from "@/lib/lesson/mindmap";
 import type { RunLogEntry } from "@/lib/lesson/run-log";
 import { DEFAULT_LANG, LANG_KEY, useCopy, useLang, type Lang } from "@/i18n/provider";
 
@@ -123,6 +133,8 @@ export interface GenerationProgress {
    * classroom session with it the moment it arrives.
    */
   lessonId?: string | null;
+  /** Chosen voice for this generation run. */
+  voice?: string | null;
 }
 
 /** One finished scene, as far as the classroom needs to show it. */
@@ -139,6 +151,96 @@ export interface LiveScene {
   layout?: string;
   /** The scene's own geometry on the 1000 x 562.5 slide grid, when it has one. */
   blocks?: SlideBlock[];
+  /**
+   * The renderer fields below used to be dropped on the way in, so a scene
+   * about a formula, a graph, a table, a board solution or a quiz arrived in
+   * the room as a bare title card — the data was already in the SSE payload.
+   */
+  steps?: string[];
+  formula?: string;
+  data?: DataPoint[];
+  graph?: SlideGraph;
+  table?: SlideTable;
+  quiz?: { question: string; options: QuizOption[] };
+  mindmap?: MindmapSnapshot;
+  simulation3d?: Simulation3DConfig;
+  icon?: SlideIconName;
+}
+
+/**
+ * One scene from either source, in the shape every live view reads.
+ *
+ * The SSE stream and the classroom's post-`done` swap to the finished lesson
+ * both build their slides through here: a slide must not change shape because
+ * of where it arrived from, and two hand-written whitelists used to drift.
+ */
+export function liveSceneFrom(value: unknown, index: number): LiveScene {
+  const scene = (value ?? {}) as {
+    title?: unknown;
+    subtitle?: unknown;
+    bullets?: unknown[];
+    narration?: unknown;
+    kind?: unknown;
+    imagePrompt?: unknown;
+    imageQuery?: unknown;
+    layout?: unknown;
+    blocks?: unknown;
+    steps?: unknown;
+    formula?: unknown;
+    data?: unknown;
+    graph?: unknown;
+    table?: unknown;
+    quiz?: unknown;
+    mindmap?: unknown;
+    simulation3d?: unknown;
+    icon?: unknown;
+  };
+  return {
+    index,
+    title:
+      typeof scene.title === "string" && scene.title.trim()
+        ? scene.title.trim().slice(0, 200)
+        : `${copy().sceneWord} ${index + 1}`,
+    subtitle: typeof scene.subtitle === "string" ? scene.subtitle.slice(0, 300) : "",
+    bullets: Array.isArray(scene.bullets)
+      ? scene.bullets.filter((b): b is string => typeof b === "string").slice(0, 12).map((b) => b.slice(0, 300))
+      : [],
+    narration: typeof scene.narration === "string" ? scene.narration.slice(0, 4000) : "",
+    kind: typeof scene.kind === "string" ? scene.kind : "concept",
+    imagePrompt:
+      typeof scene.imagePrompt === "string" && scene.imagePrompt.trim()
+        ? scene.imagePrompt.trim().slice(0, 500)
+        : undefined,
+    imageQuery:
+      typeof scene.imageQuery === "string" && scene.imageQuery.trim()
+        ? scene.imageQuery.trim().slice(0, 200)
+        : undefined,
+    layout: typeof scene.layout === "string" ? scene.layout.slice(0, 20) : undefined,
+    blocks: Array.isArray(scene.blocks) ? (scene.blocks as SlideBlock[]) : undefined,
+    steps: Array.isArray(scene.steps)
+      ? scene.steps.filter((s): s is string => typeof s === "string").slice(0, 6).map((s) => s.slice(0, 140))
+      : undefined,
+    formula:
+      typeof scene.formula === "string" && scene.formula.trim()
+        ? scene.formula.slice(0, 200)
+        : undefined,
+    data: Array.isArray(scene.data) ? (scene.data as DataPoint[]).slice(0, 6) : undefined,
+    graph: scene.graph && typeof scene.graph === "object" ? (scene.graph as SlideGraph) : undefined,
+    table: scene.table && typeof scene.table === "object" ? (scene.table as SlideTable) : undefined,
+    quiz:
+      scene.quiz && typeof scene.quiz === "object"
+        ? (scene.quiz as { question: string; options: QuizOption[] })
+        : undefined,
+    mindmap:
+      scene.mindmap && typeof scene.mindmap === "object"
+        ? (scene.mindmap as MindmapSnapshot)
+        : undefined,
+    simulation3d:
+      scene.simulation3d && typeof scene.simulation3d === "object"
+        ? (scene.simulation3d as Simulation3DConfig)
+        : undefined,
+    icon: typeof scene.icon === "string" ? (scene.icon as SlideIconName) : undefined,
+  };
 }
 
 export interface StreamEvent {
@@ -330,23 +432,18 @@ function reduceProgress(
   }
 
   if (event.type === "scene" && event.scene) {
-    const scene = event.scene as {
-      title?: string;
-      subtitle?: unknown;
-      bullets?: unknown[];
-      narration?: unknown;
-      kind?: unknown;
-      imagePrompt?: unknown;
-      imageQuery?: unknown;
-      layout?: unknown;
-      blocks?: unknown;
-    };
+    // The progressive script: keep every finished scene, ordered by deck
+    // position. Narration is what the voice reads straight away.
+    const live = liveSceneFrom(
+      event.scene,
+      typeof event.sceneIndex === "number" ? event.sceneIndex : current.liveScenes.length,
+    );
     const next = steps.map((step) =>
       step.state === "active"
         ? {
             ...step,
             state: "done" as const,
-            bullets: Array.isArray(scene.bullets) ? scene.bullets.length : step.bullets,
+            bullets: live.bullets.length > 0 ? live.bullets.length : step.bullets,
           }
         : step,
     );
@@ -355,34 +452,6 @@ function reduceProgress(
     if (nextPending >= 0) {
       next[nextPending] = { ...next[nextPending], state: "active" };
     }
-    // The progressive script: keep every finished scene, ordered by deck
-    // position. Narration is what the voice reads straight away.
-    const live: LiveScene = {
-      index: typeof event.sceneIndex === "number" ? event.sceneIndex : current.liveScenes.length,
-      title:
-        typeof scene.title === "string" && scene.title.trim()
-          ? scene.title.trim().slice(0, 200)
-          : `${copy().sceneWord} ${current.liveScenes.length + 1}`,
-      subtitle: typeof scene.subtitle === "string" ? scene.subtitle.slice(0, 300) : "",
-      bullets: Array.isArray(scene.bullets)
-        ? scene.bullets.filter((b): b is string => typeof b === "string").slice(0, 12).map((b) => b.slice(0, 300))
-        : [],
-      narration:
-        typeof scene.narration === "string" ? scene.narration.slice(0, 4000) : "",
-      kind: typeof scene.kind === "string" ? scene.kind : "concept",
-      imagePrompt:
-        typeof scene.imagePrompt === "string" && scene.imagePrompt.trim()
-          ? scene.imagePrompt.trim().slice(0, 500)
-          : undefined,
-      imageQuery:
-        typeof scene.imageQuery === "string" && scene.imageQuery.trim()
-          ? scene.imageQuery.trim().slice(0, 200)
-          : undefined,
-      layout: typeof scene.layout === "string" ? scene.layout.slice(0, 20) : undefined,
-      blocks: Array.isArray(scene.blocks)
-        ? (scene.blocks as SlideBlock[])
-        : undefined,
-    };
     const liveScenes = [...current.liveScenes, live].sort((a, b) => a.index - b.index);
     return {
       progress: { ...current, percent, message: event.message, outlineReady: true, steps: next, log, liveScenes, lessonId: event.lessonId ?? current.lessonId ?? null },
@@ -515,7 +584,10 @@ export function useGenerationStream() {
       const run: ActiveRun = {
         controller: new AbortController(),
         steps: [],
-        progress: EMPTY,
+        progress: {
+          ...EMPTY,
+          voice: typeof body.voice === "string" ? body.voice : null,
+        },
         running: true,
         saveAttempted: false,
       };

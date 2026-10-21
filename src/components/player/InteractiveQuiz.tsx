@@ -2,8 +2,9 @@
 
 import { useState } from "react";
 import { CircleCheck, CircleX, CircleHelp } from "lucide-react";
-import type { QuizOption } from "@/lib/lesson/types";
-import { quizReadSeconds } from "@/lib/lesson/quiz";
+import type { QuizOption, QuizQuestion } from "@/lib/lesson/types";
+import { quizPraiseTier, quizQuestionsOf, quizReadSeconds } from "@/lib/lesson/quiz";
+import { InlineText } from "./InlineText";
 import { useCopy } from "@/i18n/provider";
 
 interface InteractiveQuizProps {
@@ -11,6 +12,18 @@ interface InteractiveQuizProps {
   sceneId: string;
   question: string;
   options: QuizOption[];
+  /**
+   * The question bank, when the slide carries several questions. Absent (or a
+   * single entry) means the classic one-question slide, which renders exactly
+   * as it always has.
+   */
+  questions?: QuizQuestion[];
+  /**
+   * True while the stage's post-answer wait is actually running. The countdown
+   * line is a promise about a timer, so it is printed only while one exists —
+   * an answered quiz revisited later used to promise a jump that had long left.
+   */
+  autoNextPending?: boolean;
   onAnswer?: (result: {
     sceneId: string;
     isCorrect: boolean;
@@ -26,6 +39,12 @@ const COPY = {
     quizWrong: "Not quite.",
     quizCheck: "Check answer",
     quizAutoNext: "Moving to the next slide in {n}s",
+    quizNext: "Next question",
+    quizCount: "Question {i}/{n}",
+    quizScore: "{n} of {total} correct",
+    quizPraiseAll: "Excellent — you can move on with confidence.",
+    quizPraiseMid: "Good grasp — skim the parts you missed and you're set.",
+    quizPraiseLow: "Worth a second look at the lesson before moving on.",
   },
   vi: {
     quizKicker: "Trắc nghiệm",
@@ -33,6 +52,12 @@ const COPY = {
     quizWrong: "Chưa đúng.",
     quizCheck: "Kiểm tra đáp án",
     quizAutoNext: "Tự chuyển cảnh sau {n} giây",
+    quizNext: "Câu tiếp",
+    quizCount: "Câu {i}/{n}",
+    quizScore: "Đúng {n}/{total} câu",
+    quizPraiseAll: "Xuất sắc — tự tin đi tiếp nhé.",
+    quizPraiseMid: "Nắm khá tốt — xem lại vài chỗ vừa sai là ổn.",
+    quizPraiseLow: "Nên xem lại bài một lượt trước khi đi tiếp.",
   },
 };
 
@@ -54,16 +79,32 @@ const COPY = {
  * the question could be argued with for as long as the teacher tolerated it; now
  * one choice reveals the right answer with its explanation, and the stage holds
  * the deck for a few seconds so the explanation can be read before it moves on.
+ *
+ * A slide may carry a whole bank (a checkpoint quiz tests one stretch of the
+ * lesson, the closing quiz tests all of it), so the bank walks its questions one
+ * at a time with a progress strip and a final score. The gate only opens on the
+ * LAST question: `onAnswer` fires once the whole bank is done, so the stage
+ * holds the deck until the student has actually finished thinking — a mid-bank
+ * pause would let the room "answer" one question and sail past the rest.
  */
-export function InteractiveQuiz({ sceneId, question, options, onAnswer }: InteractiveQuizProps) {
+export function InteractiveQuiz({ sceneId, question, options, questions, autoNextPending, onAnswer }: InteractiveQuizProps) {
   const t = useCopy(COPY);
+  const bank = quizQuestionsOf({ question, options, questions });
+  const [qIndex, setQIndex] = useState(0);
   const [selected, setSelected] = useState<string | null>(null);
   const [submitted, setSubmitted] = useState(false);
-  /** Set once answered: how long the stage will hold for reading. */
+  /** Per-question outcomes so far; doubles as the progress strip and the score. */
+  const [results, setResults] = useState<boolean[]>([]);
+  /** Set once the bank is answered: how long the stage will hold for reading. */
   const [readSeconds, setReadSeconds] = useState<number | null>(null);
 
-  const currentOption = options.find((opt) => opt.id === selected);
-  const correctOption = options.find((opt) => opt.isCorrect);
+  const isBank = bank.length > 1;
+  const isLast = qIndex >= bank.length - 1;
+  const current = bank[Math.min(qIndex, bank.length - 1)];
+  const currentOption = current.options.find((opt) => opt.id === selected);
+  const correctOption = current.options.find((opt) => opt.isCorrect);
+  const score = results.filter(Boolean).length;
+  const tier = quizPraiseTier(score, bank.length);
 
   const handleSelect = (id: string) => {
     if (submitted) return;
@@ -71,21 +112,30 @@ export function InteractiveQuiz({ sceneId, question, options, onAnswer }: Intera
   };
 
   const handleSubmit = () => {
-    if (!selected || readSeconds !== null) return;
+    if (!selected || submitted) return;
+    const isCorrect = currentOption?.isCorrect ?? false;
     setSubmitted(true);
+    setResults((prev) => [...prev, isCorrect]);
+    if (!isLast) return;
     // The explanation shown is the right answer's, whichever option was picked:
     // a wrong choice is answered by being told why, not by repeating itself.
     const explanation = correctOption?.explanation;
     const seconds = quizReadSeconds(explanation);
     setReadSeconds(seconds);
     // The wait travels with the answer so the stage times the same number the
-    // slide just promised on screen.
+    // slide just promised on screen. Only the last question opens the gate.
     onAnswer?.({
       sceneId,
-      isCorrect: currentOption?.isCorrect ?? false,
+      isCorrect,
       explanation,
       readSeconds: seconds,
     });
+  };
+
+  const handleNext = () => {
+    setQIndex((index) => index + 1);
+    setSelected(null);
+    setSubmitted(false);
   };
 
   return (
@@ -93,12 +143,35 @@ export function InteractiveQuiz({ sceneId, question, options, onAnswer }: Intera
       <figcaption className="scene-quiz-kicker">
         <CircleHelp className="h-[1.1em] w-[1.1em] shrink-0" />
         <span>{t.quizKicker}</span>
+        {isBank ? (
+          <span className="scene-quiz-count">
+            {t.quizCount.replace("{i}", String(qIndex + 1)).replace("{n}", String(bank.length))}
+          </span>
+        ) : null}
       </figcaption>
 
-      <p className="scene-quiz-question text-balance">{question}</p>
+      {isBank ? (
+        <div className="scene-quiz-steps" aria-hidden="true">
+          {bank.map((_, index) => {
+            const state =
+              index < results.length
+                ? results[index]
+                  ? "done-correct"
+                  : "done-wrong"
+                : index === qIndex
+                  ? "current"
+                  : "pending";
+            return <span key={index} className="scene-quiz-step" data-state={state} />;
+          })}
+        </div>
+      ) : null}
+
+      <p className="scene-quiz-question text-balance">
+        <InlineText text={current.question} />
+      </p>
 
       <div className="scene-quiz-options">
-        {options.map((opt, idx) => {
+        {current.options.map((opt, idx) => {
           const isChosen = selected === opt.id;
           let state = "";
           if (submitted) {
@@ -119,12 +192,12 @@ export function InteractiveQuiz({ sceneId, question, options, onAnswer }: Intera
               className="scene-quiz-option"
             >
               <span className="scene-quiz-letter">{String.fromCharCode(65 + idx)}</span>
-              <span className="min-w-0 flex-1">{opt.text}</span>
+              <InlineText className="min-w-0 flex-1" text={opt.text} />
               {submitted && opt.isCorrect ? (
-                <CircleCheck className="h-[1.15em] w-[1.15em] shrink-0" />
+                <CircleCheck aria-hidden="true" className="h-[1.15em] w-[1.15em] shrink-0" />
               ) : null}
               {submitted && isChosen && !opt.isCorrect ? (
-                <CircleX className="h-[1.15em] w-[1.15em] shrink-0" />
+                <CircleX aria-hidden="true" className="h-[1.15em] w-[1.15em] shrink-0" />
               ) : null}
             </button>
           );
@@ -133,20 +206,40 @@ export function InteractiveQuiz({ sceneId, question, options, onAnswer }: Intera
 
       {submitted && correctOption ? (
         <p
+          role="status"
           className="scene-quiz-feedback"
           data-state={currentOption?.isCorrect ? "correct" : "wrong"}
         >
           <b>{currentOption?.isCorrect ? t.quizCorrect : t.quizWrong}</b>{" "}
-          {correctOption.explanation}
+          {correctOption.explanation ? (
+            <InlineText text={correctOption.explanation} />
+          ) : null}
         </p>
       ) : null}
 
+      {submitted && isLast && isBank ? (
+        <div className="scene-quiz-score" role="status">
+          <span>{t.quizScore.replace("{n}", String(score)).replace("{total}", String(bank.length))}</span>
+          <span className="scene-quiz-praise">
+            {tier === "excellent"
+              ? t.quizPraiseAll
+              : tier === "good"
+                ? t.quizPraiseMid
+                : t.quizPraiseLow}
+          </span>
+        </div>
+      ) : null}
+
       <div className="scene-quiz-actions">
-        {readSeconds !== null && onAnswer ? (
+        {submitted && isBank && !isLast ? (
+          <button type="button" onClick={handleNext} className="scene-quiz-button" data-primary="">
+            {t.quizNext}
+          </button>
+        ) : readSeconds !== null && autoNextPending && isLast ? (
           <span className="scene-quiz-auto">
             {t.quizAutoNext.replace("{n}", String(readSeconds))}
           </span>
-        ) : (
+        ) : !submitted ? (
           <button
             type="button"
             onClick={handleSubmit}
@@ -156,7 +249,7 @@ export function InteractiveQuiz({ sceneId, question, options, onAnswer }: Intera
           >
             {t.quizCheck}
           </button>
-        )}
+        ) : null}
       </div>
     </figure>
   );

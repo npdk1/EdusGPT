@@ -70,3 +70,17 @@ export function slugify(value: string): string {
     .replace(/^-+|-+$/g, "")
     .slice(0, 64);
 }
+
+/**
+ * Normalizes Vietnamese text for accent-insensitive search:
+ * "Mạng máy tính" -> "mang may tinh"
+ */
+export function normalizeVietnameseSearch(str: string): string {
+  if (!str) return "";
+  return str
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/đ/gi, "d")
+    .toLowerCase()
+    .trim();
+}

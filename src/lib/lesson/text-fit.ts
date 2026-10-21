@@ -13,7 +13,7 @@
  * systems measure in the same numbers without converting anything.
  */
 
-import { plainText } from "./inline";
+import { plainText } from "./inline.ts";
 
 /** Text height in pixels for 1, 2, 3, 4 and 5 lines, keyed by font size. */
 export const TEXT_HEIGHT_TABLE: Record<number, readonly number[]> = {

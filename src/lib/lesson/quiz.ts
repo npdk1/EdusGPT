@@ -1,4 +1,4 @@
-import { sceneIndexAt, type Lesson } from "./types.ts";
+import { sceneIndexAt, type Lesson, type QuizOption, type QuizQuestion } from "./types.ts";
 
 /**
  * The quiz gate.
@@ -32,7 +32,7 @@ export function quizHold(
   answered: ReadonlySet<string>,
 ): number | null {
   const scene = lesson.scenes[sceneIndexAt(lesson, time)];
-  if (!scene?.quiz || answered.has(scene.id)) return null;
+  if (scene?.kind !== "quiz" || !scene.quiz || answered.has(scene.id)) return null;
   const end = scene.start + scene.duration;
   if (scene.duration <= MIN_SLIDE) return null;
   return end - SCENE_FADE;
@@ -52,5 +52,88 @@ const MAX_READ = 10;
 export function quizReadSeconds(explanation: string | undefined): number {
   const words = (explanation ?? "").trim().split(/\s+/).filter(Boolean).length;
   const seconds = 2 + words / WORDS_PER_SECOND;
-  return Math.min(MAX_READ, Math.max(MIN_READ, seconds));
+  // Whole seconds: the slide prints this number ("in Ns"), and 8.333…s read as
+  // a bug. Rounded up so the hold never undershoots the reading time it promises.
+  return Math.min(MAX_READ, Math.max(MIN_READ, Math.ceil(seconds)));
+}
+
+/**
+ * How many questions the closing bank asks. The deck's length decides where
+ * the quiz stands between "quick self-check" and "real exam" — a micro lesson
+ * gets 10, a normal one 15, a long workshop 20.
+ */
+export function quizQuestionTarget(sceneCount: number): number {
+  if (sceneCount <= 5) return 10;
+  if (sceneCount <= 15) return 15;
+  return 20;
+}
+
+/**
+ * The question list of a quiz scene. Old decks carry one question; every
+ * mount reads both shapes through this, so the single-question look is just a
+ * bank of one and no renderer needs a second code path.
+ */
+export function quizQuestionsOf(quiz: {
+  question: string;
+  options: QuizOption[];
+  questions?: Array<{ question: string; options: QuizOption[] }>;
+}): Array<{ question: string; options: QuizOption[] }> {
+  return quiz.questions?.length ? quiz.questions : [{ question: quiz.question, options: quiz.options }];
+}
+
+/**
+ * Splits the flat bank response into the checkpoint banks and the closing one.
+ *
+ * The model answers in one ordered list — the checkpoints first, then the
+ * closing questions — because the response schema subset has no nested arrays,
+ * so position is the contract. A short answer fills the earlier buckets first,
+ * and a missing one is survivable: a deck with fewer questions still plays.
+ */
+export function splitBankQuestions(
+  questions: QuizQuestion[],
+  checkpointSizes: number[],
+  finalTarget: number,
+): { checkpoints: QuizQuestion[][]; final: QuizQuestion[] } {
+  const rest = questions.slice();
+  const checkpoints = checkpointSizes.map((size) => rest.splice(0, size));
+  return { checkpoints, final: rest.slice(0, finalTarget) };
+}
+
+/**
+ * The closing remark's tier, by ratio rather than by perfection: a 9-of-10 run
+ * is an excellent result, not a middling one — the plan's thresholds are 85%
+ * and 60%. Lives here, not in the component, so the boundaries are testable
+ * and cannot quietly rot back to "perfect score only".
+ */
+export function quizPraiseTier(
+  correct: number,
+  total: number,
+): "excellent" | "good" | "review" {
+  if (correct * 100 >= total * 85) return "excellent";
+  if (correct * 100 >= total * 60) return "good";
+  return "review";
+}
+
+/**
+ * Keeps the correct answer out of a single position.
+ *
+ * A real 18-question run put every correct answer first — a bank anyone can
+ * beat by always pressing A, and a wrong signal for self-checking. Each
+ * question's options are rotated so the correct one lands on `index % len`;
+ * the texts move as a block, so wording and explanations survive untouched.
+ * Applied only to model-generated banks (the route), never in coerceLesson:
+ * rotating an imported hand-authored question ("Cả A và B" style) would
+ * change what its options mean.
+ */
+export function spreadCorrectAnswers(questions: QuizQuestion[]): QuizQuestion[] {
+  return questions.map((question, index) => {
+    const { options } = question;
+    if (options.length < 2) return question;
+    const correct = options.findIndex((option) => option.isCorrect);
+    if (correct < 0) return question;
+    const target = index % options.length;
+    if (correct === target) return question;
+    const shift = (correct - target + options.length) % options.length;
+    return { ...question, options: options.map((_, i) => options[(i + shift) % options.length]) };
+  });
 }

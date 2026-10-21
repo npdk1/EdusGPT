@@ -5,6 +5,7 @@ import {
   ChevronLeft,
   ChevronRight,
   FastForward,
+  Gauge,
   Keyboard,
   Maximize,
   Pause,
@@ -228,47 +229,64 @@ export function TransportBar({
         >
           <Repeat className="h-3.5 w-3.5" /> A→B
         </button>
-        <button
-          type="button"
-          onClick={() => onSetPoint("a")}
-          className="inline-flex h-7 items-center rounded-lg px-2 font-mono text-xs text-mist-200 hover:bg-ink-800"
-          title={t.transportMarkATitle}
-        >
-          A {formatClock(loop.a, false)}
-        </button>
-        <button
-          type="button"
-          onClick={() => onSetPoint("b")}
-          className="inline-flex h-7 items-center rounded-lg px-2 font-mono text-xs text-mist-200 hover:bg-ink-800"
-          title={t.transportMarkBTitle}
-        >
-          B {formatClock(loop.b, false)}
-        </button>
-        <button
-          type="button"
-          onClick={onClearLoop}
-          className="inline-flex h-7 items-center rounded-lg px-2 text-xs text-mist-400 hover:bg-ink-800 hover:text-ember-400"
-          title={t.transportClearLoopTitle}
-        >
-          {t.transportClearLoop}
-        </button>
+        {/* The markers only earn their space once a region exists: toggling on
+            with no range mints one around the playhead, so the three buttons
+            appear exactly when they have something to point at. `b > a` is the
+            whole test — clear resets both to 0, and a paused loop keeps its
+            range so the markers stay editable. */}
+        {loop.b > loop.a && (
+          <>
+            <button
+              type="button"
+              onClick={() => onSetPoint("a")}
+              className="inline-flex h-7 items-center rounded-lg px-2 font-mono text-xs text-mist-200 hover:bg-ink-800"
+              title={t.transportMarkATitle}
+            >
+              A {formatClock(loop.a, false)}
+            </button>
+            <button
+              type="button"
+              onClick={() => onSetPoint("b")}
+              className="inline-flex h-7 items-center rounded-lg px-2 font-mono text-xs text-mist-200 hover:bg-ink-800"
+              title={t.transportMarkBTitle}
+            >
+              B {formatClock(loop.b, false)}
+            </button>
+            <button
+              type="button"
+              onClick={onClearLoop}
+              className="inline-flex h-7 items-center rounded-lg px-2 text-xs text-mist-400 hover:bg-ink-800 hover:text-ember-400"
+              title={t.transportClearLoopTitle}
+            >
+              {t.transportClearLoop}
+            </button>
+          </>
+        )}
       </div>
 
-      <label className="flex items-center gap-2 text-xs text-mist-400">
-        <span className="sr-only">{t.transportSpeed}</span>
-        <select
+      {/* Playback speed slider: matches volume slider CSS, no clunky dropdown */}
+      <div className="flex items-center gap-1.5" title={`${t.transportSpeedTitle} (${timebase.rate.toFixed(1)}×)`}>
+        <button
+          type="button"
+          onClick={() => timebase.setRate(1)}
+          className="flex items-center gap-1 rounded-md px-1.5 py-0.5 font-mono text-xs font-semibold text-mist-300 transition-colors hover:bg-ink-800 hover:text-mist-100"
+          title="Nhấn để đặt lại 1× / Click to reset 1×"
+        >
+          <Gauge className="h-3.5 w-3.5 text-mist-400" />
+          <span className="w-7 text-left">{timebase.rate === 1 ? "1×" : `${timebase.rate.toFixed(1)}×`}</span>
+        </button>
+        <input
+          type="range"
+          min={0.5}
+          max={2.0}
+          step={0.1}
           value={timebase.rate}
           onChange={(event) => timebase.setRate(Number(event.target.value))}
-          className="rounded-lg border border-ink-700 bg-ink-900/80 px-2 py-1.5 font-mono text-xs text-mist-100"
-          title={t.transportSpeedTitle}
-        >
-          {RATES.map((rate) => (
-            <option key={rate} value={rate}>
-              {rate === 1 ? "1×" : `${rate}×`}
-            </option>
-          ))}
-        </select>
-      </label>
+          aria-label={t.transportSpeed}
+          title={`${t.transportSpeedTitle} (${timebase.rate.toFixed(1)}×)`}
+          className="player-range w-16"
+        />
+      </div>
 
       <div className="ml-auto flex items-center gap-2">
         {/* A mute toggle on its own was the only loudness control, which is not a

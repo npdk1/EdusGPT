@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import {
@@ -33,11 +33,14 @@ export function KaraokeSubtitle({
   text,
   sceneIndex,
   channel,
+  floatingCard = false,
 }: {
   text: string;
   sceneIndex: number;
   /** The shared voice channel: position now, timings per scene. */
   channel: NarrationChannel;
+  /** When true, wraps the active sentence in a floating white pill card (sample style). */
+  floatingCard?: boolean;
 }) {
   // Sparse by design: punctuation and whitespace are rendered as bare text, so
   // some indices in this list never get a node.
@@ -236,6 +239,29 @@ export function KaraokeSubtitle({
 
   const current = shown[0];
   const next = shown[1];
+
+  if (floatingCard) {
+    return (
+      <div className="scene-caption-stack flex max-w-[88%] flex-col items-center gap-[0.6cqw] text-center">
+        <div className="floating-subtitle-card">
+          <p className="scene-narration pointer-events-auto overflow-hidden text-center">
+            {(current?.tokens ?? []).map((token, index) => token.text.trim().length === 0 ? token.text : (
+              <span
+                key={index}
+                ref={(node) => {
+                  wordsRef.current[index] = node;
+                }}
+                data-state="idle"
+                className="px-[1px]"
+              >
+                {token.text}
+              </span>
+            ))}
+          </p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="scene-caption-stack flex max-w-[84%] flex-col items-center gap-[0.6cqw] text-center">

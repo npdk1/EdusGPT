@@ -22,6 +22,7 @@ import {
 } from "@tabler/icons-react";
 import type { PublicAiStatus, ProviderId } from "@/lib/ai/config";
 import { useCopy } from "@/i18n/provider";
+import { CollapsibleCard } from "./CollapsibleCard";
 
 interface LiveModel {
   id: string;
@@ -53,6 +54,7 @@ type LiveModels = Partial<Record<ProviderId, LiveModel[]>>;
 const PROVIDER_MARKS: Record<ProviderId, { src: string; alt: string }> = {
   groq: { src: "/providers/groq.svg", alt: "Mark Groq" },
   nvidia: { src: "/providers/nvidia.svg", alt: "Mark NVIDIA API" },
+  tokenharbor: { src: "/providers/tokenharbor.svg", alt: "Mark Token Harbor" },
   antigravity: { src: "/providers/antigravity.svg", alt: "Logo Antigravity CLI" },
 };
 
@@ -77,6 +79,8 @@ const COPY = {
       "A free endpoint for trying things out, capped by requests per minute and sometimes asking for an API key on new endpoints.",
     noteAntigravity:
       "Runs the agent on your own machine and reads the slides in your library, so it spends no request quota — only your Google account limits apply.",
+    noteTokenharbor:
+      "One key in front of many vendors, metered per token with no markup. Ids ending in `:free` draw on a standing free allowance, so the models below can run a whole lesson on an empty balance.",
     cloudGroup: "Cloud Provider",
     cliGroup: "CLI Provider",
     cliUnsupported:
@@ -142,6 +146,12 @@ const COPY = {
     advancedBaseUrl: "Advanced: base URL",
     baseUrlHint:
       "Change this only if you go through a compatible proxy or gateway. Unknown hosts are rejected on the server.",
+    collapse: "Collapse",
+    expand: "Expand",
+    providerCardSubtitle: "Select cloud AI provider or run local CLI agent",
+    credentialsCardTitle: "{provider} - API Key & Model",
+    credentialsCardSubtitle: "Configure authentication credentials and language model",
+    hasKeyBadge: "Key configured",
   },
   vi: {
     providerReady: "sẵn sàng",
@@ -153,6 +163,8 @@ const COPY = {
       "Endpoint miễn phí để thử nghiệm, giới hạn theo số request mỗi phút và có thể yêu cầu khoá API cho endpoint mới.",
     noteAntigravity:
       "Chạy agent ngay trên máy bạn và đọc được slide trong thư viện, nên không tốn quota lượt nào — chỉ giới hạn theo tài khoản Google của bạn.",
+    noteTokenharbor:
+      "Một key dùng chung cho nhiều hãng, tính theo token, không phụ phí. Model kết thúc bằng `:free` nằm trong hạn mức miễn phí, nên mấy model bên dưới chạy được cả bài dù số dư bằng 0.",
     cloudGroup: "Cloud Provider",
     cliGroup: "CLI Provider",
     cliUnsupported:
@@ -213,6 +225,12 @@ const COPY = {
     advancedBaseUrl: "Nâng cao: base URL",
     baseUrlHint:
       "Chỉ đổi khi bạn đi qua proxy/gateway tương thích. Host lạ sẽ bị từ chối ở server.",
+    collapse: "Thu gọn",
+    expand: "Mở rộng",
+    providerCardSubtitle: "Chọn nhà cung cấp AI đám mây hoặc chạy Agent cục bộ",
+    credentialsCardTitle: "{provider} - Khóa API & Mô hình",
+    credentialsCardSubtitle: "Cấu hình khóa xác thực và mô hình ngôn ngữ AI",
+    hasKeyBadge: "Đã có key",
   },
 };
 
@@ -233,6 +251,7 @@ type CopyKey = keyof typeof COPY.en;
 const PROVIDER_NOTE_KEYS: Record<ProviderId, CopyKey> = {
   groq: "noteGroq",
   nvidia: "noteNvidia",
+  tokenharbor: "noteTokenharbor",
   antigravity: "noteAntigravity",
 };
 
@@ -315,6 +334,7 @@ function ProviderCard({
  */
 export function SetupPanel() {
   const t = useCopy(COPY);
+  const [openMain, setOpenMain] = useState(true);
   const [status, setStatus] = useState<PublicAiStatus | null>(null);
   const [provider, setProvider] = useState<ProviderId | "">("");
   /**
@@ -719,255 +739,295 @@ export function SetupPanel() {
           .panel has backdrop-blur (a stacking context), so without this the
           next section would paint over the open list and eat its clicks. */}
       <section className="panel relative z-10 space-y-4 p-5">
-        <h2 className="flex items-center gap-2 text-sm font-semibold text-mist-100">
-          <IconKey className="h-4 w-4 text-brand-300" />
-          {t.selectHeading}
-        </h2>
-
-        {/* Cloud providers — key-based, one card each. */}
-        <div>
-          <span className="label flex items-center gap-1.5">
-            <IconCloud className="h-3.5 w-3.5 text-brand-300" /> {t.cloudGroup}
-          </span>
-          <div className="grid gap-2 sm:grid-cols-2">
-            {cloudProviders.map((item) => (
-              <ProviderCard
-                key={item.id}
-                item={item}
-                active={item.id === activeProvider}
-                onSelect={selectProvider}
-              />
-            ))}
-          </div>
+        <div className="flex items-center justify-between gap-3">
+          <h2 className="flex items-center gap-2 text-sm font-semibold text-mist-100">
+            <IconKey className="h-4 w-4 text-brand-300" />
+            {t.selectHeading}
+          </h2>
+          <button
+            type="button"
+            onClick={() => setOpenMain((prev) => !prev)}
+            className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-lg border border-ink-700 bg-ink-900/60 text-mist-400 transition-transform duration-200 hover:text-mist-100 ${
+              openMain ? "rotate-0 text-mist-200" : "-rotate-90 text-mist-500"
+            }`}
+            title={openMain ? t.collapse : t.expand}
+            aria-expanded={openMain}
+          >
+            <IconChevronDown className="h-4 w-4" />
+          </button>
         </div>
 
-        {/* CLI providers — none are routable yet. Shown rather than hidden so
-            the absence reads as "not yet" instead of "you missed a setting". */}
-        <div>
-          <span className="label flex items-center gap-1.5">
-            <IconTerminal2 className="h-3.5 w-3.5 text-mist-400" /> {t.cliGroup}
-          </span>
-          {cliProviders.length === 0 ? (
-            <div className="rounded-xl border border-dashed border-ink-700 bg-ink-950/40 px-3.5 py-3">
-              <p className="text-xs leading-relaxed text-mist-400">
-                {t.cliUnsupported}
-              </p>
-              <div className="mt-2 flex flex-wrap gap-1.5">
-                {plannedCli.map((item) => (
-                  <span key={item.id} className="chip opacity-70" title={item.note}>
-                    {item.label}
-                  </span>
-                ))}
-              </div>
-            </div>
-          ) : (
-            <div className="grid gap-2 sm:grid-cols-2">
-              {cliProviders.map((item) => (
-                <ProviderCard
-                  key={item.id}
-                  item={item}
-                  active={item.id === activeProvider}
-                  onSelect={selectProvider}
-                />
-              ))}
-            </div>
-          )}
-        </div>
-
-        {activeNote ? (
-          <p className="text-[11px] leading-relaxed text-mist-500">
-            {activeNote} {activeSignupUrl ? (
-              <>
-                {t.getKey}{" "}
-                <a
-                  href={activeSignupUrl}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="text-gold-200 underline"
-                >
-                  {activeSignupUrl}
-                </a>
-                .
-              </>
-            ) : null}
-          </p>
-        ) : null}
-
-
-        {/* CLI providers have no key, so the box is replaced by their install
-            state and the one-time login hint. */}
-        {activeIsCli ? (
-          <div className="rounded-xl border border-ink-700 bg-ink-950/50 px-3.5 py-3">
-            <p className="flex items-center gap-2 text-sm font-semibold text-mist-100">
-              {cliReady ? (
-                <IconCircleCheck className="h-4 w-4 shrink-0 text-brand-300" />
-              ) : (
-                <IconAlertTriangle className="h-4 w-4 shrink-0 text-gold-300" />
-              )}
-              {cliReady
-                ? `${t.cliInstalled}${activeProviderInfo?.cli?.version ? ` · ${activeProviderInfo.cli.version}` : ""}`
-                : t.cliCommandMissing}
-            </p>
-            <p className="mt-1.5 text-[11px] leading-relaxed text-mist-500">
-              {cliReady ? t.cliReadyHint : t.cliInstallHint}
-            </p>
-          </div>
-        ) : (
-          <div>
-            <label className="label flex items-center gap-1.5" htmlFor="provider-key">
-              <IconLock className="h-3.5 w-3.5 text-mist-400" />
-              {activeProviderLabel} API key
-            </label>
-            <div className="flex gap-2">
-              <input
-                id="provider-key"
-                type={reveal ? "text" : "password"}
-                value={keyDraft}
-                onChange={(event) => setKeyDraft(event.target.value)}
-                onKeyDown={(event) => {
-                  if (event.key === "Enter") void submit(true);
-                }}
-                placeholder={activeProvider === "nvidia" ? "nvapi-…" : "gsk_…"}
-                autoComplete="off"
-                spellCheck={false}
-                className="field"
-              />
-              <button
-                type="button"
-                onClick={() => setReveal((value) => !value)}
-                className="btn-icon h-auto w-11 shrink-0"
-                aria-label={reveal ? t.keyHide : t.keyShow}
-              >
-                {reveal ? <IconEyeOff className="h-4 w-4" /> : <IconEye className="h-4 w-4" />}
-              </button>
-            </div>
-            <p className="mt-1.5 text-[11px] text-mist-500">
-              {!keyReady
-                ? t.keyReading
-                : storedHintForActive
-                  ? `${t.keyStored} ${storedHintForActive}.`
-                  : t.keyMissing}
-            </p>
-          </div>
-        )}
-
-        <div className="grid gap-3 sm:grid-cols-[2fr_1fr]">
-          <div>
-            <label className="label flex items-center gap-1.5" htmlFor="provider-model">
-              <IconCpu className="h-3.5 w-3.5 text-mist-400" />
-              {t.modelDefault}
-            </label>
-            <div
-              className="relative"
-              onBlur={(event) => {
-                if (!event.currentTarget.contains(event.relatedTarget as Node | null)) {
-                  commitModelBox();
-                }
-              }}
+        {openMain ? (
+          <div className="space-y-4">
+            {/* Cloud providers & CLI — grouped in collapsible card */}
+            <CollapsibleCard
+              title={t.cloudGroup}
+              subtitle={t.providerCardSubtitle}
+              icon={<IconCloud className="h-4 w-4 text-brand-300" />}
+              badge={<span className="chip text-[11px] text-brand-200">{activeProviderLabel}</span>}
+              defaultOpen={true}
             >
-              <div className="relative">
-                <IconSearch className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-mist-500" />
-                <input
-                  id="provider-model"
-                  value={modelQuery ?? model}
-                  onChange={(event) => {
-                    setModelQuery(event.target.value);
-                    setModelOpen(true);
-                  }}
-                  onFocus={(event) => {
-                    setModelQuery(model);
-                    setModelOpen(true);
-                    // Typing replaces the current id instead of appending to it.
-                    event.target.select();
-                  }}
-                  onKeyDown={(event) => {
-                    if (event.key === "Enter" && modelMatches.length > 0) {
-                      pickModel(modelMatches[0]);
-                    } else if (event.key === "Escape") {
+              <div className="space-y-4">
+                <div>
+                  <span className="label flex items-center gap-1.5">
+                    <IconCloud className="h-3.5 w-3.5 text-brand-300" /> {t.cloudGroup}
+                  </span>
+                  <div className="grid gap-2 sm:grid-cols-2">
+                    {cloudProviders.map((item) => (
+                      <ProviderCard
+                        key={item.id}
+                        item={item}
+                        active={item.id === activeProvider}
+                        onSelect={selectProvider}
+                      />
+                    ))}
+                  </div>
+                </div>
+
+                <div>
+                  <span className="label flex items-center gap-1.5">
+                    <IconTerminal2 className="h-3.5 w-3.5 text-mist-400" /> {t.cliGroup}
+                  </span>
+                  {cliProviders.length === 0 ? (
+                    <div className="rounded-xl border border-dashed border-ink-700 bg-ink-950/40 px-3.5 py-3">
+                      <p className="text-xs leading-relaxed text-mist-400">
+                        {t.cliUnsupported}
+                      </p>
+                      <div className="mt-2 flex flex-wrap gap-1.5">
+                        {plannedCli.map((item) => (
+                          <span key={item.id} className="chip opacity-70" title={item.note}>
+                            {item.label}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="grid gap-2 sm:grid-cols-2">
+                      {cliProviders.map((item) => (
+                        <ProviderCard
+                          key={item.id}
+                          item={item}
+                          active={item.id === activeProvider}
+                          onSelect={selectProvider}
+                        />
+                      ))}
+                    </div>
+                  )}
+                </div>
+
+                {activeNote ? (
+                  <p className="text-[11px] leading-relaxed text-mist-500">
+                    {activeNote} {activeSignupUrl ? (
+                      <>
+                        {t.getKey}{" "}
+                        <a
+                          href={activeSignupUrl}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="text-gold-200 underline"
+                        >
+                          {activeSignupUrl}
+                        </a>
+                        .
+                      </>
+                    ) : null}
+                  </p>
+                ) : null}
+              </div>
+            </CollapsibleCard>
+
+
+        {/* Khung 2: Khóa API & Mô hình */}
+        <CollapsibleCard
+          title={t.credentialsCardTitle.replace("{provider}", activeProviderLabel)}
+          subtitle={t.credentialsCardSubtitle}
+          icon={<IconLock className="h-4 w-4 text-brand-300" />}
+          badge={
+            keyReady ? (
+              <span className="chip text-[11px] text-brand-200">
+                {activeIsCli ? "CLI" : t.hasKeyBadge}
+              </span>
+            ) : null
+          }
+          defaultOpen={true}
+        >
+          <div className="space-y-4">
+            {/* CLI providers have no key, so the box is replaced by their install
+                state and the one-time login hint. */}
+            {activeIsCli ? (
+              <div className="rounded-xl border border-ink-700 bg-ink-950/50 px-3.5 py-3">
+                <p className="flex items-center gap-2 text-sm font-semibold text-mist-100">
+                  {cliReady ? (
+                    <IconCircleCheck className="h-4 w-4 shrink-0 text-brand-300" />
+                  ) : (
+                    <IconAlertTriangle className="h-4 w-4 shrink-0 text-gold-300" />
+                  )}
+                  {cliReady
+                    ? `${t.cliInstalled}${activeProviderInfo?.cli?.version ? ` · ${activeProviderInfo.cli.version}` : ""}`
+                    : t.cliCommandMissing}
+                </p>
+                <p className="mt-1.5 text-[11px] leading-relaxed text-mist-500">
+                  {cliReady ? t.cliReadyHint : t.cliInstallHint}
+                </p>
+              </div>
+            ) : (
+              <div>
+                <label className="label flex items-center gap-1.5" htmlFor="provider-key">
+                  <IconLock className="h-3.5 w-3.5 text-mist-400" />
+                  {activeProviderLabel} API key
+                </label>
+                <div className="flex gap-2">
+                  <input
+                    id="provider-key"
+                    type={reveal ? "text" : "password"}
+                    value={keyDraft}
+                    onChange={(event) => setKeyDraft(event.target.value)}
+                    onKeyDown={(event) => {
+                      if (event.key === "Enter") void submit(true);
+                    }}
+                    placeholder={activeProvider === "nvidia" ? "nvapi-…" : "gsk_…"}
+                    autoComplete="off"
+                    spellCheck={false}
+                    className="field"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setReveal((value) => !value)}
+                    className="btn-icon h-auto w-11 shrink-0"
+                    aria-label={reveal ? t.keyHide : t.keyShow}
+                  >
+                    {reveal ? <IconEyeOff className="h-4 w-4" /> : <IconEye className="h-4 w-4" />}
+                  </button>
+                </div>
+                <p className="mt-1.5 text-[11px] text-mist-500">
+                  {!keyReady
+                    ? t.keyReading
+                    : storedHintForActive
+                      ? `${t.keyStored} ${storedHintForActive}.`
+                      : t.keyMissing}
+                </p>
+              </div>
+            )}
+
+            <div className="grid gap-3 sm:grid-cols-[2fr_1fr]">
+              <div>
+                <label className="label flex items-center gap-1.5" htmlFor="provider-model">
+                  <IconCpu className="h-3.5 w-3.5 text-mist-400" />
+                  {t.modelDefault}
+                </label>
+                <div
+                  className="relative"
+                  onBlur={(event) => {
+                    if (!event.currentTarget.contains(event.relatedTarget as Node | null)) {
                       commitModelBox();
                     }
                   }}
-                  placeholder={t.modelSearch}
-                  autoComplete="off"
-                  spellCheck={false}
-                  className="field pl-9 pr-9"
-                />
-                <IconChevronDown className="pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-mist-500" />
-              </div>
-              {modelOpen && modelMatches.length > 0 ? (
-                <ul className="absolute z-20 mt-1 max-h-60 w-full overflow-auto rounded-xl border border-ink-700 bg-ink-900 py-1 shadow-xl">
-                  {modelMatches.map((option) => (
-                    <li key={option}>
-                      <button
-                        type="button"
-                        onClick={() => pickModel(option)}
-                        title={
-                          trustedModels.has(option)
-                            ? t.modelTrustedTitle
-                            : undefined
+                >
+                  <div className="relative">
+                    <IconSearch className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-mist-500" />
+                    <input
+                      id="provider-model"
+                      value={modelQuery ?? model}
+                      onChange={(event) => {
+                        setModelQuery(event.target.value);
+                        setModelOpen(true);
+                      }}
+                      onFocus={(event) => {
+                        setModelQuery(model);
+                        setModelOpen(true);
+                        // Typing replaces the current id instead of appending to it.
+                        event.target.select();
+                      }}
+                      onKeyDown={(event) => {
+                        if (event.key === "Enter" && modelMatches.length > 0) {
+                          pickModel(modelMatches[0]);
+                        } else if (event.key === "Escape") {
+                          commitModelBox();
                         }
-                        className={`flex w-full items-center gap-2 px-3 py-2 text-left font-mono text-xs ${
-                          option === model
-                            ? "bg-brand-500/12 text-mist-50"
-                            : "text-mist-300 hover:bg-ink-850"
-                        }`}
-                      >
-                        <span className="min-w-0 flex-1 truncate">{option}</span>
-                        {trustedModels.has(option) ? (
-                          <span
-                            aria-label={t.modelTrustedBadge}
-                            title={t.modelTrustedBadge}
-                            className="shrink-0 text-brand-300"
+                      }}
+                      placeholder={t.modelSearch}
+                      autoComplete="off"
+                      spellCheck={false}
+                      className="field pl-9 pr-9"
+                    />
+                    <IconChevronDown className="pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-mist-500" />
+                  </div>
+                  {modelOpen && modelMatches.length > 0 ? (
+                    <ul className="absolute z-20 mt-1 max-h-60 w-full overflow-auto rounded-xl border border-ink-700 bg-ink-900 py-1 shadow-xl">
+                      {modelMatches.map((option) => (
+                        <li key={option}>
+                          <button
+                            type="button"
+                            onClick={() => pickModel(option)}
+                            title={
+                              trustedModels.has(option)
+                                ? t.modelTrustedTitle
+                                : undefined
+                            }
+                            className={`flex w-full items-center gap-2 px-3 py-2 text-left font-mono text-xs ${
+                              option === model
+                                ? "bg-brand-500/12 text-mist-50"
+                                : "text-mist-300 hover:bg-ink-850"
+                            }`}
                           >
-                            &#10003;
-                          </span>
-                        ) : null}
-                      </button>
-                    </li>
-                  ))}
-                </ul>
-              ) : null}
+                            <span className="min-w-0 flex-1 truncate">{option}</span>
+                            {trustedModels.has(option) ? (
+                              <span
+                                aria-label={t.modelTrustedBadge}
+                                title={t.modelTrustedBadge}
+                                className="shrink-0 text-brand-300"
+                              >
+                                &#10003;
+                              </span>
+                            ) : null}
+                          </button>
+                        </li>
+                      ))}
+                    </ul>
+                  ) : null}
+                </div>
+                {liveCount > 0 || trustedModels.size > 0 ? (
+                  <p className="mt-1.5 text-[11px] text-mist-500">
+                    {liveCount > 0 ? `${liveCount} ${t.modelUnit} ${activeProviderLabel}.` : null}
+                    {trustedModels.size > 0
+                      ? `${t.modelTrustedNote} (${trustedModels.size}).`
+                      : t.modelUntestedNote}
+                  </p>
+                ) : null}
+              </div>
+              <div className="flex items-start">
+                <button
+                  type="button"
+                  onClick={() => void loadModels()}
+                  className="btn-ghost w-full"
+                  disabled={busy !== null || !canFetchModels}
+                  title={
+                    canFetchModels
+                      ? `${t.modelsAskLead} ${activeProviderLabel} ${t.modelsAskTail}`
+                      : `${t.modelsNeedKeyLead} ${activeProviderLabel}${t.modelsNeedKeyTail}`
+                  }
+                >
+                  {busy === "models" ? (
+                    <IconLoader2 className="h-4 w-4 animate-spin" />
+                  ) : (
+                    <IconRefresh className="h-4 w-4" />
+                  )}
+                  {t.modelsLoad}
+                </button>
+              </div>
             </div>
-            {liveCount > 0 || trustedModels.size > 0 ? (
-              <p className="mt-1.5 text-[11px] text-mist-500">
-                {liveCount > 0 ? `${liveCount} ${t.modelUnit} ${activeProviderLabel}.` : null}
-                {trustedModels.size > 0
-                  ? `${t.modelTrustedNote} (${trustedModels.size}).`
-                  : t.modelUntestedNote}
-              </p>
-            ) : null}
           </div>
-          <div className="flex items-start">
-            <button
-              type="button"
-              onClick={() => void loadModels()}
-              className="btn-ghost w-full"
-              disabled={busy !== null || !canFetchModels}
-              title={
-                canFetchModels
-                  ? `${t.modelsAskLead} ${activeProviderLabel} ${t.modelsAskTail}`
-                  : `${t.modelsNeedKeyLead} ${activeProviderLabel}${t.modelsNeedKeyTail}`
-              }
-            >
-              {busy === "models" ? (
-                <IconLoader2 className="h-4 w-4 animate-spin" />
-              ) : (
-                <IconRefresh className="h-4 w-4" />
-              )}
-              {t.modelsLoad}
-            </button>
-          </div>
-        </div>
+        </CollapsibleCard>
 
-        {/* A CLI provider has no HTTP endpoint, so there is no base URL to
-            point somewhere else. */}
+        {/* Khung 3: Nâng cao Base URL */}
         {!activeIsCli ? (
-          <details className="rounded-xl border border-ink-700/70 bg-ink-950/50 px-3.5 py-3">
-            <summary className="flex cursor-pointer items-center gap-1.5 text-xs font-semibold uppercase tracking-wide text-mist-400">
-              <IconAdjustments className="h-3.5 w-3.5" />
-              {t.advancedBaseUrl}
-            </summary>
-            <div className="mt-3">
+          <CollapsibleCard
+            title={t.advancedBaseUrl}
+            subtitle={t.baseUrlHint}
+            icon={<IconAdjustments className="h-4 w-4 text-brand-300" />}
+            defaultOpen={true}
+          >
+            <div>
               <label className="label flex items-center gap-1.5" htmlFor="provider-base">
                 {activeProvider === "nvidia" ? "NVIDIA_BASE_URL" : "GROQ_BASE_URL"}
               </label>
@@ -985,11 +1045,10 @@ export function SetupPanel() {
                 {t.baseUrlHint}
               </p>
             </div>
-          </details>
+          </CollapsibleCard>
         ) : null}
 
-
-        <div className="flex flex-wrap gap-2">
+        <div className="flex flex-wrap gap-2 pt-1">
           <button
             type="button"
             onClick={() => void submit(false)}
@@ -1033,25 +1092,27 @@ export function SetupPanel() {
           ) : null}
         </div>
 
-        {message ? (
-          <p
-            className={`flex items-start gap-2 rounded-xl border px-3.5 py-2.5 text-sm ${
-              message.tone === "ok"
-                ? "border-brand-600/50 bg-brand-500/10 text-mist-100"
-                : message.tone === "error"
-                  ? "border-ember-500/50 bg-ember-500/10 text-mist-100"
-                  : "border-ink-600 bg-ink-900/70 text-mist-200"
-            }`}
-          >
-            {message.tone === "ok" ? (
-              <IconCircleCheck className="mt-0.5 h-4 w-4 shrink-0 text-brand-300" />
-            ) : message.tone === "error" ? (
-              <IconAlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-ember-400" />
-            ) : (
-              <IconKey className="mt-0.5 h-4 w-4 shrink-0 text-gold-300" />
-            )}
-            <span className="min-w-0 break-words">{message.text}</span>
-          </p>
+            {message ? (
+              <p
+                className={`flex items-start gap-2 rounded-xl border px-3.5 py-2.5 text-sm ${
+                  message.tone === "ok"
+                    ? "border-brand-600/50 bg-brand-500/10 text-mist-100"
+                    : message.tone === "error"
+                      ? "border-ember-500/50 bg-ember-500/10 text-mist-100"
+                      : "border-ink-600 bg-ink-900/70 text-mist-200"
+                }`}
+              >
+                {message.tone === "ok" ? (
+                  <IconCircleCheck className="mt-0.5 h-4 w-4 shrink-0 text-brand-300" />
+                ) : message.tone === "error" ? (
+                  <IconAlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-ember-400" />
+                ) : (
+                  <IconKey className="mt-0.5 h-4 w-4 shrink-0 text-gold-300" />
+                )}
+                <span className="min-w-0 break-words">{message.text}</span>
+              </p>
+            ) : null}
+          </div>
         ) : null}
       </section>
 

@@ -8,6 +8,7 @@ import {
 import { localVoiceStatus } from "@/lib/server/tts-local";
 import { localVoiceCatalog } from "@/lib/server/local-voices";
 import { rejectRemote } from "@/lib/server/guard";
+import { maskKey } from "@/lib/ai/config";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -26,8 +27,18 @@ export async function GET() {
     localVoiceStatus(),
     localVoiceCatalog(),
   ]);
+  const envGroqKey = process.env.GROQ_API_KEY?.trim() || "";
+  const sttKeyHint = config.sttApiKey
+    ? maskKey(config.sttApiKey)
+    : envGroqKey
+      ? `${maskKey(envGroqKey)} (tự động từ Groq API key)`
+      : "";
+
   return NextResponse.json({
     engine: config.engine,
+    speechRate: config.speechRate,
+    sttApiKey: config.sttApiKey || envGroqKey,
+    sttKeyHint,
     default: DEFAULT_ENGINE,
     local,
     providers: catalog.providers,
@@ -38,25 +49,31 @@ export async function POST(request: NextRequest) {
   const remote = rejectRemote(request);
   if (remote) return remote;
 
-  let body: { engine?: unknown };
+  let body: { engine?: unknown; speechRate?: unknown; sttApiKey?: unknown };
   try {
     body = (await request.json()) as typeof body;
   } catch {
     return NextResponse.json({ error: "Body phải là JSON." }, { status: 400 });
   }
-  if (!isTtsEngine(body.engine)) {
-    return NextResponse.json(
-      { error: "Chỉ nhận “local” (giọng trên máy) hoặc “cloud” (API)." },
-      { status: 400 },
-    );
+
+  const patch: Parameters<typeof writeTtsConfig>[0] = {};
+  if (isTtsEngine(body.engine)) {
+    patch.engine = body.engine;
+  }
+  if (typeof body.speechRate === "number" && body.speechRate >= 0.75 && body.speechRate <= 1.5) {
+    patch.speechRate = Number(body.speechRate.toFixed(2));
+  }
+  if (typeof body.sttApiKey === "string") {
+    patch.sttApiKey = body.sttApiKey.trim();
   }
 
-  const config = await writeTtsConfig({ engine: body.engine });
-  // Re-probed rather than reported from the old cache: picking the machine's
-  // voice is exactly the moment the answer changes.
+  const config = await writeTtsConfig(patch);
   const local = await localVoiceStatus(true);
   return NextResponse.json({
+    ok: true,
     engine: config.engine,
+    speechRate: config.speechRate,
+    sttApiKey: config.sttApiKey,
     local,
   });
 }

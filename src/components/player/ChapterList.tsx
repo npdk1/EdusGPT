@@ -2,9 +2,9 @@
 
 import { ListOrdered, Mic } from "lucide-react";
 import type { Timebase } from "@/hooks/useTimebase";
-import { SCENE_KIND_LABEL, type Lesson } from "@/lib/lesson/types";
+import { sceneKindLabel, type Lesson } from "@/lib/lesson/types";
 import { formatClock } from "@/lib/format";
-import { useCopy } from "@/i18n/provider";
+import { useCopy, useLang } from "@/i18n/provider";
 
 const COPY = {
   en: {
@@ -32,6 +32,7 @@ export function ChapterList({
   activeChapter,
 }: ChapterListProps) {
   const t = useCopy(COPY);
+  const lang = useLang();
   const activeNarration = lesson.scenes[activeScene]?.narration;
 
   return (
@@ -44,7 +45,12 @@ export function ChapterList({
         </span>
       </div>
 
-      <div className="max-h-[22rem] overflow-y-auto px-2 py-2 lg:max-h-[30rem]">
+      {/* One scroll layer per column. The list used to cap itself at 30rem
+          inside a rail that also scrolls, so a wheel over the outline hit
+          an inner scroller and then an outer one — two bars, one gesture.
+          On lg the rail owns the scrolling; only the stacked mobile layout
+          still caps the card. */}
+      <div className="max-h-[22rem] overflow-y-auto px-2 py-2 lg:max-h-none">
         {lesson.chapters.map((chapter, chapterIndex) => {
           const scenes = lesson.scenes.filter((scene) =>
             chapter.sceneIds.includes(scene.id),
@@ -98,7 +104,7 @@ export function ChapterList({
                               {formatClock(scene.start, false)}
                             </span>
                             <span>·</span>
-                            <span>{SCENE_KIND_LABEL[scene.kind]}</span>
+                            <span>{sceneKindLabel(scene.kind, lang)}</span>
                             <span>·</span>
                             <span>{scene.duration.toFixed(0)}s</span>
                           </span>
@@ -123,7 +129,13 @@ export function ChapterList({
             <Mic className="h-3.5 w-3.5 text-brand-300" /> {t.chapterNarration}{" "}
             {activeScene + 1}
           </p>
-          <p className="mt-1.5 text-sm italic leading-relaxed text-mist-300">
+          {/* The full narration is one hover away; unclamped it ran to a
+              paragraph and read as a second subtitle competing with the one
+              on the slide. Three lines say "there is more here, keep it". */}
+          <p
+            className="mt-1.5 line-clamp-3 text-sm italic leading-relaxed text-mist-300"
+            title={activeNarration}
+          >
             {activeNarration}
           </p>
         </div>

@@ -20,9 +20,14 @@ const SETTINGS_DIR = join(process.cwd(), "data");
 const SETTINGS_FILE = join(SETTINGS_DIR, "tts-settings.json");
 
 export const DEFAULT_ENGINE: TtsEngine = "local";
+export const DEFAULT_SPEECH_RATE = 1.0;
 
 export interface TtsConfig {
   engine: TtsEngine;
+  /** Speech rate multiplier: 0.8 to 1.3 (default 1.0). */
+  speechRate: number;
+  /** Groq Whisper STT API key override. If omitted, uses GROQ_API_KEY from .env. */
+  sttApiKey?: string;
 }
 
 export function isTtsEngine(value: unknown): value is TtsEngine {
@@ -43,14 +48,22 @@ export async function readTtsConfig(): Promise<TtsConfig> {
   try {
     const raw = JSON.parse(await readFile(SETTINGS_FILE, "utf8")) as {
       engine?: unknown;
+      speechRate?: unknown;
+      sttApiKey?: unknown;
     };
+    const rate =
+      typeof raw.speechRate === "number" && raw.speechRate >= 0.75 && raw.speechRate <= 1.5
+        ? Number(raw.speechRate.toFixed(2))
+        : DEFAULT_SPEECH_RATE;
     cached = {
       engine: isTtsEngine(raw.engine) ? raw.engine : DEFAULT_ENGINE,
+      speechRate: rate,
+      sttApiKey: typeof raw.sttApiKey === "string" ? raw.sttApiKey.trim() : undefined,
     };
   } catch {
     // No file yet — a fresh clone, or a machine that has never spoken. Local is
     // the default and needs no setup beyond the voice itself.
-    cached = { engine: DEFAULT_ENGINE };
+    cached = { engine: DEFAULT_ENGINE, speechRate: DEFAULT_SPEECH_RATE };
   }
   return cached;
 }
@@ -69,6 +82,16 @@ export async function writeTtsConfig(patch: Partial<TtsConfig>): Promise<TtsConf
 
 export async function readTtsEngine(): Promise<TtsEngine> {
   return (await readTtsConfig()).engine;
+}
+
+export async function readSpeechRate(): Promise<number> {
+  return (await readTtsConfig()).speechRate;
+}
+
+export async function readSttApiKey(): Promise<string> {
+  const config = await readTtsConfig();
+  if (config.sttApiKey) return config.sttApiKey;
+  return process.env.GROQ_API_KEY?.trim() || "";
 }
 
 export async function writeTtsEngine(engine: TtsEngine): Promise<TtsEngine> {

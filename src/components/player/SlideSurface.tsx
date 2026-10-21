@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, type ReactNode } from "react";
 import {
-  SCENE_KIND_LABEL,
+  sceneKindLabel,
   SLIDE_GRID,
   defaultSlideLayout,
   type Lesson,
@@ -25,6 +25,7 @@ import {
   SlideImageView,
 } from "./SceneFigure";
 import { InteractiveQuiz } from "./InteractiveQuiz";
+import { MindMap } from "./MindMap";
 import { InteractiveSimulation } from "./InteractiveSimulation";
 import { InlineText } from "./InlineText";
 import { ScenePointer } from "./ScenePointer";
@@ -33,19 +34,21 @@ import {
   createNarrationChannel,
   type NarrationChannel,
 } from "@/lib/karaoke";
-import { useCopy } from "@/i18n/provider";
+import { useCopy, useLang } from "@/i18n/provider";
 
 const COPY = {
   en: {
     zoom: "Zoom",
     zoomFormula: "Zoom the formula",
     graphFallback: "the graph",
+    mapFallback: "the summary map",
     dataTitle: "Data",
   },
   vi: {
     zoom: "Phóng to",
     zoomFormula: "Phóng to công thức",
     graphFallback: "đồ thị",
+    mapFallback: "sơ đồ tóm tắt",
     dataTitle: "Số liệu",
   },
 };
@@ -123,6 +126,7 @@ export function SlideSurface({
   className?: string;
 }) {
   const t = useCopy(COPY);
+  const lang = useLang();
   const stageRef = useRef<HTMLDivElement | null>(null);
   const KickerIcon = slideIcon(scene.icon);
   // The pointer needs a voice channel whether or not one was passed: a slide
@@ -136,6 +140,7 @@ export function SlideSurface({
       scene.table ||
       scene.data?.length ||
       scene.graph ||
+      scene.mindmap ||
       scene.simulation3d ||
       (scene.kind === "quiz" && scene.quiz) ||
       (scene.imagePrompt ?? "").trim() ||
@@ -341,6 +346,7 @@ export function SlideSurface({
           <InteractiveQuiz
             sceneId={scene.id}
             question={scene.quiz.question}
+            questions={scene.quiz.questions}
             options={scene.quiz.options}
           />
         </div>
@@ -360,6 +366,11 @@ export function SlideSurface({
           <FunctionGraph graph={scene.graph} />
         </FigureZoom>
       ) : null}
+      {scene.mindmap ? (
+        <FigureZoom label={`${t.zoom} ${t.mapFallback}`}>
+          <MindMap branches={scene.mindmap.branches} />
+        </FigureZoom>
+      ) : null}
 
       <SlideImageView lessonId={lessonId} scene={scene} />
     </>
@@ -371,7 +382,7 @@ export function SlideSurface({
         {KickerIcon ? (
           <KickerIcon className="scene-kicker-icon" aria-hidden="true" />
         ) : null}
-        {SCENE_KIND_LABEL[scene.kind]}
+        {sceneKindLabel(scene.kind, lang)}
       </span>
       <h3 className="scene-title mt-[2.5%] text-balance font-bold tracking-tight">
         <InlineText text={scene.title} />

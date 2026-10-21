@@ -81,9 +81,12 @@ async function readError(response: Response): Promise<string> {
   const text = await response.text();
   try {
     const payload = JSON.parse(text) as {
-      error?: { message?: string };
+      error?: { message?: string; failed_generation?: string };
       message?: string;
     };
+    if (payload.error?.failed_generation) {
+      return `${payload.error.message || "Failed to generate JSON"} | generated: ${payload.error.failed_generation.slice(0, 250)}`;
+    }
     if (payload.error?.message) return payload.error.message;
     if (payload.message) return payload.message;
   } catch {
@@ -361,16 +364,14 @@ function noteSuccess(): void {
  * hidden trace had taken most of the 2048 tokens before `content` began.
  */
 const REASONING_MODEL =
-  /gpt-oss|deepseek-(?:r1|reasoner|reasoning)|qwq|thinking|reason|nemotron/i;
+  /gpt-oss|deepseek-(?:r1|reasoner|reasoning|v\d+)|qwq|thinking|reason|nemotron/i;
 
 /**
  * Room kept aside for the reasoning trace.
  *
- * Measured against Groq's `openai/gpt-oss-120b` with a real scene prompt: the
- * trace came to 2634 characters while the JSON answer needed 508, so a 2048
- * token budget was spent before `content` began — every scene came back empty
- * and the whole lesson failed. Adding headroom plus a low reasoning effort
- * (202 characters for the same prompt) is what makes these models usable here.
+ * Measured against Groq's `openai/gpt-oss-120b` and Token Harbor's DeepSeek models
+ * with a real scene prompt: the trace needs room before `content` begins.
+ * Adding headroom ensures the model does not run out of tokens mid-reasoning.
  */
 const REASONING_HEADROOM_TOKENS = 2048;
 
@@ -444,8 +445,8 @@ function buildBody(
     response_format: { type: "json_object" },
     // Several vendors default these families to a high reasoning effort. Only
     // sent to models that are known to accept it, so no other vendor sees a
-    // field it might reject.
-    ...(reasons ? { reasoning_effort: "low" } : {}),
+    // field it might reject. DeepSeek APIs do not accept reasoning_effort.
+    ...(reasons && !/deepseek/i.test(model) ? { reasoning_effort: "low" } : {}),
   };
 }
 
@@ -479,7 +480,7 @@ async function fitAnswerBudget(
    */
   const full = REASONING_MODEL.test(model) ? REASONING_HEADROOM_TOKENS : 0;
   const room = Math.floor(limit * 0.9) - input;
-  if (room <= 0) return undefined;
+  if (room <= 0) return { maxOutputTokens: 512, headroom: 256 };
   const headroom = Math.min(full, Math.max(256, Math.floor(room / 3)));
   return { maxOutputTokens: Math.max(512, Math.min(wanted, room - headroom)), headroom };
 }
@@ -733,11 +734,14 @@ export async function generateChatJson<T>(
           );
         }
       }
+      const scaledBudget = Math.round((options.maxOutputTokens ?? 4096) * budgetScale);
       response = await chat(
         creds,
         buildBody(
           model,
-          fit === undefined ? options : { ...options, maxOutputTokens: fit.maxOutputTokens },
+          fit === undefined
+            ? { ...options, maxOutputTokens: scaledBudget }
+            : { ...options, maxOutputTokens: fit.maxOutputTokens },
           fit?.headroom,
         ),
         // A bigger budget takes proportionally longer to stream: measured at
@@ -767,7 +771,7 @@ export async function generateChatJson<T>(
       const payload = (await response.json()) as {
         choices?: Array<{
           finish_reason?: string | null;
-          message?: { content?: string | null; reasoning?: string };
+          message?: { content?: string | null; reasoning?: string; reasoning_content?: string };
         }>;
         usage?: unknown;
       };
@@ -775,7 +779,12 @@ export async function generateChatJson<T>(
       // Reasoning models can spend the whole budget on their trace and leave
       // `content` null. Their trace usually *ends* with the answer, so it is
       // worth reading rather than failing the call.
-      const text = (answer?.content ?? answer?.reasoning ?? "").trim();
+      const text = (
+        answer?.content?.trim() ||
+        answer?.reasoning_content?.trim() ||
+        answer?.reasoning?.trim() ||
+        ""
+      );
       const finish = payload.choices?.[0]?.finish_reason;
       if (!text) {
         await debugLog(
@@ -930,6 +939,17 @@ export async function generateChatJson<T>(
         `${message}. Đã thử hết model dự trữ. Thử lại sau hoặc đổi model trong /setup.`,
         response.status,
       );
+    }
+
+    if (response.status === 400 && /Failed to (?:generate|validate) JSON/i.test(message)) {
+      transientStreak += 1;
+      if (queueIndex + 1 < queue.length) {
+        queueIndex += 1;
+        transientStreak = 0;
+        continue;
+      }
+      await backoff(transientStreak);
+      continue;
     }
 
     if (response.status === 429 || response.status >= 500) {

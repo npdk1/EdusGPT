@@ -32,7 +32,7 @@ const MAX_ENTRIES = 2_000;
  * format changes — the key carries no trace of the tempo otherwise.
  */
 function keyFor(text: string, voice: string, engine: string): string {
-  return createHash("sha256").update(`v4\n${engine}\n${voice}\n${text}`).digest("hex");
+  return createHash("sha256").update(`v5\n${engine}\n${voice}\n${text}`).digest("hex");
 }
 
 export interface CachedNarration {

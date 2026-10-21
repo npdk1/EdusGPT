@@ -1,4 +1,4 @@
-﻿import type { Metadata } from "next";
+import type { Metadata } from "next";
 import { LessonHeader } from "./LessonHeader";
 import LessonClient from "./LessonClient";
 
@@ -15,8 +15,15 @@ interface LessonPageProps {
 
 export default async function LessonPage({ searchParams }: LessonPageProps) {
   // Resolved here, on the server, so the player keeps rendering server-side.
-  const raw = (await searchParams).c;
+  const sp = await searchParams;
+  const raw = sp.c;
+  const modeRaw = sp.mode;
   const courseId = typeof raw === "string" && raw ? raw : null;
+  const initialMode =
+    typeof modeRaw === "string" && (modeRaw === "quiz" || modeRaw === "flashcard")
+      ? (modeRaw as "quiz" | "flashcard")
+      : null;
+
   return (
     <div className="lesson-shell px-4 py-6 sm:px-6 lg:flex lg:h-full lg:flex-col lg:gap-2 lg:overflow-hidden lg:py-3">
       <LessonHeader />
@@ -30,7 +37,7 @@ export default async function LessonPage({ searchParams }: LessonPageProps) {
         keeps its normal flow, because a phone has no room to spare.
       */}
       <div className="flex min-h-0 flex-1 flex-col">
-        <LessonClient courseId={courseId} />
+        <LessonClient courseId={courseId} initialMode={initialMode} />
       </div>
     </div>
   );

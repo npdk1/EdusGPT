@@ -34,7 +34,7 @@ export {
 import { resolveVoice, voiceForLanguage, type LessonVoiceId } from "@/lib/lesson/voices";
 import { speakLocal } from "./tts-local";
 import { localVoiceFor, speakLocalProvider, type LocalVoiceOption } from "./local-voices";
-import { readTtsEngine, type TtsEngine } from "./tts-settings";
+import { readSpeechRate, readTtsEngine, type TtsEngine } from "./tts-settings";
 
 /**
  * Keeps a bug in msedge-tts from killing the whole app.
@@ -305,6 +305,13 @@ async function synthesizeOnce(
 ): Promise<Synthesis> {
   if (!shared) shared = await openConnection();
   const { name, prosody } = resolveVoice(voice);
+  const speechRate = await readSpeechRate();
+  const rateOffset = Math.round((speechRate - 1) * 100);
+  const rateStr = `${rateOffset >= 0 ? "+" : ""}${rateOffset}%`;
+  const effectiveProsody = {
+    ...prosody,
+    rate: prosody?.rate ?? (speechRate !== 1.0 ? rateStr : undefined),
+  };
 
   const buffers: Uint8Array[] = [];
   const words: WordMark[] = [];
@@ -336,7 +343,7 @@ async function synthesizeOnce(
       await writeFile(metadataPath, "").catch(() => {});
 
       const { audioFilePath, metadataFilePath } = await withTimeout(
-        shared.tts.toFile(`${dir}/`, piece, prosody),
+        shared.tts.toFile(`${dir}/`, piece, effectiveProsody),
         CHUNK_TIMEOUT_MS,
         "Tổng hợp giọng nói",
       );
@@ -411,7 +418,7 @@ const MAX_ATTEMPTS = 3;
  * pitch, so the voice is the voice the teacher picked, only unhurried. Anything
  * under 0.5 needs a chain, hence the guard.
  */
-const TEACHING_TEMPO = 0.75;
+const TEACHING_TEMPO = 1.0;
 
 /**
  * Stretches a finished narration, and its word timings with it.
@@ -422,7 +429,9 @@ const TEACHING_TEMPO = 0.75;
  * read: fast narration is a lesser fault than no narration.
  */
 async function atTeachingPace(result: SpeakResult): Promise<SpeakResult> {
-  if (TEACHING_TEMPO <= 0.5 || result.audio.length === 0) return result;
+  if ((TEACHING_TEMPO >= 0.99 && TEACHING_TEMPO <= 1.01) || TEACHING_TEMPO <= 0.5 || result.audio.length === 0) {
+    return result;
+  }
   const dir = await mkdtemp(join(tmpdir(), TEMP_DIR_PREFIX));
   const isMp3 = result.contentType === "audio/mpeg";
   const src = join(dir, isMp3 ? "in.mp3" : "in.wav");

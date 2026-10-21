@@ -1,15 +1,17 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { ensureGsap } from "@/lib/gsap";
 import type { Timebase } from "@/hooks/useTimebase";
-import { SCENE_KIND_LABEL, defaultSlideLayout, type Lesson, type SlideLayout } from "@/lib/lesson/types";
+import { sceneKindLabel, defaultSlideLayout, type Lesson, type SlideLayout } from "@/lib/lesson/types";
 import { motionFor } from "@/lib/lesson/motion";
 import { quizHold } from "@/lib/lesson/quiz";
+import { mindmapFreshFrom } from "@/lib/lesson/mindmap";
 import { slideIcon } from "@/lib/lesson/slide-icons";
 import { DEFAULT_SLIDE_THEME, isDarkTheme, paletteStyle } from "@/lib/lesson/themes";
 import { InteractiveSimulation } from "./InteractiveSimulation";
 import { InteractiveQuiz } from "./InteractiveQuiz";
+import { MindMap } from "./MindMap";
 import { InlineText } from "./InlineText";
 import { SceneDataChart, SceneFormula, SceneTable, SlideImageView, SlideImagePreload, FunctionGraph, FigureZoom } from "./SceneFigure";
 import { KaraokeSubtitle } from "./KaraokeSubtitle";
@@ -17,7 +19,7 @@ import { ScenePointer } from "./ScenePointer";
 import { pointerColorToRgb } from "@/lib/lesson/pollinations";
 import { formatClock } from "@/lib/format";
 import type { NarrationChannel } from "@/lib/karaoke";
-import { useCopy } from "@/i18n/provider";
+import { useCopy, useLang } from "@/i18n/provider";
 
 const COPY = {
   en: {
@@ -31,6 +33,7 @@ const COPY = {
     zoomFormula: "Zoom the formula",
     zoom: "Zoom",
     zoomGraph: "the graph",
+    zoomMindmap: "the summary map",
   },
   vi: {
     stageTimeline: "Dòng thời gian",
@@ -43,6 +46,7 @@ const COPY = {
     zoomFormula: "Phóng to công thức",
     zoom: "Phóng to",
     zoomGraph: "đồ thị",
+    zoomMindmap: "sơ đồ tóm tắt",
   },
 };
 
@@ -55,6 +59,12 @@ interface GsapSlideStageProps {
   narration: NarrationChannel;
   /** The caption fades out when paused; a stopped deck is one being read. */
   playing: boolean;
+  /**
+   * A running MP4 export must roll through quizzes: nobody is in the room to
+   * answer them while the take records, and an armed gate would stall the
+   * deck on a frozen slide for the rest of the file.
+   */
+  recording?: boolean;
 }
 
 /**
@@ -71,8 +81,10 @@ export function GsapSlideStage({
   activeScene,
   narration,
   playing,
+  recording = false,
 }: GsapSlideStageProps) {
   const t = useCopy(COPY);
+  const lang = useLang();
   const stageRef = useRef<HTMLDivElement>(null);
   const timelineRef = useRef<gsap.core.Timeline | null>(null);
   const fillRef = useRef<HTMLDivElement>(null);
@@ -102,6 +114,14 @@ export function GsapSlideStage({
   const answeredRef = useRef<Set<string>>(new Set());
   const advanceTimerRef = useRef<number | null>(null);
   /**
+   * True from the moment a bank is answered until the stage's advance timer
+   * fires. The countdown line reads it: a revisited quiz has no timer pending,
+   * and must not promise a jump that will never come.
+   */
+  const [autoNextPending, setAutoNextPending] = useState(false);
+  /** Guards the advance timer: `next` belongs to the lesson that armed it. */
+  const lessonIdRef = useRef(lesson.id);
+  /**
    * `holdRef` is the same ref object for the life of the timebase, so naming it
    * here is stable even though the `timebase` object is rebuilt every render.
    */
@@ -111,12 +131,18 @@ export function GsapSlideStage({
   // the scene rather than run per frame: the index changes only when the deck
   // crosses a boundary, which is the only moment a gate can need arming.
   useEffect(() => {
-    holdRef.current = quizHold(lesson, activeSceneData?.start ?? 0, answeredRef.current);
-  }, [activeSceneData, holdRef, lesson]);
+    // While an MP4 export records, the deck must run straight through: the gate
+    // exists for a room that can answer, and a recorder is not one.
+    holdRef.current = recording
+      ? null
+      : quizHold(lesson, activeSceneData?.start ?? 0, answeredRef.current);
+  }, [activeSceneData, holdRef, lesson, recording]);
 
-  // A different lesson is a different set of unanswered quizzes.
+  // A different lesson is a different set of unanswered quizzes — and the
+  // advance timer's `next` belongs to the old one.
   useEffect(() => {
     answeredRef.current = new Set();
+    lessonIdRef.current = lesson.id;
   }, [lesson.id]);
 
   // Nothing left to advance to once the stage is gone.
@@ -146,14 +172,23 @@ export function GsapSlideStage({
     const scene = index >= 0 ? lesson.scenes[index] : undefined;
     const next = scene ? lesson.scenes[index + 1] : undefined;
     const sceneEnd = scene ? scene.start + scene.duration : Number.POSITIVE_INFINITY;
+    const sceneStart = scene ? scene.start : 0;
+    const lessonId = lesson.id;
+    setAutoNextPending(true);
 
     // ponytail: real seconds, not deck seconds — the rate slider is the
     // narrator's, and this wait is for reading.
     advanceTimerRef.current = window.setTimeout(() => {
       advanceTimerRef.current = null;
-      // A teacher who pressed play during the wait is already past this quiz;
-      // pulling them back would be worse than letting the timeout lapse.
-      if (timebase.timeRef.current > sceneEnd + 1) return;
+      setAutoNextPending(false);
+      // The lesson changed under the timer: `next` is a timestamp in a deck
+      // nobody is looking at any more.
+      if (lessonIdRef.current !== lessonId) return;
+      const now = timebase.timeRef.current;
+      // A teacher who seeked — forward past this quiz, or back to re-read
+      // something — is steering; the timer must not yank the deck away from
+      // either position.
+      if (now > sceneEnd + 1 || now < sceneStart - 0.5) return;
       if (!next) {
         timebase.seek(lesson.duration || timebase.duration);
         return;
@@ -205,13 +240,22 @@ export function GsapSlideStage({
       // stage to the incoming entrance instead of a hard cut. Ends exactly
       // where the cut used to land, which is why scrubbing stays exact and
       // the total never moves.
+      //
+      // The last scene has no next to hand over to: fading it out left the
+      // deck parked on a blank card (and recorded an MP4 ending on one), so
+      // the summary stays up instead.
       {
         const fade = Math.min(2, scene.duration / 2);
-        tl.to(
-          element,
-          { autoAlpha: 0, scale: 0.985, duration: fade, ease: "power2.inOut" },
-          at + scene.duration - fade,
-        ).set(element, { zIndex: 1 }, at + scene.duration);
+        if (index < scenes.length - 1) {
+          tl.to(
+            element,
+            { autoAlpha: 0, scale: 0.985, duration: fade, ease: "power2.inOut" },
+            at + scene.duration - fade,
+          );
+        }
+        // This set stays for every scene — it is what pins the timeline's
+        // total length at the lesson's end.
+        tl.set(element, { zIndex: 1 }, at + scene.duration);
       }
       // The studio's entrance motion, one table for the whole deck: the card,
       // the title and the items each take their "from" from it, and the "to"
@@ -526,7 +570,7 @@ export function GsapSlideStage({
           </span>
           <span className="text-xs text-mist-500">
             {t.stageScene} {activeScene + 1}/{lesson.scenes.length} ·{" "}
-            {SCENE_KIND_LABEL[lesson.scenes[activeScene]?.kind ?? "concept"]}
+            {sceneKindLabel(lesson.scenes[activeScene]?.kind ?? "concept", lang)}
           </span>
         </div>
         <div className="flex items-center gap-3 font-mono text-xs text-mist-400">
@@ -613,7 +657,7 @@ export function GsapSlideStage({
                   {KickerIcon ? (
                     <KickerIcon className="scene-kicker-icon" aria-hidden="true" />
                   ) : null}
-                  {SCENE_KIND_LABEL[scene.kind]}
+                  {sceneKindLabel(scene.kind, lang)}
                 </span>
                 <h3 className="scene-title mt-[2.5%] text-balance font-bold tracking-tight">
                   <InlineText text={scene.title} />
@@ -674,7 +718,9 @@ export function GsapSlideStage({
                   <InteractiveQuiz
                     sceneId={scene.id}
                     question={scene.quiz.question}
+                    questions={scene.quiz.questions}
                     options={scene.quiz.options}
+                    autoNextPending={autoNextPending}
                     onAnswer={handleQuizAnswer}
                   />
                 </div>
@@ -695,6 +741,12 @@ export function GsapSlideStage({
               {scene.graph ? (
                 <FigureZoom label={`${t.zoom} ${scene.graph.title ?? t.zoomGraph}`}>
                   <FunctionGraph graph={scene.graph} />
+                </FigureZoom>
+              ) : null}
+
+              {scene.mindmap ? (
+                <FigureZoom label={`${t.zoom} ${t.zoomMindmap}`}>
+                  <MindMap branches={scene.mindmap.branches} freshFrom={mindmapFreshFrom(lesson, scene.id)} />
                 </FigureZoom>
               ) : null}
 
@@ -737,7 +789,7 @@ export function GsapSlideStage({
             className={`pointer-events-none absolute inset-x-0 z-20 flex justify-center px-[4%] transition-opacity duration-200 ${
               playing ? "opacity-100" : "opacity-0"
             }`}
-            style={{ bottom: "calc(var(--slide-caption-track) * 0.12)" }}
+            style={{ bottom: "2.2cqw" }}
           >
             <KaraokeSubtitle
               key={activeSceneData.id}

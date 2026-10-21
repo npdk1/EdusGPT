@@ -1,24 +1,33 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import Link from "next/link";
 import {
+  BookOpen,
   CircleCheck,
   TriangleAlert,
-  Download,
   FileJson,
+  FileText,
+  Globe,
+  HelpCircle,
   LoaderCircle,
+  Search,
   Volume2,
+  Sparkles,
+  X,
 } from "lucide-react";
 import { useTimebase, type LoopRange } from "@/hooks/useTimebase";
 import { chapterIndexAt, sceneIndexAt, type Lesson } from "@/lib/lesson/types";
 import { LESSONS_CHANGED_EVENT, loadStoredLessons } from "@/lib/lesson/storage";
-import { slugify } from "@/lib/format";
+import { normalizeVietnameseSearch, slugify } from "@/lib/format";
 import { GsapSlideStage } from "./GsapSlideStage";
 import { FullscreenControls } from "./FullscreenControls";
 import { ScrubBar } from "./ScrubBar";
 import { TransportBar } from "./TransportBar";
 import { ChapterList } from "./ChapterList";
 import { ShortcutsDialog } from "./ShortcutsDialog";
+import { FlashcardModal } from "./FlashcardModal";
+import { QuizModal } from "./QuizModal";
 import { TeacherVoice, type VoiceState } from "./TeacherVoice";
 import { createNarrationChannel } from "@/lib/karaoke";
 import { ClassroomAgentChat } from "./ClassroomAgentChat";
@@ -27,35 +36,61 @@ import { useCopy } from "@/i18n/provider";
 const COPY = {
   en: {
     playerLessonLabel: "Choose a lesson",
+    playerSearchPlaceholder: "Search lessons (title, subject)...",
+    playerSearchEmpty: "No matching lessons",
     playerVoicePreparing: "Building voice",
     playerVoiceSpeaking: "Reading",
     playerExportHtml: "Export HTML",
+    playerExportHtmlTitle: "Export as a self-contained offline interactive HTML player",
+    exportHtmlKind: "Standalone HTML Lesson",
     playerExportJson: "JSON",
-    playerExportHtmlTitle: "Export one self-contained HTML file, no server needed",
+    playerExportSrt: "SRT",
+    playerQuiz: "Quiz",
+    playerQuizTitle: "Open interactive quiz practice mode",
+    playerFlashcards: "Flashcards",
+    playerFlashcardsTitle: "Open interactive flashcard revision mode",
     playerExportJsonTitle: "Download the lesson content as JSON",
-    playerFrameStep: "frame step",
-    exportHtmlKind: "Standalone HTML page",
+    playerExportSrtTitle: "Download lesson subtitles as a standard .srt file",
     exportJsonKind: "Lesson data",
+    exportSrtKind: "Subtitles (.srt)",
     exportSaved: 'Saved "{file}" to the folder you picked.',
     exportDownloaded:
       'The browser would not ask where to save — "{file}" is in your Downloads folder.',
     exportFailed: "Export failed",
+    playerLibrarySection: "Saved in library",
+    playerSamplesSection: "Sample lessons",
+    playerViewLibrary: "Manage all in Library →",
+    playerPlaying: "Playing",
+    playerLessonsCount: "lessons",
   },
   vi: {
     playerLessonLabel: "Chọn bài giảng",
+    playerSearchPlaceholder: "Tìm bài giảng (tiêu đề, môn học)...",
+    playerSearchEmpty: "Không có bài học phù hợp",
     playerVoicePreparing: "Đang tạo giọng",
     playerVoiceSpeaking: "Đang đọc",
     playerExportHtml: "Xuất HTML",
+    playerExportHtmlTitle: "Xuất bài giảng thành file HTML tự chạy offline không cần mạng",
+    exportHtmlKind: "Bài giảng HTML độc lập",
     playerExportJson: "JSON",
-    playerExportHtmlTitle: "Xuất một file HTML tự chạy được, không cần server",
+    playerExportSrt: "SRT",
+    playerQuiz: "Trắc nghiệm",
+    playerQuizTitle: "Mở chế độ luyện trắc nghiệm tương tác",
+    playerFlashcards: "Thẻ ghi nhớ",
+    playerFlashcardsTitle: "Mở chế độ thẻ ghi nhớ ôn tập nhanh bài học",
     playerExportJsonTitle: "Tải nội dung bài giảng dạng JSON",
-    playerFrameStep: "bước khung hình",
-    exportHtmlKind: "Trang HTML tự chạy",
+    playerExportSrtTitle: "Tải phụ đề bài giảng dạng tệp .srt chuẩn",
     exportJsonKind: "Dữ liệu bài giảng",
+    exportSrtKind: "Phụ đề (.srt)",
     exportSaved: 'Đã lưu "{file}" vào nơi bạn chọn.',
     exportDownloaded:
       'Trình duyệt không cho chọn nơi lưu — file "{file}" nằm trong thư mục Tải xuống.',
     exportFailed: "Không xuất được file",
+    playerLibrarySection: "Đã lưu trong thư viện",
+    playerSamplesSection: "Bài học mẫu",
+    playerViewLibrary: "Quản lý trong Thư viện →",
+    playerPlaying: "Đang phát",
+    playerLessonsCount: "bài học",
   },
 };
 
@@ -64,17 +99,34 @@ function withFile(copy: string, filename: string): string {
   return copy.replace("{file}", filename);
 }
 
+/** Saves a finished export through the browser's download path. */
+function downloadBlob(blob: Blob, filename: string): void {
+  const url = URL.createObjectURL(blob);
+  const anchor = document.createElement("a");
+  anchor.href = url;
+  anchor.download = filename;
+  document.body.appendChild(anchor);
+  anchor.click();
+  anchor.remove();
+  // Revoking in the same tick cancels the download on some browsers:
+  // give it a moment to start before the URL dies.
+  window.setTimeout(() => URL.revokeObjectURL(url), 30_000);
+}
+
 interface LessonPlayerProps {
   initialLesson: Lesson;
   samples: Lesson[];
+  initialMode?: "quiz" | "flashcard" | null;
 }
 
-export function LessonPlayer({ initialLesson, samples }: LessonPlayerProps) {
+export function LessonPlayer({ initialLesson, samples, initialMode }: LessonPlayerProps) {
   const t = useCopy(COPY);
   const [lesson, setLesson] = useState<Lesson>(initialLesson);
   const [stored, setStored] = useState<Lesson[]>([]);
   const [loop, setLoop] = useState<LoopRange>({ enabled: false, a: 0, b: 0 });
   const [helpOpen, setHelpOpen] = useState(false);
+  const [flashcardsOpen, setFlashcardsOpen] = useState(initialMode === "flashcard");
+  const [quizOpen, setQuizOpen] = useState(initialMode === "quiz");
   const [exportError, setExportError] = useState<string | null>(null);
   /** Where the exported file went, so a silent save never looks like a dud. */
   const [exportNotice, setExportNotice] = useState<string | null>(null);
@@ -83,7 +135,7 @@ export function LessonPlayer({ initialLesson, samples }: LessonPlayerProps) {
     status: "idle", sceneIndex: null, sceneTitle: "", voice: "",
   });
   const [activeChapter, setActiveChapter] = useState(0);
-  const [exporting, setExporting] = useState<"html" | "json" | null>(null);
+  const [exporting, setExporting] = useState(false);
   /**
    * Whether the stage owns the whole screen.
    *
@@ -124,6 +176,8 @@ export function LessonPlayer({ initialLesson, samples }: LessonPlayerProps) {
     seek: tbSeek,
     seekBy: tbSeekBy,
     toggle: tbToggle,
+    play: tbPlay,
+    pause: tbPause,
     stepFrames: tbStepFrames,
     setRate: tbSetRate,
     toggleMute: tbToggleMute,
@@ -139,18 +193,6 @@ export function LessonPlayer({ initialLesson, samples }: LessonPlayerProps) {
     return () => document.removeEventListener("fullscreenchange", sync);
   }, []);
 
-  // --- stored (AI generated) lessons --------------------------------------
-  useEffect(() => {
-    const sync = () => setStored(loadStoredLessons());
-    sync();
-    window.addEventListener(LESSONS_CHANGED_EVENT, sync);
-    window.addEventListener("storage", sync);
-    return () => {
-      window.removeEventListener(LESSONS_CHANGED_EVENT, sync);
-      window.removeEventListener("storage", sync);
-    };
-  }, []);
-
   const library = useMemo(() => {
     // The playing lesson leads: it may come from the server (`?c=`) and exist
     // in neither list, and the select must show what is actually playing —
@@ -163,13 +205,153 @@ export function LessonPlayer({ initialLesson, samples }: LessonPlayerProps) {
     return Array.from(byId.values());
   }, [lesson, samples, stored]);
 
+  const [serverCourses, setServerCourses] = useState<
+    Array<{
+      id: string;
+      title: string;
+      subject: string;
+      grade?: string;
+      source: "sample" | "gemini";
+      sceneCount?: number;
+      duration?: number;
+    }>
+  >([]);
+  const [lessonSearch, setLessonSearch] = useState("");
+  const [lessonSearchOpen, setLessonSearchOpen] = useState(false);
+
+  const refreshServerCourses = useCallback(() => {
+    fetch("/api/courses?all=true", { cache: "no-store" })
+      .then((res) => (res.ok ? res.json() : null))
+      .then((data) => {
+        if (data?.courses && Array.isArray(data.courses)) {
+          setServerCourses(data.courses);
+        }
+      })
+      .catch(() => {});
+  }, []);
+
+  // --- stored & server-saved lessons synchronization -----------------------
+  useEffect(() => {
+    const sync = () => {
+      setStored(loadStoredLessons());
+      refreshServerCourses();
+    };
+    sync();
+    window.addEventListener(LESSONS_CHANGED_EVENT, sync);
+    window.addEventListener("storage", sync);
+    return () => {
+      window.removeEventListener(LESSONS_CHANGED_EVENT, sync);
+      window.removeEventListener("storage", sync);
+    };
+  }, [refreshServerCourses]);
+
+  const allAvailableCourses = useMemo(() => {
+    const byId = new Map<
+      string,
+      {
+        id: string;
+        title: string;
+        subject: string;
+        grade?: string;
+        source: "sample" | "gemini";
+        isServer?: boolean;
+        sceneCount?: number;
+        duration?: number;
+      }
+    >();
+
+    // 1. Currently active lesson
+    byId.set(lesson.id, {
+      id: lesson.id,
+      title: lesson.title,
+      subject: lesson.subject,
+      grade: lesson.grade,
+      source: lesson.source,
+      sceneCount: lesson.scenes?.length,
+      duration: lesson.duration,
+      isServer: lesson.source === "gemini",
+    });
+
+    // 2. Server courses from data/courses/ (user's library)
+    serverCourses.forEach((item) => {
+      if (!byId.has(item.id)) {
+        byId.set(item.id, {
+          ...item,
+          isServer: true,
+        });
+      }
+    });
+
+    // 3. Local/bundled sample lessons
+    library.forEach((item) => {
+      if (!byId.has(item.id)) {
+        byId.set(item.id, {
+          id: item.id,
+          title: item.title,
+          subject: item.subject,
+          grade: item.grade,
+          source: item.source,
+          sceneCount: item.scenes?.length,
+          duration: item.duration,
+          isServer: item.source === "gemini",
+        });
+      }
+    });
+
+    return Array.from(byId.values());
+  }, [lesson, library, serverCourses]);
+
+  const filteredLessons = useMemo(() => {
+    const q = normalizeVietnameseSearch(lessonSearch);
+    if (!q) return allAvailableCourses;
+    return allAvailableCourses.filter((item) => {
+      const t = normalizeVietnameseSearch(item.title);
+      const s = normalizeVietnameseSearch(item.subject || "");
+      const g = normalizeVietnameseSearch(item.grade || "");
+      const id = normalizeVietnameseSearch(item.id);
+      return t.includes(q) || s.includes(q) || g.includes(q) || id.includes(q);
+    });
+  }, [allAvailableCourses, lessonSearch]);
+
+  const clearLoop = useCallback(() => setLoop({ enabled: false, a: 0, b: 0 }), []);
+
+  const selectLessonById = useCallback(
+    async (selectedId: string) => {
+      setLessonSearchOpen(false);
+      setLessonSearch("");
+      if (selectedId === lesson.id) return;
+
+      tbPause();
+      tbSeek(0);
+      clearLoop();
+
+      const next = library.find((item) => item.id === selectedId);
+      if (next) {
+        setLesson(next);
+        window.history.pushState(null, "", `/lesson?c=${encodeURIComponent(selectedId)}`);
+        return;
+      }
+      try {
+        const res = await fetch(`/api/courses?id=${encodeURIComponent(selectedId)}`);
+        if (res.ok) {
+          const data = await res.json();
+          if (data.lesson) {
+            setLesson(data.lesson);
+            window.history.pushState(null, "", `/lesson?c=${encodeURIComponent(selectedId)}`);
+          }
+        }
+      } catch {}
+    },
+    [clearLoop, lesson.id, library, tbPause, tbSeek],
+  );
+
   // --- cheap React state: only changes when the scene actually changes -----
   // `subscribe` is a stable callback; the `timebase` object itself is fresh on
   // every render, so depending on it re-attached this subscription (and its
   // synchronous setState) on every render — the "Maximum update depth" loop.
   const subscribeTime = timebase.subscribe;
   useEffect(() => {
-    return subscribeTime((time) => {
+    return subscribeTime((time, meta) => {
       const scene = sceneIndexAt(lesson, time);
       const chapter = chapterIndexAt(lesson, time);
       setActiveScene((current) => (current === scene ? current : scene));
@@ -197,8 +379,6 @@ export function LessonPlayer({ initialLesson, samples }: LessonPlayerProps) {
     },
     [playheadRef],
   );
-
-  const clearLoop = useCallback(() => setLoop({ enabled: false, a: 0, b: 0 }), []);
 
   // --- keyboard: every way to jump around the lecture ----------------------
   useEffect(() => {
@@ -304,94 +484,192 @@ export function LessonPlayer({ initialLesson, samples }: LessonPlayerProps) {
     return () => window.removeEventListener("keydown", onKeyDown);
   }, [tbSeek, tbSeekBy, tbToggle, tbStepFrames, tbSetRate, tbToggleMute, tbDuration, tbRate, setLoopPoint]);
 
-  // --- standalone export (one self-contained HTML file) ---------------------
-  const exportLesson = useCallback(
-    async (kind: "html" | "json") => {
-      const filename = `${slugify(lesson.title) || "bai-giang"}.${
-        kind === "html" ? "html" : "lesson.json"
-      }`;
-      setExporting(kind);
-      setExportError(null);
-      setExportNotice(null);
-      /**
-       * Ask where the file goes, the way every other program does.
-       *
-       * A blob download has no dialogue at all: the file lands in the
-       * Downloads folder under a name nobody chose, which is what made this
-       * button feel broken. Where the browser offers the picker we open it
-       * first — before the (slow) export request, because a picker asked for
-       * after an await is outside the click gesture and gets refused — then
-       * write the finished bytes into the file the teacher picked.
-       */
-      let writable: FileSystemWritableFileStream | null = null;
-      try {
-        if (typeof window.showSaveFilePicker === "function") {
-          const handle = await window.showSaveFilePicker({
-            suggestedName: filename,
-            types: [
-              {
-                description: kind === "html" ? t.exportHtmlKind : t.exportJsonKind,
-                accept: {
-                  [kind === "html" ? "text/html" : "application/json"]: [
-                    kind === "html" ? ".html" : ".json",
-                  ],
-                },
-              },
-            ],
-          });
-          writable = await handle.createWritable();
-        }
-      } catch (error) {
-        // Cancelling the dialogue is a decision, not a failure.
-        if (error instanceof DOMException && error.name === "AbortError") {
-          setExporting(null);
-          return;
-        }
-        // No picker, or the browser refused one: fall through to the plain
-        // download below rather than failing the export.
-        writable = null;
-      }
-      try {
-        const response = await fetch(`/api/export/${kind}`, {
-          method: "POST",
-          headers: { "content-type": "application/json" },
-          body: JSON.stringify({ lesson }),
+  // --- JSON export (the lesson content, for backups and imports) ------------
+  const exportLesson = useCallback(async () => {
+    const filename = `${slugify(lesson.title) || "bai-giang"}.lesson.json`;
+    setExporting(true);
+    setExportError(null);
+    setExportNotice(null);
+    /**
+     * Ask where the file goes, the way every other program does.
+     *
+     * A blob download has no dialogue at all: the file lands in the
+     * Downloads folder under a name nobody chose, which is what made this
+     * button feel broken. Where the browser offers the picker we open it
+     * first — before the (slow) export request, because a picker asked for
+     * after an await is outside the click gesture and gets refused — then
+     * write the finished bytes into the file the teacher picked.
+     */
+    let writable: FileSystemWritableFileStream | null = null;
+    try {
+      if (typeof window.showSaveFilePicker === "function") {
+        const handle = await window.showSaveFilePicker({
+          suggestedName: filename,
+          types: [
+            {
+              description: t.exportJsonKind,
+              accept: { "application/json": [".json"] },
+            },
+          ],
         });
-        if (!response.ok) {
-          const payload = (await response.json().catch(() => null)) as
-            | { error?: string }
-            | null;
-          throw new Error(payload?.error ?? `HTTP ${response.status}`);
-        }
-        const blob = await response.blob();
-        if (writable) {
-          await writable.write(blob);
-          await writable.close();
-          setExportNotice(withFile(t.exportSaved, filename));
-        } else {
-          const url = URL.createObjectURL(blob);
-          const anchor = document.createElement("a");
-          anchor.href = url;
-          anchor.download = filename;
-          document.body.appendChild(anchor);
-          anchor.click();
-          anchor.remove();
-          // Revoking in the same tick cancels the download on some browsers:
-          // give it a moment to start before the URL dies.
-          window.setTimeout(() => URL.revokeObjectURL(url), 30_000);
-          setExportNotice(withFile(t.exportDownloaded, filename));
-        }
-      } catch (error) {
-        if (writable) await writable.abort().catch(() => null);
-        setExportError(
-          error instanceof Error ? error.message : t.exportFailed,
-        );
-      } finally {
-        setExporting(null);
+        writable = await handle.createWritable();
       }
-    },
-    [lesson, t],
-  );
+    } catch (error) {
+      // Cancelling the dialogue is a decision, not a failure.
+      if (error instanceof DOMException && error.name === "AbortError") {
+        setExporting(false);
+        return;
+      }
+      // No picker, or the browser refused one: fall through to the plain
+      // download below rather than failing the export.
+      writable = null;
+    }
+    try {
+      const response = await fetch("/api/export/json", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ lesson }),
+      });
+      if (!response.ok) {
+        const payload = (await response.json().catch(() => null)) as
+          | { error?: string }
+          | null;
+        throw new Error(payload?.error ?? `HTTP ${response.status}`);
+      }
+      const blob = await response.blob();
+      if (writable) {
+        await writable.write(blob);
+        await writable.close();
+        setExportNotice(withFile(t.exportSaved, filename));
+      } else {
+        downloadBlob(blob, filename);
+        setExportNotice(withFile(t.exportDownloaded, filename));
+      }
+    } catch (error) {
+      if (writable) await writable.abort().catch(() => null);
+      setExportError(
+        error instanceof Error ? error.message : t.exportFailed,
+      );
+    } finally {
+      setExporting(false);
+    }
+  }, [lesson, t]);
+
+  // --- SRT export (the subtitles, for players and video editors) ------------
+  const exportSrt = useCallback(async () => {
+    const filename = `${slugify(lesson.title) || "bai-giang"}.srt`;
+    setExporting(true);
+    setExportError(null);
+    setExportNotice(null);
+    let writable: FileSystemWritableFileStream | null = null;
+    try {
+      if (typeof window.showSaveFilePicker === "function") {
+        const handle = await window.showSaveFilePicker({
+          suggestedName: filename,
+          types: [
+            {
+              description: t.exportSrtKind,
+              accept: { "text/plain": [".srt"] },
+            },
+          ],
+        });
+        writable = await handle.createWritable();
+      }
+    } catch (error) {
+      if (error instanceof DOMException && error.name === "AbortError") {
+        setExporting(false);
+        return;
+      }
+      writable = null;
+    }
+    try {
+      const response = await fetch("/api/export/srt", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ lesson }),
+      });
+      if (!response.ok) {
+        const payload = (await response.json().catch(() => null)) as
+          | { error?: string }
+          | null;
+        throw new Error(payload?.error ?? `HTTP ${response.status}`);
+      }
+      const blob = await response.blob();
+      if (writable) {
+        await writable.write(blob);
+        await writable.close();
+        setExportNotice(withFile(t.exportSaved, filename));
+      } else {
+        downloadBlob(blob, filename);
+        setExportNotice(withFile(t.exportDownloaded, filename));
+      }
+    } catch (error) {
+      if (writable) await writable.abort().catch(() => null);
+      setExportError(
+        error instanceof Error ? error.message : t.exportFailed,
+      );
+    } finally {
+      setExporting(false);
+    }
+  }, [lesson, t]);
+
+  // --- Standalone HTML export (100% self-contained offline player) ----------
+  const exportHtml = useCallback(async () => {
+    const filename = `${slugify(lesson.title) || "bai-giang"}.html`;
+    setExporting(true);
+    setExportError(null);
+    setExportNotice(null);
+    let writable: FileSystemWritableFileStream | null = null;
+    try {
+      if (typeof window.showSaveFilePicker === "function") {
+        const handle = await window.showSaveFilePicker({
+          suggestedName: filename,
+          types: [
+            {
+              description: t.exportHtmlKind,
+              accept: { "text/html": [".html"] },
+            },
+          ],
+        });
+        writable = await handle.createWritable();
+      }
+    } catch (error) {
+      if (error instanceof DOMException && error.name === "AbortError") {
+        setExporting(false);
+        return;
+      }
+      writable = null;
+    }
+    try {
+      const response = await fetch("/api/export/html", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ lesson }),
+      });
+      if (!response.ok) {
+        const payload = (await response.json().catch(() => null)) as
+          | { error?: string }
+          | null;
+        throw new Error(payload?.error ?? `HTTP ${response.status}`);
+      }
+      const blob = await response.blob();
+      if (writable) {
+        await writable.write(blob);
+        await writable.close();
+        setExportNotice(withFile(t.exportSaved, filename));
+      } else {
+        downloadBlob(blob, filename);
+        setExportNotice(withFile(t.exportDownloaded, filename));
+      }
+    } catch (error) {
+      if (writable) await writable.abort().catch(() => null);
+      setExportError(
+        error instanceof Error ? error.message : t.exportFailed,
+      );
+    } finally {
+      setExporting(false);
+    }
+  }, [lesson, t]);
 
   return (
     <>
@@ -407,27 +685,143 @@ export function LessonPlayer({ initialLesson, samples }: LessonPlayerProps) {
         */}
         <div className="flex min-w-0 flex-col space-y-4 lg:min-h-0 lg:gap-3 lg:space-y-0 lg:overflow-y-auto">
           {/* toolbar */}
-          <div className="panel flex flex-wrap items-center gap-2.5 p-3 lg:flex-nowrap lg:gap-2 lg:overflow-x-auto lg:p-2 lg:[&>*]:shrink-0">
-            <label className="flex items-center gap-2">
-              <span className="sr-only">{t.playerLessonLabel}</span>
-              <select
-                value={lesson.id}
-                onChange={(event) => {
-                  const next = library.find((item) => item.id === event.target.value);
-                  if (!next) return;
-                  clearLoop();
-                  setLesson(next);
-                }}
-                className="max-w-[16rem] rounded-lg border border-ink-700 bg-ink-900/80 px-2.5 py-2 text-sm text-mist-100"
-              >
-                {library.map((item) => (
-                  <option key={item.id} value={item.id}>
-                    {item.source === "gemini" ? "🤖 " : "📘 "}
-                    {item.title}
-                  </option>
-                ))}
-              </select>
-            </label>
+          <div className="panel relative z-30 flex flex-wrap items-center gap-2.5 p-3 lg:flex-nowrap lg:gap-2 lg:p-2 lg:[&>*]:shrink-0">
+            {/* Thanh tìm kiếm & chọn bài giảng thông minh */}
+            <div
+              className="relative z-40 min-w-[14rem] max-w-[20rem] flex-1"
+              onBlur={(e) => {
+                if (!e.currentTarget.contains(e.relatedTarget as Node | null)) {
+                  setLessonSearchOpen(false);
+                }
+              }}
+            >
+              <div className="relative">
+                <Search className="pointer-events-none absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-mist-400" />
+                <input
+                  type="text"
+                  value={lessonSearchOpen ? lessonSearch : `${lesson.source === "gemini" ? "🤖 " : "📘 "}${lesson.title}`}
+                  onChange={(e) => {
+                    setLessonSearch(e.target.value);
+                    setLessonSearchOpen(true);
+                  }}
+                  onFocus={() => {
+                    setLessonSearch("");
+                    setLessonSearchOpen(true);
+                    refreshServerCourses();
+                  }}
+                  onKeyDown={(e) => {
+                    if (e.key === "Escape") {
+                      setLessonSearchOpen(false);
+                    }
+                  }}
+                  placeholder={t.playerSearchPlaceholder}
+                  className="w-full rounded-xl border border-ink-700 bg-ink-900/90 py-1.5 pl-8 pr-7 text-xs text-mist-100 placeholder:text-mist-500 focus:border-brand-500 focus:outline-none transition-colors truncate shadow-inner"
+                />
+                {lessonSearchOpen && lessonSearch ? (
+                  <button
+                    type="button"
+                    onClick={() => setLessonSearch("")}
+                    className="absolute right-2 top-1/2 -translate-y-1/2 text-mist-400 hover:text-mist-100"
+                  >
+                    <X className="h-3 w-3" />
+                  </button>
+                ) : null}
+              </div>
+
+              {lessonSearchOpen ? (
+                <div
+                  onMouseDown={(e) => e.preventDefault()}
+                  className="absolute left-0 top-full z-50 mt-1.5 flex max-h-80 w-[min(22rem,calc(100vw-2rem))] flex-col overflow-hidden rounded-2xl border border-ink-700 bg-ink-900/98 shadow-2xl backdrop-blur-xl"
+                >
+                  <div className="flex items-center justify-between border-b border-ink-800/80 px-3 py-2 text-[11px] text-mist-400">
+                    <span>
+                      {filteredLessons.length > 0
+                        ? `${filteredLessons.length} ${t.playerLessonsCount}`
+                        : t.playerSearchEmpty}
+                    </span>
+                    <span className="text-[10px] text-mist-500">Esc để đóng</span>
+                  </div>
+
+                  <ul className="max-h-64 overflow-y-auto py-1 divide-y divide-ink-800/40">
+                    {filteredLessons.length === 0 ? (
+                      <li className="px-3 py-4 text-center text-xs text-mist-400">
+                        <p>{t.playerSearchEmpty}</p>
+                        <p className="mt-1 text-[11px] text-mist-500">
+                          Thử tìm bằng tiêu đề, môn học hoặc từ khoá khác.
+                        </p>
+                      </li>
+                    ) : (
+                      filteredLessons.map((item) => {
+                        const isCurrent = item.id === lesson.id;
+                        const isLibrary = item.isServer || item.source === "gemini";
+                        return (
+                          <li key={item.id}>
+                            <button
+                              type="button"
+                              onClick={() => void selectLessonById(item.id)}
+                              className={`flex w-full items-start gap-2.5 px-3 py-2 text-left text-xs transition-colors ${
+                                isCurrent
+                                  ? "bg-brand-500/15 text-mist-50 font-semibold"
+                                  : "text-mist-300 hover:bg-ink-800/70 hover:text-mist-50"
+                              }`}
+                            >
+                              <span className="mt-0.5 shrink-0 text-base">
+                                {isLibrary ? "🤖" : "📘"}
+                              </span>
+                              <div className="min-w-0 flex-1">
+                                <div className="flex items-center gap-1.5">
+                                  <p className="truncate font-medium text-mist-100 flex-1">
+                                    {item.title}
+                                  </p>
+                                  {isCurrent ? (
+                                    <span className="shrink-0 rounded bg-brand-500/20 px-1.5 py-0.5 text-[9px] font-medium text-brand-300">
+                                      {t.playerPlaying}
+                                    </span>
+                                  ) : null}
+                                </div>
+                                <div className="mt-0.5 flex items-center gap-2 text-[10px] text-mist-400">
+                                  <span className="truncate">
+                                    {item.subject} {item.grade ? `· ${item.grade}` : ""}
+                                  </span>
+                                  {item.sceneCount ? (
+                                    <>
+                                      <span>•</span>
+                                      <span className="shrink-0 text-mist-500">
+                                        {item.sceneCount} cảnh
+                                      </span>
+                                    </>
+                                  ) : null}
+                                  <span
+                                    className={`ml-auto shrink-0 rounded px-1 text-[9px] font-medium ${
+                                      isLibrary
+                                        ? "bg-emerald-500/15 text-emerald-400"
+                                        : "bg-ink-800 text-mist-400"
+                                    }`}
+                                  >
+                                    {isLibrary ? "Thư viện" : "Mẫu"}
+                                  </span>
+                                </div>
+                              </div>
+                            </button>
+                          </li>
+                        );
+                      })
+                    )}
+                  </ul>
+
+                  <div className="border-t border-ink-800/80 bg-ink-950/60 p-2 text-center">
+                    <Link
+                      href="/library"
+                      className="flex items-center justify-center gap-1.5 text-xs text-brand-400 hover:text-brand-300 font-medium transition-colors"
+                      onClick={() => setLessonSearchOpen(false)}
+                    >
+                      <BookOpen className="h-3.5 w-3.5" />
+                      <span>{t.playerViewLibrary}</span>
+                    </Link>
+                  </div>
+                </div>
+              ) : null}
+            </div>
 
             <span className="chip">
               {lesson.subject}
@@ -439,6 +833,19 @@ export function LessonPlayer({ initialLesson, samples }: LessonPlayerProps) {
               activeSceneIndex={activeScene}
               loopEnabled={loop.enabled}
               onVoiceState={setVoiceState}
+              onVoiceChange={(nextVoice) => {
+                setLesson((prev) => {
+                  const updated = { ...prev, voice: nextVoice };
+                  if (prev.source === "gemini") {
+                    void fetch("/api/courses", {
+                      method: "POST",
+                      headers: { "Content-Type": "application/json" },
+                      body: JSON.stringify({ lesson: updated }),
+                    });
+                  }
+                  return updated;
+                });
+              }}
               onNarration={(update) => {
                 // Written straight onto the channel; see the note where it is
                 // declared for why this is never state.
@@ -477,44 +884,83 @@ export function LessonPlayer({ initialLesson, samples }: LessonPlayerProps) {
             {/* ml-auto alone leaves this group at its max-content width, which
                 overflows the toolbar once the chips above wrap onto two rows. */}
             <div className="ml-auto flex min-w-0 flex-wrap items-center justify-end gap-2">
-              <button
-                type="button"
-                onClick={() => exportLesson("html")}
-                disabled={exporting !== null}
-                className="btn-ghost"
-                title={t.playerExportHtmlTitle}
+              {/* One pill, not two bordered buttons: exporting is a single
+                  action ("get this lesson out") with two formats, and two
+                  equal-weight buttons in the corner read as two competing
+                  actions. A dropdown menu would hide the second format and
+                  the toolbar scrolls sideways on narrow windows, which clips
+                  an absolutely-positioned panel — so both segments stay
+                  visible and share one border. */}
+              <div className="inline-flex items-stretch overflow-hidden rounded-xl border border-ink-600 bg-ink-900/60 shadow-sm">
+                <button
+                  type="button"
+                  onClick={() => void exportHtml()}
+                  disabled={exporting}
+                  className="btn-primary inline-flex items-center gap-1.5 px-3 py-2 text-xs font-semibold"
+                  title={t.playerExportHtmlTitle}
+                >
+                  {exporting ? (
+                    <LoaderCircle className="h-3.5 w-3.5 animate-spin" />
+                  ) : (
+                    <Globe className="h-3.5 w-3.5" />
+                  )}
+                  {t.playerExportHtml}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => void exportLesson()}
+                  disabled={exporting}
+                  className="inline-flex items-center gap-1.5 border-l border-ink-600 px-3 py-2 text-xs font-semibold text-mist-200 transition-colors hover:bg-ink-800 hover:text-mist-50 disabled:pointer-events-none disabled:opacity-60"
+                  title={t.playerExportJsonTitle}
+                >
+                  <FileJson className="h-3.5 w-3.5" />
+                  {t.playerExportJson}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => void exportSrt()}
+                  disabled={exporting}
+                  className="inline-flex items-center gap-1.5 border-l border-ink-600 px-3 py-2 text-xs font-semibold text-mist-200 transition-colors hover:bg-ink-800 hover:text-mist-50 disabled:pointer-events-none disabled:opacity-60"
+                  title={t.playerExportSrtTitle}
+                >
+                  <FileText className="h-3.5 w-3.5" />
+                  {t.playerExportSrt}
+                </button>
+              </div>
+
+              <Link
+                href={`/quiz?c=${encodeURIComponent(lesson.id)}`}
+                className="inline-flex items-center gap-1.5 rounded-xl border border-gold-500/40 bg-gold-500/10 px-3 py-2 text-xs font-semibold text-gold-300 transition-colors hover:bg-gold-500/20"
+                title={t.playerQuizTitle}
               >
-                {exporting === "html" ? (
-                  <LoaderCircle className="h-4 w-4 animate-spin" />
-                ) : (
-                  <Download className="h-4 w-4" />
-                )}
-                {t.playerExportHtml}
-              </button>
-              <button
-                type="button"
-                onClick={() => exportLesson("json")}
-                disabled={exporting !== null}
-                className="btn-ghost"
-                title={t.playerExportJsonTitle}
+                <HelpCircle className="h-3.5 w-3.5 text-gold-400" />
+                {t.playerQuiz}
+              </Link>
+
+              <Link
+                href={`/flashcard?c=${encodeURIComponent(lesson.id)}`}
+                className="inline-flex items-center gap-1.5 rounded-xl border border-brand-500/40 bg-brand-500/10 px-3 py-2 text-xs font-semibold text-brand-200 transition-colors hover:bg-brand-500/20"
+                title={t.playerFlashcardsTitle}
               >
-                {exporting === "json" ? (
-                  <LoaderCircle className="h-4 w-4 animate-spin" />
-                ) : (
-                  <FileJson className="h-4 w-4" />
-                )}
-                {t.playerExportJson}
-              </button>
+                <Sparkles className="h-3.5 w-3.5 text-brand-300" />
+                {t.playerFlashcards}
+              </Link>
             </div>
           </div>
 
           {exportError ? (
-            <p className="flex items-start gap-2 rounded-xl border border-ember-500/40 bg-ember-500/10 px-3.5 py-2.5 text-sm text-mist-100">
+            <p
+              role="alert"
+              className="flex items-start gap-2 rounded-xl border border-ember-500/40 bg-ember-500/10 px-3.5 py-2.5 text-sm text-mist-100"
+            >
               <TriangleAlert className="mt-0.5 h-4 w-4 shrink-0 text-ember-400" />
               {exportError}
             </p>
           ) : exportNotice ? (
-            <p className="flex items-start gap-2 rounded-xl border border-brand-600/50 bg-brand-500/10 px-3.5 py-2.5 text-sm text-mist-100">
+            <p
+              role="status"
+              className="flex items-start gap-2 rounded-xl border border-brand-600/50 bg-brand-500/10 px-3.5 py-2.5 text-sm text-mist-100"
+            >
               <CircleCheck className="mt-0.5 h-4 w-4 shrink-0 text-brand-400" />
               {exportNotice}
             </p>
@@ -539,12 +985,6 @@ export function LessonPlayer({ initialLesson, samples }: LessonPlayerProps) {
                 onExit={toggleFullscreen}
               />
             ) : null}
-          </div>
-
-          <div className="flex flex-wrap items-center gap-2">
-            <span className="ml-auto font-mono text-[11px] text-mist-500">
-              {lesson.fps} fps · {t.playerFrameStep} {(1 / lesson.fps).toFixed(3)}s
-            </span>
           </div>
 
           {/* transport + timeline */}
@@ -592,6 +1032,8 @@ export function LessonPlayer({ initialLesson, samples }: LessonPlayerProps) {
       </div>
 
       <ShortcutsDialog open={helpOpen} onClose={() => setHelpOpen(false)} />
+      <FlashcardModal open={flashcardsOpen} lesson={lesson} onClose={() => setFlashcardsOpen(false)} />
+      <QuizModal open={quizOpen} lesson={lesson} onClose={() => setQuizOpen(false)} />
     </>
   );
 }

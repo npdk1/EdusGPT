@@ -37,7 +37,7 @@ const LEGACY_ENV_FILE = path.join(process.cwd(), ".env.local");
 export const DATA_DIR = path.join(process.cwd(), "data");
 export const SETTINGS_FILE = path.join(DATA_DIR, "ai-settings.json");
 
-export const PROVIDER_IDS = ["groq", "nvidia", "antigravity"] as const;
+export const PROVIDER_IDS = ["groq", "nvidia", "tokenharbor", "antigravity"] as const;
 export type ProviderId = (typeof PROVIDER_IDS)[number];
 
 /**
@@ -140,6 +140,30 @@ export const PROVIDERS: Record<ProviderId, ProviderSpec> = {
     keyHintPrefix: "nvapi-",
     docs: "https://build.nvidia.com/explore/discover",
   },
+  tokenharbor: {
+    id: "tokenharbor",
+    kind: "cloud",
+    label: "Token Harbor",
+    signupUrl: "https://tokenharbor.ai",
+    keyEnvNames: ["TOKENHARBOR_API_KEY"],
+    defaultBaseUrl: "https://tokenharbor.ai/v1",
+    // One gateway in front of many vendors behind a single `thk_live_` key.
+    // Model ids ending in `:free` never charge the balance, so everything
+    // below sits on the free shelf — a fresh key can still hold a class.
+    defaultModel: "deepseek-v4.1-flash:free",
+    // Same bar as the vendors above: an id earns its place by finishing a
+    // whole lesson that credits it back (`lesson.model`). Cross-checked
+    // against the live catalog: `claude-haiku-5.5:free` never appeared, so
+    // only the ids `/v1/models` actually returns are listed.
+    modelChoices: [
+      "deepseek-v4.1-flash:free",
+      "deepseek-v4-flash:free",
+      "mimo-v2.6-flash:free",
+      "mimo-v2.5:free",
+    ],
+    keyHintPrefix: "thk_",
+    docs: "https://tokenharbor.ai/docs/api/curl",
+  },
   antigravity: {
     id: "antigravity",
     kind: "cli",
@@ -190,6 +214,7 @@ export const PLANNED_CLI_PROVIDERS = [
 const ALLOWED_BASE_HOSTS: Record<ProviderId, readonly string[]> = {
   groq: ["api.groq.com"],
   nvidia: ["integrate.api.nvidia.com"],
+  tokenharbor: ["tokenharbor.ai"],
   antigravity: [],
 };
 

@@ -46,6 +46,15 @@ export function rateLimit(
     for (const [id, bucket] of buckets) {
       if (bucket.resetAt <= now) buckets.delete(id);
     }
+    // Hard ceiling: if still oversized, drop the oldest entries so memory stays bounded
+    if (buckets.size > MAX_TRACKED_KEYS) {
+      const toRemove = buckets.size - MAX_TRACKED_KEYS;
+      let removed = 0;
+      for (const id of buckets.keys()) {
+        buckets.delete(id);
+        if (++removed >= toRemove) break;
+      }
+    }
   }
 
   const bucket = buckets.get(key);
@@ -65,6 +74,9 @@ export function rateLimit(
 
 /** Best-effort client identity for rate limiting; never a security boundary. */
 export function clientKey(request: NextRequest, scope: string): string {
+  if (isLocalRequest(request.headers.get("host"))) {
+    return `${scope}:local`;
+  }
   const forwarded = request.headers.get("x-forwarded-for");
   const ip =
     forwarded?.split(",")[0]?.trim() || request.headers.get("x-real-ip") || "local";

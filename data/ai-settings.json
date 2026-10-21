@@ -2,27 +2,21 @@
   "provider": "groq",
   "model": "openai/gpt-oss-120b",
   "baseUrl": "https://api.groq.com/openai/v1",
-  "keyHints": {
-    "groq": "gsk_3D…oXZa",
-    "nvidia": "nvapi-…KypI"
-  },
-  "keySources": {
-    "groq": "file",
-    "nvidia": "file"
-  },
+  "keyHints": {},
+  "keySources": {},
   "baseUrls": {
     "groq": "https://api.groq.com/openai/v1",
-    "nvidia": "https://integrate.api.nvidia.com/v1"
+    "nvidia": "https://integrate.api.nvidia.com/v1",
+    "tokenharbor": "https://tokenharbor.ai/v1"
   },
   "models": {
     "antigravity": "gemini-3.8-flash-high",
     "groq": "openai/gpt-oss-120b",
-    "nvidia": "nvidia/nemotron-3-ultra-550b-a55b"
+    "nvidia": "nvidia/nemotron-3-ultra-550b-a55b",
+    "tokenharbor": "deepseek-v4.1-flash:free"
   },
-  "lastValidatedAt": "2026-10-05T16:23:10.840Z",
-  "lastValidationOk": true,
-  "lastValidationMessage": "Key hoạt động. Model \"openai/gpt-oss-120b\" trả lời trong 907ms.",
-  "updatedAt": "2026-10-05T16:23:10.840Z",
-  "keyHint": "",
-  "keySource": "none"
+  "lastValidatedAt": null,
+  "lastValidationOk": false,
+  "lastValidationMessage": null,
+  "updatedAt": "2026-10-21T00:00:00.000Z"
 }

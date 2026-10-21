@@ -1,7 +1,7 @@
 import fs from "node:fs";
 import path from "node:path";
 import katex from "katex";
-import { SCENE_KIND_LABEL, type Lesson } from "./types";
+import { sceneKindLabel, type Lesson } from "./types";
 import { type AlignedSentence } from "@/lib/karaoke";
 import { inlineHtml } from "./inline";
 import { pollinationsImageUrl } from "./pollinations";
@@ -26,10 +26,10 @@ import {
  * lesson data itself is embedded inline.
  */
 const CSS = `
-:root{color-scheme:dark;--ink:#04090b;--ink2:#0c151a;--ink3:#18272f;--line:#22353e;--mist:#e3eff0;--mist3:#9fb9bd;--mist5:#567277;--brand:#24bdac;--brand3:#57d6c6;--brand7:#0d665e;--gold:#f6b93b;--gold3:#fbd275;--ember:#ff8a5b}
+:root{color-scheme:dark;--ink:#05080f;--ink2:#0a0f1d;--ink3:#0f1628;--line:#1e2b4a;--mist:#f0f4f9;--mist3:#9cb0cb;--mist5:#5f7394;--brand:#1f6fb5;--brand3:#38bdf8;--brand7:#12395c;--gold:#f0c979;--gold3:#fbd275;--ember:#ff8a3d}
 *{box-sizing:border-box}
 html,body{margin:0;background:var(--ink);color:var(--mist);font-family:ui-sans-serif,system-ui,"Segoe UI",Roboto,sans-serif}
-body{background-image:radial-gradient(50rem 32rem at 12% -8%,rgba(36,189,172,.16),transparent 62%),radial-gradient(40rem 28rem at 92% 2%,rgba(246,185,59,.12),transparent 60%);min-height:100vh}
+body{background-image:radial-gradient(50rem 32rem at 12% -8%,rgba(31,111,181,.18),transparent 62%),radial-gradient(40rem 28rem at 92% 2%,rgba(240,201,121,.12),transparent 60%);min-height:100vh}
 .wrap{max-width:1080px;margin:0 auto;padding:28px 20px 64px}
 .head{display:flex;flex-wrap:wrap;align-items:center;gap:10px;margin-bottom:16px}
 .head h1{margin:0;font-size:20px;letter-spacing:-.01em}
@@ -70,6 +70,25 @@ body{background-image:radial-gradient(50rem 32rem at 12% -8%,rgba(36,189,172,.16
 .body li>span:last-child{display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:3;line-clamp:3;overflow:hidden}
 .inline-code{font-family:ui-monospace,monospace;font-size:.92em;padding:0 .3em;border-radius:.3em;background:color-mix(in srgb,var(--mist) 8%,transparent)}
 .formula{margin:0;width:fit-content;border:1px solid rgba(246,185,59,.4);background:rgba(246,185,59,.1);color:var(--gold3);border-radius:12px;padding:12px 16px;font-family:ui-monospace,monospace;font-size:calc(2cqw * var(--slide-fit));font-weight:600}
+/* The quiz prints like an answer key: nobody can click in a downloaded file,
+   so the right option is marked and the explanation sits under its question.
+   The bank scrolls — a 20-question final can be taller than the paper. */
+.quiz{display:grid;width:100%;max-width:86%;gap:1.4cqw;margin:0;max-height:36cqw;overflow:auto}
+.quiz-q{margin:0}
+.quiz-qt{margin:0;font-size:calc(1.5cqw * var(--slide-fit));line-height:1.45;font-weight:600;color:var(--mist)}
+.quiz-n{font-family:ui-monospace,monospace;font-size:.82em;font-weight:600;color:var(--brand);margin-right:1.2cqw}
+.quiz-opts{margin:.6cqw 0 0;padding:0;list-style:none;display:grid;gap:.35cqw}
+.quiz-opts li{display:flex;align-items:baseline;gap:1.2cqw;font-size:calc(1.3cqw * var(--slide-fit));line-height:1.5;padding:.5cqw .9cqw;border:1px solid var(--line);border-radius:.6cqw;color:var(--mist3)}
+.quiz-opts li[data-correct="true"]{color:var(--brand3);border-color:color-mix(in srgb,var(--brand) 55%,transparent);background:color-mix(in srgb,var(--brand) 10%,transparent)}
+.quiz-exp{margin:.5cqw 0 0;font-size:calc(1.15cqw * var(--slide-fit));line-height:1.5;color:var(--mist5)}
+/* The recap map, in the same two columns the player uses once the paper is
+   wide enough to hold them. */
+.mm{display:grid;width:100%;max-width:86%;gap:1.2cqw 4%;grid-template-columns:1fr;margin:0}
+@container (min-width:620px){.mm{grid-template-columns:1fr 1fr}}
+.mm-branch{margin:0}
+.mm-label{margin:0;font-size:calc(1.3cqw * var(--slide-fit));font-weight:700;color:var(--brand)}
+.mm-branch ul{margin:.35cqw 0 0;padding:0;list-style:none;display:grid;gap:.2cqw}
+.mm-branch li{font-size:calc(1.2cqw * var(--slide-fit));line-height:1.45;color:var(--mist3)}
 /* The picture, under the words and under the caption: a photograph that covered
    the line being read was worse than no photograph at all. */
 .fig{position:relative;z-index:1;margin:0;display:flex;flex-direction:column;align-items:center;flex:0 1 auto;min-height:0}
@@ -85,15 +104,15 @@ body{background-image:radial-gradient(50rem 32rem at 12% -8%,rgba(36,189,172,.16
    the one coming next. Reserving both rows is the point — a caption whose height
    changes when the hand-over happens moves every line on screen, and the reader
    feels it as a stutter at the exact moment they are following the voice. */
-.cap{position:absolute;left:4%;right:4%;bottom:1.08cqw;z-index:3;height:5.22cqw;overflow:hidden;text-align:center;pointer-events:none}
-.sent{position:absolute;left:0;right:0;margin:0;font-size:1.75cqw;line-height:1.32;font-weight:500;letter-spacing:.005em;color:var(--mist);opacity:0;transition:opacity .16s linear}
-.sent[data-row="live"]{top:0;opacity:1}
-.sent[data-row="next"]{top:2.91cqw;opacity:1;color:var(--mist5)}
+.cap{position:absolute;left:5%;right:5%;bottom:2.2cqw;z-index:10;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;pointer-events:none;text-align:center}
+.sent{position:relative;margin:0;font-size:1.65cqw;line-height:1.34;font-weight:500;letter-spacing:.005em;color:var(--mist);display:none;text-align:center;transition:opacity .16s linear}
+.sent[data-row="live"]{display:block;opacity:1}
+.sent[data-row="next"]{display:block;opacity:.55;color:var(--mist5);margin-top:.4cqw}
 .sent .w{padding:0 1px;transition:color 90ms linear}
 .sent .w[data-state="idle"]{color:var(--mist5)}
 .sent .w[data-state="said"]{color:var(--mist3)}
 .sent .w[data-state="now"]{color:var(--brand)}
-.cap-plain{position:absolute;left:0;right:0;top:0;margin:0;font-size:1.75cqw;line-height:1.32;font-weight:500;color:var(--mist3)}
+.cap-plain{position:relative;margin:0;font-size:1.65cqw;line-height:1.34;font-weight:500;color:var(--mist3);text-align:center}
 .bar{position:absolute;left:0;bottom:0;height:3px;width:100%;transform:scaleX(0);transform-origin:left center;background:linear-gradient(90deg,var(--brand),var(--gold3))}
 
 /* Click a picture to read it: a downloaded file has no player to go back to, so
@@ -386,13 +405,80 @@ function figureMarkup(lesson: Lesson, scene: Lesson["scenes"][number]): string {
   const prompt = (scene.imagePrompt ?? "").trim();
   if (prompt.length < 3) return "";
   const src = pollinationsImageUrl(lesson.id, scene.id, prompt);
+  const isVi = lesson.language === "vi";
+  const caption = isVi
+    ? "Ảnh AI &middot; pollinations.ai &mdash; bấm để phóng to"
+    : "AI Image &middot; pollinations.ai &mdash; click to zoom";
   return (
     `<figure class="fig">` +
     // Remote picture: there is no image pipeline in a downloaded file.
     // eslint-disable-next-line @next/next/no-img-element
     `<img src="${escapeHtml(src)}" alt="${escapeHtml(scene.title)}" loading="lazy" referrerpolicy="no-referrer" />` +
-    `<figcaption>Ảnh AI &middot; pollinations.ai &mdash; bấm để phóng to</figcaption>` +
+    `<figcaption>${caption}</figcaption>` +
     `</figure>`
+  );
+}
+
+/** The quiz data a lesson scene can carry, bank or single. */
+type ExportQuiz = NonNullable<Lesson["scenes"][number]["quiz"]>;
+type ExportMindmap = NonNullable<Lesson["scenes"][number]["mindmap"]>;
+
+/**
+ * A quiz in a downloaded file is a worked answer key — there is nothing to
+ * click — so the correct option is marked and the explanation printed under
+ * its question. Both shapes render: the single-question classic and the bank.
+ */
+function quizMarkup(quiz: ExportQuiz): string {
+  const bank: { question: string; options: ExportQuiz["options"] }[] =
+    quiz.questions && quiz.questions.length > 0
+      ? quiz.questions
+      : [{ question: quiz.question, options: quiz.options }];
+  return (
+    `<div class="quiz">` +
+    bank
+      .map((question, questionIndex) => {
+        const options = question.options
+          .map(
+            (option, optionIndex) =>
+              `<li${option.isCorrect ? ` data-correct="true"` : ""}>` +
+              `<span class="bi">${String.fromCharCode(65 + optionIndex)}</span>` +
+              `<span>${inlineHtml(option.text, escapeHtml)}</span></li>`,
+          )
+          .join("");
+        const explanation = question.options.find((option) => option.isCorrect)?.explanation;
+        return (
+          `<section class="quiz-q">` +
+          `<p class="quiz-qt"><span class="quiz-n">${
+            bank.length > 1 ? `${questionIndex + 1}/${bank.length}` : "?"
+          }</span>${inlineHtml(question.question, escapeHtml)}</p>` +
+          `<ul class="quiz-opts">${options}</ul>` +
+          (explanation ? `<p class="quiz-exp">${inlineHtml(explanation, escapeHtml)}</p>` : "") +
+          `</section>`
+        );
+      })
+      .join("") +
+    `</div>`
+  );
+}
+
+/** The recap map as printed branches: a label and its lines. */
+function mindmapMarkup(mindmap: ExportMindmap): string {
+  return (
+    `<div class="mm">` +
+    mindmap.branches
+      .map(
+        (branch) =>
+          `<section class="mm-branch">` +
+          `<p class="mm-label">${inlineHtml(branch.label, escapeHtml)}</p>` +
+          (branch.items.length > 0
+            ? `<ul>${branch.items
+                .map((item) => `<li>${inlineHtml(item, escapeHtml)}</li>`)
+                .join("")}</ul>`
+            : "") +
+          `</section>`,
+      )
+      .join("") +
+    `</div>`
   );
 }
 
@@ -427,13 +513,15 @@ function sceneMarkup(
         `<div class="wash"></div>`,
         `<div class="fit">`,
         `<header class="head-in">`,
-        `<span class="kicker">${escapeHtml(SCENE_KIND_LABEL[scene.kind])}</span>`,
+        `<span class="kicker">${escapeHtml(sceneKindLabel(scene.kind, lesson.language === "vi" ? "vi" : "en"))}</span>`,
         `<h2 class="title">${inlineHtml(scene.title, escapeHtml)}</h2>`,
         scene.subtitle ? `<p class="sub">${inlineHtml(scene.subtitle, escapeHtml)}</p>` : "",
         `<hr class="rule" />`,
         `</header>`,
         bullets ? `<ul class="body">${bullets}</ul>` : "",
         steps ? `<ol class="body">${steps}</ol>` : "",
+        scene.quiz ? quizMarkup(scene.quiz) : "",
+        scene.mindmap ? mindmapMarkup(scene.mindmap) : "",
         scene.formula ? formulaMarkup(scene.formula) : "",
         figureMarkup(lesson, scene),
         `</div>`,
@@ -468,7 +556,96 @@ function percent(value: number, total: number): string {
  * (the fill, the handle, the chapter states, the loop region) is set by the
  * script, so scrubbing never has to rebuild this markup.
  */
+const STANDALONE_I18N = {
+  vi: {
+    scenes: "cảnh",
+    chapters: "chương",
+    ariaTimeline: "Timeline bài giảng. Kéo để tua, phím mũi tên để tua từng bước",
+    ariaValuetext: "{s} giây",
+    keyHints: "&larr; / &rarr; tua 5s &middot; Shift + &larr;/&rarr; tua 1s &middot; , / . từng khung hình",
+    toStart: "Về đầu",
+    toStartTitle: "Về đầu (Home)",
+    back10: "Tua lui 10 giây",
+    back10Title: "Tua lui 10 giây (J)",
+    stepBack: "Lùi một khung hình",
+    stepBackTitle: "Lùi 1 khung hình (,)",
+    play: "Phát",
+    playTitle: "Phát (Space)",
+    stepForward: "Tiến một khung hình",
+    stepForwardTitle: "Tiến 1 khung hình (.)",
+    forward10: "Tua tới 10 giây",
+    forward10Title: "Tua tới 10 giây (L)",
+    toEnd: "Tới cuối",
+    toEndTitle: "Tới cuối (End)",
+    loopTitle: "Bật/tắt lặp trong khoảng A→B (\\)",
+    loopAria: "Bật/tắt lặp A→B",
+    setATitle: "Đặt mốc A tại vị trí hiện tại ([)",
+    setBTitle: "Đặt mốc B tại vị trí hiện tại (])",
+    clearLoop: "xoá",
+    clearLoopTitle: "Xoá khoảng lặp",
+    speedTitle: "Tốc độ phát (− / + để đổi nhanh)",
+    speedAria: "Tốc độ phát",
+    mute: "Tắt hoặc bật tiếng",
+    muteTitle: "Tắt/bật tiếng (M)",
+    volume: "Âm lượng",
+    volume100: "Âm lượng 100%",
+    help: "Danh sách phím tắt",
+    helpTitle: "Danh sách phím tắt (?)",
+    fullscreen: "Toàn màn hình",
+    fullscreenTitle: "Toàn màn hình (F)",
+    dlgTitle: "Phím tắt trình phát",
+    dlgSubtitle: "Mọi thao tác tua đều hoạt động trên timeline của bài giảng.",
+    dlgClose: "Đóng bảng phím tắt",
+    dlgCloseTitle: "Đóng (Esc)",
+    hint: "Toàn bộ bài nằm trong file này. GSAP tải từ CDN nên cần mạng ở lần mở đầu; bài học và giọng đọc thì không.",
+  },
+  en: {
+    scenes: "scenes",
+    chapters: "chapters",
+    ariaTimeline: "Lesson timeline. Drag to scrub, arrow keys to step",
+    ariaValuetext: "{s} seconds",
+    keyHints: "&larr; / &rarr; seek 5s &middot; Shift + &larr;/&rarr; seek 1s &middot; , / . frame by frame",
+    toStart: "Go to start",
+    toStartTitle: "Go to start (Home)",
+    back10: "Back 10 seconds",
+    back10Title: "Back 10 seconds (J)",
+    stepBack: "Back 1 frame",
+    stepBackTitle: "Back 1 frame (,)",
+    play: "Play",
+    playTitle: "Play (Space)",
+    stepForward: "Forward 1 frame",
+    stepForwardTitle: "Forward 1 frame (.)",
+    forward10: "Forward 10 seconds",
+    forward10Title: "Forward 10 seconds (L)",
+    toEnd: "Go to end",
+    toEndTitle: "Go to end (End)",
+    loopTitle: "Turn A→B loop on/off (\\)",
+    loopAria: "Turn A→B loop on/off",
+    setATitle: "Set marker A at current position ([)",
+    setBTitle: "Set marker B at current position (])",
+    clearLoop: "clear",
+    clearLoopTitle: "Clear loop range",
+    speedTitle: "Playback speed (− / + to change fast)",
+    speedAria: "Playback speed",
+    mute: "Mute or unmute",
+    muteTitle: "Mute/unmute (M)",
+    volume: "Volume",
+    volume100: "Volume 100%",
+    help: "Keyboard shortcuts",
+    helpTitle: "Keyboard shortcuts (?)",
+    fullscreen: "Fullscreen",
+    fullscreenTitle: "Fullscreen (F)",
+    dlgTitle: "Player keyboard shortcuts",
+    dlgSubtitle: "Every seek works on the lesson timeline.",
+    dlgClose: "Close shortcuts",
+    dlgCloseTitle: "Close (Esc)",
+    hint: "The entire lesson is contained in this file. GSAP loads from CDN on first open; the lesson slides and audio are 100% offline.",
+  },
+};
+
 function playerMarkup(lesson: Lesson): string {
+  const lang = lesson.language === "vi" ? "vi" : "en";
+  const t = STANDALONE_I18N[lang];
   const total = lesson.duration || 1;
   const bands = lesson.chapters
     .map((chapter, index) => {
@@ -508,9 +685,9 @@ function playerMarkup(lesson: Lesson): string {
     `<div class="scrubwrap">` +
     `<div class="hovertime" id="hovertime" data-visible="false">00:00.0</div>` +
     `<div class="scrub" id="scrub" role="slider" tabindex="0"` +
-    ` aria-label="Timeline bài giảng. Kéo để tua, phím mũi tên để tua từng bước"` +
+    ` aria-label="${t.ariaTimeline}"` +
     ` aria-valuemin="0" aria-valuemax="${Math.round(total)}" aria-valuenow="0"` +
-    ` aria-valuetext="0 giây" data-dragging="false">` +
+    ` aria-valuetext="0 ${t.scenes}" data-dragging="false">` +
     `<div class="chapterband">${bands}</div>` +
     `<div class="rail"><div class="fill" id="fill"></div></div>` +
     `<div class="loopregion" id="loopregion" data-on="false" hidden></div>` +
@@ -518,40 +695,37 @@ function playerMarkup(lesson: Lesson): string {
     `<div class="handle" id="handle" style="left:0%"></div>` +
     `</div></div>` +
     `<div class="scrubfoot">` +
-    `<span>${lesson.scenes.length} cảnh &middot; ${lesson.chapters.length} chương</span>` +
-    `<span>&larr; / &rarr; tua 5s &middot; Shift + &larr;/&rarr; tua 1s &middot; , / . từng khung hình</span>` +
+    `<span>${lesson.scenes.length} ${t.scenes} &middot; ${lesson.chapters.length} ${t.chapters}</span>` +
+    `<span>${t.keyHints}</span>` +
     `</div>` +
     `<div class="transport">` +
-    toolButton("toStart", "Về đầu", "Về đầu (Home)", "toStart") +
-    toolButton("back10", "Tua lui 10 giây", "Tua lui 10 giây (J)", "back10") +
-    toolButton("stepBack", "Lùi một khung hình", "Lùi 1 khung hình (,)", "stepBack") +
-    `<button type="button" class="tplay" id="play" title="Phát (Space)" aria-label="Phát">` +
+    toolButton("toStart", t.toStart, t.toStartTitle, "toStart") +
+    toolButton("back10", t.back10, t.back10Title, "back10") +
+    toolButton("stepBack", t.stepBack, t.stepBackTitle, "stepBack") +
+    `<button type="button" class="tplay" id="play" title="${t.playTitle}" aria-label="${t.play}">` +
     icon("play", true) +
     `</button>` +
-    toolButton("stepForward", "Tiến một khung hình", "Tiến 1 khung hình (.)", "stepForward") +
-    toolButton("forward10", "Tua tới 10 giây", "Tua tới 10 giây (L)", "forward10") +
-    toolButton("toEnd", "Tới cuối", "Tới cuối (End)", "toEnd") +
+    toolButton("stepForward", t.stepForward, t.stepForwardTitle, "stepForward") +
+    toolButton("forward10", t.forward10, t.forward10Title, "forward10") +
+    toolButton("toEnd", t.toEnd, t.toEndTitle, "toEnd") +
     `<span class="clock" id="clock">00:00.0 / 00:00.0</span>` +
     `<span class="tsep" aria-hidden="true"></span>` +
     `<div class="loopbox">` +
-    // The loop toggle carries its label next to the icon, so it is written out
-    // rather than going through `toolButton`: it is a switch with a name, not
-    // one more icon in a row.
     `<button type="button" class="tbtn" id="loop" aria-pressed="false"` +
-    ` title="Bật/tắt lặp trong khoảng A→B (\\)" aria-label="Bật/tắt lặp A→B">` +
+    ` title="${t.loopTitle}" aria-label="${t.loopAria}">` +
     `${icon("repeat")}<span>A&rarr;B</span></button>` +
-    `<button type="button" class="ab" id="setA" title="Đặt mốc A tại vị trí hiện tại ([)">A 00:00.0</button>` +
-    `<button type="button" class="ab" id="setB" title="Đặt mốc B tại vị trí hiện tại (])">B 00:00.0</button>` +
-    `<button type="button" class="clearbtn" id="clearLoop" title="Xoá khoảng lặp">xoá</button>` +
+    `<button type="button" class="ab" id="setA" title="${t.setATitle}">A 00:00.0</button>` +
+    `<button type="button" class="ab" id="setB" title="${t.setBTitle}">B 00:00.0</button>` +
+    `<button type="button" class="clearbtn" id="clearLoop" title="${t.clearLoopTitle}">${t.clearLoop}</button>` +
     `</div>` +
-    `<select class="rate" id="speed" title="Tốc độ phát (− / + để đổi nhanh)"` +
-    ` aria-label="Tốc độ phát">${speeds}</select>` +
+    `<select class="rate" id="speed" title="${t.speedTitle}"` +
+    ` aria-label="${t.speedAria}">${speeds}</select>` +
     `<div class="volrow">` +
-    toolButton("mute", "Tắt hoặc bật tiếng", "Tắt/bật tiếng (M)", "volumeHigh") +
+    toolButton("mute", t.mute, t.muteTitle, "volumeHigh") +
     `<input type="range" id="vol" min="0" max="1" step="0.05" value="1"` +
-    ` aria-label="Âm lượng" title="Âm lượng 100%" />` +
-    toolButton("help", "Danh sách phím tắt", "Danh sách phím tắt (?)", "keyboard") +
-    toolButton("fullscreen", "Toàn màn hình", "Toàn màn hình (F)", "fullscreen") +
+    ` aria-label="${t.volume}" title="${t.volume100}" />` +
+    toolButton("help", t.help, t.helpTitle, "keyboard") +
+    toolButton("fullscreen", t.fullscreen, t.fullscreenTitle, "fullscreen") +
     `</div>` +
     `</div>` +
     (chapters ? `<div class="chapterlist" id="chapterlist">${chapters}</div>` : "") +
@@ -561,53 +735,86 @@ function playerMarkup(lesson: Lesson): string {
 
 /**
  * The shortcut sheet.
- *
- * Written out rather than generated from the key handler, because a list of keys
- * that is itself generated is a list that can quietly stop being true. Every row
- * here is bound in the script below.
  */
-function shortcutsMarkup(): string {
-  const groups: Array<[string, Array<[string, string]>]> = [
-    [
-      "Tua & phát",
-      [
-        ["Space / K", "Phát hoặc tạm dừng"],
-        ["← / →", "Tua lui / tua tới 5 giây"],
-        ["J / L", "Tua lui / tua tới 10 giây"],
-        ["Shift + ← / →", "Tua chậm 1 giây"],
-        [", / .", "Lùi / tiến đúng 1 khung hình"],
-        ["0 – 9", "Nhảy tới 0% – 90% thời lượng"],
-        ["Home / End", "Về đầu / tới cuối"],
-      ],
-    ],
-    [
-      "Lặp một đoạn để học kỹ",
-      [
-        ["[", "Đặt mốc A tại vị trí hiện tại"],
-        ["]", "Đặt mốc B tại vị trí hiện tại"],
-        ["\\", "Bật/tắt lặp A→B"],
-        ["1 lần nhấn", "Chuột kéo trên timeline để tua tự do"],
-      ],
-    ],
-    [
-      "Khác",
-      [
-        ["− / +", "Giảm / tăng tốc độ phát"],
-        ["M", "Tắt hoặc bật tiếng"],
-        ["F", "Toàn màn hình vùng trình chiếu"],
-        ["?", "Mở bảng phím tắt này"],
-        ["Esc", "Đóng bảng / thoát toàn màn hình / đóng ảnh phóng to"],
-      ],
-    ],
-  ];
+function shortcutsMarkup(lang: "en" | "vi" = "vi"): string {
+  const isVi = lang === "vi";
+  const t = STANDALONE_I18N[lang];
+  const groups: Array<[string, Array<[string, string]>]> = isVi
+    ? [
+        [
+          "Tua & phát",
+          [
+            ["Space / K", "Phát hoặc tạm dừng"],
+            ["← / →", "Tua lui / tua tới 5 giây"],
+            ["J / L", "Tua lui / tua tới 10 giây"],
+            ["Shift + ← / →", "Tua chậm 1 giây"],
+            [", / .", "Lùi / tiến đúng 1 khung hình"],
+            ["0 – 9", "Nhảy tới 0% – 90% thời lượng"],
+            ["Home / End", "Về đầu / tới cuối"],
+          ],
+        ],
+        [
+          "Lặp một đoạn để học kỹ",
+          [
+            ["[", "Đặt mốc A tại vị trí hiện tại"],
+            ["]", "Đặt mốc B tại vị trí hiện tại"],
+            ["\\", "Bật/tắt lặp A→B"],
+            ["1 lần nhấn", "Chuột kéo trên timeline để tua tự do"],
+          ],
+        ],
+        [
+          "Khác",
+          [
+            ["− / +", "Giảm / tăng tốc độ phát"],
+            ["M", "Tắt hoặc bật tiếng"],
+            ["F", "Toàn màn hình vùng trình chiếu"],
+            ["?", "Mở bảng phím tắt này"],
+            ["Esc", "Đóng bảng / thoát toàn màn hình / đóng ảnh phóng to"],
+          ],
+        ],
+      ]
+    : [
+        [
+          "Seek & play",
+          [
+            ["Space / K", "Play or pause"],
+            ["← / →", "Back / forward 5 seconds"],
+            ["J / L", "Back / forward 10 seconds"],
+            ["Shift + ← / →", "Nudge 1 second"],
+            [", / .", "Back / forward 1 frame"],
+            ["0 – 9", "Jump to 0% – 90% of the lesson"],
+            ["Home / End", "Go to start / end"],
+          ],
+        ],
+        [
+          "Loop a section to study it",
+          [
+            ["[", "Set marker A at current position"],
+            ["]", "Set marker B at current position"],
+            ["\\", "Turn the A→B loop on/off"],
+            ["1 press", "Drag on the timeline to scrub freely"],
+          ],
+        ],
+        [
+          "Other",
+          [
+            ["− / +", "Slow down / speed up"],
+            ["M", "Mute or unmute"],
+            ["F", "Fullscreen the slide"],
+            ["?", "Open this shortcut list"],
+            ["Esc", "Close dialog / exit fullscreen / close zoom"],
+          ],
+        ],
+      ];
+
   return (
-    `<div class="dlg" id="dlg" role="dialog" aria-modal="true" aria-label="Phím tắt trình phát">` +
+    `<div class="dlg" id="dlg" role="dialog" aria-modal="true" aria-label="${t.dlgTitle}">` +
     `<div class="dlg-panel">` +
     `<div class="dlg-head"><div>` +
-    `<h2>Phím tắt trình phát</h2>` +
-    `<p>Mọi thao tác tua đều hoạt động trên timeline của bài giảng.</p>` +
+    `<h2>${t.dlgTitle}</h2>` +
+    `<p>${t.dlgSubtitle}</p>` +
     `</div>` +
-    toolButton("dlgClose", "Đóng bảng phím tắt", "Đóng (Esc)", "close") +
+    toolButton("dlgClose", t.dlgClose, t.dlgCloseTitle, "close") +
     `</div>` +
     `<div class="dlg-grid">` +
     groups
@@ -624,7 +831,8 @@ function shortcutsMarkup(): string {
           `</ul></section>`,
       )
       .join("") +
-    `</div></div></div>`
+    `</div>` +
+    `</div></div>`
   );
 }
 
@@ -649,10 +857,15 @@ const PLAYER_JS = `
     tl.set(el, { autoAlpha: 1, zIndex: 2 }, at);
     // Two-second fade into the next scene, same rule as the web player: the
     // outgoing slide dissolves across its last two seconds instead of cutting.
+    // The last scene stays up, also like the web player: there is no next
+    // scene to hand over to, and fading it out parked the deck on a blank card
+    // (recorded exports ended on one).
     (function () {
       var fade = Math.min(2, scene.duration / 2);
-      tl.to(el, { autoAlpha: 0, scale: 0.985, duration: fade, ease: 'power2.inOut' }, at + scene.duration - fade)
-        .set(el, { zIndex: 1 }, at + scene.duration);
+      if (index < data.scenes.length - 1) {
+        tl.to(el, { autoAlpha: 0, scale: 0.985, duration: fade, ease: 'power2.inOut' }, at + scene.duration - fade);
+      }
+      tl.set(el, { zIndex: 1 }, at + scene.duration);
     })();
     // The studio's entrance motion, same table as the web player: "to" is
     // always the natural layout, and a deck without the field plays still.
@@ -757,20 +970,20 @@ const PLAYER_JS = `
   // lands just after a swap — the listener below re-applies the rate once it
   // does, and until then the previous clip's fit (or 1x) holds for a few
   // milliseconds.
-  function voiceFit(idx, consumed) {
+  function voiceFit(idx) {
     var scene = data.scenes[idx];
     var audio = 0;
     try { audio = voice.duration || 0; } catch (e) {}
     var slide = (scene && scene.duration) || 0;
     if (!(audio > 0) || !(slide > 0)) return 1;
-    var avail = slide - (consumed || 0) - 1.5;
+    var avail = slide - 1.5;
     if (!(avail > 1)) return 1;
     return Math.min(1.4, Math.max(0.8, audio / avail));
   }
-  function applyVoiceRate(consumed) {
+  function applyVoiceRate() {
     var idx = voiceScene >= 0 ? voiceScene : sceneIndexAt(current);
     try {
-      voice.playbackRate = rate * voiceFit(idx, consumed);
+      voice.playbackRate = rate * voiceFit(idx);
       if ('preservesPitch' in voice) voice.preservesPitch = true;
     } catch (e) {}
   }
@@ -915,7 +1128,7 @@ const PLAYER_JS = `
     // voice reads at 1x and the two part ways within a sentence. Re-applied on
     // every swap: some browsers drop a custom rate when the source changes.
     // The fit on top (see voiceFit): engines speak unevenly slide to slide.
-    applyVoiceRate(off);
+    applyVoiceRate();
     if (playing) {
       var off = Math.max(0, current - data.scenes[idx].start);
       try {
@@ -1374,8 +1587,11 @@ export function buildStandaloneHtml({ lesson, audios, karaoke }: StandaloneHtmlO
   // `<` is escaped so the JSON blob can never close its own <script> tag.
   const payload = JSON.stringify(lesson).replace(/</g, "\\u003c");
 
+  const lang = lesson.language === "vi" ? "vi" : "en";
+  const t = STANDALONE_I18N[lang];
+
   return `<!doctype html>
-<html lang="vi">
+<html lang="${lang}">
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
@@ -1387,15 +1603,15 @@ export function buildStandaloneHtml({ lesson, audios, karaoke }: StandaloneHtmlO
   <div class="head">
     <h1>${escapeHtml(lesson.title)}</h1>
     <span class="tag">${escapeHtml(lesson.subject)}${lesson.grade ? ` &middot; ${escapeHtml(lesson.grade)}` : ""}</span>
-    <span class="tag mono">${lesson.duration.toFixed(1)}s &middot; ${lesson.scenes.length} cảnh</span>
+    <span class="tag mono">${lesson.duration.toFixed(1)}s &middot; ${lesson.scenes.length} ${t.scenes}</span>
     <span class="tag">${escapeHtml(preset.label)}</span>
   </div>
   <div class="stage" id="stage">${sceneMarkup(lesson, audios, karaoke)}</div>
   <audio id="voice" preload="auto" style="display:none"></audio>
   ${playerMarkup(lesson)}
-  <p class="hint">Toàn bộ bài nằm trong file này. GSAP tải từ CDN nên cần mạng ở lần mở đầu; bài học và giọng đọc thì không.</p>
+  <p class="hint">${t.hint}</p>
 </div>
-${shortcutsMarkup()}
+${shortcutsMarkup(lang)}
 <script id="lesson-data" type="application/json">${payload}</script>
 <script src="https://cdn.jsdelivr.net/npm/gsap@3.15.0/dist/gsap.min.js"></script>
 <script>${PLAYER_JS}</script>

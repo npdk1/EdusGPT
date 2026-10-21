@@ -3,9 +3,9 @@
 import { useEffect, useRef, useState, useCallback } from "react";
 import { Volume2, VolumeX, LoaderCircle } from "lucide-react";
 import type { Timebase } from "@/hooks/useTimebase";
-import type { Lesson } from "@/lib/lesson/types";
+import { sceneIndexAt, type Lesson } from "@/lib/lesson/types";
 import { approximateWords, decodeWordMarks, paceFitRate, type WordMark } from "@/lib/karaoke";
-import { useCopy } from "@/i18n/provider";
+import { useCopy, useLang } from "@/i18n/provider";
 
 const COPY = {
   en: {
@@ -13,13 +13,13 @@ const COPY = {
     voiceServerFallback: "The server could not read this. Using the browser voice.",
     voiceTurnOff: "Turn off the AI teacher voice",
     voiceTurnOn: "Turn on the AI teacher voice (TTS)",
-    voiceChipLabel: "Vietnamese voice:",
+    voiceChipLabel: "Voice:",
     voicePreparing: "preparing",
     voiceTeaching: "Teaching",
     voiceOn: "On",
     voiceOff: "Off",
-    voiceSelectLabel: "Choose the Vietnamese voice",
-    voiceSelectTitle: "Vietnamese narration voice",
+    voiceSelectLabel: "Choose narration voice",
+    voiceSelectTitle: "Narration voice",
   },
   vi: {
     voiceBlocked: "Trình duyệt chặn phát. Bấm lại để nghe.",
@@ -64,6 +64,7 @@ interface TeacherVoiceProps {
    * fall out of step.
    */
   onNarration?: (update: NarrationUpdate) => void;
+  onVoiceChange?: (voice: string) => void;
 }
 
 /** One publication on the narration channel. */
@@ -105,6 +106,16 @@ const FALLBACK_VOICES: VoiceOption[] = [
   { id: "vi-VN-NamMinhNeural#tram", label: "Nam Minh trầm (nam)" },
   { id: "vi-VN-NamMinhNeural#cham", label: "Nam Minh chậm (nam)" },
 ];
+
+function formatVoiceLabel(label: string, lang: "en" | "vi"): string {
+  if (lang === "vi") return label;
+  return label
+    .replace(/\(nữ\)/g, "(female)")
+    .replace(/\(nam\)/g, "(male)")
+    .replace(/chậm/g, "slow")
+    .replace(/cao/g, "high")
+    .replace(/trầm/g, "deep");
+}
 
 /** One slide's synthesised narration, kept so it is never fetched twice. */
 interface CachedNarration {
@@ -151,8 +162,10 @@ export function TeacherVoice({
   onVoiceState,
   loopEnabled = false,
   onNarration,
+  onVoiceChange,
 }: TeacherVoiceProps) {
   const t = useCopy(COPY);
+  const currentLang = useLang();
   const [enabled, setEnabled] = useState(true);
   const [speaking, setSpeaking] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -163,6 +176,8 @@ export function TeacherVoice({
   // The voice list arrives a moment later and replaces the fallback labels; if
   // the stored id is not among them, the server's own default takes over.
   const [voice, setVoice] = useState(lesson.voice ?? FALLBACK_VOICES[0].id);
+  const voiceRef = useRef(voice);
+  voiceRef.current = voice;
 
   const lastSpokenSceneRef = useRef<number | null>(null);
   /**
@@ -343,7 +358,7 @@ export function TeacherVoice({
       // one speed across the deck and stops a long clip overrunning its scene.
       const audioSeconds =
         entry.words.length > 0 ? entry.words[entry.words.length - 1].end : 0;
-      const fitted = paceFitRate(audioSeconds, sceneDuration - startAt, rateRef.current);
+      const fitted = paceFitRate(audioSeconds, sceneDuration, rateRef.current);
       fitRef.current = rateRef.current > 0 ? fitted / rateRef.current : 1;
       audio.playbackRate = fitted;
       if ("preservesPitch" in audio) audio.preservesPitch = true;
@@ -356,6 +371,7 @@ export function TeacherVoice({
       // element before `play()` is what lines the voice back up with the playhead.
       if (startAt > 0) {
         const resume = () => {
+          if (audio.duration && startAt >= audio.duration) return;
           audio.currentTime = startAt;
         };
         // `currentTime` before metadata is loaded is silently ignored by some
@@ -454,9 +470,11 @@ export function TeacherVoice({
       startAt = 0,
       /** Timeline end of this slide; the silence skip aims at it. */
       sceneEnd = Number.POSITIVE_INFINITY,
+      explicitVoice?: string,
     ) => {
       stop();
-      const key = `${sceneId}|${voice}`;
+      const voiceToUse = explicitVoice || voiceRef.current;
+      const key = `${sceneId}|${voiceToUse}`;
       const cached = cacheRef.current.get(key);
       const controller = new AbortController();
       abortRef.current = controller;
@@ -471,7 +489,7 @@ export function TeacherVoice({
       // Riding along beats a second synthesis for one playback.
       if (warmingRef.current.has(key)) {
         setLoading(true);
-        onVoiceState?.({ status: "preparing", sceneIndex, sceneTitle, voice });
+        onVoiceState?.({ status: "preparing", sceneIndex, sceneTitle, voice: voiceToUse });
         const rode = await waitForWarm(key, controller.signal);
         if (rode) {
           play(rode, sceneIndex, sceneTitle, text, startAt, sceneEnd, sceneSeconds);
@@ -489,12 +507,12 @@ export function TeacherVoice({
       setLoading(true);
       // The gap the presenter actually cares about: the slide is on screen but
       // its narration is still being fetched.
-      onVoiceState?.({ status: "preparing", sceneIndex, sceneTitle, voice });
+      onVoiceState?.({ status: "preparing", sceneIndex, sceneTitle, voice: voiceToUse });
       try {
         const response = await fetch("/api/tts", {
           method: "POST",
           headers: { "content-type": "application/json" },
-          body: JSON.stringify({ text, voice }),
+          body: JSON.stringify({ text, voice: voiceToUse }),
           signal: controller.signal,
         });
         if (controller.signal.aborted) {
@@ -555,7 +573,7 @@ export function TeacherVoice({
         );
       }
     },
-    [play, stop, stopTracking, voice, t, waitForWarm],
+    [onVoiceState, play, stop, stopTracking, t, waitForWarm],
   );
 
   /**
@@ -567,17 +585,18 @@ export function TeacherVoice({
    * the in-flight set is cleared even when the fetch fails.
    */
   const warmScene = useCallback(
-    (index: number) => {
+    (index: number, explicitVoice?: string) => {
       const scene = lesson.scenes[index];
       if (!scene?.narration) return;
-      const key = `${scene.id}|${voice}`;
+      const voiceToUse = explicitVoice || voiceRef.current;
+      const key = `${scene.id}|${voiceToUse}`;
       if (cacheRef.current.has(key) || warmingRef.current.has(key)) return;
 
       warmingRef.current.add(key);
       fetch("/api/tts", {
         method: "POST",
         headers: { "content-type": "application/json" },
-        body: JSON.stringify({ text: scene.narration, voice }),
+        body: JSON.stringify({ text: scene.narration, voice: voiceToUse }),
       })
         .then(async (response) => {
           if (response.ok) {
@@ -595,7 +614,7 @@ export function TeacherVoice({
         })
         .finally(() => warmingRef.current.delete(key));
     },
-    [lesson.scenes, voice],
+    [lesson.scenes],
   );
 
   /**
@@ -634,11 +653,10 @@ export function TeacherVoice({
    * loop.
    */
   const liveRef = useRef({
-    scenes: lesson.scenes,
+    lesson,
     speakNow: speak,
-    spokenIndex: () => activeSceneIndex,
   });
-  liveRef.current = { scenes: lesson.scenes, speakNow: speak, spokenIndex: () => activeSceneIndex };
+  liveRef.current = { lesson, speakNow: speak };
 
   /**
    * The timebase, read through a ref for the same reason.
@@ -685,9 +703,9 @@ export function TeacherVoice({
     }
 
     return tb.subscribe((time) => {
-      const { scenes, speakNow, spokenIndex } = liveRef.current;
-      const sceneIndex = spokenIndex();
-      const scene = scenes[sceneIndex];
+      const { lesson: currentLesson, speakNow } = liveRef.current;
+      const sceneIndex = sceneIndexAt(currentLesson, time);
+      const scene = currentLesson.scenes[sceneIndex];
 
       // One ordinary frame is ~16ms of deck; the timebase clamps its own delta to
       // 250ms, and the rate multiplies that. Anything past that budget could not
@@ -708,15 +726,19 @@ export function TeacherVoice({
       const frameBudget = 0.25 * Math.max(1, rateRef.current) + 0.15;
       const movedBackwards = previous !== null && time < previous - 0.05;
       const jumpedForward = previous !== null && time - previous > frameBudget;
+      const isNewScene = lastSpokenSceneRef.current !== sceneIndex;
       const jumped =
-        lastSpokenSceneRef.current !== sceneIndex ||
+        isNewScene ||
         previous === null ||
         movedBackwards ||
         jumpedForward;
       if (!jumped) return;
 
       lastSpokenSceneRef.current = sceneIndex;
-      void speakNow(scene.narration, scene.id, sceneIndex, scene.title, scene.duration, offset, scene.start + scene.duration);
+      // When entering a new scene naturally, start at 0 so no opening syllables are clipped.
+      // Only seek into the slide when resuming from a hold/seek (>350ms into the scene).
+      const startAt = isNewScene && offset <= 0.35 ? 0 : offset;
+      void speakNow(scene.narration, scene.id, sceneIndex, scene.title, scene.duration, startAt, scene.start + scene.duration);
     });
     // `enabled` and `playing` are the only things that change what this does.
     // Deliberately not `timebase`: it is a new object every render, and depending
@@ -751,17 +773,39 @@ export function TeacherVoice({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [lesson.id]);
 
-  // Switching voice must not replay a scene that was already narrated.
+  // Switching voice immediately stops old audio and starts new voice
   const changeVoice = (next: string) => {
+    voiceRef.current = next;
     setVoice(next);
+    onVoiceChange?.(next);
     lastSpokenSceneRef.current = null;
-    // The frame history goes too. It describes a run of playhead positions read
-    // for the old voice, so keeping it would let the next frame look like ordinary
-    // playback — and the slide would then stay silent until the playhead moved by
-    // more than a frame, which on a paused deck is never.
     lastSeenTimeRef.current = null;
     setNotice(null);
     stop(next);
+
+    // Pre-warm the current and next scenes with the newly selected voice
+    warmScene(activeSceneIndex, next);
+    warmScene(activeSceneIndex + 1, next);
+
+    // If deck is currently playing, immediately start reading the current scene with the new voice
+    if (timebase.playing) {
+      const scene = lesson.scenes[activeSceneIndex];
+      if (scene?.narration) {
+        lastSpokenSceneRef.current = activeSceneIndex;
+        const offset = Math.max(0, timebase.timeRef.current - scene.start);
+        const startAt = offset <= 0.35 ? 0 : offset;
+        void speak(
+          scene.narration,
+          scene.id,
+          activeSceneIndex,
+          scene.title,
+          scene.duration,
+          startAt,
+          scene.start + scene.duration,
+          next,
+        );
+      }
+    }
   };
 
   const toggle = () => {
@@ -777,7 +821,10 @@ export function TeacherVoice({
   };
 
   return (
-    <div className="flex items-center gap-1.5">
+    /* min-w-0 + flex-wrap: at 390px this group was the one thing in the
+       toolbar that could not wrap, and it pushed the whole page 19px wide
+       (the export group next to it already wrapped this way). */
+    <div className="flex min-w-0 flex-wrap items-center gap-1.5">
       <button
         type="button"
         onClick={toggle}
@@ -811,11 +858,13 @@ export function TeacherVoice({
             value={voice}
             onChange={(e) => changeVoice(e.target.value)}
             title={notice ?? t.voiceSelectTitle}
-            className="chip border-ink-700 bg-ink-900/60 text-mist-300 hover:text-mist-100"
+            /* A native select sizes to its longest option; capped so one long
+               voice name cannot widen the toolbar past the screen again. */
+            className="chip max-w-full border-ink-700 bg-ink-900/60 text-mist-300 hover:text-mist-100"
           >
             {voices.map((v) => (
               <option key={v.id} value={v.id}>
-                {v.label}
+                {formatVoiceLabel(v.label, currentLang)}
               </option>
             ))}
           </select>

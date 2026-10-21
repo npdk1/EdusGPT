@@ -15,6 +15,7 @@ import {
 import { coerceLesson } from "@/lib/lesson/validate";
 import { sanitizeRunLog } from "@/lib/lesson/run-log";
 import { newLessonId } from "@/lib/lesson/types";
+import { normalizeVietnameseSearch } from "@/lib/format";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -33,7 +34,8 @@ export async function GET(request: NextRequest) {
   const denied = guard(request);
   if (denied) return denied;
 
-  const id = new URL(request.url).searchParams.get("id");
+  const searchParams = new URL(request.url).searchParams;
+  const id = searchParams.get("id");
   if (id) {
     if (!isValidCourseId(id)) {
       return NextResponse.json({ error: "Id không hợp lệ." }, { status: 400 });
@@ -45,12 +47,55 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ ok: true, lesson, log: await readCourseLog(id) });
   }
 
+  const allCourses = await listCourses();
+  const qParam = searchParams.get("q") || searchParams.get("search");
+  let filteredCourses = allCourses;
+
+  if (qParam && qParam.trim()) {
+    const term = normalizeVietnameseSearch(qParam);
+    filteredCourses = allCourses.filter((course) => {
+      const matchTitle = normalizeVietnameseSearch(course.title).includes(term);
+      const matchSubject = normalizeVietnameseSearch(course.subject || "").includes(term);
+      const matchGrade = normalizeVietnameseSearch(course.grade || "").includes(term);
+      return matchTitle || matchSubject || matchGrade;
+    });
+  }
+
+  const totalCourses = filteredCourses.length;
+  const pageParam = searchParams.get("page");
+  const limitParam = searchParams.get("limit");
+  const allParam = searchParams.get("all");
+
+  // If "all=true" is explicitly requested, return courses unpaginated
+  if (allParam === "true" && !pageParam) {
+    return NextResponse.json(
+      {
+        ok: true,
+        courses: filteredCourses,
+        total: totalCourses,
+        page: 1,
+        limit: totalCourses,
+        totalPages: 1,
+        drafts: await listDrafts(),
+      },
+      { headers: { "cache-control": "no-store" } },
+    );
+  }
+
+  const limit = Math.max(1, parseInt(limitParam || "9", 10) || 9);
+  const totalPages = Math.max(1, Math.ceil(totalCourses / limit));
+  const page = Math.min(totalPages, Math.max(1, parseInt(pageParam || "1", 10) || 1));
+  const startIdx = (page - 1) * limit;
+  const pagedCourses = filteredCourses.slice(startIdx, startIdx + limit);
+
   return NextResponse.json(
     {
       ok: true,
-      courses: await listCourses(),
-      // Lessons still being written, so the library can show a "Đang tạo…"
-      // card instead of nothing while a run is in flight.
+      courses: pagedCourses,
+      total: totalCourses,
+      page,
+      limit,
+      totalPages,
       drafts: await listDrafts(),
     },
     { headers: { "cache-control": "no-store" } },

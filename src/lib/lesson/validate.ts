@@ -9,6 +9,7 @@ import {
   type Lesson,
   type LessonChapter,
   type LessonScene,
+  type QuizOption,
   type SceneAccent,
   type SceneKind,
   type SlideBlock,
@@ -16,12 +17,12 @@ import {
   type SlideGraph,
   type SlideLayout,
   type SlideTable,
-} from "./types";
-import { BLOCK_TYPE_CQW, fitBlockText } from "./text-fit";
-import { DEFAULT_SLIDE_PATTERN, DEFAULT_SLIDE_THEME, isSlidePattern } from "./themes";
-import { DEFAULT_SLIDE_MOTION, isSlideMotion } from "./motion";
-import { SLIDE_ICON_NAMES } from "./types";
-import { MAX_LESSON_SCENES } from "./presentation-styles";
+} from "./types.ts";
+import { BLOCK_TYPE_CQW, fitBlockText } from "./text-fit.ts";
+import { DEFAULT_SLIDE_PATTERN, DEFAULT_SLIDE_THEME, isSlidePattern } from "./themes.ts";
+import { DEFAULT_SLIDE_MOTION, isSlideMotion } from "./motion.ts";
+import { SLIDE_ICON_NAMES } from "./types.ts";
+import { MAX_LESSON_SCENES } from "./presentation-styles.ts";
 
 /** Defensive validation for anything that arrives over HTTP or from localStorage. */
 
@@ -221,6 +222,59 @@ export function sanitizeBlocks(raw: unknown): SlideBlock[] | undefined {
   return blocks.length > 0 ? blocks : undefined;
 }
 
+/**
+ * Every answer list — a single question's or one entry of a bank — goes
+ * through this one function, so both shapes always coerce identically.
+ */
+function coerceQuizOptions(value: unknown): QuizOption[] {
+  return Array.isArray(value)
+    ? value.map((opt: Record<string, unknown>, optIdx: number) => ({
+        id: asString(opt.id) || `opt-${optIdx + 1}`,
+        text: asString(opt.text, `Lựa chọn ${optIdx + 1}`),
+        isCorrect: Boolean(opt.isCorrect),
+        explanation: asString(opt.explanation) || undefined,
+      }))
+    : [];
+}
+
+/** Han / Kana / Hangul — the scripts a Vietnamese sentence never borrows. */
+const CJK_CHAR = /[\p{Script=Han}\p{Script=Hiragana}\p{Script=Katakana}\p{Script=Hangul}]/u;
+const CJK_RUN =
+  "[\\p{Script=Han}\\p{Script=Hiragana}\\p{Script=Katakana}\\p{Script=Hangul}]+";
+/**
+ * Removes Han/Kana/Hangul characters glued onto a Latin letter or digit —
+ * "số原子" becomes "số".
+ *
+ * A real run wrote "số原子" where "số nguyên tử" was meant: the model leaked
+ * Chinese mid-word, and stored text is exactly what the player prints, so the
+ * leak has to die at this gate. Only glued runs are cut: a free-standing
+ * "中文" (a genuine quotation) survives, and CJK-script lessons are exempted
+ * entirely by coerceLesson.
+ */
+function stripGluedCjk(text: string): string {
+  if (!CJK_CHAR.test(text)) return text;
+  return text.replace(
+    new RegExp(`(?<=[A-Za-zÀ-ỹ0-9])${CJK_RUN}|${CJK_RUN}(?=[A-Za-zÀ-ỹ0-9])`, "gu"),
+    "",
+  );
+}
+
+/**
+ * Rewrites every string leaf of a JSON-ish value. Used for the glued-CJK
+ * pass so quiz options, mindmap branches and any future text field are all
+ * covered without listing them one by one.
+ */
+function mapStrings<T>(value: T, fn: (text: string) => string): T {
+  if (typeof value === "string") return fn(value) as unknown as T;
+  if (Array.isArray(value)) return value.map((item) => mapStrings(item, fn)) as unknown as T;
+  if (value && typeof value === "object") {
+    return Object.fromEntries(
+      Object.entries(value).map(([key, item]) => [key, mapStrings(item, fn)]),
+    ) as T;
+  }
+  return value;
+}
+
 export function coerceLesson(input: unknown): Lesson | null {
   if (!input || typeof input !== "object") return null;
   const raw = input as Record<string, unknown>;
@@ -237,16 +291,32 @@ export function coerceLesson(input: unknown): Lesson | null {
       : "brand";
     const bullets = asStringArray(scene.bullets, 7);
     const quizRaw = scene.quiz as Record<string, unknown> | undefined;
-    const quiz = quizRaw && typeof quizRaw === "object" ? {
-      question: asString(quizRaw.question, "Câu hỏi kiểm tra kiến thức:"),
-      options: Array.isArray(quizRaw.options)
-        ? quizRaw.options.map((opt: Record<string, unknown>, optIdx: number) => ({
-            id: asString(opt.id) || `opt-${optIdx + 1}`,
-            text: asString(opt.text, `Lựa chọn ${optIdx + 1}`),
-            isCorrect: Boolean(opt.isCorrect),
-            explanation: asString(opt.explanation) || undefined,
+    // A question bank: the slide walks these one at a time. Junk and dead
+    // questions are dropped before the cap — a question nobody can answer
+    // (no text, fewer than two options) would lock the Check button and the
+    // gate with it — so junk cannot eat the 30-slot budget either.
+    const questions = Array.isArray(quizRaw?.questions)
+      ? (quizRaw?.questions as unknown[])
+          .filter((entry): entry is Record<string, unknown> =>
+            Boolean(entry && typeof entry === "object"),
+          )
+          .map((entry) => ({
+            question: asString(entry.question).trim(),
+            options: coerceQuizOptions(entry.options),
           }))
-        : [],
+          .filter((entry) => entry.question.length > 0 && entry.options.length >= 2)
+          .slice(0, 30)
+      : [];
+    // A quiz with fewer than two options can never be answered: the Check
+    // button stays disabled, and with the gate armed the deck would be
+    // rewound to it forever. A bank-only slide survives — its questions
+    // carry their own options.
+    const quizOptions =
+      quizRaw && typeof quizRaw === "object" ? coerceQuizOptions(quizRaw.options) : [];
+    const quiz = quizRaw && typeof quizRaw === "object" && (quizOptions.length >= 2 || questions.length > 0) ? {
+      question: asString(quizRaw.question, "Câu hỏi kiểm tra kiến thức:"),
+      options: quizOptions,
+      ...(questions.length > 0 ? { questions } : {}),
     } : undefined;
 
     const simRaw = scene.simulation3d as Record<string, unknown> | undefined;
@@ -289,6 +359,23 @@ export function coerceLesson(input: unknown): Lesson | null {
     const rawTable = scene.table as Record<string, unknown> | undefined;
     const table = rawTable && typeof rawTable === "object" ? buildTable(rawTable) : undefined;
 
+    // The cumulative summary diagram. Branches are capped and blank labels
+    // dropped here so the SVG renderer only ever sees a shape it can draw.
+    const rawMindmap = scene.mindmap as Record<string, unknown> | undefined;
+    const mindmapBranches = Array.isArray(rawMindmap?.branches)
+      ? (rawMindmap?.branches as unknown[])
+          .filter((branch): branch is Record<string, unknown> =>
+            Boolean(branch && typeof branch === "object"),
+          )
+          .map((branch) => ({
+            label: asString(branch.label).trim().slice(0, 80),
+            items: asStringArray(branch.items, 4),
+          }))
+          .filter((branch) => branch.label.length > 0)
+          .slice(0, 6)
+      : [];
+    const mindmap = mindmapBranches.length > 0 ? { branches: mindmapBranches } : undefined;
+
     // The pointer script only survives with targets the stage can find: a cue
     // naming anything else would park the pointer nowhere, which reads as a
     // bug rather than as restraint.
@@ -326,6 +413,7 @@ export function coerceLesson(input: unknown): Lesson | null {
       data: data.length > 0 ? data : undefined,
       graph,
       table,
+      mindmap,
       imageQuery: asString(scene.imageQuery).slice(0, 120) || undefined,
       imagePrompt: asString(scene.imagePrompt).slice(0, 500) || undefined,
       // Only a name the slide is allowed to use survives. See SLIDE_ICON_NAMES
@@ -371,16 +459,24 @@ export function coerceLesson(input: unknown): Lesson | null {
     })
     .filter((chapter) => chapter.sceneIds.length > 0);
 
+  // The leaked-script pass over everything a lesson prints: scene text, quiz
+  // banks, mindmaps and the lesson's own title. CJK-script lessons keep their
+  // characters untouched (see stripGluedCjk for why only glued runs go).
+  const language = asString(raw.language, "vi").slice(0, 12);
+  const keepCjk = language === "zh-CN" || language === "ja" || language === "ko";
+  const cleanStrings = <T,>(value: T): T =>
+    keepCjk ? value : mapStrings(value, stripGluedCjk);
+
   const lesson = relayoutLesson({
     id: asString(raw.id) || `lesson-${Date.now().toString(36)}`,
-    title: asString(raw.title, "Bài giảng chưa có tên").slice(0, 200),
-    subject: asString(raw.subject, "Chung").slice(0, 80),
+    title: cleanStrings(asString(raw.title, "Bài giảng chưa có tên").slice(0, 200)),
+    subject: cleanStrings(asString(raw.subject, "Chung").slice(0, 80)),
     grade: asString(raw.grade).slice(0, 80) || undefined,
-    language: asString(raw.language, "vi").slice(0, 12),
+    language,
     fps: Math.min(120, Math.max(12, asNumber(raw.fps, 30))),
     duration: 0,
-    scenes,
-    chapters,
+    scenes: cleanStrings(scenes),
+    chapters: cleanStrings(chapters),
     source: raw.source === "gemini" ? "gemini" : "sample",
     // A theme this build does not know still has to render. The player resolves
     // the id through the registry, so passing an unknown one through is safe and
