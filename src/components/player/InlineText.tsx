@@ -1,12 +1,12 @@
 import { Fragment } from "react";
 import katex from "katex";
-import { inlineParts } from "@/lib/lesson/inline";
+import { inlineParts, cleanLatex } from "@/lib/lesson/inline";
 
 export { plainText } from "@/lib/lesson/inline";
 
 function renderMathToString(tex: string, display: boolean): string | null {
   try {
-    return katex.renderToString(tex, {
+    return katex.renderToString(cleanLatex(tex), {
       displayMode: display,
       throwOnError: false,
       strict: false,

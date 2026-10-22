@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState, type ReactNode } from "react";
 import { Bot, ChevronDown, ChevronUp, Send, User, Sparkles, LoaderCircle, Maximize2, Minimize2 } from "lucide-react";
 import katex from "katex";
+import { cleanLatex } from "@/lib/lesson/inline";
 import type { LessonScene } from "@/lib/lesson/types";
 import { useCopy } from "@/i18n/provider";
 
@@ -70,9 +71,9 @@ interface Message {
  */
 function renderMath(tex: string, display: boolean, key: number): ReactNode {
   try {
-    const html = katex.renderToString(tex, {
+    const html = katex.renderToString(cleanLatex(tex), {
       displayMode: display,
-      throwOnError: true,
+      throwOnError: false,
       strict: false,
       trust: false,
       output: "html",

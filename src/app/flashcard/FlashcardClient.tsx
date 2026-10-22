@@ -18,6 +18,7 @@ import {
   ArrowRight,
 } from "lucide-react";
 import katex from "katex";
+import { cleanLatex } from "@/lib/lesson/inline";
 import type { Lesson, LessonScene } from "@/lib/lesson/types";
 import { SAMPLE_LESSON } from "@/lib/lesson/sample-lesson";
 import { useCopy } from "@/i18n/provider";
@@ -409,7 +410,7 @@ export function FlashcardClient({ courseId }: FlashcardClientProps) {
             const renderedFormula = card.formula
               ? (() => {
                   try {
-                    return katex.renderToString(card.formula, {
+                    return katex.renderToString(cleanLatex(card.formula), {
                       displayMode: true,
                       throwOnError: false,
                     });

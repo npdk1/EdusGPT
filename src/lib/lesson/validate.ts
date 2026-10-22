@@ -409,7 +409,7 @@ export function coerceLesson(input: unknown): Lesson | null {
           .filter(Boolean);
         return raw.length > 0 ? raw : undefined;
       })(),
-      formula: asString(scene.formula).slice(0, 200) || undefined,
+      formula: asString(scene.formula).slice(0, 1000) || undefined,
       data: data.length > 0 ? data : undefined,
       graph,
       table,

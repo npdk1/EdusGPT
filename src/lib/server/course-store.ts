@@ -1,24 +1,20 @@
 import fs from "node:fs/promises";
 import path from "node:path";
-import type { Lesson } from "@/lib/lesson/types";
-import { coerceLesson } from "@/lib/lesson/validate";
-import { sanitizeRunLog, type RunLogEntry } from "@/lib/lesson/run-log";
+import type { Lesson, LessonScene } from "../lesson/types.ts";
+import { coerceLesson } from "../lesson/validate.ts";
+import { sanitizeRunLog, type RunLogEntry } from "../lesson/run-log.ts";
+import { decryptText, encryptText } from "./crypto-vault.ts";
+import { deleteTtsCacheForLesson } from "./tts-cache.ts";
 
 /**
- * Server-side course library.
+ * Server-side course library with Latin-Chinese AES-256-GCM encryption.
  *
- * OpenMAIC persists courses through `/api/persistence` (browser storage by
- * default, PostgreSQL optionally). Our version had a real hole: lessons only
- * lived in `localStorage`, so switching browser or machine lost every generated
- * course. This store keeps one JSON file per course under `data/courses/`, so
- * the library survives a reinstall of the browser and can be shared between
- * browser profiles on the same machine.
- *
- * No database required — same philosophy as their default storage layer, minus
- * the browser-only limitation.
+ * Courses are stored in `data/courses/` as encrypted files with Latin-Chinese
+ * glyph representation. They can only be accessed through EdusGPT.
  */
 
 export const COURSES_DIR = path.join(process.cwd(), "data", "courses");
+export const TEMP_DELETE_DIR = path.join(process.cwd(), "data", "temp_delete");
 
 const ID_PATTERN = /^[a-z0-9][a-z0-9-]{0,80}$/i;
 
@@ -44,36 +40,16 @@ export interface CourseSummary {
   voice?: Lesson["voice"];
 }
 
-/**
- * A lesson that is still being written. Lives in `<id>.draft.json` next to
- * the finished courses, so the library can show a "Đang tạo…" card while the
- * run is in flight — switching to /library mid-run no longer shows nothing.
- *
- * Only the server writes drafts (the lesson route updates one per finished
- * scene and deletes it on `done`). A draft whose `updatedAt` is old and has no
- * `error` means the server died mid-run: the stream is gone and the card says
- * so instead of spinning forever.
- */
 export interface GenerationDraft {
   id: string;
   title: string;
   subject: string;
-  /** Planned scene count, from the outline. */
   total: number;
-  /** Scenes finished so far. */
   done: number;
-  /** Last status line, shown under the progress bar. */
   message: string;
   updatedAt: string;
-  /** Set when the run failed instead of finishing. */
   error?: string;
-  /** Voice chosen by user in studio. */
   voice?: string;
-  /**
-   * Finished scene bodies, in deck order. A classroom watching without the
-   * live stream — a second tab, a reload, the draft card in /library — can
-   * only replay what is written here, so the slides ride along from scene one.
-   */
   scenes?: unknown[];
 }
 
@@ -83,6 +59,10 @@ function draftFor(id: string): string {
 
 async function ensureDir(): Promise<void> {
   await fs.mkdir(COURSES_DIR, { recursive: true });
+}
+
+async function ensureTempDeleteDir(): Promise<void> {
+  await fs.mkdir(TEMP_DELETE_DIR, { recursive: true });
 }
 
 function fileFor(id: string): string {
@@ -133,7 +113,8 @@ export async function listCourses(): Promise<CourseSummary[]> {
         }
 
         const raw = await fs.readFile(filePath, "utf8");
-        const parsed = JSON.parse(raw) as { lesson: unknown; updatedAt?: string };
+        const decrypted = decryptText(raw);
+        const parsed = JSON.parse(decrypted) as { lesson: unknown; updatedAt?: string };
         const lesson = coerceLesson(parsed.lesson);
         if (!lesson) return null;
         const summary = toSummary(lesson, parsed.updatedAt ?? lesson.createdAt);
@@ -155,7 +136,8 @@ export async function readCourse(id: string): Promise<Lesson | null> {
   if (!isValidCourseId(id)) return null;
   try {
     const raw = await fs.readFile(fileFor(id), "utf8");
-    const parsed = JSON.parse(raw) as { lesson: unknown };
+    const decrypted = decryptText(raw);
+    const parsed = JSON.parse(decrypted) as { lesson: unknown };
     return coerceLesson(parsed.lesson);
   } catch {
     return null;
@@ -167,7 +149,8 @@ export async function readCourseLog(id: string): Promise<RunLogEntry[] | null> {
   if (!isValidCourseId(id)) return null;
   try {
     const raw = await fs.readFile(fileFor(id), "utf8");
-    const parsed = JSON.parse(raw) as { log?: unknown };
+    const decrypted = decryptText(raw);
+    const parsed = JSON.parse(decrypted) as { log?: unknown };
     return sanitizeRunLog(parsed.log);
   } catch {
     return null;
@@ -179,35 +162,163 @@ export async function saveCourse(lesson: Lesson, log?: unknown): Promise<Lesson>
   if (!isValidCourseId(lesson.id)) {
     throw new Error(`Course id không hợp lệ: ${lesson.id}`);
   }
-  // Write to a temp file then rename, so a crash mid-write cannot leave a
-  // half-written course that `listCourses` would silently skip.
+
   const target = fileFor(lesson.id);
   const temp = `${target}.${process.pid}.tmp`;
   const payload = {
     format: "eduai-studio/course@1",
     updatedAt: new Date().toISOString(),
     lesson,
-    // A finished lesson replaces its "Đang tạo…" draft card: same id, so the
-    // library never shows both.
     log: sanitizeRunLog(log) ?? undefined,
   };
-  await fs.writeFile(temp, `${JSON.stringify(payload, null, 2)}\n`, "utf8");
+
+  const plainJson = JSON.stringify(payload, null, 2);
+  const encryptedPayload = encryptText(plainJson);
+
+  await fs.writeFile(temp, `${encryptedPayload}\n`, "utf8");
   await fs.rename(temp, target);
   await deleteDraft(lesson.id);
+
+  summaryCache.delete(`${lesson.id}.json`);
   return lesson;
 }
 
+/**
+ * Permanently delete a course and its associated audio cache.
+ */
 export async function deleteCourse(id: string): Promise<boolean> {
   if (!isValidCourseId(id)) return false;
   try {
+    const lesson = await readCourse(id);
+    if (lesson) {
+      await deleteTtsCacheForLesson(lesson).catch(() => {});
+    }
     await fs.unlink(fileFor(id));
-    // A leftover draft for the same id must go too, or the library keeps a
-    // "Đang tạo…" card for a lesson that is already gone.
     await fs.unlink(draftFor(id)).catch(() => null);
+    summaryCache.delete(`${id}.json`);
     return true;
   } catch {
     return false;
   }
+}
+
+/**
+ * Soft delete: Move course file to `data/temp_delete/${timestamp}_${id}.json`
+ * Preserves the file in trash for safe recovery.
+ */
+export async function softDeleteCourse(id: string): Promise<{ ok: boolean; path: string }> {
+  if (!isValidCourseId(id)) {
+    return { ok: false, path: "" };
+  }
+  await ensureTempDeleteDir();
+  const sourcePath = fileFor(id);
+  const targetName = `${Date.now()}_${id}.json`;
+  const targetPath = path.join(TEMP_DELETE_DIR, targetName);
+
+  try {
+    await fs.rename(sourcePath, targetPath);
+    await fs.unlink(draftFor(id)).catch(() => null);
+    summaryCache.delete(`${id}.json`);
+    return { ok: true, path: targetPath };
+  } catch {
+    return { ok: false, path: "" };
+  }
+}
+
+/**
+ * Trim storage: Remove slide presentations & narration audio to save disk space,
+ * retaining only interactive quizzes, review flashcards (bullets & formulas), and mindmaps.
+ */
+export async function trimCourseContent(
+  id: string,
+  options: { keepQuiz?: boolean; keepFlashcards?: boolean } = { keepQuiz: true, keepFlashcards: true }
+): Promise<Lesson | null> {
+  const original = await readCourse(id);
+  if (!original) return null;
+
+  // 1. Delete narration audio cache from disk
+  await deleteTtsCacheForLesson(original).catch(() => {});
+
+  const keepQuiz = options.keepQuiz !== false;
+  const keepFlashcards = options.keepFlashcards !== false;
+
+  const preservedScenes: LessonScene[] = [];
+  let currentTime = 0;
+
+  for (let i = 0; i < original.scenes.length; i++) {
+    const s = original.scenes[i];
+    const isQuiz = s.kind === "quiz" || Boolean(s.quiz);
+
+    if (isQuiz) {
+      if (keepQuiz) {
+        preservedScenes.push({
+          ...s,
+          narration: "", // Clear narration to save space & decouple audio
+          image: undefined,
+          imagePrompt: undefined,
+          imageQuery: undefined,
+          start: currentTime,
+          duration: Math.max(15, s.duration),
+        });
+        currentTime += Math.max(15, s.duration);
+      }
+    } else {
+      if (keepFlashcards) {
+        // Retain as a concise review flashcard
+        preservedScenes.push({
+          id: s.id,
+          kind: s.kind === "summary" || s.kind === "formula" ? s.kind : "concept",
+          accent: s.accent,
+          title: s.title,
+          subtitle: s.subtitle,
+          bullets: s.bullets,
+          formula: s.formula,
+          mindmap: s.mindmap,
+          narration: "", // Clear audio narration
+          image: undefined, // Drop heavy illustrations
+          imagePrompt: undefined,
+          imageQuery: undefined,
+          simulation3d: undefined,
+          start: currentTime,
+          duration: 10,
+        });
+        currentTime += 10;
+      }
+    }
+  }
+
+  // If everything was stripped, preserve at least a minimal summary card
+  if (preservedScenes.length === 0) {
+    preservedScenes.push({
+      id: "summary-review",
+      kind: "summary",
+      accent: "brand",
+      title: `${original.title} (Thẻ ôn tập)`,
+      bullets: ["Nội dung đã được tối ưu dung lượng."],
+      narration: "",
+      start: 0,
+      duration: 10,
+    });
+    currentTime = 10;
+  }
+
+  const trimmedLesson: Lesson = {
+    ...original,
+    scenes: preservedScenes,
+    duration: currentTime,
+    chapters: [
+      {
+        id: "ch-review",
+        title: "Nội dung ôn tập (Quiz & Flashcards)",
+        start: 0,
+        end: currentTime,
+        sceneIds: preservedScenes.map((s) => s.id),
+      },
+    ],
+  };
+
+  await saveCourse(trimmedLesson);
+  return trimmedLesson;
 }
 
 export async function deleteAllCourses(): Promise<number> {
@@ -220,6 +331,7 @@ export async function deleteAllCourses(): Promise<number> {
       fs.unlink(path.join(COURSES_DIR, name)).catch(() => null),
     ),
   );
+  summaryCache.clear();
   return files.length;
 }
 
@@ -236,7 +348,10 @@ export async function saveDraft(draft: GenerationDraft): Promise<void> {
   };
   const target = draftFor(draft.id);
   const temp = `${target}.${process.pid}.tmp`;
-  await fs.writeFile(temp, `${JSON.stringify(payload)}\n`, "utf8");
+  const plainJson = JSON.stringify(payload);
+  const encryptedPayload = encryptText(plainJson);
+
+  await fs.writeFile(temp, `${encryptedPayload}\n`, "utf8");
   await fs.rename(temp, target);
 }
 
@@ -249,7 +364,8 @@ export async function listDrafts(): Promise<GenerationDraft[]> {
     files.map(async (name) => {
       try {
         const raw = await fs.readFile(path.join(COURSES_DIR, name), "utf8");
-        const parsed = JSON.parse(raw) as {
+        const decrypted = decryptText(raw);
+        const parsed = JSON.parse(decrypted) as {
           draft?: GenerationDraft;
           updatedAt?: string;
         };

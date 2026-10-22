@@ -7,6 +7,7 @@ import { useCallback, useEffect, useRef, useState, type ReactNode } from "react"
 import { Image as ImageIcon, ImageOff, EyeOff, Maximize2, X } from "lucide-react";
 import katex from "katex";
 import "katex/dist/katex.min.css";
+import { cleanLatex } from "@/lib/lesson/inline";
 import type { DataPoint, SlideGraph, SlideImage as SlideImageType, SlideTable, Lesson } from "@/lib/lesson/types";
 import { pollinationsImageUrl } from "@/lib/lesson/pollinations";
 import { useCopy } from "@/i18n/provider";
@@ -494,9 +495,10 @@ export function SceneFormula({ formula }: SceneFormulaProps) {
     const host = hostRef.current;
     if (!host) return;
     try {
-      katex.render(formula, host, {
+      const cleaned = cleanLatex(formula);
+      katex.render(cleaned, host, {
         displayMode: true,
-        throwOnError: true,
+        throwOnError: false,
         strict: false,
         trust: false,
         output: "htmlAndMathml",

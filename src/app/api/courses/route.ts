@@ -11,6 +11,8 @@ import {
   readCourseLog,
   renameCourse,
   saveCourse,
+  softDeleteCourse,
+  trimCourseContent,
 } from "@/lib/server/course-store";
 import { coerceLesson } from "@/lib/lesson/validate";
 import { sanitizeRunLog } from "@/lib/lesson/run-log";
@@ -107,11 +109,34 @@ export async function POST(request: NextRequest) {
   const denied = guard(request);
   if (denied) return denied;
 
-  let body: { lesson?: unknown; title?: string; log?: unknown };
+  let body: {
+    lesson?: unknown;
+    title?: string;
+    log?: unknown;
+    action?: string;
+    id?: string;
+    keepQuiz?: boolean;
+    keepFlashcards?: boolean;
+  };
   try {
     body = (await request.json()) as typeof body;
   } catch {
     return NextResponse.json({ error: "Body phải là JSON." }, { status: 400 });
+  }
+
+  // Handle trim action via POST
+  if (body.action === "trim" && body.id) {
+    if (!isValidCourseId(body.id)) {
+      return NextResponse.json({ error: "Id không hợp lệ." }, { status: 400 });
+    }
+    const trimmed = await trimCourseContent(body.id, {
+      keepQuiz: body.keepQuiz !== false,
+      keepFlashcards: body.keepFlashcards !== false,
+    });
+    if (!trimmed) {
+      return NextResponse.json({ error: "Không tìm thấy bài để tối ưu." }, { status: 404 });
+    }
+    return NextResponse.json({ ok: true, action: "trim", lesson: trimmed });
   }
 
   const lesson = coerceLesson(body.lesson);
@@ -129,20 +154,41 @@ export async function POST(request: NextRequest) {
   return NextResponse.json({ ok: true, id: lesson.id, lesson });
 }
 
-/** Rename without resending the whole lesson. */
+/** Rename or trim course without resending the whole lesson. */
 export async function PATCH(request: NextRequest) {
   const denied = guard(request);
   if (denied) return denied;
 
-  let body: { id?: string; title?: string };
+  let body: {
+    id?: string;
+    title?: string;
+    action?: string;
+    keepQuiz?: boolean;
+    keepFlashcards?: boolean;
+  };
   try {
     body = (await request.json()) as typeof body;
   } catch {
     return NextResponse.json({ error: "Body phải là JSON." }, { status: 400 });
   }
 
-  if (!body.id || !body.title) {
-    return NextResponse.json({ error: "Thiếu id hoặc title." }, { status: 400 });
+  if (!body.id) {
+    return NextResponse.json({ error: "Thiếu id." }, { status: 400 });
+  }
+
+  if (body.action === "trim") {
+    const trimmed = await trimCourseContent(body.id, {
+      keepQuiz: body.keepQuiz !== false,
+      keepFlashcards: body.keepFlashcards !== false,
+    });
+    if (!trimmed) {
+      return NextResponse.json({ error: "Không tìm thấy bài để tối ưu." }, { status: 404 });
+    }
+    return NextResponse.json({ ok: true, action: "trim", lesson: trimmed });
+  }
+
+  if (!body.title) {
+    return NextResponse.json({ error: "Thiếu title." }, { status: 400 });
   }
 
   const lesson = await renameCourse(body.id, body.title);
@@ -167,9 +213,32 @@ export async function DELETE(request: NextRequest) {
     return NextResponse.json({ error: "Thiếu id." }, { status: 400 });
   }
 
-  const removed = (await deleteCourse(id)) || (await deleteDraft(id));
-  if (!removed) {
-    return NextResponse.json({ error: "Không tìm thấy bài." }, { status: 404 });
+  const mode = params.get("mode") || "trash";
+
+  if (mode === "permanent") {
+    const removed = (await deleteCourse(id)) || (await deleteDraft(id));
+    if (!removed) {
+      return NextResponse.json({ error: "Không tìm thấy bài." }, { status: 404 });
+    }
+    return NextResponse.json({ ok: true, mode: "permanent", ai: await publicAiStatus() });
   }
-  return NextResponse.json({ ok: true, ai: await publicAiStatus() });
+
+  // Default mode: soft delete to data/temp_delete/
+  const softResult = await softDeleteCourse(id);
+  if (softResult.ok) {
+    return NextResponse.json({
+      ok: true,
+      mode: "trash",
+      trashPath: softResult.path,
+      ai: await publicAiStatus(),
+    });
+  }
+
+  // Fallback to deleteDraft if it was just a draft
+  const draftRemoved = await deleteDraft(id);
+  if (draftRemoved) {
+    return NextResponse.json({ ok: true, mode: "draft", ai: await publicAiStatus() });
+  }
+
+  return NextResponse.json({ error: "Không tìm thấy bài." }, { status: 404 });
 }

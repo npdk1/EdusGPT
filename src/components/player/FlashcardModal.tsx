@@ -14,6 +14,7 @@ import {
   Shuffle,
 } from "lucide-react";
 import katex from "katex";
+import { cleanLatex } from "@/lib/lesson/inline";
 import type { Lesson, LessonScene } from "@/lib/lesson/types";
 import { useCopy } from "@/i18n/provider";
 
@@ -304,7 +305,7 @@ export function FlashcardModal({ open, lesson, onClose }: FlashcardModalProps) {
   const renderedFormulaHtml = currentCard?.backFormula
     ? (() => {
         try {
-          return katex.renderToString(currentCard.backFormula, {
+          return katex.renderToString(cleanLatex(currentCard.backFormula), {
             displayMode: true,
             throwOnError: false,
           });

@@ -222,7 +222,7 @@ export function liveSceneFrom(value: unknown, index: number): LiveScene {
       : undefined,
     formula:
       typeof scene.formula === "string" && scene.formula.trim()
-        ? scene.formula.slice(0, 200)
+        ? scene.formula.slice(0, 1000)
         : undefined,
     data: Array.isArray(scene.data) ? (scene.data as DataPoint[]).slice(0, 6) : undefined,
     graph: scene.graph && typeof scene.graph === "object" ? (scene.graph as SlideGraph) : undefined,

@@ -13,11 +13,13 @@ import {
   Play,
   RefreshCw,
   Search,
+  Settings,
   Sparkles,
   Trash2,
   X,
 } from "lucide-react";
 import { useCopy } from "@/i18n/provider";
+import { CourseSettingsModal } from "./CourseSettingsModal";
 
 /**
  * The screen's own sentences, in both languages.
@@ -71,6 +73,8 @@ const COPY = {
     libraryResetSearch: "Clear filter",
     librarySearchEmptyTitle: "No matching lessons found",
     librarySearchEmptyDesc: "No lessons matched \"{query}\". Try a different search term.",
+    librarySettings: "Settings",
+    librarySettingsTitle: "Lesson settings, storage trim & deletion modes",
   },
   vi: {
     libraryInLibrary: "bài trong thư viện",
@@ -117,6 +121,8 @@ const COPY = {
     libraryResetSearch: "Xóa bộ lọc",
     librarySearchEmptyTitle: "Không tìm thấy kết quả phù hợp",
     librarySearchEmptyDesc: "Không có bài học nào khớp với từ khóa \"{query}\". Bạn thử tìm từ khóa khác xem sao nhé.",
+    librarySettings: "Cài đặt",
+    librarySettingsTitle: "Cài đặt bài học, tối ưu dung lượng & chế độ xóa",
   },
 } satisfies Record<string, Record<string, string>>;
 
@@ -188,6 +194,8 @@ export function LibraryPanel() {
   const [error, setError] = useState<string | null>(null);
   const [busyId, setBusyId] = useState<string | null>(null);
   const [clearing, setClearing] = useState(false);
+  const [settingsCourse, setSettingsCourse] = useState<CourseSummary | null>(null);
+  const [isSettingsOpen, setIsSettingsOpen] = useState(false);
 
   const load = useCallback(async (targetPage = page, query = searchQuery, quiet = false) => {
     if (!quiet) {
@@ -305,6 +313,16 @@ export function LibraryPanel() {
       setClearing(false);
     }
   }, [totalCourses, t]);
+
+  const openSettings = useCallback((course: CourseSummary) => {
+    setSettingsCourse(course);
+    setIsSettingsOpen(true);
+  }, []);
+
+  const closeSettings = useCallback(() => {
+    setIsSettingsOpen(false);
+    setSettingsCourse(null);
+  }, []);
 
   return (
     <div className="space-y-5">
@@ -560,6 +578,15 @@ export function LibraryPanel() {
                 </Link>
                 <button
                   type="button"
+                  onClick={() => openSettings(course)}
+                  className="btn-icon shrink-0 text-mist-400 hover:text-mist-100"
+                  title={t.librarySettingsTitle}
+                  aria-label={t.librarySettings}
+                >
+                  <Settings className="h-4 w-4" />
+                </button>
+                <button
+                  type="button"
                   onClick={() => void remove(course.id)}
                   disabled={busyId === course.id}
                   className="btn-icon shrink-0"
@@ -647,6 +674,13 @@ export function LibraryPanel() {
         ) : null}
       </>
       )}
+
+      <CourseSettingsModal
+        course={settingsCourse}
+        isOpen={isSettingsOpen}
+        onClose={closeSettings}
+        onRefresh={() => void load(page, searchQuery, true)}
+      />
     </div>
   );
 }

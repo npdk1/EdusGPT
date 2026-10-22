@@ -337,6 +337,7 @@ if exist "data\courses" (
   rmdir /s /q "_empty_del" >nul 2>&1
   echo       !C_GREEN![OK]!C_RESET! Da xoa toan bo bai giang trong data\courses\
 )
+if exist "data\temp_delete" rmdir /s /q "data\temp_delete" >nul 2>&1
 for %%f in (course-library.json model-trust.json token-limits.json tts-settings.json) do (
   if exist "data\%%f" del /q "data\%%f" >nul 2>&1
 )
@@ -409,6 +410,7 @@ if exist "data\courses" (
 echo  !C_CYAN![!C_GREEN!===============!C_GRAY!-----!C_CYAN!]!C_BOLD!!C_WHITE!  75%%!C_RESET!  Dang xoa cache am thanh va chi muc...
 if exist "data\tts-cache" del /f /q "data\tts-cache\*.*" >nul 2>&1
 if exist "data\course-library.json" del /q "data\course-library.json" >nul 2>&1
+if exist "data\temp_delete" rmdir /s /q "data\temp_delete" >nul 2>&1
 if exist "data\library-text" rmdir /s /q "data\library-text" >nul 2>&1
 echo       !C_GREEN![OK]!C_RESET! Da xoa sach cache am thanh
 

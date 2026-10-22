@@ -1,58 +1,36 @@
 import { createHash } from "node:crypto";
 import { mkdir, readFile, readdir, rename, rm, stat, writeFile } from "node:fs/promises";
 import { join } from "node:path";
-import type { WordMark } from "./tts";
+import type { WordMark } from "./tts.ts";
+import type { Lesson } from "../lesson/types.ts";
+import {
+  decryptBinary,
+  decryptText,
+  encryptBinary,
+  encryptText,
+} from "./crypto-vault.ts";
 
 /**
- * On-disk cache for synthesised narration.
+ * On-disk cache for synthesised narration with Latin-Chinese AES-256-GCM encryption.
  *
- * A scene is spoken on every play-through, and a teacher presents the same
- * lesson dozens of times. Re-synthesising identical text each time burns the
- * voice service's rate limit and makes playback wait; the audio for a given
- * sentence never changes, so this turns every repeat into a file read.
- *
- * The service throttles unauthenticated clients hard, so the cache is what keeps
- * a classroom smooth rather than a curiosity.
+ * All audio files (.mp3, .wav) and timing files (.words.json) are securely encrypted
+ * on disk in Latin-Chinese glyph representation. External media players cannot play them,
+ * and text editors cannot read them. They are only decryptable by EdusGPT.
  */
 const CACHE_DIR = join(process.cwd(), "data", "tts-cache");
 /** Bounded so a long-running install cannot fill the disk. */
 const MAX_ENTRIES = 2_000;
 
-/**
- * The cache key, engine included.
- *
- * The two engines do not produce the same bytes for the same text, and their word
- * timings are not even the same kind of thing — one measured, one estimated. A
- * key without the engine would hand a lesson the other engine's audio after the
- * teacher switched, and the subtitle would light up on someone else's cadence.
- *
- * The trailing version is the teaching tempo: slowing every voice means
- * yesterday's faster bytes must never serve today's slower request. Bump it
- * on ANY tempo change (engine rate, length scale, speed, atempo), not just on
- * format changes — the key carries no trace of the tempo otherwise.
- */
 function keyFor(text: string, voice: string, engine: string): string {
   return createHash("sha256").update(`v5\n${engine}\n${voice}\n${text}`).digest("hex");
 }
 
 export interface CachedNarration {
   audio: Uint8Array;
-  /**
-   * Word timings, or null when the cached entry predates karaoke. Keeping them
-   * beside the audio matters: a cache hit is the common case on a second
-   * play-through, and re-synthesising just to recover the timings would cost a
-   * full voice call for data we already had.
-   */
   words: WordMark[] | null;
-  /**
-   * What the bytes actually are. The local engine hands back WAV on a machine
-   * with no ffmpeg, and a WAV served as `audio/mpeg` is a file some players
-   * refuse — so the type is stored with the audio rather than assumed.
-   */
   contentType: "audio/mpeg" | "audio/wav";
 }
 
-/** The extension the cache stores an engine's output under. */
 function extension(contentType: "audio/mpeg" | "audio/wav"): string {
   return contentType === "audio/wav" ? "wav" : "mp3";
 }
@@ -63,23 +41,24 @@ export async function readCachedAudio(
   engine: string,
 ): Promise<CachedNarration | null> {
   const base = keyFor(text, voice, engine);
-  // Both extensions are tried: which one this entry is depends on the machine
-  // that wrote it, and a cache from before ffmpeg was installed is still good
-  // audio.
   for (const [suffix, contentType] of [
     [".mp3", "audio/mpeg"],
     [".wav", "audio/wav"],
   ] as const) {
     try {
-      const audio = new Uint8Array(await readFile(join(CACHE_DIR, `${base}${suffix}`)));
+      const rawFile = await readFile(join(CACHE_DIR, `${base}${suffix}`));
+      const decryptedAudio = decryptBinary(new Uint8Array(rawFile));
+
       let words: WordMark[] | null = null;
       try {
-        const raw = JSON.parse(await readFile(join(CACHE_DIR, `${base}.words.json`), "utf8"));
-        if (Array.isArray(raw)) words = raw as WordMark[];
+        const rawWords = await readFile(join(CACHE_DIR, `${base}.words.json`), "utf8");
+        const decryptedWords = decryptText(rawWords);
+        const parsed = JSON.parse(decryptedWords);
+        if (Array.isArray(parsed)) words = parsed as WordMark[];
       } catch {
         words = null;
       }
-      return { audio, words, contentType };
+      return { audio: decryptedAudio, words, contentType };
     } catch {
       /* try the other extension */
     }
@@ -99,16 +78,51 @@ export async function writeCachedAudio(
   const base = keyFor(text, voice, engine);
   const target = join(CACHE_DIR, `${base}.${extension(contentType)}`);
   const temp = `${target}.${process.pid}.tmp`;
+
   try {
     await mkdir(CACHE_DIR, { recursive: true });
-    await writeFile(temp, audio);
+
+    // Encrypt audio bytes with Latin-Chinese AES-256-GCM
+    const encryptedAudio = encryptBinary(audio);
+    await writeFile(temp, encryptedAudio);
     await rename(temp, target);
+
     if (words && words.length > 0) {
-      await writeFile(join(CACHE_DIR, `${base}.words.json`), JSON.stringify(words));
+      const wordsJson = JSON.stringify(words);
+      const encryptedWords = encryptText(wordsJson);
+      await writeFile(join(CACHE_DIR, `${base}.words.json`), `${encryptedWords}\n`, "utf8");
     }
   } catch {
     await rm(temp, { force: true }).catch(() => {});
   }
+}
+
+/**
+ * Remove cached audio for all scenes of a specific lesson.
+ * Useful when trimming a course or deleting it permanently to reclaim disk space.
+ */
+export async function deleteTtsCacheForLesson(lesson: Lesson): Promise<number> {
+  const voice = lesson.voice || "vi-VN-HoaiMyNeural";
+  const engines = ["edge", "piper"];
+  let deletedCount = 0;
+
+  for (const scene of lesson.scenes) {
+    if (!scene.narration) continue;
+    for (const engine of engines) {
+      const base = keyFor(scene.narration, voice, engine);
+      for (const ext of [".mp3", ".wav", ".words.json"]) {
+        const filePath = join(CACHE_DIR, `${base}${ext}`);
+        try {
+          await rm(filePath, { force: true });
+          deletedCount++;
+        } catch {
+          // ignore if file doesn't exist
+        }
+      }
+    }
+  }
+
+  return deletedCount;
 }
 
 /** Drops the oldest entries once the cache outgrows MAX_ENTRIES. */

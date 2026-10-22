@@ -18,6 +18,7 @@ next-env.d.ts
 # Generated lesson library index + cached narration rebuild themselves.
 data/library-text/
 data/tts-cache/
+data/temp_delete/
 
 # Giọng nói tải về cho giọng đọc chạy trên máy (Piper). Mỗi voice là một file
 # .onnx 60 MB, tải lại được bằng nút "cài giọng" ở /setup, nên để trong repo chỉ

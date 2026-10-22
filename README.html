@@ -3,13 +3,14 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>EdusGPT: Hướng dẫn sử dụng</title>
+<title>EdusGPT: Hướng dẫn Sử dụng & Giới thiệu Hệ sinh thái</title>
 <link rel="icon" type="image/png" href="public/logo.png" />
 <style>
 :root {
   --paper: #0b1120;
   --wash: #05080f;
   --panel: #0f172a;
+  --panel-card: rgba(15, 23, 42, 0.75);
   --line: #1e293b;
   --ink: #f8fafc;
   --soft: #cbd5e1;
@@ -17,18 +18,21 @@
   --blue: #38bdf8;
   --blue-dark: #0284c7;
   --blue-wash: rgba(56, 189, 248, 0.08);
+  --blue-glow: rgba(56, 189, 248, 0.35);
   --emerald: #10b981;
+  --amber: #f59e0b;
 }
 * { box-sizing: border-box; }
 body {
   margin: 0;
   background: var(--wash);
   color: var(--soft);
-  font: 16px/1.7 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  font: 16px/1.75 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  -webkit-font-smoothing: antialiased;
 }
 .layout { display: flex; align-items: stretch; min-height: 100vh; }
 aside.side {
-  width: 280px;
+  width: 290px;
   flex-shrink: 0;
   position: sticky;
   top: 0;
@@ -49,23 +53,25 @@ aside.side {
   padding: 8px 12px;
   border-radius: 8px;
   color: var(--soft);
-  font-size: 14.5px;
+  font-size: 14px;
   transition: all 0.15s ease;
 }
 .side nav a:hover { background: var(--blue-wash); color: var(--blue); text-decoration: none; }
 .side nav a.active { background: var(--blue-wash); color: var(--blue); font-weight: 700; border-left: 3px solid var(--blue); border-radius: 4px 8px 8px 4px; }
 .content { flex: 1; min-width: 0; }
-.wrap { max-width: 880px; margin: 0 auto; padding: 48px 32px 88px; }
-@media (max-width: 840px) {
+.wrap { max-width: 920px; margin: 0 auto; padding: 48px 32px 88px; }
+
+@media (max-width: 860px) {
   .layout { display: block; }
   aside.side { width: auto; height: auto; position: static; border-right: none; border-bottom: 1px solid var(--line); padding: 14px 18px; }
   .side nav ul { display: flex; flex-wrap: wrap; gap: 6px; }
-  .side nav a { padding: 6px 10px; font-size: 13.5px; }
+  .side nav a { padding: 6px 10px; font-size: 13px; }
   .side .brand { border-bottom: none; margin-bottom: 10px; padding-bottom: 6px; }
 }
+
 a { color: var(--blue); text-decoration: none; }
 a:hover { text-decoration: underline; }
-h1 { color: var(--ink); font-size: 32px; letter-spacing: -0.03em; margin: 0 0 16px; }
+h1 { color: var(--ink); font-size: 34px; letter-spacing: -0.03em; margin: 0 0 16px; }
 h2 {
   color: var(--ink);
   font-size: 22px;
@@ -81,7 +87,7 @@ li { margin: 6px 0; }
 code {
   font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
   font-size: 0.88em;
-  background: rgba(255, 255, 255, 0.05);
+  background: rgba(255, 255, 255, 0.06);
   border: 1px solid var(--line);
   border-radius: 6px;
   padding: 2px 7px;
@@ -96,14 +102,84 @@ pre {
   overflow-x: auto;
 }
 pre code { background: none; border: none; padding: 0; color: #e2e8f0; }
-table { border-collapse: collapse; width: 100%; margin: 18px 0; font-size: 14.5px; }
+table { border-collapse: collapse; width: 100%; margin: 18px 0; font-size: 14px; }
 th, td { border: 1px solid var(--line); padding: 10px 14px; text-align: left; vertical-align: top; }
 thead th { background: #1e293b; color: var(--ink); font-weight: 600; }
 tbody tr:nth-child(even) td { background: rgba(255, 255, 255, 0.02); }
 footer { margin-top: 56px; padding-top: 20px; border-top: 1px solid var(--line); color: var(--faint); font-size: 14px; }
+
 .badge { display: inline-block; padding: 2px 8px; border-radius: 6px; font-size: 12px; font-weight: 600; margin-right: 6px; }
 .badge-blue { background: rgba(56, 189, 248, 0.15); color: var(--blue); border: 1px solid rgba(56, 189, 248, 0.3); }
 .badge-green { background: rgba(16, 185, 129, 0.15); color: var(--emerald); border: 1px solid rgba(16, 185, 129, 0.3); }
+.badge-amber { background: rgba(245, 158, 11, 0.15); color: var(--amber); border: 1px solid rgba(245, 158, 11, 0.3); }
+
+/* --- Interactive Video Showcase Container --- */
+.video-showcase-box {
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  padding: 16px;
+  margin: 24px 0 32px;
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.6);
+}
+.video-frame-wrap {
+  position: relative;
+  border-radius: 10px;
+  overflow: hidden;
+  background: #000;
+  box-shadow: 0 0 30px rgba(0, 120, 212, 0.2);
+  border: 1px solid rgba(56, 189, 248, 0.2);
+}
+video.intro-video {
+  width: 100%;
+  height: auto;
+  display: block;
+}
+.milestone-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 14px;
+  align-items: center;
+}
+.milestone-chip {
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid var(--line);
+  color: var(--soft);
+  padding: 6px 12px;
+  border-radius: 20px;
+  font-size: 12.5px;
+  font-family: ui-monospace, SFMono-Regular, monospace;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+.milestone-chip:hover {
+  background: var(--blue-wash);
+  border-color: var(--blue);
+  color: var(--blue);
+}
+.milestone-chip.active {
+  background: rgba(56, 189, 248, 0.2);
+  border-color: var(--blue);
+  color: #fff;
+  font-weight: 700;
+  box-shadow: 0 0 12px var(--blue-glow);
+}
+.active-scene-hint {
+  margin-top: 10px;
+  padding: 8px 14px;
+  background: rgba(56, 189, 248, 0.06);
+  border-left: 3px solid var(--blue);
+  border-radius: 4px;
+  font-size: 13.5px;
+  color: var(--ink);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
 </style>
 </head>
 <body>
@@ -118,67 +194,118 @@ footer { margin-top: 56px; padding-top: 20px; border-top: 1px solid var(--line);
   </div>
   <nav aria-label="Mục lục tài liệu">
   <ul>
-    <li><a href="#gioi-thieu">Giới thiệu</a></li>
+    <li><a href="#video-tour" class="active">🎬 Video Giới thiệu (intro.mp4)</a></li>
+    <li><a href="#gioi-thieu">Giới thiệu tổng quan</a></li>
     <li><a href="#tinh-nang">Tính năng nổi bật</a></li>
-    <li><a href="#chay">Chạy nhanh</a></li>
-    <li><a href="#cai-api-key">Cài đặt API key</a></li>
-    <li><a href="#sinh-bai-giang">Sinh bài giảng</a></li>
-    <li><a href="#trinh-phat">Trình phát & Học tập</a></li>
-    <li><a href="#xuat-file">Các định dạng xuất</a></li>
-    <li><a href="#thu-vien">Thư viện bài giảng</a></li>
-    <li><a href="#giong-doc">Giọng đọc & TTS Offline</a></li>
-    <li><a href="#don-dep">Dọn dẹp & Reset</a></li>
-    <li><a href="#kiem-tra-chat-luong">Kiểm tra chất lượng</a></li>
+    <li><a href="#bao-mat-latin-zh">🔐 Mã hóa Latin-Trung Quốc</a></li>
+    <li><a href="#chay-nhanh">Khởi chạy nhanh</a></li>
+    <li><a href="#cai-api-key">Cài đặt API key & AI Local</a></li>
+    <li><a href="#sinh-bai-giang">AI Studio & Tạo bài học</a></li>
+    <li><a href="#trinh-phat">Trình phát & Phím tắt</a></li>
+    <li><a href="#toan-hoc-katex">📐 KaTeX & Ngân hàng Quiz</a></li>
+    <li><a href="#xuat-file">Xuất file HTML độc lập</a></li>
+    <li><a href="#thu-vien-cai-dat">⚙️ Quản lý Thư viện & Trim</a></li>
+    <li><a href="#kiem-tra-chat-luong">Hệ thống Test Verify</a></li>
     <li><a href="#cau-truc-thu-muc">Cấu trúc thư mục</a></li>
-    <li><a href="#gioi-han">Giới hạn hệ thống</a></li>
   </ul>
   </nav>
 </aside>
 <div class="content">
 <div class="wrap">
 <main>
+
 <h1 id="gioi-thieu">EdusGPT</h1>
-<p>Bạn đã chán ngấy việc đọc những khối văn bản dài dặc dặc từ chatbot AI? <strong>EdusGPT</strong> là giải pháp cục bộ (local-first) chuyển hóa mọi chủ đề hoặc tài liệu thành bài giảng tương tác có thuyết minh — hoàn chỉnh với slide động, phụ đề karaoke theo từng từ, công thức toán KaTeX chuẩn mực, trắc nghiệm tương tác ngắt nhịp và xuất file HTML độc lập để học tập ngoại tuyến. Mọi thứ hoạt động trực tiếp trên máy tính qua <code>localhost:3000</code> — hoàn toàn không cần Docker hay cơ sở dữ liệu.</p>
+<p>
+  <strong>EdusGPT</strong> là nền tảng sư phạm thế hệ mới chạy hoàn toàn cục bộ (local-first), biến mọi chủ đề hoặc tài liệu thành bài giảng tương tác có thuyết minh sinh động — slide động 60 FPS, phụ đề karaoke theo từng từ, công thức toán KaTeX sắc nét, trắc nghiệm tương tác ngắt nhịp, thẻ ghi nhớ 3D, mã hóa bảo mật Latin - Trung Quốc và xuất file HTML độc lập để học tập mọi lúc mọi nơi.
+</p>
+
+<!-- Video Tour Showcase with Real-Time Frame Synchronization -->
+<section id="video-tour">
+  <h2>🎬 Video Giới thiệu Sản phẩm (`intro.mp4`)</h2>
+  <p>Nhấp vào các mốc thời gian bên dưới để tua nhanh đến từng phân đoạn tính năng của video:</p>
+
+  <div class="video-showcase-box">
+    <div class="video-frame-wrap">
+      <video id="intro-vid" class="intro-video" src="public_html/video/intro.mp4" controls autoplay muted loop playsinline></video>
+    </div>
+
+    <div class="milestone-chips">
+      <button type="button" class="milestone-chip active" data-time="0"><span>🤖</span> 00:00 Hook (Mascot)</button>
+      <button type="button" class="milestone-chip" data-time="2.4"><span>🪄</span> 02.4s AI Studio</button>
+      <button type="button" class="milestone-chip" data-time="5.0"><span>🎓</span> 05.0s Lesson Player</button>
+      <button type="button" class="milestone-chip" data-time="9.0"><span>🗂️</span> 09.0s 3D Flashcards</button>
+      <button type="button" class="milestone-chip" data-time="12.0"><span>📝</span> 12.0s Real-Time Quiz</button>
+      <button type="button" class="milestone-chip" data-time="15.0"><span>🍱</span> 15.0s Bento System</button>
+      <button type="button" class="milestone-chip" data-time="21.2"><span>🔒</span> 21.2s Privacy & Flow</button>
+      <button type="button" class="milestone-chip" data-time="25.0"><span>✨</span> 25.0s Outro & CTA</button>
+    </div>
+
+    <div class="active-scene-hint">
+      <span id="scene-desc-text"><strong>// 01 - hook</strong>: Chú robot giáo viên EdusGPT Mascot chào đón người học với phong cách dithered pixel art & editorial sang trọng.</span>
+      <span id="scene-time-badge" class="badge badge-blue">00:00 / 30:00</span>
+    </div>
+  </div>
+
+  <h3>⏱️ Bảng Phân Tích Đồng Bộ Khung Hình Chi Tiết (Frame-by-Frame Timeline)</h3>
+  <table>
+    <thead>
+      <tr><th>Mốc thời gian</th><th>Khung hình</th><th>Phân đoạn</th><th>Kiến trúc Kỹ thuật</th></tr>
+    </thead>
+    <tbody>
+      <tr><td><code>00:00 - 00:02.4</code></td><td><code>frame_01</code></td><td><code>// 01 - hook</code></td><td><strong>Mascot Robot Teacher</strong>: Chào sân ấn tượng với dithered pixel art kết hợp thẩm mỹ tối giản sang trọng.</td></tr>
+      <tr><td><code>00:02.4 - 00:05.0</code></td><td><code>frame_04</code></td><td><code>// 02 - capabilities</code></td><td><strong>AI Studio (Smart Slides)</strong>: Tự động phân tích tài liệu đính kèm (PDF, DOCX) và sinh giáo trình bài bản.</td></tr>
+      <tr><td><code>00:05.0 - 00:09.0</code></td><td><code>frame_07</code></td><td><code>// 03 - interactive deck</code></td><td><strong>Lesson Player</strong>: Live deck mượt mà, đồng bộ phụ đề karaoke sáng chữ thời gian thực và công thức toán học.</td></tr>
+      <tr><td><code>00:09.0 - 00:12.0</code></td><td><code>frame_10</code></td><td><code>// 04a - flashcards</code></td><td><strong>3D Flashcards</strong>: Thẻ ghi nhớ không gian 3D, phóng to công thức KaTeX và chu trình lặp ngắt quãng Spaced Repetition.</td></tr>
+      <tr><td><code>00:12.0 - 00:15.0</code></td><td><code>frame_12</code></td><td><code>// 04b - quizzes</code></td><td><strong>Real-Time AI Quizzes</strong>: Kiểm tra ngắt nhịp ngay trên slide, chấm điểm tự động và lời giải thích chi tiết.</td></tr>
+      <tr><td><code>00:15.0 - 00:21.2</code></td><td><code>frame_18</code></td><td><code>// 05 - orchestrated</code></td><td><strong>Bento Grid Dashboard</strong>: Smart Player 60 FPS, Trợ giảng AI On-Air, KaTeX Pipeline, Xuất Single HTML.</td></tr>
+      <tr><td><code>00:21.2 - 00:25.0</code></td><td><code>frame_23</code></td><td><code>// 06 - flow</code></td><td><strong>"You teach. We deliver."</strong>: Vận hành cục bộ 100%, bảo mật mã hóa kép Latin - Trung Quốc chống rò rỉ dữ liệu.</td></tr>
+      <tr><td><code>00:25.0 - 00:30.0</code></td><td><code>frame_28</code></td><td><code>// 07 - outro</code></td><td><strong>EdusGPT Ecosystem</strong>: "Interactive learning decks that you deserve." 100% miễn phí và mã nguồn mở.</td></tr>
+    </tbody>
+  </table>
+</section>
 
 <h2 id="tinh-nang">Tính năng nổi bật</h2>
 <ul>
   <li>🎙️ <strong>Thuyết minh & Phụ đề Karaoke chuẩn xác</strong>: Tích hợp Microsoft Edge Neural TTS, Piper offline và VieNeu; phụ đề sáng từng từ theo thời gian thực với nhịp đọc sư phạm chuẩn mực.</li>
-  <li>📐 <strong>Công thức Toán KaTeX</strong>: Hỗ trợ cú pháp <code>$ ... $</code> (nội dòng) và <code>$$ ... $$</code> (khối) trên slide, câu hỏi trắc nghiệm, các phương án lựa chọn và hội thoại trợ giảng.</li>
-  <li>🧩 <strong>Trắc nghiệm tương tác ngắt nhịp (Quiz Gates)</strong>: Tự động dừng bài giảng khi tới câu hỏi, chấm điểm trực tiếp và giải thích đáp án trước khi tiếp tục.</li>
+  <li>📐 <strong>Công thức Toán KaTeX nâng cấp</strong>: Hỗ trợ cú pháp <code>$ ... $</code> (nội dòng) và <code>$$ ... $$</code> (khối) trên slide, trắc nghiệm, các lựa chọn và khung trò chuyện trợ giảng; bảo vệ công thức dài đến 1.000 ký tự.</li>
+  <li>🧩 <strong>Ngân hàng Trắc nghiệm đa tầng (Quiz Banks)</strong>: Mỗi slide kiểm tra có thể tích hợp nhiều câu hỏi trắc nghiệm liên tiếp, bài học dài 45–60 phút sở hữu ngân hàng hơn 25 câu hỏi chuẩn thi tốt nghiệp.</li>
   <li>🎴 <strong>Thẻ nhớ chủ động 3D (Active Recall Flashcards)</strong>: Không gian ôn tập đa giác quan kèm giọng đọc, phóng to công thức và điều hướng phím tắt.</li>
   <li>🌐 <strong>Xuất file HTML độc lập (Standalone Player)</strong>: Gói toàn bộ bài học, âm thanh base64 và engine phát GSAP vào 1 file <code>.html</code> duy nhất — mở xem ngay trên trình duyệt mà không cần web server hay database.</li>
   <li>🔍 <strong>Tìm kiếm & Chuyển bài trực tiếp trong Thư viện</strong>: Menu tìm kiếm bài học từ <code>data/courses/</code> ngay trên thanh công cụ với huy hiệu trực quan (<span class="badge badge-green">Thư viện</span>, <span class="badge badge-blue">Đang phát</span>).</li>
 </ul>
 
-<h2 id="chay">Chạy nhanh</h2>
+<h2 id="bao-mat-latin-zh">🔐 Kho Mã Hóa Latin - Trung Quốc (Chinese-Latin Cipher V1)</h2>
+<p>
+  EdusGPT bảo vệ toàn bộ kho bài học và bộ nhớ đệm âm thanh trong thư mục <code>data/</code> bằng hệ thống mã hóa độc quyền <code>EDUS_ZH_LATIN_CIPHER_V1</code>:
+</p>
+<ul>
+  <li><strong>Mã hóa chuẩn công nghiệp</strong>: Sử dụng thuật toán <code>AES-256-GCM</code> với khóa bảo mật 256-bit dẫn xuất qua PBKDF2 từ machine identifier và secret key.</li>
+  <li><strong>Xen kẽ CJK Glyph Transposition</strong>: Dữ liệu nhị phân sau khi mã hóa được chuyển đổi qua bộ codec hoán vị chữ cái Latin và các chữ Hán CJK tượng hình (tỉ lệ 1 ký tự Latin xen 3 chữ Hán), tạo thành văn bản mã hóa huyền bí, không thể đọc được bằng các công cụ bên ngoài.</li>
+  <li><strong>Tính tương thích ngược</strong>: Tự động phát hiện và giải mã liền mạch các bài giảng JSON thuần trước đây mà không làm mất mát dữ liệu.</li>
+</ul>
+
+<h2 id="chay-nhanh">Khởi chạy nhanh</h2>
 <p><strong>Windows</strong>: Nhấp đúp vào <code>run.bat</code>.</p>
 <p><strong>macOS hoặc Linux</strong>: <code>./run.sh</code></p>
-<p>Các script khởi động tự động kiểm tra Node 22+, tự chạy <code>npm install</code> khi thiếu packages, tạo <code>.env</code> từ <code>.env.example</code> khi chưa có, giải phóng cổng 3000 khi bị chiếm và mở trình duyệt. Trên Windows, <code>run.bat</code> sở hữu giao diện màu ANSI hiện đại với thanh tiến trình trực quan 7 giai đoạn. Nhấn <code>Ctrl+C</code> trong console để dừng server.</p>
 <p>Chạy thủ công:</p>
 <pre><code data-lang="bash">npm install
 npm run dev          # http://localhost:3000</code></pre>
 <p>Kiểm tra trạng thái runtime khi server đang mở:</p>
 <pre><code data-lang="powershell">powershell -ExecutionPolicy Bypass -File scripts/smoke-test.ps1</code></pre>
 
-<h2 id="cai-api-key">Cài đặt API key</h2>
+<h2 id="cai-api-key">Cài đặt API key & AI Cục bộ</h2>
 <p>Mở <code>/setup</code>. Hệ thống hỗ trợ hai nhóm provider:</p>
 <ul>
-  <li><strong>Cloud</strong>: Gọi API qua mạng (cần key). Hỗ trợ Groq, NVIDIA và Token Harbor theo giao thức chuẩn OpenAI chat-completions, chia sẻ chung adapter trong <code>src/lib/ai/openai-compatible.ts</code>.</li>
-  <li><strong>CLI</strong>: Điều khiển AI agent cục bộ trên máy, hoàn toàn không cần API key đám mây. Antigravity CLI (<code>agy</code>) được tích hợp sẵn — tự động đọc và học từ tài liệu tham khảo trong thư mục bạn chỉ định (xem chi tiết tại <code>docs/ANTIGRAVITY.md</code>).</li>
+  <li><strong>Cloud API</strong>: Gọi API qua mạng với Groq (Llama 3.3 70B), NVIDIA NIM (DeepSeek-R1, Llama 3) và Token Harbor. Server lưu key an toàn vào <code>.env</code> và giao diện luôn che mờ key.</li>
+  <li><strong>Local Agent</strong>: Antigravity CLI (<code>agy</code>) kết nối trực tiếp với tài liệu học tập trong máy, tự động học và sinh bài giảng mà không tốn chi phí gọi API.</li>
 </ul>
-<p>Lấy key miễn phí tại <code>console.groq.com/keys</code> (Groq) hoặc <code>build.nvidia.com</code> (NVIDIA). Cả hai hãng đều cung cấp gói miễn phí không cần thẻ tín dụng, giúp chuyển đổi dự phòng mượt mà khi một bên chạm giới hạn quota. Server lưu key an toàn vào <code>.env</code> (các biến <code>GROQ_API_KEY</code>, <code>NVIDIA_API_KEY</code>, <code>TOKENHARBOR_API_KEY</code>) và giao diện luôn che mờ key.</p>
 
-<h2 id="sinh-bai-giang">Sinh bài giảng</h2>
-<p>Mở <code>/studio</code> và nhập chủ đề, môn học, khối lớp, số cảnh, thời lượng và ghi chú. Bạn có thể đính kèm tài liệu tham khảo (<code>pdf</code>, <code>docx</code>, <code>xlsx</code>, <code>txt</code>, <code>md</code>, <code>csv</code>, <code>json</code>, tối đa 40 MB mỗi tệp) hoặc dán trực tiếp văn bản.</p>
-<p>Tiến trình tạo bài diễn ra qua hai bước và hiển thị trực tiếp (streaming):</p>
-<ol>
-  <li><strong>Lên dàn ý</strong>: Tạo tiêu đề, thể loại và thời lượng từng cảnh, xuất hiện chỉ sau vài giây.</li>
-  <li><strong>Soạn chi tiết</strong>: Từng cảnh được sinh độc lập và hiển thị ngay trên màn hình xem trước. Nếu một cảnh gặp sự cố mạng, cảnh đó sẽ giữ khung dàn ý tối giản — toàn bộ bài giảng không bao giờ bị gián đoạn.</li>
-</ol>
-<p>Các thể loại cảnh bao gồm: gạch đầu dòng, công thức toán học KaTeX, bảng số liệu, đồ thị hàm số, các bước giải mẫu có đánh số (B1, B2…), câu hỏi trắc nghiệm, ảnh minh họa AI và mô phỏng 3D.</p>
+<h2 id="sinh-bai-giang">AI Studio & Tạo bài học</h2>
+<p>Mở <code>/studio</code> và nhập chủ đề, môn học, khối lớp, số cảnh, thời lượng và ghi chú. Bạn có thể đính kèm tài liệu tham khảo (<code>pdf</code>, <code>docx</code>, <code>xlsx</code>, <code>txt</code>, <code>md</code>, <code>csv</code>, <code>json</code>, tối đa 40 MB mỗi tệp).</p>
+<p>Hỗ trợ 3 preset thời lượng: <strong>Thấp</strong> (3–5 slides, 1–2 phút), <strong>Trung bình</strong> (10–16 slides, 6–10 phút) và <strong>Cao</strong> (60–95 slides, 45–60 phút kèm ngân hàng 25+ câu hỏi trắc nghiệm ôn thi).</p>
 
-<h2 id="trinh-phat">Trình phát & Học tập tương tác</h2>
-<p>Mở <code>/lesson</code>. Thanh công cụ phía trên tích hợp ô tìm kiếm bài giảng trực tiếp từ thư viện máy tính (<code>data/courses/</code>), đi kèm huy hiệu phân loại trực quan.</p>
+<h2 id="trinh-phat">Trình phát & Bảng Phím tắt</h2>
+<p>Mở <code>/lesson</code> để trải nghiệm trình phát timeline 60 FPS được điều khiển bởi GSAP:</p>
 <table>
 <thead><tr><th>Phím tắt</th><th>Chức năng</th></tr></thead>
 <tbody>
@@ -193,104 +320,79 @@ npm run dev          # http://localhost:3000</code></pre>
 <tr><td><code>−</code>, <code>+</code></td><td>Giảm hoặc tăng tốc độ phát</td></tr>
 <tr><td><code>F</code>, <code>?</code></td><td>Toàn màn hình, mở bảng phím tắt</td></tr>
 </tbody></table>
-<p>Slide không phải video quay sẵn mà là một timeline thời gian thực do GSAP điều khiển: tua tới bất kỳ giây nào sẽ tái hiện chính xác trạng thái DOM, vị trí highlight phụ đề và khung hình chuyển động.</p>
 
-<h2 id="xuat-file">Các định dạng xuất bài giảng</h2>
+<h2 id="thu-vien-cai-dat">⚙️ Quản lý Thư viện & Tối ưu Dung lượng (Trim)</h2>
+<p>Mở <code>/library</code>. Mỗi thẻ bài giảng tích hợp icon cài đặt SVG hình Bánh răng mở ra bảng điều khiển thông minh:</p>
 <ul>
-  <li>🌐 <strong>Xuất file HTML độc lập</strong> (<code>/api/export/html</code>): Đóng gói toàn bộ slide, mã nguồn GSAP, bộ dựng toán KaTeX và dữ liệu âm thanh base64 vào 1 file <code>.html</code> duy nhất. Nhấp đúp mở bằng mọi trình duyệt là xem và tương tác được ngay, không cần web server hay cơ sở dữ liệu.</li>
-  <li>📝 <strong>Xuất phụ đề SRT</strong> (<code>/api/export/srt</code>): Tải file phụ đề chuẩn SRT với độ chính xác theo từng chữ, hỗ trợ cả chế độ câu liên tục và chế độ theo dòng thời gian.</li>
-  <li>📦 <strong>Xuất kịch bản JSON</strong> (<code>/api/export/json</code>): Tải file cấu trúc dữ liệu bài học để lưu trữ hoặc tích hợp vào các hệ thống khác.</li>
+  <li><strong>Tối ưu dung lượng (Gọt bài)</strong>: Xóa bỏ các slide bài thuyết minh và tệp âm thanh nặng, tiết kiệm đến 90% ổ cứng nhưng vẫn giữ trọn vẹn 100% Quiz và Flashcard để ôn thi.</li>
+  <li><strong>Xóa an toàn vào Thùng rác</strong>: Tùy chọn di chuyển bài học vào thư mục <code>data/temp_delete/</code> để khôi phục khi cần, hoặc xóa vĩnh viễn khỏi máy.</li>
 </ul>
 
-<h2 id="thu-vien">Thư viện bài giảng</h2>
-<p>Mở <code>/library</code>. Toàn bộ bài đã lưu được lưu dưới dạng file JSON dễ đọc trong thư mục <code>data/courses/</code> trên ổ cứng. Mỗi thẻ bài cung cấp nút phát ngay, xem mã JSON và nút xóa. Cơ chế ghi file nguyên tử (<code>.tmp</code> &rarr; <code>.json</code>) đảm bảo an toàn dữ liệu, chống hỏng file khi mất điện đột ngột.</p>
+<h2 id="kiem-tra-chat-luong">Hệ thống Test Verify Toàn Diện</h2>
+<p>EdusGPT tích hợp hệ thống kiểm định chất lượng tự động 7 giai đoạn:</p>
+<pre><code data-lang="bash">npm run verify        # Chạy toàn bộ 7 kiểm thử + TypeScript strict check
+npm run audit:katex   # Audit tự động 100% công thức toán học và ngân hàng trắc nghiệm
+npm run build         # Kiểm tra đóng gói Turbopack Next.js</code></pre>
 
-<h2 id="giong-doc">Giọng đọc & TTS Offline</h2>
-<p>Giọng đọc do server tổng hợp tự động, không cần thuê dịch vụ ngoài. Âm thanh được lưu đệm (cache) theo từng câu tại <code>data/tts-cache/</code>, giúp các lần phát lại diễn ra tức thì mà không tốn tài nguyên tính toán. Bạn có thể xóa thư mục này bất cứ lúc nào để giải phóng dung lượng ổ cứng. Hệ thống cũng hỗ trợ công cụ tổng hợp giọng đọc offline qua Piper (<code>scripts/local-voice/piper_speak.py</code>) cho môi trường biệt lập không có Internet.</p>
-
-<h2 id="don-dep">Dọn dẹp & Reset hệ thống</h2>
-<p><code>uninstall.bat</code> cung cấp menu chọn lọc thông minh với màu sắc ANSI trực quan:</p>
-<ol>
-  <li><strong>Dọn Cache & Build</strong>: Xóa <code>.next/</code>, <code>data/tts-cache/</code> và file rác mà vẫn giữ lại bài giảng và thư viện packages.</li>
-  <li><strong>Gỡ bỏ Runtime</strong>: Xóa thư mục <code>.runtime/</code> (Node portable, Python venv, model giọng đọc).</li>
-  <li><strong>Reset sạch sẽ</strong>: Xác nhận trước khi dọn <code>node_modules/</code>, <code>.next/</code>, <code>.runtime/</code>, cache âm thanh và bài giảng đã tạo. Toàn bộ mã nguồn dự án, file <code>.env</code> chứa API key và logo luôn được bảo vệ an toàn tuyệt đối.</li>
-</ol>
-
-<h2 id="kiem-tra-chat-luong">Kiểm tra chất lượng</h2>
-<table>
-<thead><tr><th>Lệnh kiểm tra</th><th>Ý nghĩa</th></tr></thead>
-<tbody>
-<tr><td><code>npm run typecheck</code></td><td><code>tsc --noEmit</code> kiểm tra TypeScript nghiêm ngặt</td></tr>
-<tr><td><code>npm run check:palette</code></td><td>Đảm bảo bảng màu obsidian (chặn triệt để màu họ tím trong <code>src/</code>)</td></tr>
-<tr><td><code>npm run check:icons</code></td><td>Đảm bảo mọi tên icon trên slide đều có thật trong Lucide</td></tr>
-<tr><td><code>npm run check:subtitle</code></td><td>Kiểm tra độ khớp thời gian từng từ của phụ đề karaoke</td></tr>
-<tr><td><code>npm run check:length</code></td><td>Kiểm tra tính khả thi của 3 preset thời lượng với nhịp đọc thật</td></tr>
-<tr><td><code>npm run check:pace</code></td><td>Đảm bảo tốc độ phát giọng đọc ổn định ở mức 1× chuẩn sư phạm</td></tr>
-<tr><td><code>npm run check:quiz</code></td><td>Kiểm tra cơ chế dừng bài khi gặp câu hỏi trắc nghiệm và thời gian đọc giải thích</td></tr>
-<tr><td><code>npm run verify</code></td><td>Chạy toàn bộ 7 bài kiểm tra trên kết hợp typecheck</td></tr>
-<tr><td><code>npm run build</code>, <code>npm start</code></td><td>Biên dịch và chạy thử bản production với Turbopack</td></tr>
-<tr><td><code>powershell -File scripts/smoke-test.ps1</code></td><td>Kiểm thử runtime toàn diện khi server đang chạy</td></tr>
-<tr><td><code>node scripts/verify-export.mjs exported.html</code></td><td>Thẩm định tính hợp lệ của file HTML xuất ra</td></tr>
-<tr><td><code>node scripts/generate-sample.mjs "Chủ đề"</code></td><td>Tạo bài giảng mẫu trực tiếp từ dòng lệnh</td></tr>
-</tbody></table>
-
-<h2 id="cau-truc-thu-muc">Cấu trúc thư mục</h2>
-<pre><code data-lang="">scripts/           Bộ kiểm tra chất lượng (palette, icons, subtitle, length, pace, quiz),
-                   lập chỉ mục tài liệu, phân quyền Antigravity, smoke test
-src/app/           Các trang App Router: / (trang chủ), /studio, /lesson, /library, /setup,
-                   /quiz, /flashcard, /classroom
-src/app/api/       Các endpoint API: sinh bài giảng, kiểm tra sức khỏe, models, CRUD bài giảng,
-                   xuất file HTML/SRT/JSON, trích xuất tài liệu, tìm ảnh, giọng đọc
-src/components/
-  player/          LessonPlayer, GsapSlideStage, SlideSurface, SceneFigure,
-                   ScenePointer, KaraokeSubtitle, TeacherVoice, TransportBar,
-                   ScrubBar, ChapterList, ShortcutsDialog, InlineText
-  studio/          Form nhập liệu & tiến trình tạo bài trực tiếp
-  library/         Các thẻ quản lý bài giảng đã lưu
-  setup/           Giao diện quản lý API key các hãng
-  site/            Thanh điều hướng, chân trang, trạng thái hệ thống
-src/hooks/         useTimebase đồng hồ phát dùng chung
-src/lib/
-  ai/              Lớp trừu tượng provider, adapter OpenAI-compatible, Antigravity CLI
-  lesson/          Định dạng dữ liệu bài giảng, validate, chủ đề, hiệu ứng, bộ xuất HTML
-  server/          Trích xuất tài liệu, lưu trữ bài giảng, bộ tổng hợp giọng nói, rate limiting
-public/            Logo, icon tab, huy hiệu các hãng AI
-public_html/       Trang giới thiệu tĩnh hiện đại, hiệu năng cao (deploy Vercel)
-run.bat, run.sh    Khởi động một chạm (kèm màu sắc ANSI và thanh tiến trình)
-uninstall.bat      Công cụ gỡ cài đặt & dọn dẹp bộ nhớ đệm thông minh</code></pre>
-
-<h2 id="gioi-han">Giới hạn hệ thống</h2>
-<ul>
-  <li><strong>Local-first</strong>: Không cần cơ sở dữ liệu. Bài giảng lưu thành file JSON trong <code>data/courses/</code>, âm thanh lưu trong <code>data/tts-cache/</code>. Muốn sao chép sang máy khác chỉ cần tải file JSON hoặc copy thư mục.</li>
-  <li><strong>Quota API</strong>: Quá trình tạo bài cần API key còn hạn mức. Khi nhà cung cấp hết quota, hệ thống sẽ hiển thị thông báo lỗi rõ ràng kèm hướng dẫn khắc phục.</li>
-  <li><strong>Xuất HTML độc lập</strong>: Dữ liệu và âm thanh được nhúng trực tiếp; ở lần mở đầu tiên trên trình duyệt mới, hệ thống kết nối Internet để nạp thư viện hiệu ứng CDN, sau đó hoạt động hoàn toàn offline.</li>
-  <li><strong>Độ chuẩn xác khung hình</strong>: Khả năng tua theo khung hình dựa trên tỷ lệ <code>1/fps</code> (mặc định 30 fps), có thể cấu hình cho từng bài giảng.</li>
-</ul>
-
-<footer>Mã nguồn chính thức được lưu trữ tại <a href="https://github.com/npdk1/EdusGPT" target="_blank" rel="noreferrer">github.com/npdk1/EdusGPT</a> (Giấy phép MIT).</footer>
 </main>
+<footer>
+  <p>© 2026 EdusGPT. Phát triển vì nền giáo dục trực quan, tương tác và bảo mật.</p>
+</footer>
 </div>
 </div>
 </div>
+
 <script>
-(function () {
-  var links = Array.prototype.slice.call(document.querySelectorAll(".side nav a"));
-  var byId = {};
-  links.forEach(function (a) { byId[a.getAttribute("href").slice(1)] = a; });
-  if (!("IntersectionObserver" in window)) return;
-  var current = null;
-  var obs = new IntersectionObserver(function (entries) {
-    entries.forEach(function (en) {
-      if (en.isIntersecting) { current = en.target.id; }
-    });
-    links.forEach(function (a) { a.classList.remove("active"); });
-    if (current && byId[current]) { byId[current].classList.add("active"); }
-  }, { rootMargin: "-20% 0px -70% 0px" });
-  Object.keys(byId).forEach(function (id) {
-    var el = document.getElementById(id);
-    if (el) obs.observe(el);
+// Video Milestone Interactive Syncing
+const video = document.getElementById("intro-vid");
+const chips = document.querySelectorAll(".milestone-chip");
+const hintText = document.getElementById("scene-desc-text");
+const timeBadge = document.getElementById("scene-time-badge");
+
+const MILESTONES = [
+  { time: 0, text: "<strong>// 01 - hook</strong>: Chú robot giáo viên EdusGPT Mascot chào đón người học với phong cách dithered pixel art & editorial sang trọng." },
+  { time: 2.4, text: "<strong>// 02 - capabilities</strong>: AI Studio tự động tạo Smart Slides đa giác quan từ tài liệu đính kèm (PDF, DOCX) hoặc ghi chú." },
+  { time: 5.0, text: "<strong>// 03 - interactive deck</strong>: Lesson Player chuyển tài liệu thành live deck tương tác, đồng bộ giọng đọc và phụ đề karaoke từng chữ." },
+  { time: 9.0, text: "<strong>// 04a - 3d flashcards</strong>: Thẻ ghi nhớ 3D xoay lật, phóng to công thức KaTeX và chu trình ôn tập lặp lại ngắt quãng Spaced Repetition." },
+  { time: 12.0, text: "<strong>// 04b - real-time quiz</strong>: Bộ câu hỏi trắc nghiệm kiểm tra tức thì, tự động dừng bài giảng, chấm điểm trực tiếp và giải thích chi tiết." },
+  { time: 15.0, text: "<strong>// 05 - orchestrated</strong>: Hệ sinh thái Bento hoàn chỉnh: Smart Player 60 FPS, Trợ giảng AI on-air, KaTeX Engine, Xuất Single HTML." },
+  { time: 21.2, text: "<strong>// 06 - flow</strong>: Triết lý trải nghiệm: 'You teach. We deliver.' Hoạt động cục bộ 100%, bảo vệ bằng kho mã hóa kép Latin - Trung Quốc." },
+  { time: 25.0, text: "<strong>// 07 - outro</strong>: EdusGPT: Interactive learning decks that you deserve. Nền tảng mở, hoàn toàn miễn phí và không cần mạng." }
+];
+
+// Click chip to seek video
+chips.forEach(chip => {
+  chip.addEventListener("click", () => {
+    const targetTime = parseFloat(chip.getAttribute("data-time"));
+    video.currentTime = targetTime;
+    video.play();
   });
-})();
+});
+
+// Update active chip on video playback
+video.addEventListener("timeupdate", () => {
+  const cur = video.currentTime;
+  let activeIndex = 0;
+  for (let i = 0; i < MILESTONES.length; i++) {
+    if (cur >= MILESTONES[i].time) {
+      activeIndex = i;
+    }
+  }
+
+  chips.forEach((c, idx) => {
+    c.classList.toggle("active", idx === activeIndex);
+  });
+
+  if (hintText) {
+    hintText.innerHTML = MILESTONES[activeIndex].text;
+  }
+
+  if (timeBadge) {
+    const mins = Math.floor(cur / 60).toString().padStart(2, '0');
+    const secs = Math.floor(cur % 60).toString().padStart(2, '0');
+    timeBadge.textContent = `${mins}:${secs} / 00:30`;
+  }
+});
 </script>
 </body>
 </html>

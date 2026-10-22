@@ -3,7 +3,7 @@ import path from "node:path";
 import katex from "katex";
 import { sceneKindLabel, type Lesson } from "./types";
 import { type AlignedSentence } from "@/lib/karaoke";
-import { inlineHtml } from "./inline";
+import { inlineHtml, cleanLatex } from "./inline";
 import { pollinationsImageUrl } from "./pollinations";
 import {
   isDarkTheme,
@@ -343,9 +343,9 @@ function katexCss(): string {
 function formulaMarkup(formula: string): string {
   let inner: string;
   try {
-    inner = katex.renderToString(formula, {
+    inner = katex.renderToString(cleanLatex(formula), {
       displayMode: true,
-      throwOnError: true,
+      throwOnError: false,
       strict: false,
       trust: false,
       output: "htmlAndMathml",

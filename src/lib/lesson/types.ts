@@ -602,7 +602,7 @@ export function relayoutLesson(lesson: Lesson): Lesson {
 
   // Chapters are always derived from their scenes, so an imported or generated
   // lesson can never carry stale start/end values into the scrub bar.
-  const declared = lesson.chapters
+  const declared = (lesson.chapters ?? [])
     .map((chapter) => {
       const members = scenes.filter((scene) => chapter.sceneIds.includes(scene.id));
       if (members.length === 0) return null;

@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import katex from "katex";
 import "katex/dist/katex.min.css";
+import { cleanLatex } from "@/lib/lesson/inline";
 import {
   TriangleAlert,
   CircleCheck,
@@ -340,9 +341,9 @@ function PreviewFormula({ formula }: { formula: string }) {
   // back to raw text so the preview never disagrees with the player.
   const html = useMemo(() => {
     try {
-      return katex.renderToString(formula, {
+      return katex.renderToString(cleanLatex(formula), {
         displayMode: true,
-        throwOnError: true,
+        throwOnError: false,
         strict: false,
         trust: false,
         output: "htmlAndMathml",
