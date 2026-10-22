@@ -15,7 +15,7 @@
 
 <p align="center">
   <a href="https://github.com/npdk1/EdusGPT"><img src="https://img.shields.io/badge/source-GitHub-0b63e5?logo=github" alt="Source on GitHub" /></a>
-  <img src="https://img.shields.io/badge/license-MIT-blue" alt="MIT license" />
+  <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-blue" alt="MIT license" /></a>
   <img src="https://img.shields.io/badge/platform-Windows%20%7C%20macOS%20%7C%20Linux-lightgrey" alt="Windows, macOS, Linux" />
   <img src="https://img.shields.io/badge/Next.js-16.3.6-black?logo=next.js" alt="Next.js" />
   <img src="https://img.shields.io/badge/Tailwind-v4-38bdf8?logo=tailwindcss" alt="Tailwind CSS v4" />
@@ -82,6 +82,40 @@ chmod +x run.sh
 ```
 
 Both scripts verify Node 22+, install missing dependencies, configure `.env` automatically from `.env.example`, free port 3000 if occupied, launch the browser, and start the development server. On Windows, `run.bat` provides an interactive ANSI-colored terminal with 7-stage visual progress bars and portable runtime bootstrap. Press `Ctrl+C` to stop.
+
+### ⚙️ Environment Configuration (`.env.example` ➔ `.env`)
+
+Before running manually, configure your environment variables:
+
+1. **Copy the example configuration file**:
+   ```bash
+   # Windows (Command Prompt)
+   copy .env.example .env
+
+   # Windows (PowerShell)
+   Copy-Item .env.example .env
+
+   # macOS / Linux
+   cp .env.example .env
+   ```
+
+2. **Configure your preferred AI Provider** in `.env`:
+   Open `.env` in any text editor and fill in your API key for at least one provider (or configure via the web UI at `http://localhost:3000/setup`):
+   ```env
+   # Choose default provider: tokenharbor | groq | nvidia | gemini | antigravity
+   AI_PROVIDER=groq
+
+   # If using Groq (Ultra-fast & Free tier available at https://console.groq.com/keys)
+   GROQ_API_KEY=gsk_your_groq_api_key_here
+
+   # If using Google Gemini (Free tier available at https://aistudio.google.com)
+   GEMINI_API_KEY=your_gemini_api_key_here
+
+   # If using Token Harbor (https://tokenharbor.ai)
+   TOKENHARBOR_API_KEY=thk_live_your_key_here
+   ```
+
+> 💡 **Tip**: When using `run.bat` (Windows) or `./run.sh` (macOS/Linux), the script **automatically copies `.env.example` to `.env`** if missing, and directs you to `http://localhost:3000/setup` where you can simply paste your key without touching config files!
 
 ### Manual Run:
 ```bash

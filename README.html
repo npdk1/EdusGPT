@@ -287,6 +287,21 @@ video.intro-video {
 <h2 id="chay-nhanh">Khởi chạy nhanh</h2>
 <p><strong>Windows</strong>: Nhấp đúp vào <code>run.bat</code>.</p>
 <p><strong>macOS hoặc Linux</strong>: <code>./run.sh</code></p>
+<p><em>Cả hai script tự động kiểm tra Node 22+, cài dependencies thiếu, tự động sao chép <code>.env.example</code> thành <code>.env</code> nếu chưa có, giải phóng cổng 3000 và khởi động trình duyệt.</em></p>
+
+<h3>⚙️ Cấu hình Môi trường (<code>.env.example</code> ➔ <code>.env</code>)</h3>
+<p>Nếu bạn muốn cấu hình thủ công tệp biến môi trường:</p>
+<pre><code data-lang="bash"># Trên Windows (CMD hoặc PowerShell):
+copy .env.example .env
+
+# Trên macOS / Linux:
+cp .env.example .env</code></pre>
+<p>Mở tệp <code>.env</code> bằng trình soạn thảo bất kỳ và điền API key nhà cung cấp AI bạn muốn sử dụng (hoặc truy cập <a href="http://localhost:3000/setup">http://localhost:3000/setup</a> trên trình duyệt để dán key trực tiếp):</p>
+<pre><code data-lang="env">AI_PROVIDER=groq
+GROQ_API_KEY=gsk_your_groq_api_key_here
+GEMINI_API_KEY=your_gemini_api_key_here
+TOKENHARBOR_API_KEY=thk_live_your_key_here</code></pre>
+
 <p>Chạy thủ công:</p>
 <pre><code data-lang="bash">npm install
 npm run dev          # http://localhost:3000</code></pre>

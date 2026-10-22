@@ -15,7 +15,7 @@
 
 <p align="center">
   <a href="https://github.com/npdk1/EdusGPT"><img src="https://img.shields.io/badge/source-GitHub-0b63e5?logo=github" alt="Mã nguồn trên GitHub" /></a>
-  <img src="https://img.shields.io/badge/license-MIT-blue" alt="Giấy phép MIT" />
+  <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-blue" alt="Giấy phép MIT" /></a>
   <img src="https://img.shields.io/badge/platform-Windows%20%7C%20macOS%20%7C%20Linux-lightgrey" alt="Windows, macOS, Linux" />
   <img src="https://img.shields.io/badge/Next.js-16.3.6-black?logo=next.js" alt="Next.js" />
   <img src="https://img.shields.io/badge/Tailwind-v4-38bdf8?logo=tailwindcss" alt="Tailwind CSS v4" />
@@ -82,6 +82,40 @@ chmod +x run.sh
 ```
 
 Cả hai script tự động kiểm tra Node từ bản 22, tự chạy `npm install` khi thiếu `node_modules`, tạo `.env` từ `.env.example`, giải phóng cổng 3000 khi bị chiếm dụng, mở trình duyệt rồi khởi động server. Trên Windows, `run.bat` sở hữu giao diện màu ANSI hiện đại với thanh tiến trình trực quan 7 giai đoạn. Bấm `Ctrl+C` trong cửa sổ console để dừng.
+
+### ⚙️ Hướng dẫn Cấu hình Môi trường (`.env.example` ➔ `.env`)
+
+Trước khi khởi chạy thủ công, bạn cần chuẩn bị tệp biến môi trường `.env`:
+
+1. **Sao chép tệp mẫu cấu hình**:
+   ```bash
+   # Trên Windows (Command Prompt)
+   copy .env.example .env
+
+   # Trên Windows (PowerShell)
+   Copy-Item .env.example .env
+
+   # Trên macOS / Linux
+   cp .env.example .env
+   ```
+
+2. **Điền khóa API nhà cung cấp AI** trong `.env`:
+   Mở tệp `.env` vừa tạo bằng bất kỳ trình soạn thảo văn bản nào và dán API key của ít nhất một nhà cung cấp bạn muốn dùng (hoặc có thể cấu hình trực tiếp qua giao diện web tại `http://localhost:3000/setup`):
+   ```env
+   # Chọn nhà cung cấp mặc định: tokenharbor | groq | nvidia | gemini | antigravity
+   AI_PROVIDER=groq
+
+   # Nếu dùng Groq (Tốc độ cực nhanh, có gói miễn phí tại https://console.groq.com/keys)
+   GROQ_API_KEY=gsk_your_groq_api_key_here
+
+   # Nếu dùng Google Gemini (Gói miễn phí tại https://aistudio.google.com)
+   GEMINI_API_KEY=your_gemini_api_key_here
+
+   # Nếu dùng Token Harbor (https://tokenharbor.ai)
+   TOKENHARBOR_API_KEY=thk_live_your_key_here
+   ```
+
+> 💡 **Mẹo**: Nếu bạn khởi động bằng file tự động `run.bat` (trên Windows) hoặc `./run.sh` (trên macOS/Linux), hệ thống sẽ **tự động sao chép `.env.example` thành `.env`** nếu chưa có, và tự mở trang `http://localhost:3000/setup` để bạn chỉ cần dán key vào giao diện là xong!
 
 ### Chạy thủ công:
 ```bash
