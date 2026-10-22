@@ -29,9 +29,13 @@
 Mời bạn theo dõi video giới thiệu chính thức 30 giây khám phá toàn cảnh hệ sinh thái EdusGPT:
 
 <div align="center">
-  <video src="public_html/video/intro.mp4" controls loop playsinline width="100%" style="max-width: 880px; border-radius: 12px; box-shadow: 0 20px 50px rgba(0,0,0,0.5); border: 1px solid #1e293b;">
-    <p>Trình duyệt của bạn không hỗ trợ thẻ video HTML5. Bạn có thể mở trực tiếp tại <a href="public_html/video/intro.mp4">public_html/video/intro.mp4</a>.</p>
-  </video>
+  <a href="public_html/video/intro.mp4" target="_blank" title="Nhấp để xem Video Full HD 60 FPS có âm thanh">
+    <img src="public_html/assets/intro-preview.gif" alt="EdusGPT Product Tour Preview" width="100%" style="max-width: 880px; border-radius: 12px; box-shadow: 0 20px 50px rgba(0,0,0,0.5); border: 1px solid #334155;" />
+  </a>
+  <p align="center">
+    🎬 <b><a href="public_html/video/intro.mp4">▶️ Nhấp vào đây để xem / tải Video Full HD 60 FPS có âm thanh (intro.mp4)</a></b> &nbsp;•&nbsp; 
+    🌐 <b><a href="README.html">Mở bản Interactive HTML Guide</a></b>
+  </p>
 </div>
 
 ### ⏱️ Bảng Phân đoạn & Khung hình Đồng bộ Chi tiết (Frame-by-Frame)

@@ -29,9 +29,13 @@
 Watch the official 30-second product tour showcasing the complete EdusGPT ecosystem:
 
 <div align="center">
-  <video src="public_html/video/intro.mp4" controls loop playsinline width="100%" style="max-width: 880px; border-radius: 12px; box-shadow: 0 20px 50px rgba(0,0,0,0.5); border: 1px solid #1e293b;">
-    <p>Your browser does not support HTML5 video. View the clip directly at <a href="public_html/video/intro.mp4">public_html/video/intro.mp4</a>.</p>
-  </video>
+  <a href="public_html/video/intro.mp4" target="_blank" title="Click to watch the full 60 FPS HD Video with sound">
+    <img src="public_html/assets/intro-preview.gif" alt="EdusGPT Product Tour Preview" width="100%" style="max-width: 880px; border-radius: 12px; box-shadow: 0 20px 50px rgba(0,0,0,0.5); border: 1px solid #334155;" />
+  </a>
+  <p align="center">
+    🎬 <b><a href="public_html/video/intro.mp4">▶️ Click Here to Watch / Download the Full 60 FPS Video with Sound (intro.mp4)</a></b> &nbsp;•&nbsp; 
+    🌐 <b><a href="README.html">Open Interactive HTML Guide</a></b>
+  </p>
 </div>
 
 ### ⏱️ Frame-by-Frame Synchronization Breakdown
