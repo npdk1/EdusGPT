@@ -10,8 +10,7 @@ export const metadata: Metadata = {
 
 export default function LibraryPage() {
   return (
-    <div className="mx-auto max-w-6xl px-4 py-12 sm:px-6">
-      <LibraryHeader />
+    <div className="mx-auto max-w-6xl px-4 py-6 sm:px-6 sm:py-8">
       <LibraryPanel />
     </div>
   );

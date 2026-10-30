@@ -18,7 +18,8 @@ import {
 } from "lucide-react";
 import { useTimebase, type LoopRange } from "@/hooks/useTimebase";
 import { chapterIndexAt, sceneIndexAt, type Lesson } from "@/lib/lesson/types";
-import { LESSONS_CHANGED_EVENT, loadStoredLessons } from "@/lib/lesson/storage";
+import { LESSONS_CHANGED_EVENT, loadStoredLessons, setActiveLessonId } from "@/lib/lesson/storage";
+import { recordLessonProgress } from "@/lib/student/profile";
 import { normalizeVietnameseSearch, slugify } from "@/lib/format";
 import { GsapSlideStage } from "./GsapSlideStage";
 import { FullscreenControls } from "./FullscreenControls";
@@ -136,6 +137,14 @@ export function LessonPlayer({ initialLesson, samples, initialMode }: LessonPlay
   });
   const [activeChapter, setActiveChapter] = useState(0);
   const [exporting, setExporting] = useState(false);
+  const [aiChatOpen, setAiChatOpen] = useState(true);
+  const [outlineExpanded, setOutlineExpanded] = useState(false);
+
+  useEffect(() => {
+    if (lesson?.id) {
+      setActiveLessonId(lesson.id);
+    }
+  }, [lesson?.id]);
   /**
    * Whether the stage owns the whole screen.
    *
@@ -345,17 +354,33 @@ export function LessonPlayer({ initialLesson, samples, initialMode }: LessonPlay
     [clearLoop, lesson.id, library, tbPause, tbSeek],
   );
 
+  const onNextScene = useCallback(() => {
+    if (activeScene < lesson.scenes.length - 1) {
+      tbSeek(lesson.scenes[activeScene + 1].start);
+    }
+  }, [activeScene, lesson.scenes, tbSeek]);
+
   // --- cheap React state: only changes when the scene actually changes -----
   // `subscribe` is a stable callback; the `timebase` object itself is fresh on
   // every render, so depending on it re-attached this subscription (and its
   // synchronous setState) on every render — the "Maximum update depth" loop.
   const subscribeTime = timebase.subscribe;
   useEffect(() => {
+    let lastPercent = 0;
     return subscribeTime((time, meta) => {
       const scene = sceneIndexAt(lesson, time);
       const chapter = chapterIndexAt(lesson, time);
       setActiveScene((current) => (current === scene ? current : scene));
       setActiveChapter((current) => (current === chapter ? current : chapter));
+
+      // Record student lesson progress for LMS tracking
+      if (lesson.duration > 0 && lesson.id) {
+        const percent = Math.min(100, Math.round((time / lesson.duration) * 100));
+        if (percent >= lastPercent + 5 || percent === 100) {
+          lastPercent = percent;
+          recordLessonProgress(lesson.id, percent, scene, time);
+        }
+      }
     });
   }, [subscribeTime, lesson]);
 
@@ -673,217 +698,214 @@ export function LessonPlayer({ initialLesson, samples, initialMode }: LessonPlay
 
   return (
     <>
-      {/* min-w-0 on both children: without it a wide descendant (a long chip, a
-          figure, a chart) refuses to shrink and pushes the second column off
-          the screen instead of scrolling inside its own column. */}
-      <div className="grid min-w-0 gap-5 lg:min-h-0 lg:flex-1 lg:grid-cols-[minmax(0,1fr)_20rem] lg:grid-rows-[minmax(0,1fr)] lg:gap-4">
-        {/*
-          One row on a desktop, wrapping only on a phone: every wrapped row
-          costs the stage ~40px of height, and two wrapped bars were what pushed
-          the timeline below the fold. Nothing is removed — the row scrolls
-          sideways on a narrow window instead of growing taller.
-        */}
-        <div className="flex min-w-0 flex-col space-y-4 lg:min-h-0 lg:gap-3 lg:space-y-0 lg:overflow-y-auto">
+      {/* Responsive layout: Side-by-side on desktop with matching heights, stacked on mobile/tablet */}
+      <div className="grid min-w-0 gap-4 lg:min-h-0 lg:flex-1 lg:grid-cols-[minmax(0,1fr)_auto] lg:grid-rows-[minmax(0,1fr)] lg:gap-4 xl:gap-5">
+        {/* Left column: Video stage, toolbar, transport controls */}
+        <div className="flex min-w-0 flex-col space-y-2 lg:min-h-0 lg:gap-2.5 lg:space-y-0 lg:overflow-y-auto">
           {/* toolbar */}
-          <div className="panel relative z-30 flex flex-wrap items-center gap-2.5 p-3 lg:flex-nowrap lg:gap-2 lg:p-2 lg:[&>*]:shrink-0">
-            {/* Thanh tìm kiếm & chọn bài giảng thông minh */}
-            <div
-              className="relative z-40 min-w-[14rem] max-w-[20rem] flex-1"
-              onBlur={(e) => {
-                if (!e.currentTarget.contains(e.relatedTarget as Node | null)) {
-                  setLessonSearchOpen(false);
-                }
-              }}
-            >
-              <div className="relative">
-                <Search className="pointer-events-none absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-mist-400" />
-                <input
-                  type="text"
-                  value={lessonSearchOpen ? lessonSearch : `${lesson.source === "gemini" ? "🤖 " : "📘 "}${lesson.title}`}
-                  onChange={(e) => {
-                    setLessonSearch(e.target.value);
-                    setLessonSearchOpen(true);
-                  }}
-                  onFocus={() => {
-                    setLessonSearch("");
-                    setLessonSearchOpen(true);
-                    refreshServerCourses();
-                  }}
-                  onKeyDown={(e) => {
-                    if (e.key === "Escape") {
-                      setLessonSearchOpen(false);
-                    }
-                  }}
-                  placeholder={t.playerSearchPlaceholder}
-                  className="w-full rounded-xl border border-ink-700 bg-ink-900/90 py-1.5 pl-8 pr-7 text-xs text-mist-100 placeholder:text-mist-500 focus:border-brand-500 focus:outline-none transition-colors truncate shadow-inner"
-                />
-                {lessonSearchOpen && lessonSearch ? (
-                  <button
-                    type="button"
-                    onClick={() => setLessonSearch("")}
-                    className="absolute right-2 top-1/2 -translate-y-1/2 text-mist-400 hover:text-mist-100"
+          <div className="panel relative z-30 flex flex-wrap items-center justify-between gap-2.5 p-2.5">
+            {/* Left controls: search, subject chip, teacher voice */}
+            <div className="flex min-w-0 flex-1 flex-wrap items-center gap-2">
+              {/* Thanh tìm kiếm & chọn bài giảng thông minh */}
+              <div
+                className="relative z-40 min-w-[12rem] sm:min-w-[14rem] max-w-[20rem] flex-1"
+                onBlur={(e) => {
+                  if (!e.currentTarget.contains(e.relatedTarget as Node | null)) {
+                    setLessonSearchOpen(false);
+                  }
+                }}
+              >
+                <div className="relative">
+                  <Search className="pointer-events-none absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-mist-400" />
+                  <input
+                    type="text"
+                    value={lessonSearchOpen ? lessonSearch : `${lesson.source === "gemini" ? "🤖 " : "📘 "}${lesson.title}`}
+                    onChange={(e) => {
+                      setLessonSearch(e.target.value);
+                      setLessonSearchOpen(true);
+                    }}
+                    onFocus={() => {
+                      setLessonSearch("");
+                      setLessonSearchOpen(true);
+                      refreshServerCourses();
+                    }}
+                    onKeyDown={(e) => {
+                      if (e.key === "Escape") {
+                        setLessonSearchOpen(false);
+                      }
+                    }}
+                    placeholder={t.playerSearchPlaceholder}
+                    className="w-full rounded-xl border border-ink-700 bg-ink-900/90 py-1.5 pl-8 pr-7 text-xs text-mist-100 placeholder:text-mist-500 focus:border-brand-500 focus:outline-none transition-colors truncate shadow-inner"
+                  />
+                  {lessonSearchOpen && lessonSearch ? (
+                    <button
+                      type="button"
+                      onClick={() => setLessonSearch("")}
+                      className="absolute right-2 top-1/2 -translate-y-1/2 text-mist-400 hover:text-mist-100"
+                    >
+                      <X className="h-3 w-3" />
+                    </button>
+                  ) : null}
+                </div>
+
+                {lessonSearchOpen ? (
+                  <div
+                    onMouseDown={(e) => e.preventDefault()}
+                    className="absolute left-0 top-full z-50 mt-1.5 flex max-h-80 w-[min(22rem,calc(100vw-2rem))] flex-col overflow-hidden rounded-2xl border border-ink-700 bg-ink-900/98 shadow-2xl backdrop-blur-xl"
                   >
-                    <X className="h-3 w-3" />
-                  </button>
+                    <div className="flex items-center justify-between border-b border-ink-800/80 px-3 py-2 text-[11px] text-mist-400">
+                      <span>
+                        {filteredLessons.length > 0
+                          ? `${filteredLessons.length} ${t.playerLessonsCount}`
+                          : t.playerSearchEmpty}
+                      </span>
+                      <span className="text-[10px] text-mist-500">Esc để đóng</span>
+                    </div>
+
+                    <ul className="max-h-64 overflow-y-auto py-1 divide-y divide-ink-800/40">
+                      {filteredLessons.length === 0 ? (
+                        <li className="px-3 py-4 text-center text-xs text-mist-400">
+                          <p>{t.playerSearchEmpty}</p>
+                          <p className="mt-1 text-[11px] text-mist-500">
+                            Thử tìm bằng tiêu đề, môn học hoặc từ khoá khác.
+                          </p>
+                        </li>
+                      ) : (
+                        filteredLessons.map((item) => {
+                          const isCurrent = item.id === lesson.id;
+                          const isLibrary = item.isServer || item.source === "gemini";
+                          return (
+                            <li key={item.id}>
+                              <button
+                                type="button"
+                                onClick={() => void selectLessonById(item.id)}
+                                className={`flex w-full items-start gap-2.5 px-3 py-2 text-left text-xs transition-colors ${
+                                  isCurrent
+                                    ? "bg-brand-500/15 text-mist-50 font-semibold"
+                                    : "text-mist-300 hover:bg-ink-800/70 hover:text-mist-50"
+                                }`}
+                              >
+                                <span className="mt-0.5 shrink-0 text-base">
+                                  {isLibrary ? "🤖" : "📘"}
+                                </span>
+                                <div className="min-w-0 flex-1">
+                                  <div className="flex items-center gap-1.5">
+                                    <p className="truncate font-medium text-mist-100 flex-1">
+                                      {item.title}
+                                    </p>
+                                    {isCurrent ? (
+                                      <span className="shrink-0 rounded bg-brand-500/20 px-1.5 py-0.5 text-[9px] font-medium text-brand-300">
+                                        {t.playerPlaying}
+                                      </span>
+                                    ) : null}
+                                  </div>
+                                  <div className="mt-0.5 flex items-center gap-2 text-[10px] text-mist-400">
+                                    <span className="truncate">
+                                      {item.subject} {item.grade ? `· ${item.grade}` : ""}
+                                    </span>
+                                    {item.sceneCount ? (
+                                      <>
+                                        <span>•</span>
+                                        <span className="shrink-0 text-mist-500">
+                                          {item.sceneCount} cảnh
+                                        </span>
+                                      </>
+                                    ) : null}
+                                    <span
+                                      className={`ml-auto shrink-0 rounded px-1 text-[9px] font-medium ${
+                                        isLibrary
+                                          ? "bg-emerald-500/15 text-emerald-400"
+                                          : "bg-ink-800 text-mist-400"
+                                      }`}
+                                    >
+                                      {isLibrary ? "Thư viện" : "Mẫu"}
+                                    </span>
+                                  </div>
+                                </div>
+                              </button>
+                            </li>
+                          );
+                        })
+                      )}
+                    </ul>
+
+                    <div className="border-t border-ink-800/80 bg-ink-950/60 p-2 text-center">
+                      <Link
+                        href="/library"
+                        className="flex items-center justify-center gap-1.5 text-xs text-brand-400 hover:text-brand-300 font-medium transition-colors"
+                        onClick={() => setLessonSearchOpen(false)}
+                      >
+                        <BookOpen className="h-3.5 w-3.5" />
+                        <span>{t.playerViewLibrary}</span>
+                      </Link>
+                    </div>
+                  </div>
                 ) : null}
               </div>
 
-              {lessonSearchOpen ? (
-                <div
-                  onMouseDown={(e) => e.preventDefault()}
-                  className="absolute left-0 top-full z-50 mt-1.5 flex max-h-80 w-[min(22rem,calc(100vw-2rem))] flex-col overflow-hidden rounded-2xl border border-ink-700 bg-ink-900/98 shadow-2xl backdrop-blur-xl"
+              <span className="chip shrink-0">
+                {lesson.subject}
+                {lesson.grade ? ` · ${lesson.grade}` : ""}
+              </span>
+              <div className="shrink-0">
+                <TeacherVoice
+                  lesson={lesson}
+                  timebase={timebase}
+                  activeSceneIndex={activeScene}
+                  loopEnabled={loop.enabled}
+                  onVoiceState={setVoiceState}
+                  onVoiceChange={(nextVoice) => {
+                    setLesson((prev) => {
+                      const updated = { ...prev, voice: nextVoice };
+                      if (prev.source === "gemini") {
+                        void fetch("/api/courses", {
+                          method: "POST",
+                          headers: { "Content-Type": "application/json" },
+                          body: JSON.stringify({ lesson: updated }),
+                        });
+                      }
+                      return updated;
+                    });
+                  }}
+                  onNarration={(update) => {
+                    // Written straight onto the channel; see the note where it is
+                    // declared for why this is never state.
+                    if (update.type === "position") {
+                      narration.live = { sceneIndex: update.sceneIndex, time: update.time };
+                    } else if (update.type === "words") {
+                      narration.words.set(update.sceneIndex, update.words);
+                    } else {
+                      narration.live = null;
+                    }
+                  }}
+                />
+              </div>
+
+              {/* Which slide the voice is on, so a silent gap reads as "loading",
+                  not "broken". */}
+              {voiceState.status !== "idle" && voiceState.sceneIndex !== null ? (
+                <span
+                  className={`chip shrink-0 ${
+                    voiceState.status === "preparing"
+                      ? "border-gold-500/60 bg-gold-500/10 text-gold-600"
+                      : "border-brand-500/60 bg-brand-500/10 text-brand-300"
+                  }`}
+                  title={voiceState.sceneTitle}
                 >
-                  <div className="flex items-center justify-between border-b border-ink-800/80 px-3 py-2 text-[11px] text-mist-400">
-                    <span>
-                      {filteredLessons.length > 0
-                        ? `${filteredLessons.length} ${t.playerLessonsCount}`
-                        : t.playerSearchEmpty}
-                    </span>
-                    <span className="text-[10px] text-mist-500">Esc để đóng</span>
-                  </div>
-
-                  <ul className="max-h-64 overflow-y-auto py-1 divide-y divide-ink-800/40">
-                    {filteredLessons.length === 0 ? (
-                      <li className="px-3 py-4 text-center text-xs text-mist-400">
-                        <p>{t.playerSearchEmpty}</p>
-                        <p className="mt-1 text-[11px] text-mist-500">
-                          Thử tìm bằng tiêu đề, môn học hoặc từ khoá khác.
-                        </p>
-                      </li>
-                    ) : (
-                      filteredLessons.map((item) => {
-                        const isCurrent = item.id === lesson.id;
-                        const isLibrary = item.isServer || item.source === "gemini";
-                        return (
-                          <li key={item.id}>
-                            <button
-                              type="button"
-                              onClick={() => void selectLessonById(item.id)}
-                              className={`flex w-full items-start gap-2.5 px-3 py-2 text-left text-xs transition-colors ${
-                                isCurrent
-                                  ? "bg-brand-500/15 text-mist-50 font-semibold"
-                                  : "text-mist-300 hover:bg-ink-800/70 hover:text-mist-50"
-                              }`}
-                            >
-                              <span className="mt-0.5 shrink-0 text-base">
-                                {isLibrary ? "🤖" : "📘"}
-                              </span>
-                              <div className="min-w-0 flex-1">
-                                <div className="flex items-center gap-1.5">
-                                  <p className="truncate font-medium text-mist-100 flex-1">
-                                    {item.title}
-                                  </p>
-                                  {isCurrent ? (
-                                    <span className="shrink-0 rounded bg-brand-500/20 px-1.5 py-0.5 text-[9px] font-medium text-brand-300">
-                                      {t.playerPlaying}
-                                    </span>
-                                  ) : null}
-                                </div>
-                                <div className="mt-0.5 flex items-center gap-2 text-[10px] text-mist-400">
-                                  <span className="truncate">
-                                    {item.subject} {item.grade ? `· ${item.grade}` : ""}
-                                  </span>
-                                  {item.sceneCount ? (
-                                    <>
-                                      <span>•</span>
-                                      <span className="shrink-0 text-mist-500">
-                                        {item.sceneCount} cảnh
-                                      </span>
-                                    </>
-                                  ) : null}
-                                  <span
-                                    className={`ml-auto shrink-0 rounded px-1 text-[9px] font-medium ${
-                                      isLibrary
-                                        ? "bg-emerald-500/15 text-emerald-400"
-                                        : "bg-ink-800 text-mist-400"
-                                    }`}
-                                  >
-                                    {isLibrary ? "Thư viện" : "Mẫu"}
-                                  </span>
-                                </div>
-                              </div>
-                            </button>
-                          </li>
-                        );
-                      })
-                    )}
-                  </ul>
-
-                  <div className="border-t border-ink-800/80 bg-ink-950/60 p-2 text-center">
-                    <Link
-                      href="/library"
-                      className="flex items-center justify-center gap-1.5 text-xs text-brand-400 hover:text-brand-300 font-medium transition-colors"
-                      onClick={() => setLessonSearchOpen(false)}
-                    >
-                      <BookOpen className="h-3.5 w-3.5" />
-                      <span>{t.playerViewLibrary}</span>
-                    </Link>
-                  </div>
-                </div>
+                  {voiceState.status === "preparing" ? (
+                    <LoaderCircle className="h-3.5 w-3.5 animate-spin" />
+                  ) : (
+                    <Volume2 className="h-3.5 w-3.5" />
+                  )}
+                  {voiceState.status === "preparing" ? t.playerVoicePreparing : t.playerVoiceSpeaking}{" "}
+                  slide{" "}
+                  {voiceState.sceneIndex + 1}/{lesson.scenes.length}
+                </span>
               ) : null}
             </div>
 
-            <span className="chip">
-              {lesson.subject}
-              {lesson.grade ? ` · ${lesson.grade}` : ""}
-            </span>
-            <TeacherVoice
-              lesson={lesson}
-              timebase={timebase}
-              activeSceneIndex={activeScene}
-              loopEnabled={loop.enabled}
-              onVoiceState={setVoiceState}
-              onVoiceChange={(nextVoice) => {
-                setLesson((prev) => {
-                  const updated = { ...prev, voice: nextVoice };
-                  if (prev.source === "gemini") {
-                    void fetch("/api/courses", {
-                      method: "POST",
-                      headers: { "Content-Type": "application/json" },
-                      body: JSON.stringify({ lesson: updated }),
-                    });
-                  }
-                  return updated;
-                });
-              }}
-              onNarration={(update) => {
-                // Written straight onto the channel; see the note where it is
-                // declared for why this is never state.
-                if (update.type === "position") {
-                  narration.live = { sceneIndex: update.sceneIndex, time: update.time };
-                } else if (update.type === "words") {
-                  narration.words.set(update.sceneIndex, update.words);
-                } else {
-                  narration.live = null;
-                }
-              }}
-            />
-
-            {/* Which slide the voice is on, so a silent gap reads as "loading",
-                not "broken". */}
-            {voiceState.status !== "idle" && voiceState.sceneIndex !== null ? (
-              <span
-                className={`chip ${
-                  voiceState.status === "preparing"
-                    ? "border-gold-500/60 bg-gold-500/10 text-gold-600"
-                    : "border-brand-500/60 bg-brand-500/10 text-brand-300"
-                }`}
-                title={voiceState.sceneTitle}
-              >
-                {voiceState.status === "preparing" ? (
-                  <LoaderCircle className="h-3.5 w-3.5 animate-spin" />
-                ) : (
-                  <Volume2 className="h-3.5 w-3.5" />
-                )}
-                {voiceState.status === "preparing" ? t.playerVoicePreparing : t.playerVoiceSpeaking}{" "}
-                slide{" "}
-                {voiceState.sceneIndex + 1}/{lesson.scenes.length}
-              </span>
-            ) : null}
-
-            {/* ml-auto alone leaves this group at its max-content width, which
-                overflows the toolbar once the chips above wrap onto two rows. */}
-            <div className="ml-auto flex min-w-0 flex-wrap items-center justify-end gap-2">
+            {/* Right actions: Export HTML/JSON/SRT, AI chat, Quiz, Flashcards */}
+            <div className="flex min-w-0 flex-wrap items-center justify-end gap-2 shrink-0">
               {/* One pill, not two bordered buttons: exporting is a single
                   action ("get this lesson out") with two formats, and two
                   equal-weight buttons in the corner read as two competing
@@ -896,7 +918,7 @@ export function LessonPlayer({ initialLesson, samples, initialMode }: LessonPlay
                   type="button"
                   onClick={() => void exportHtml()}
                   disabled={exporting}
-                  className="btn-primary inline-flex items-center gap-1.5 px-3 py-2 text-xs font-semibold"
+                  className="inline-flex items-center gap-1.5 bg-sky-600 px-3 py-2 text-xs font-semibold text-white transition-colors hover:bg-sky-500 active:scale-95 disabled:pointer-events-none disabled:opacity-60"
                   title={t.playerExportHtmlTitle}
                 >
                   {exporting ? (
@@ -910,7 +932,7 @@ export function LessonPlayer({ initialLesson, samples, initialMode }: LessonPlay
                   type="button"
                   onClick={() => void exportLesson()}
                   disabled={exporting}
-                  className="inline-flex items-center gap-1.5 border-l border-ink-600 px-3 py-2 text-xs font-semibold text-mist-200 transition-colors hover:bg-ink-800 hover:text-mist-50 disabled:pointer-events-none disabled:opacity-60"
+                  className="inline-flex items-center gap-1.5 border-l border-ink-600 px-2.5 py-2 text-xs font-semibold text-mist-200 transition-colors hover:bg-ink-800 hover:text-mist-50 disabled:pointer-events-none disabled:opacity-60"
                   title={t.playerExportJsonTitle}
                 >
                   <FileJson className="h-3.5 w-3.5" />
@@ -920,13 +942,36 @@ export function LessonPlayer({ initialLesson, samples, initialMode }: LessonPlay
                   type="button"
                   onClick={() => void exportSrt()}
                   disabled={exporting}
-                  className="inline-flex items-center gap-1.5 border-l border-ink-600 px-3 py-2 text-xs font-semibold text-mist-200 transition-colors hover:bg-ink-800 hover:text-mist-50 disabled:pointer-events-none disabled:opacity-60"
+                  className="inline-flex items-center gap-1.5 border-l border-ink-600 px-2.5 py-2 text-xs font-semibold text-mist-200 transition-colors hover:bg-ink-800 hover:text-mist-50 disabled:pointer-events-none disabled:opacity-60"
                   title={t.playerExportSrtTitle}
                 >
                   <FileText className="h-3.5 w-3.5" />
                   {t.playerExportSrt}
                 </button>
               </div>
+
+              <button
+                type="button"
+                onClick={() => {
+                  if (!aiChatOpen) {
+                    setAiChatOpen(true);
+                    setOutlineExpanded(false);
+                  } else if (outlineExpanded) {
+                    setOutlineExpanded(false);
+                  } else {
+                    setAiChatOpen(false);
+                  }
+                }}
+                className={`inline-flex items-center gap-1.5 rounded-xl border px-3 py-2 text-xs font-semibold transition-all ${
+                  aiChatOpen && !outlineExpanded
+                    ? "border-gold-400 bg-gold-400/20 text-gold-200 shadow-sm"
+                    : "border-ink-600 bg-ink-900/60 text-mist-200 hover:border-gold-500/50 hover:text-gold-300"
+                }`}
+                title="Bật/tắt Trợ giảng AI trực tuyến"
+              >
+                <Sparkles className="h-3.5 w-3.5 text-gold-400" />
+                <span>Trợ giảng AI</span>
+              </button>
 
               <Link
                 href={`/quiz?c=${encodeURIComponent(lesson.id)}`}
@@ -987,8 +1032,9 @@ export function LessonPlayer({ initialLesson, samples, initialMode }: LessonPlay
             ) : null}
           </div>
 
-          {/* transport + timeline */}
-          <div className="panel space-y-3 p-4 md:space-y-2 md:p-3">
+          {/* YouTube-style transport + timeline: ScrubBar on top, TransportBar below */}
+          <div className="panel space-y-2.5 p-3 sm:p-4">
+            <ScrubBar lesson={lesson} timebase={timebase} loop={loop} />
             <TransportBar
               timebase={timebase}
               loop={loop}
@@ -1008,25 +1054,45 @@ export function LessonPlayer({ initialLesson, samples, initialMode }: LessonPlay
               onToggleMute={timebase.toggleMute}
               onFullscreen={toggleFullscreen}
               onToggleHelp={() => setHelpOpen((value) => !value)}
+              onToggleAi={() => {
+                if (!aiChatOpen) {
+                  setAiChatOpen(true);
+                  setOutlineExpanded(false);
+                } else if (outlineExpanded) {
+                  setOutlineExpanded(false);
+                } else {
+                  setAiChatOpen(false);
+                }
+              }}
+              aiOpen={aiChatOpen && !outlineExpanded}
+              onNextScene={onNextScene}
+              currentSceneTitle={lesson.scenes[activeScene]?.title}
             />
-            <div className="hairline" />
-            <ScrubBar lesson={lesson} timebase={timebase} loop={loop} />
           </div>
         </div>
 
-        {/* right column */}
-        <div className="min-w-0 space-y-4 lg:flex lg:min-h-0 lg:flex-col lg:overflow-y-auto lg:pr-1">
-
+        {/* right column: chapter outline and AI tutor */}
+        <div
+          className={`min-w-0 flex flex-col gap-3 transition-all duration-300 lg:flex lg:h-full lg:min-h-0 ${
+            outlineExpanded ? "lg:w-[28rem] xl:w-[32rem]" : "lg:w-[23rem] xl:w-[26rem]"
+          }`}
+        >
           <ChapterList
             lesson={lesson}
             timebase={timebase}
             activeScene={activeScene}
             activeChapter={activeChapter}
+            expanded={outlineExpanded}
+            onToggleExpand={() => setOutlineExpanded((v) => !v)}
           />
 
           <ClassroomAgentChat
+            open={aiChatOpen}
+            onClose={() => setAiChatOpen(false)}
             currentScene={lesson.scenes[activeScene]}
             lessonTitle={lesson.title}
+            outlineExpanded={outlineExpanded}
+            onToggleOutlineExpand={() => setOutlineExpanded(false)}
           />
         </div>
       </div>

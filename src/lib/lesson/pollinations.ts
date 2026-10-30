@@ -18,20 +18,73 @@ function hashSeed(text: string): number {
   return Math.abs(hash);
 }
 
+/**
+ * Clean and enrich prompt to maximize Pollinations AI image quality.
+ * Strips formatting artifacts and ensures clear negative prompt safeguards for educational slides.
+ */
+export function enrichImagePrompt(prompt: string): string {
+  let cleaned = prompt.trim();
+  // Strip enclosing quotes if model returned them
+  if (
+    (cleaned.startsWith('"') && cleaned.endsWith('"')) ||
+    (cleaned.startsWith("'") && cleaned.endsWith("'"))
+  ) {
+    cleaned = cleaned.slice(1, -1).trim();
+  }
+  // Strip trailing punctuation
+  cleaned = cleaned.replace(/[.]+$/, "").trim();
+
+  // Ensure negative prompt safeguards against bad text rendering
+  const lower = cleaned.toLowerCase();
+  if (
+    !lower.includes("no text") &&
+    !lower.includes("no words") &&
+    !lower.includes("no letters")
+  ) {
+    cleaned += ", no text, no watermark, clean composition";
+  }
+  return cleaned;
+}
+
+export interface PollinationsOptions {
+  width?: number;
+  height?: number;
+  seed?: number | string;
+  enhance?: boolean;
+  model?: string;
+  nologo?: boolean;
+  safe?: boolean;
+}
+
 export function pollinationsImageUrl(
   lessonId: string,
   sceneId: string,
   prompt: string,
+  options?: PollinationsOptions,
 ): string {
-  const seed = hashSeed(`${lessonId} ${sceneId}`);
+  const seed =
+    options?.seed !== undefined
+      ? typeof options.seed === "number"
+        ? options.seed
+        : hashSeed(String(options.seed))
+      : hashSeed(`${lessonId} ${sceneId}`);
+
+  const enrichedPrompt = enrichImagePrompt(prompt);
+
   const params = new URLSearchParams({
-    width: "1024",
-    height: "640",
+    width: String(options?.width ?? 1024),
+    height: String(options?.height ?? 576), // 16:9 widescreen ratio matching slide player
     seed: String(seed),
-    nologo: "true",
-    model: "flux",
+    nologo: options?.nologo !== false ? "true" : "false",
+    model: options?.model ?? "turbo",
+    enhance: options?.enhance !== false ? "true" : "false", // LLM prompt expansion enabled for rich lighting, angle & details
   });
-  return `${POLLINATIONS_BASE}/${encodeURIComponent(prompt.trim())}?${params.toString()}`;
+
+  if (options?.safe !== false) {
+    params.set("safe", "true");
+  }
+
+  return `${POLLINATIONS_BASE}/${encodeURIComponent(enrichedPrompt)}?${params.toString()}`;
 }
 
 /**

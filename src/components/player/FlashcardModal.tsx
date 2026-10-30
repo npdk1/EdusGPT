@@ -17,6 +17,7 @@ import katex from "katex";
 import { cleanLatex } from "@/lib/lesson/inline";
 import type { Lesson, LessonScene } from "@/lib/lesson/types";
 import { useCopy } from "@/i18n/provider";
+import { InlineText } from "./InlineText";
 
 interface Flashcard {
   id: string;
@@ -435,7 +436,7 @@ export function FlashcardModal({ open, lesson, onClose }: FlashcardModalProps) {
                         {currentCard.frontPrompt}
                       </p>
                       <h4 className="text-xl font-bold leading-snug text-mist-50">
-                        {currentCard.frontTitle}
+                        <InlineText text={currentCard.frontTitle} />
                       </h4>
                     </div>
                     <div className="mt-6 flex items-center gap-1.5 text-xs text-mist-500 transition-colors group-hover:text-brand-300">
@@ -449,7 +450,7 @@ export function FlashcardModal({ open, lesson, onClose }: FlashcardModalProps) {
                     <div className="space-y-3">
                       {currentCard.backSubtitle ? (
                         <p className="text-xs font-semibold text-brand-300">
-                          {currentCard.backSubtitle}
+                          <InlineText text={currentCard.backSubtitle} />
                         </p>
                       ) : null}
 
@@ -465,7 +466,7 @@ export function FlashcardModal({ open, lesson, onClose }: FlashcardModalProps) {
                           {currentCard.backBullets.map((bullet, idx) => (
                             <li key={idx} className="flex items-start gap-2">
                               <span className="mt-1 h-1.5 w-1.5 shrink-0 rounded-full bg-brand-400" />
-                              <span>{bullet}</span>
+                              <span><InlineText text={bullet} /></span>
                             </li>
                           ))}
                         </ul>

@@ -57,15 +57,173 @@ export function quizReadSeconds(explanation: string | undefined): number {
   return Math.min(MAX_READ, Math.max(MIN_READ, Math.ceil(seconds)));
 }
 
+export interface QuizTargetOptions {
+  /** Whether quizzes should be generated in the lesson. Defaults to true. */
+  enabled?: boolean;
+  /** "auto" calculates pedagogical defaults based on scene count; "custom" enforces user min/max bounds. */
+  mode?: "auto" | "custom";
+  /** Minimum number of total questions. Clamped to >= 1. */
+  minQuestions?: number;
+  /** Maximum number of total questions. Clamped to >= minQuestions. */
+  maxQuestions?: number;
+  /** Custom checkpoint size per milestone. Default is typically 2 or 3. */
+  checkpointSize?: number;
+}
+
+export type QuizSettings = QuizTargetOptions;
+
+export const DEFAULT_QUIZ_SETTINGS: Required<QuizTargetOptions> = {
+  enabled: true,
+  mode: "auto",
+  minQuestions: 5,
+  maxQuestions: 25,
+  checkpointSize: 3,
+};
+
+export interface QuizAllocationPlan {
+  enabled: boolean;
+  /** Number of checkpoint quizzes inserted mid-lesson. */
+  checkpointCount: number;
+  /** Questions per checkpoint quiz. */
+  questionsPerCheckpoint: number;
+  /** Total checkpoint questions. */
+  checkpointTotal: number;
+  /** Target questions for the final closing quiz. */
+  finalTarget: number;
+  /** Total questions across all checkpoints + final exam. */
+  totalQuestions: number;
+  /** Pedagogical rationale or summary note. */
+  reasoning: string;
+}
+
 /**
- * How many questions the closing bank asks. The deck's length decides where
- * the quiz stands between "quick self-check" and "real exam" — a micro lesson
- * gets 10, a normal one 15, a long workshop 20.
+ * Intelligent algorithm that computes the optimal quiz question allocation
+ * across mid-lesson checkpoints and the final closing assessment.
+ *
+ * It balances pedagogical pacing with user-defined min/max bounds:
+ * - Micro lessons (3-5 slides): Avoids question overload; 0 checkpoints and 5-10 final questions.
+ * - Standard lessons (6-15 slides): 1 checkpoint mid-way (2-3 questions) + comprehensive closing quiz.
+ * - Deep lectures (16+ slides): 2 checkpoints at 1/3 and 2/3 milestones + thorough closing exam.
  */
-export function quizQuestionTarget(sceneCount: number): number {
-  if (sceneCount <= 5) return 10;
-  if (sceneCount <= 15) return 15;
-  return 20;
+export function calculateOptimalQuizPlan(
+  sceneCount: number,
+  options?: QuizTargetOptions,
+): QuizAllocationPlan {
+  const enabled = options?.enabled !== false;
+  if (!enabled) {
+    return {
+      enabled: false,
+      checkpointCount: 0,
+      questionsPerCheckpoint: 0,
+      checkpointTotal: 0,
+      finalTarget: 0,
+      totalQuestions: 0,
+      reasoning: "Quiz is disabled by user settings.",
+    };
+  }
+
+  const mode =
+    options?.mode ??
+    (options?.minQuestions !== undefined || options?.maxQuestions !== undefined
+      ? "custom"
+      : "auto");
+
+  let defaultCheckpointCount = 0;
+  let defaultCheckpointSize = 3;
+  let defaultFinalTarget = 10;
+
+  if (sceneCount <= 5) {
+    defaultCheckpointCount = 0;
+    defaultCheckpointSize = 0;
+    defaultFinalTarget = 10;
+  } else if (sceneCount <= 15) {
+    defaultCheckpointCount = 1;
+    defaultCheckpointSize = 3;
+    defaultFinalTarget = 15;
+  } else {
+    defaultCheckpointCount = 2;
+    defaultCheckpointSize = 3;
+    defaultFinalTarget = 20;
+  }
+
+  if (mode === "auto") {
+    const checkpointTotal = defaultCheckpointCount * defaultCheckpointSize;
+    return {
+      enabled: true,
+      checkpointCount: defaultCheckpointCount,
+      questionsPerCheckpoint: defaultCheckpointSize,
+      checkpointTotal,
+      finalTarget: defaultFinalTarget,
+      totalQuestions: checkpointTotal + defaultFinalTarget,
+      reasoning: `Tự động tối ưu cho ${sceneCount} cảnh: ${defaultCheckpointCount} chặng (${defaultCheckpointSize} câu/chặng) + ${defaultFinalTarget} câu tổng kết.`,
+    };
+  }
+
+  // Custom mode: calculates distribution strictly respecting minQuestions and maxQuestions
+  const rawMin =
+    typeof options?.minQuestions === "number" && !isNaN(options.minQuestions)
+      ? Math.max(1, Math.floor(options.minQuestions))
+      : 5;
+  const rawMax =
+    typeof options?.maxQuestions === "number" && !isNaN(options.maxQuestions)
+      ? Math.max(rawMin, Math.floor(options.maxQuestions))
+      : Math.max(rawMin, 25);
+
+  const minQ = Math.min(rawMin, rawMax);
+  const maxQ = Math.max(rawMin, rawMax);
+
+  let checkpointCount = defaultCheckpointCount;
+  if (maxQ <= 4 || sceneCount < 6) {
+    checkpointCount = 0;
+  } else if (maxQ <= 8 && checkpointCount > 1) {
+    checkpointCount = 1;
+  }
+
+  const checkpointSize =
+    typeof options?.checkpointSize === "number" && options.checkpointSize > 0
+      ? Math.floor(options.checkpointSize)
+      : checkpointCount > 0
+        ? maxQ <= 8
+          ? 2
+          : 3
+        : 0;
+
+  const checkpointTotal = checkpointCount * checkpointSize;
+
+  let finalTarget = defaultFinalTarget;
+  if (checkpointTotal + finalTarget > maxQ) {
+    finalTarget = Math.max(1, maxQ - checkpointTotal);
+  }
+  if (checkpointTotal + finalTarget < minQ) {
+    finalTarget = Math.max(1, minQ - checkpointTotal);
+  }
+
+  finalTarget = Math.max(1, Math.min(maxQ, finalTarget));
+  const totalQuestions = checkpointTotal + finalTarget;
+
+  return {
+    enabled: true,
+    checkpointCount,
+    questionsPerCheckpoint: checkpointSize,
+    checkpointTotal,
+    finalTarget,
+    totalQuestions,
+    reasoning: `Tuỳ chỉnh [${minQ}–${maxQ} câu]: ${checkpointCount} chặng (${checkpointSize} câu) + ${finalTarget} câu tổng kết (Tổng cộng: ${totalQuestions} câu).`,
+  };
+}
+
+/**
+ * How many questions the closing bank asks.
+ * When called without options, preserves original fixed counts for backward compatibility.
+ * When called with options, uses calculateOptimalQuizPlan.
+ */
+export function quizQuestionTarget(sceneCount: number, options?: QuizTargetOptions): number {
+  if (!options) {
+    if (sceneCount <= 5) return 10;
+    if (sceneCount <= 15) return 15;
+    return 20;
+  }
+  return calculateOptimalQuizPlan(sceneCount, options).finalTarget;
 }
 
 /**
@@ -137,3 +295,91 @@ export function spreadCorrectAnswers(questions: QuizQuestion[]): QuizQuestion[] 
     return { ...question, options: options.map((_, i) => options[(i + shift) % options.length]) };
   });
 }
+
+/**
+ * Detects and purges Chinese / Han characters that occasionally leak into quiz explanations
+ * from multilingual LLMs (such as Qwen, DeepSeek, GLM, etc.).
+ *
+ * When the lesson is in Vietnamese, models sometimes prefix explanations with
+ * "正确。" or "错误。" or write Chinese sentences ("因为...", "解释：...").
+ * This function translates common Chinese markers into natural Vietnamese, strips
+ * remaining CJK ideographs, and ensures students ALWAYS receive a clean, friendly Vietnamese
+ * explanation.
+ */
+export function cleanQuizExplanation(
+  explanation: string | undefined | null,
+  isCorrect?: boolean,
+  optionText?: string,
+): string {
+  if (!explanation || typeof explanation !== "string") {
+    if (optionText) {
+      return isCorrect
+        ? `Chính xác! "${optionText}" là phương án đúng.`
+        : `Chưa chính xác. Đáp án đúng là: "${optionText}".`;
+    }
+    return isCorrect
+      ? "Chính xác! Bạn đã chọn đúng phương án."
+      : "Chưa chính xác. Hãy xem lại kiến thức ở các slide trước nhé!";
+  }
+
+  let text = explanation.trim();
+
+  // Han script character detector
+  const HAS_HAN = /[\u4e00-\u9fff\u3400-\u4dbf]/u;
+  if (!HAS_HAN.test(text)) {
+    return text;
+  }
+
+  // 1. Convert common Chinese quiz explanation markers to friendly Vietnamese
+  const replacements: [RegExp, string][] = [
+    [/^(?:正确|回答正确|正确答案|正确选项)[。:：,\s]*/u, "Chính xác. "],
+    [/^(?:错误|回答错误|错误答案|错误选项)[。:：,\s]*/u, "Chưa đúng. "],
+    [/^(?:解析|解释|原因)[。:：\s]*/u, "Lời giải: "],
+    [/^(?:注意|提示)[。:：\s]*/u, "Lưu ý: "],
+    [/(?<=\s|^)因为\s*/gu, "Bởi vì "],
+    [/(?<=\s|^)所以\s*/gu, "Do đó "],
+    [/(?<=\s|^)答案是\s*/gu, "Đáp án là "],
+    [/(?<=\s|^)这是因为\s*/gu, "Đây là vì "],
+    [/(?<=\s|^)不对[。!,\s]*/gu, "Không đúng. "],
+    [/(?<=\s|^)是的[。!,\s]*/gu, "Đúng vậy. "],
+  ];
+
+  for (const [regex, repl] of replacements) {
+    text = text.replace(regex, repl);
+  }
+
+  // Count remaining Chinese characters vs total non-whitespace length
+  const hanChars = (text.match(/[\u4e00-\u9fff\u3400-\u4dbf]/gu) || []).length;
+  const nonSpaceLen = text.replace(/\s+/g, "").length;
+
+  // 2. If the explanation was predominantly Chinese (> 20% Han characters):
+  // Stripping Han characters would leave incomprehensible fragments.
+  // Instead, replace with a pedagogical Vietnamese explanation!
+  if (nonSpaceLen > 0 && hanChars / nonSpaceLen > 0.2) {
+    if (optionText) {
+      return isCorrect
+        ? `Chính xác! "${optionText}" là phương án hoàn toàn chính xác.`
+        : `Chưa chính xác. Đáp án đúng của câu này là: "${optionText}".`;
+    }
+    return isCorrect
+      ? "Chính xác! Bạn đã nắm rất vững kiến thức này."
+      : "Chưa chính xác. Bạn hãy ôn lại phần lý thuyết ở các slide trước nhé.";
+  }
+
+  // 3. Otherwise, strip isolated remaining Han characters and normalize whitespace
+  text = text.replace(/[\u4e00-\u9fff\u3400-\u4dbf]+/gu, " ");
+  text = text.replace(/\s{2,}/g, " ").replace(/\s+([.,!?:;])/g, "$1").trim();
+
+  // If text became too short after stripping
+  if (text.length < 5) {
+    if (optionText) {
+      return isCorrect
+        ? `Chính xác! "${optionText}" là phương án đúng.`
+        : `Chưa đúng. Đáp án chính xác là: "${optionText}".`;
+    }
+    return isCorrect ? "Chính xác!" : "Chưa chính xác.";
+  }
+
+  return text;
+}
+

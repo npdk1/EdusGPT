@@ -152,10 +152,26 @@ export function SlideSurface({
     scene.layout && typeof scene.layout === "string"
       ? (scene.layout as SlideLayout)
       : defaultSlideLayout(scene);
-  const layout: SlideLayout =
-    (requested === "image-left" || requested === "image-right") && !hasFigure
-      ? "statement"
-      : requested;
+
+  const hasPicture = Boolean(
+    (scene.imagePrompt ?? "").trim() || (scene.imageQuery ?? "").trim()
+  );
+
+  const shouldSplit =
+    (requested === "image-left" ||
+      requested === "image-right" ||
+      ((requested === "cards" || requested === "statement" || requested === "two-col") &&
+        hasPicture &&
+        scene.bullets.length >= 2)) &&
+    hasFigure;
+
+  const layout: SlideLayout = shouldSplit
+    ? requested === "image-left"
+      ? "image-left"
+      : "image-right"
+    : requested === "full-figure"
+    ? "full-figure"
+    : requested;
   const split = layout === "image-left" || layout === "image-right";
 
   /**
@@ -332,17 +348,15 @@ export function SlideSurface({
   );
 
   // The evidence: a formula, a table, a chart, a graph, a quiz, a simulation —
-  // or the picture the scene asked for.
+  // or the picture the scene asked for. Prioritized so figures don't collide.
   const figure = (
-    <>
+    <div className="scene-figure-container w-full flex items-center justify-center min-h-0">
       {scene.kind === "simulation3d" || scene.simulation3d ? (
-        <div className="scene-interactive-panel relative z-10 my-2">
+        <div className="scene-interactive-panel relative z-10 my-2 w-full">
           <InteractiveSimulation config={scene.simulation3d} />
         </div>
-      ) : null}
-
-      {scene.kind === "quiz" && scene.quiz ? (
-        <div className="scene-interactive-panel scene-interactive-quiz relative z-10">
+      ) : scene.kind === "quiz" && scene.quiz ? (
+        <div className="scene-interactive-panel scene-interactive-quiz relative z-10 w-full">
           <InteractiveQuiz
             sceneId={scene.id}
             question={scene.quiz.question}
@@ -350,30 +364,26 @@ export function SlideSurface({
             options={scene.quiz.options}
           />
         </div>
-      ) : null}
-
-      {scene.formula ? (
+      ) : scene.formula ? (
         <FigureZoom label={t.zoomFormula}>
           <SceneFormula formula={scene.formula} />
         </FigureZoom>
-      ) : null}
-      {scene.table ? <SceneTable table={scene.table} /> : null}
-      {scene.data?.length ? (
+      ) : scene.table ? (
+        <SceneTable table={scene.table} />
+      ) : scene.data?.length ? (
         <SceneDataChart data={scene.data} title={t.dataTitle} />
-      ) : null}
-      {scene.graph ? (
+      ) : scene.graph ? (
         <FigureZoom label={`${t.zoom} ${scene.graph.title ?? t.graphFallback}`}>
           <FunctionGraph graph={scene.graph} />
         </FigureZoom>
-      ) : null}
-      {scene.mindmap ? (
+      ) : scene.mindmap ? (
         <FigureZoom label={`${t.zoom} ${t.mapFallback}`}>
           <MindMap branches={scene.mindmap.branches} />
         </FigureZoom>
-      ) : null}
-
-      <SlideImageView lessonId={lessonId} scene={scene} />
-    </>
+      ) : (
+        <SlideImageView lessonId={lessonId} scene={scene} />
+      )}
+    </div>
   );
 
   const head = (
@@ -510,6 +520,10 @@ export function SlideSurface({
                     <figure className="scene-split-figure">{figure}</figure>
                   </>
                 )}
+              </div>
+            ) : scene.kind === "quiz" && scene.quiz ? (
+              <div className="scene-quiz-stage flex flex-col justify-center flex-1 min-h-0 w-full my-auto px-[2%]">
+                {figure}
               </div>
             ) : layout === "full-figure" ? (
               <>

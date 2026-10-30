@@ -1,14 +1,18 @@
+import { Suspense } from "react";
 import type { Metadata } from "next";
 import "./globals.css";
 import "katex/dist/katex.min.css";
 import { SiteHeader } from "@/components/site/SiteHeader";
 import { SiteFooter } from "@/components/site/SiteFooter";
 import { ScrollProgressBar } from "@/components/motion/Reveal";
+import { RouteProgressBar } from "@/components/site/RouteProgressBar";
 import { ThemeProvider } from "@/components/site/ThemeProvider";
 import { I18nProvider } from "@/i18n/provider";
 import { LANG_BOOTSTRAP_SCRIPT } from "@/i18n/config";
 import { SkipLink } from "@/components/site/SkipLink";
 import { THEME_BOOTSTRAP_SCRIPT } from "@/lib/theme";
+import { TutorialProvider } from "@/components/tutorial/TutorialContext";
+import { TutorialTour } from "@/components/tutorial/TutorialTour";
 
 export const metadata: Metadata = {
   title: {
@@ -50,11 +54,17 @@ export default function RootLayout({
       <body className="min-h-screen bg-ink-950 font-sans text-mist-100 antialiased">
         <ThemeProvider>
           <I18nProvider>
-            <SkipLink />
-            <ScrollProgressBar />
-            <SiteHeader />
-            <main id="main">{children}</main>
-            <SiteFooter />
+            <TutorialProvider>
+              <SkipLink />
+              <Suspense fallback={null}>
+                <RouteProgressBar />
+              </Suspense>
+              <ScrollProgressBar />
+              <SiteHeader />
+              <main id="main">{children}</main>
+              <SiteFooter />
+              <TutorialTour />
+            </TutorialProvider>
           </I18nProvider>
         </ThemeProvider>
       </body>

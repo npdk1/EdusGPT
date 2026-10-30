@@ -163,7 +163,7 @@ export function FullscreenControls({
         <button
           type="button"
           onClick={timebase.toggle}
-          className="flex h-11 w-11 items-center justify-center rounded-full bg-white/95 text-black transition-transform hover:scale-105"
+          className="flex h-11 w-11 items-center justify-center rounded-full bg-gradient-to-br from-brand-500 via-blue-600 to-amber-500 text-white shadow-lg shadow-brand-500/30 transition-transform hover:scale-105 active:scale-95 border border-amber-400/30"
           title={timebase.playing ? t.fullscreenPauseTitle : t.fullscreenPlayTitle}
           aria-label={timebase.playing ? t.fullscreenPause : t.fullscreenPlay}
         >
@@ -361,7 +361,7 @@ function ScrubLine({ timebase }: { timebase: Timebase }) {
       >
         <div
           ref={fillRef}
-          className="absolute inset-0 origin-left rounded-full bg-brand-400"
+          className="absolute inset-0 origin-left rounded-full bg-gradient-to-r from-brand-500 via-blue-500 to-amber-400"
           style={{ scale: "0 1" }}
         />
       </div>

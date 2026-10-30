@@ -433,7 +433,7 @@ export function FlashcardClient({ courseId }: FlashcardClientProps) {
                         {String(idx + 1).padStart(2, "0")}
                       </span>
                       <h3 className="text-base sm:text-lg font-bold text-mist-50">
-                        {card.keyword}
+                        <InlineText text={card.keyword} />
                       </h3>
                       <span className="rounded-md border border-brand-500/30 bg-brand-500/10 px-2 py-0.5 text-[10px] font-semibold text-brand-300">
                         {catBadge}

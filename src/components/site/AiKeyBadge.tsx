@@ -93,9 +93,9 @@ export function AiKeyBadge({ compact = false }: { compact?: boolean }) {
     return (
       <Link
         href="/setup"
-        className="chip whitespace-nowrap border-gold-500/60 bg-gold-500/10 text-gold-200 transition-colors hover:border-gold-400 hover:text-gold-100"
+        className="chip whitespace-nowrap border-amber-500/40 bg-amber-500/10 text-amber-700 dark:text-amber-300 transition-colors hover:border-amber-500 hover:bg-amber-500/20"
       >
-        <IconAlertTriangle className="h-3.5 w-3.5" />
+        <IconAlertTriangle className="h-3.5 w-3.5 text-amber-500" />
         {isCli
           ? compact
             ? t.missingAgentShort
@@ -122,10 +122,10 @@ export function AiKeyBadge({ compact = false }: { compact?: boolean }) {
   return (
     <Link
       href="/setup"
-      className="chip whitespace-nowrap border-brand-600/60 bg-brand-500/10 text-brand-200 transition-colors hover:border-brand-400 hover:text-brand-100"
+      className="chip whitespace-nowrap border-emerald-500/40 bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 transition-colors hover:border-emerald-500 hover:bg-emerald-500/20"
       title={title}
     >
-      <IconCircleCheck className="h-3.5 w-3.5" />
+      <IconCircleCheck className="h-3.5 w-3.5 text-emerald-500" />
       {text}
     </Link>
   );

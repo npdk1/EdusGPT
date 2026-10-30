@@ -5,6 +5,7 @@ import { sceneKindLabel, type Lesson } from "./types";
 import { type AlignedSentence } from "@/lib/karaoke";
 import { inlineHtml, cleanLatex } from "./inline";
 import { pollinationsImageUrl } from "./pollinations";
+import { cleanQuizExplanation } from "./quiz";
 import {
   isDarkTheme,
   resolveSlideTheme,
@@ -26,23 +27,33 @@ import {
  * lesson data itself is embedded inline.
  */
 const CSS = `
-:root{color-scheme:dark;--ink:#05080f;--ink2:#0a0f1d;--ink3:#0f1628;--line:#1e2b4a;--mist:#f0f4f9;--mist3:#9cb0cb;--mist5:#5f7394;--brand:#1f6fb5;--brand3:#38bdf8;--brand7:#12395c;--gold:#f0c979;--gold3:#fbd275;--ember:#ff8a3d}
+:root, html[data-theme="dark"]{color-scheme:dark;--ink:#09090b;--ink2:#121215;--ink3:#18181b;--line:#27272a;--mist:#ffffff;--mist3:#d4d4d8;--mist5:#a1a1aa;--brand:#0284c7;--brand3:#38bdf8;--brand7:#0369a1;--gold:#f59e0b;--gold3:#fbbf24;--ember:#f97316;--stage-shadow:0 28px 60px -34px rgba(0,0,0,.85);--player-bg:rgba(18,18,21,.92)}
+html[data-theme="light"]{color-scheme:light;--ink:#f8fafc;--ink2:#ffffff;--ink3:#f1f5f9;--line:#cbd5e1;--mist:#09090b;--mist3:#1e293b;--mist5:#475569;--brand:#0284c7;--brand3:#0369a1;--brand7:#0c4a6e;--gold:#d97706;--gold3:#b45309;--ember:#ea580c;--stage-shadow:0 20px 45px -20px rgba(0,0,0,.12);--player-bg:rgba(255,255,255,.96)}
 *{box-sizing:border-box}
-html,body{margin:0;background:var(--ink);color:var(--mist);font-family:ui-sans-serif,system-ui,"Segoe UI",Roboto,sans-serif}
-body{background-image:radial-gradient(50rem 32rem at 12% -8%,rgba(31,111,181,.18),transparent 62%),radial-gradient(40rem 28rem at 92% 2%,rgba(240,201,121,.12),transparent 60%);min-height:100vh}
+html,body{margin:0;background:var(--ink);color:var(--mist);font-family:ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;min-height:100vh;transition:background .2s ease,color .2s ease}
+body{background-image:radial-gradient(50rem 32rem at 12% -8%,color-mix(in srgb,var(--brand) 12%,transparent) 0%,transparent 65%),radial-gradient(40rem 28rem at 92% 2%,color-mix(in srgb,var(--gold) 10%,transparent) 0%,transparent 60%)}
 .wrap{max-width:1080px;margin:0 auto;padding:28px 20px 64px}
-.head{display:flex;flex-wrap:wrap;align-items:center;gap:10px;margin-bottom:16px}
-.head h1{margin:0;font-size:20px;letter-spacing:-.01em}
-.tag{font-size:11px;border:1px solid var(--line);border-radius:999px;padding:3px 10px;color:var(--mist3)}
+.head{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:12px;margin-bottom:16px}
+.head-left{display:flex;flex-direction:column;gap:8px}
+.head-tags{display:flex;flex-wrap:wrap;align-items:center;gap:8px}
+.head h1{margin:0;font-size:22px;font-weight:800;letter-spacing:-.02em;color:var(--mist)}
+.tag{font-size:11px;border:1px solid var(--line);border-radius:999px;padding:3px 10px;color:var(--mist3);background:var(--ink2);box-shadow:0 1px 2px rgba(0,0,0,.03)}
 .mono{font-family:ui-monospace,Consolas,monospace}
+.theme-btn{display:inline-flex;align-items:center;gap:7px;border:1px solid var(--line);background:var(--ink2);color:var(--mist);border-radius:999px;padding:6px 14px;font-size:12px;font-weight:600;cursor:pointer;transition:all .15s ease;box-shadow:0 1px 3px rgba(0,0,0,.06);user-select:none}
+.theme-btn:hover{border-color:var(--brand);color:var(--brand);background:var(--ink3)}
+.theme-btn svg{width:15px;height:15px;flex-shrink:0}
+html[data-theme="dark"] .icon-sun,html[data-theme="dark"] .theme-txt-light{display:inline-flex}
+html[data-theme="dark"] .icon-moon,html[data-theme="dark"] .theme-txt-dark{display:none}
+html[data-theme="light"] .icon-sun,html[data-theme="light"] .theme-txt-light{display:none}
+html[data-theme="light"] .icon-moon,html[data-theme="light"] .theme-txt-dark{display:inline-flex}
 
-/* The slide box. \`container-type\` is what lets everything inside measure its
-   type in \`cqw\` against this box, so the sizes below are the same numbers the
+/* The slide box. container-type is what lets everything inside measure its
+   type in cqw against this box, so the sizes below are the same numbers the
    web player's stylesheet uses rather than a fresh guess at "about right". */
-.stage{position:relative;aspect-ratio:16/9;container-type:inline-size;background:var(--ink2);border:1px solid var(--line);border-radius:20px;overflow:hidden;box-shadow:0 28px 60px -34px rgba(0,0,0,.75)}
+.stage{position:relative;aspect-ratio:16/9;container-type:inline-size;background:var(--ink2);border:1px solid var(--line);border-radius:20px;overflow:hidden;box-shadow:var(--stage-shadow);transition:background .2s ease,border-color .2s ease}
 .scene{position:absolute;inset:0;opacity:0;visibility:hidden}
-.card{--slide-fit:1;position:absolute;inset:0;display:flex;flex-direction:column;justify-content:safe center;padding:3.4cqw 5.5cqw 9cqw;overflow:hidden;background-image:linear-gradient(180deg,color-mix(in srgb,var(--ink) 88%,var(--mist5)) 0%,var(--ink) 38%,var(--ink3) 100%)}
-.wash{position:absolute;inset:0;z-index:-1;pointer-events:none;background:radial-gradient(120% 90% at 88% -10%,color-mix(in srgb,var(--brand3) 16%,transparent) 0%,transparent 62%),radial-gradient(90% 80% at 8% 108%,color-mix(in srgb,var(--brand) 10%,transparent) 0%,transparent 60%)}
+.card{--slide-fit:1;position:absolute;inset:0;display:flex;flex-direction:column;justify-content:safe center;padding:3.4cqw 5.5cqw 9cqw;overflow:hidden;background-image:linear-gradient(180deg,var(--ink2) 0%,var(--ink2) 60%,var(--ink3) 100%)}
+.wash{position:absolute;inset:0;z-index:-1;pointer-events:none;background:radial-gradient(120% 90% at 88% -10%,color-mix(in srgb,var(--brand) 12%,transparent) 0%,transparent 62%),radial-gradient(90% 80% at 8% 108%,color-mix(in srgb,var(--gold) 8%,transparent) 0%,transparent 60%)}
 /* Same five patterns as the web player, drawn with the export's own accent
    roles (remapped to the lesson paper in themeCss), so a downloaded deck
    keeps the backdrop its teacher picked. */
@@ -56,9 +67,9 @@ body{background-image:radial-gradient(50rem 32rem at 12% -8%,rgba(31,111,181,.18
    the caption strip, with the picture as the one thing allowed to give way. */
 .fit{position:relative;z-index:2;display:flex;flex-direction:column;gap:1.1cqw;flex-shrink:0;max-height:100%;min-height:0}
 .head-in{width:100%;max-width:86%}
-.kicker{display:inline-flex;align-items:center;gap:.6cqw;font-size:calc(1.05cqw * var(--slide-fit));font-weight:700;letter-spacing:.18em;text-transform:uppercase;color:var(--brand)}
-.title{margin:2.5% 0 0;font-size:calc(5.2cqw * var(--slide-fit));line-height:1.04;letter-spacing:-.03em;font-weight:700;color:var(--mist);text-wrap:balance}
-.sub{margin:2% 0 0;font-size:calc(1.7cqw * var(--slide-fit));color:var(--mist3)}
+.kicker{display:inline-flex;align-items:center;gap:.6cqw;font-size:calc(1.05cqw * var(--slide-fit));font-weight:800;letter-spacing:.18em;text-transform:uppercase;color:var(--brand)}
+.title{margin:2.5% 0 0;font-size:calc(5.2cqw * var(--slide-fit));line-height:1.04;letter-spacing:-.03em;font-weight:800;color:var(--mist);text-wrap:balance}
+.sub{margin:2% 0 0;font-size:calc(1.7cqw * var(--slide-fit));color:var(--mist3);line-height:1.4}
 .rule{border:0;border-top:1px solid var(--line);width:22%;margin:3% 0 0}
 
 /* Hairlines, not filled cards: one alignment for the eye and none of the visual
@@ -66,20 +77,20 @@ body{background-image:radial-gradient(50rem 32rem at 12% -8%,rgba(31,111,181,.18
 .body{display:grid;width:100%;max-width:86%;gap:0 6%;grid-template-columns:1fr;margin:0;padding:0;list-style:none}
 @container (min-width:620px){.body{grid-template-columns:1fr 1fr}}
 .body li{display:flex;align-items:baseline;gap:1.5cqw;font-size:calc(1.4cqw * var(--slide-fit));line-height:1.62;padding:.75cqw 0;border-top:1px solid var(--line);color:var(--mist3)}
-.body .bi{font-family:ui-monospace,monospace;font-size:.8em;font-weight:600;color:var(--brand);flex:0 0 auto}
+.body .bi{font-family:ui-monospace,monospace;font-size:.8em;font-weight:800;color:var(--brand);flex:0 0 auto}
 .body li>span:last-child{display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:3;line-clamp:3;overflow:hidden}
 .inline-code{font-family:ui-monospace,monospace;font-size:.92em;padding:0 .3em;border-radius:.3em;background:color-mix(in srgb,var(--mist) 8%,transparent)}
-.formula{margin:0;width:fit-content;border:1px solid rgba(246,185,59,.4);background:rgba(246,185,59,.1);color:var(--gold3);border-radius:12px;padding:12px 16px;font-family:ui-monospace,monospace;font-size:calc(2cqw * var(--slide-fit));font-weight:600}
+.formula{margin:0;width:fit-content;border:1px solid color-mix(in srgb,var(--gold) 45%,transparent);background:color-mix(in srgb,var(--gold) 10%,transparent);color:var(--gold);border-radius:12px;padding:12px 16px;font-family:ui-monospace,monospace;font-size:calc(2cqw * var(--slide-fit));font-weight:700}
 /* The quiz prints like an answer key: nobody can click in a downloaded file,
    so the right option is marked and the explanation sits under its question.
    The bank scrolls — a 20-question final can be taller than the paper. */
 .quiz{display:grid;width:100%;max-width:86%;gap:1.4cqw;margin:0;max-height:36cqw;overflow:auto}
 .quiz-q{margin:0}
-.quiz-qt{margin:0;font-size:calc(1.5cqw * var(--slide-fit));line-height:1.45;font-weight:600;color:var(--mist)}
-.quiz-n{font-family:ui-monospace,monospace;font-size:.82em;font-weight:600;color:var(--brand);margin-right:1.2cqw}
+.quiz-qt{margin:0;font-size:calc(1.5cqw * var(--slide-fit));line-height:1.45;font-weight:700;color:var(--mist)}
+.quiz-n{font-family:ui-monospace,monospace;font-size:.82em;font-weight:700;color:var(--brand);margin-right:1.2cqw}
 .quiz-opts{margin:.6cqw 0 0;padding:0;list-style:none;display:grid;gap:.35cqw}
 .quiz-opts li{display:flex;align-items:baseline;gap:1.2cqw;font-size:calc(1.3cqw * var(--slide-fit));line-height:1.5;padding:.5cqw .9cqw;border:1px solid var(--line);border-radius:.6cqw;color:var(--mist3)}
-.quiz-opts li[data-correct="true"]{color:var(--brand3);border-color:color-mix(in srgb,var(--brand) 55%,transparent);background:color-mix(in srgb,var(--brand) 10%,transparent)}
+.quiz-opts li[data-correct="true"]{color:var(--brand);border-color:color-mix(in srgb,var(--brand) 65%,transparent);background:color-mix(in srgb,var(--brand) 12%,transparent);font-weight:700}
 .quiz-exp{margin:.5cqw 0 0;font-size:calc(1.15cqw * var(--slide-fit));line-height:1.5;color:var(--mist5)}
 /* The recap map, in the same two columns the player uses once the paper is
    wide enough to hold them. */
@@ -105,13 +116,13 @@ body{background-image:radial-gradient(50rem 32rem at 12% -8%,rgba(31,111,181,.18
    changes when the hand-over happens moves every line on screen, and the reader
    feels it as a stutter at the exact moment they are following the voice. */
 .cap{position:absolute;left:5%;right:5%;bottom:2.2cqw;z-index:10;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;pointer-events:none;text-align:center}
-.sent{position:relative;margin:0;font-size:1.65cqw;line-height:1.34;font-weight:500;letter-spacing:.005em;color:var(--mist);display:none;text-align:center;transition:opacity .16s linear}
+.sent{position:relative;margin:0;font-size:1.65cqw;line-height:1.34;font-weight:600;letter-spacing:.005em;color:var(--mist);display:none;text-align:center;transition:opacity .16s linear}
 .sent[data-row="live"]{display:block;opacity:1}
-.sent[data-row="next"]{display:block;opacity:.55;color:var(--mist5);margin-top:.4cqw}
+.sent[data-row="next"]{display:block;opacity:.6;color:var(--mist5);margin-top:.4cqw}
 .sent .w{padding:0 1px;transition:color 90ms linear}
 .sent .w[data-state="idle"]{color:var(--mist5)}
 .sent .w[data-state="said"]{color:var(--mist3)}
-.sent .w[data-state="now"]{color:var(--brand)}
+.sent .w[data-state="now"]{color:var(--brand);font-weight:800}
 .cap-plain{position:relative;margin:0;font-size:1.65cqw;line-height:1.34;font-weight:500;color:var(--mist3);text-align:center}
 .bar{position:absolute;left:0;bottom:0;height:3px;width:100%;transform:scaleX(0);transform-origin:left center;background:linear-gradient(90deg,var(--brand),var(--gold3))}
 
@@ -128,54 +139,54 @@ body{background-image:radial-gradient(50rem 32rem at 12% -8%,rgba(31,111,181,.18
    the transport, and volume, speed and the shortcut list are on the right. A row
    of evenly spaced buttons in a black strip is a toolbar, and a toolbar spends
    the width that a player spends on the one control people reach for. */
-.player{margin-top:14px;border:1px solid var(--line);background:color-mix(in srgb,var(--ink3) 72%,transparent);border-radius:18px;padding:14px 16px 12px}
+.player{margin-top:14px;border:1px solid var(--line);background:var(--player-bg);border-radius:18px;padding:14px 16px 12px;backdrop-filter:blur(8px);box-shadow:0 4px 20px rgba(0,0,0,.04);transition:background .2s ease,border-color .2s ease}
 .scrubwrap{position:relative;padding-top:26px}
 .hovertime{position:absolute;top:0;left:0;transform:translateX(-50%);border:1px solid var(--line);background:var(--ink2);border-radius:6px;padding:1px 6px;font-family:ui-monospace,monospace;font-size:11px;color:var(--mist);opacity:0;pointer-events:none;transition:opacity .1s}
 .hovertime[data-visible="true"]{opacity:1}
 .scrub{position:relative;height:44px;touch-action:none;user-select:none;cursor:pointer;outline:none}
 .scrub[data-dragging="true"]{cursor:grabbing}
-.scrub:focus-visible .rail{box-shadow:0 0 0 2px color-mix(in srgb,var(--brand3) 55%,transparent)}
+.scrub:focus-visible .rail{box-shadow:0 0 0 2px color-mix(in srgb,var(--brand) 55%,transparent)}
 .chapterband{position:absolute;left:0;right:0;top:0;height:16px}
 .chapter{position:absolute;top:0;height:16px;overflow:hidden;white-space:nowrap;text-overflow:ellipsis;border-left:1px solid color-mix(in srgb,var(--brand) 70%,transparent);padding-left:6px;font-size:10px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--mist5)}
 .chapter[data-state="passed"]{color:var(--mist3)}
-.chapter[data-state="current"]{color:var(--brand3)}
+.chapter[data-state="current"]{color:var(--brand)}
 .rail{position:absolute;left:0;right:0;bottom:12px;height:10px;border-radius:999px;background:var(--ink3);border:1px solid var(--line);overflow:hidden}
 .fill{position:absolute;top:0;bottom:0;left:0;width:0;background:linear-gradient(90deg,var(--brand),var(--brand3))}
 .loopregion{position:absolute;bottom:10px;height:14px;border-radius:3px;border-left:2px solid;border-right:2px solid;pointer-events:none}
-.loopregion[data-on="true"]{border-color:var(--gold3);background:color-mix(in srgb,var(--gold) 30%,transparent)}
+.loopregion[data-on="true"]{border-color:var(--gold);background:color-mix(in srgb,var(--gold) 30%,transparent)}
 .loopregion[data-on="false"]{border-color:var(--mist5);background:color-mix(in srgb,var(--mist5) 15%,transparent)}
-.tick{position:absolute;bottom:12px;width:1px;height:10px;background:var(--ink2)}
-.handle{position:absolute;bottom:6px;width:20px;height:20px;margin-left:-10px;border-radius:999px;background:var(--brand3);border:2px solid var(--ink);box-shadow:0 6px 14px rgba(0,0,0,.45);transition:transform .12s}
+.tick{position:absolute;bottom:12px;width:1px;height:10px;background:var(--line)}
+.handle{position:absolute;bottom:6px;width:20px;height:20px;margin-left:-10px;border-radius:999px;background:var(--brand);border:2px solid var(--ink);box-shadow:0 4px 12px rgba(0,0,0,.3);transition:transform .12s}
 .scrub:hover .handle,.scrub[data-dragging="true"] .handle{transform:scale(1.12)}
 .scrubfoot{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:8px;font-family:ui-monospace,monospace;font-size:11px;color:var(--mist5)}
 .transport{display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin-top:12px}
-.tbtn{display:inline-flex;align-items:center;justify-content:center;gap:6px;width:36px;height:36px;border-radius:10px;padding:0;font:inherit;color:var(--mist3);background:transparent;border:1px solid transparent;cursor:pointer}
-.tbtn:hover{color:var(--mist);background:color-mix(in srgb,var(--ink3) 92%,transparent);border-color:var(--line)}
+.tbtn{display:inline-flex;align-items:center;justify-content:center;gap:6px;width:36px;height:36px;border-radius:10px;padding:0;font:inherit;color:var(--mist3);background:transparent;border:1px solid transparent;cursor:pointer;transition:all .15s ease}
+.tbtn:hover{color:var(--mist);background:var(--ink3);border-color:var(--line)}
 .tbtn svg{width:17px;height:17px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
 .tbtn svg[data-fill="1"]{fill:currentColor;stroke:none}
-.tplay{display:inline-flex;align-items:center;justify-content:center;width:44px;height:44px;border-radius:12px;border:0;background:var(--brand);color:var(--ink);cursor:pointer}
+.tplay{display:inline-flex;align-items:center;justify-content:center;width:44px;height:44px;border-radius:12px;border:0;background:var(--brand);color:#ffffff;cursor:pointer;transition:background .15s ease}
 .tplay:hover{background:var(--brand3)}
 .tplay svg{width:21px;height:21px;fill:currentColor;stroke:none}
 .tsep{width:1px;height:28px;background:var(--line)}
-.clock{border:1px solid var(--line);background:var(--ink2);border-radius:8px;padding:6px 10px;font-family:ui-monospace,monospace;font-size:12px;color:var(--brand3);white-space:nowrap}
-.loopbox{display:flex;align-items:center;gap:6px;border:1px solid var(--line);background:color-mix(in srgb,var(--ink3) 70%,transparent);border-radius:12px;padding:4px}
+.clock{border:1px solid var(--line);background:var(--ink2);border-radius:8px;padding:6px 10px;font-family:ui-monospace,monospace;font-size:12px;font-weight:700;color:var(--brand);white-space:nowrap}
+.loopbox{display:flex;align-items:center;gap:6px;border:1px solid var(--line);background:var(--ink3);border-radius:12px;padding:4px}
 .loopbox .tbtn{width:auto;height:28px;padding:0 8px;font-size:12px;font-weight:600}
-.loopbox .tbtn[aria-pressed="true"]{background:var(--gold);color:var(--ink)}
+.loopbox .tbtn[aria-pressed="true"]{background:var(--gold);color:#09090b;font-weight:700}
 .ab{height:28px;border:0;border-radius:8px;padding:0 8px;font-family:ui-monospace,monospace;font-size:12px;color:var(--mist3);background:transparent;cursor:pointer}
-.ab:hover{color:var(--mist);background:color-mix(in srgb,var(--ink3) 92%,transparent)}
+.ab:hover{color:var(--mist);background:var(--ink3)}
 .clearbtn{height:28px;border:0;border-radius:8px;padding:0 8px;font:inherit;font-size:12px;color:var(--mist5);background:transparent;cursor:pointer}
 .clearbtn:hover{color:var(--ember)}
 .rate{border:1px solid var(--line);background:var(--ink2);border-radius:8px;padding:6px 8px;font-family:ui-monospace,monospace;font-size:12px;color:var(--mist);cursor:pointer}
 .volrow{display:flex;align-items:center;gap:6px;margin-left:auto}
 input[type=range]{-webkit-appearance:none;appearance:none;width:84px;height:22px;background:transparent;cursor:pointer}
 input[type=range]::-webkit-slider-runnable-track{height:6px;border-radius:999px;background:var(--ink3);border:1px solid var(--line)}
-input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:14px;height:14px;margin-top:-5px;border-radius:999px;background:var(--brand3);border:2px solid var(--ink)}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:14px;height:14px;margin-top:-5px;border-radius:999px;background:var(--brand);border:2px solid var(--ink)}
 input[type=range]::-moz-range-track{height:6px;border-radius:999px;background:var(--ink3)}
-input[type=range]::-moz-range-thumb{width:12px;height:12px;border-radius:999px;background:var(--brand3);border:2px solid var(--ink)}
+input[type=range]::-moz-range-thumb{width:12px;height:12px;border-radius:999px;background:var(--brand);border:2px solid var(--ink)}
 .chapterlist{display:flex;flex-direction:column;gap:4px;margin-top:12px;max-height:170px;overflow-y:auto}
-.mark{display:flex;align-items:baseline;justify-content:space-between;gap:10px;width:100%;text-align:left;font:inherit;font-size:12px;color:var(--mist3);background:transparent;border:0;border-left:2px solid var(--line);border-radius:0;padding:5px 10px;cursor:pointer}
-.mark:hover{color:var(--brand3);border-left-color:var(--brand3);background:transparent}
-.mark[data-current="true"]{color:var(--mist);border-left-color:var(--brand)}
+.mark{display:flex;align-items:baseline;justify-content:space-between;gap:10px;width:100%;text-align:left;font:inherit;font-size:12px;color:var(--mist3);background:transparent;border:0;border-left:2px solid var(--line);border-radius:0;padding:5px 10px;cursor:pointer;transition:all .15s ease}
+.mark:hover{color:var(--brand);border-left-color:var(--brand);background:color-mix(in srgb,var(--brand) 6%,transparent)}
+.mark[data-current="true"]{color:var(--mist);border-left-color:var(--brand);font-weight:700;background:color-mix(in srgb,var(--brand) 10%,transparent)}
 .mark .at{font-family:ui-monospace,monospace;font-size:11px;color:var(--mist5)}
 .hint{color:var(--mist5);font-size:11px;margin-top:10px;font-family:ui-monospace,monospace}
 /* Fullscreen takes the whole page, slide and transport together: the browser
@@ -230,23 +241,8 @@ input[type=range]::-moz-range-thumb{width:12px;height:12px;border-radius:999px;b
 function themeCss(palette: SlidePalette, dark: boolean): string {
   const p = palette;
   return (
-    `:root{color-scheme:${dark ? "dark" : "light"};` +
-    `--ink:${p.bg};--ink2:${p.bg};--ink3:${p.bgSunk};--line:${p.rule};` +
-    `--mist:${p.ink};--mist3:${p.inkSoft};--mist5:${p.inkFaint};` +
-    `--brand:${p.accent};--brand3:${p.accentSoft};--brand7:${p.accent}}` +
-    `body{background-image:none}` +
-    `.stage{background:${p.bg}}` +
-    `.player{background:color-mix(in srgb, ${p.bgSunk} 72%, transparent)}` +
-    // The play button sits on the accent, so its ink has to come from the paper
-    // rather than from the accent's own theme: a light deck would otherwise put
-    // near-white text on a mid-tone accent.
-    `.tplay{color:${dark ? p.bg : "#ffffff"}}` +
-    `.wash{background:radial-gradient(120% 90% at 88% -10%,` +
-    `color-mix(in srgb, ${p.accentSoft} 16%, transparent) 0%,transparent 62%)}` +
-    `.fig img{background:${p.bgSunk}}` +
-    `.zoom{background:color-mix(in srgb, ${p.ink} 82%, transparent)}` +
-    `.formula{border-color:color-mix(in srgb, #f6b93b 40%, transparent);` +
-    `background:color-mix(in srgb, #f6b93b 10%, transparent)}`
+    `\n/* Lesson custom accents */\n` +
+    `.formula{border-color:color-mix(in srgb,var(--gold) 45%,transparent);background:color-mix(in srgb,var(--gold) 10%,transparent)}\n`
   );
 }
 
@@ -445,7 +441,12 @@ function quizMarkup(quiz: ExportQuiz): string {
               `<span>${inlineHtml(option.text, escapeHtml)}</span></li>`,
           )
           .join("");
-        const explanation = question.options.find((option) => option.isCorrect)?.explanation;
+        const correctOption = question.options.find((option) => option.isCorrect);
+        const explanation = cleanQuizExplanation(
+          correctOption?.explanation,
+          true,
+          correctOption?.text,
+        );
         return (
           `<section class="quiz-q">` +
           `<p class="quiz-qt"><span class="quiz-n">${
@@ -597,6 +598,9 @@ const STANDALONE_I18N = {
     dlgSubtitle: "Mọi thao tác tua đều hoạt động trên timeline của bài giảng.",
     dlgClose: "Đóng bảng phím tắt",
     dlgCloseTitle: "Đóng (Esc)",
+    themeToggle: "Chuyển giao diện Sáng / Tối",
+    themeDark: "Giao diện Tối",
+    themeLight: "Giao diện Sáng",
     hint: "Toàn bộ bài nằm trong file này. GSAP tải từ CDN nên cần mạng ở lần mở đầu; bài học và giọng đọc thì không.",
   },
   en: {
@@ -639,6 +643,9 @@ const STANDALONE_I18N = {
     dlgSubtitle: "Every seek works on the lesson timeline.",
     dlgClose: "Close shortcuts",
     dlgCloseTitle: "Close (Esc)",
+    themeToggle: "Toggle Light / Dark mode",
+    themeDark: "Dark mode",
+    themeLight: "Light mode",
     hint: "The entire lesson is contained in this file. GSAP loads from CDN on first open; the lesson slides and audio are 100% offline.",
   },
 };
@@ -765,6 +772,7 @@ function shortcutsMarkup(lang: "en" | "vi" = "vi"): string {
         [
           "Khác",
           [
+            ["T", "Chuyển giao diện Sáng / Tối"],
             ["− / +", "Giảm / tăng tốc độ phát"],
             ["M", "Tắt hoặc bật tiếng"],
             ["F", "Toàn màn hình vùng trình chiếu"],
@@ -798,6 +806,7 @@ function shortcutsMarkup(lang: "en" | "vi" = "vi"): string {
         [
           "Other",
           [
+            ["T", "Toggle Light / Dark mode"],
             ["− / +", "Slow down / speed up"],
             ["M", "Mute or unmute"],
             ["F", "Fullscreen the slide"],
@@ -1518,6 +1527,32 @@ const PLAYER_JS = `
     button.addEventListener('click', function () { seek(parseFloat(button.getAttribute('data-seek'))); });
   });
 
+  // Dark/Light Mode Switcher for Standalone Export
+  var themeBtn = document.getElementById('theme-btn');
+  function applyTheme(mode) {
+    document.documentElement.setAttribute('data-theme', mode);
+    document.documentElement.style.colorScheme = mode;
+    try {
+      localStorage.setItem('edusgpt_standalone_theme', mode);
+    } catch (e) {}
+  }
+
+  var savedTheme = null;
+  try {
+    savedTheme = localStorage.getItem('edusgpt_standalone_theme');
+  } catch (e) {}
+
+  if (savedTheme === 'light' || savedTheme === 'dark') {
+    applyTheme(savedTheme);
+  }
+
+  if (themeBtn) {
+    themeBtn.addEventListener('click', function () {
+      var current = document.documentElement.getAttribute('data-theme') === 'light' ? 'dark' : 'light';
+      applyTheme(current);
+    });
+  }
+
   document.addEventListener('keydown', function (event) {
     var tag = event.target && event.target.tagName ? event.target.tagName : '';
     if (/INPUT|TEXTAREA|SELECT/.test(tag)) return;
@@ -1530,6 +1565,11 @@ const PLAYER_JS = `
       closeZoom();
       setHelp(false);
       if (document.fullscreenElement && document.exitFullscreen) document.exitFullscreen();
+      return;
+    }
+    if (key === 't' || key === 'T') {
+      var nextTheme = document.documentElement.getAttribute('data-theme') === 'light' ? 'dark' : 'light';
+      applyTheme(nextTheme);
       return;
     }
     if (key === '?' || (key === '/' && event.shiftKey)) {
@@ -1583,7 +1623,8 @@ export interface StandaloneHtmlOptions {
 
 export function buildStandaloneHtml({ lesson, audios, karaoke }: StandaloneHtmlOptions): string {
   const preset = resolveSlideTheme(lesson.theme);
-  const theme = themeCss(preset.palette, isDarkTheme(lesson.theme));
+  const initialDark = isDarkTheme(lesson.theme);
+  const theme = themeCss(preset.palette, initialDark);
   // `<` is escaped so the JSON blob can never close its own <script> tag.
   const payload = JSON.stringify(lesson).replace(/</g, "\\u003c");
 
@@ -1591,7 +1632,7 @@ export function buildStandaloneHtml({ lesson, audios, karaoke }: StandaloneHtmlO
   const t = STANDALONE_I18N[lang];
 
   return `<!doctype html>
-<html lang="${lang}">
+<html lang="${lang}" data-theme="${initialDark ? "dark" : "light"}">
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
@@ -1601,10 +1642,20 @@ export function buildStandaloneHtml({ lesson, audios, karaoke }: StandaloneHtmlO
 <body>
 <div class="wrap" id="wrap">
   <div class="head">
-    <h1>${escapeHtml(lesson.title)}</h1>
-    <span class="tag">${escapeHtml(lesson.subject)}${lesson.grade ? ` &middot; ${escapeHtml(lesson.grade)}` : ""}</span>
-    <span class="tag mono">${lesson.duration.toFixed(1)}s &middot; ${lesson.scenes.length} ${t.scenes}</span>
-    <span class="tag">${escapeHtml(preset.label)}</span>
+    <div class="head-left">
+      <h1>${escapeHtml(lesson.title)}</h1>
+      <div class="head-tags">
+        <span class="tag">${escapeHtml(lesson.subject)}${lesson.grade ? ` &middot; ${escapeHtml(lesson.grade)}` : ""}</span>
+        <span class="tag mono">${lesson.duration.toFixed(1)}s &middot; ${lesson.scenes.length} ${t.scenes}</span>
+        <span class="tag">${escapeHtml(preset.label)}</span>
+      </div>
+    </div>
+    <button id="theme-btn" class="theme-btn" type="button" aria-label="${t.themeToggle}" title="${t.themeToggle}">
+      <svg class="icon-moon" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/></svg>
+      <svg class="icon-sun" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2"/><path d="M12 20v2"/><path d="m4.93 4.93 1.41 1.41"/><path d="m17.66 17.66 1.41 1.41"/><path d="M2 12h2"/><path d="M20 12h2"/><path d="m6.34 17.66-1.41 1.41"/><path d="m19.07 4.93-1.41 1.41"/></svg>
+      <span class="theme-txt-light">${t.themeLight}</span>
+      <span class="theme-txt-dark">${t.themeDark}</span>
+    </button>
   </div>
   <div class="stage" id="stage">${sceneMarkup(lesson, audios, karaoke)}</div>
   <audio id="voice" preload="auto" style="display:none"></audio>

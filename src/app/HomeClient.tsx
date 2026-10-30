@@ -1,41 +1,53 @@
 "use client";
 
 import Link from "next/link";
+import { useRouter, useSearchParams } from "next/navigation";
+import { useEffect, useState } from "react";
 import {
   ArrowRight,
+  BookOpen,
+  Bot,
   Boxes,
-  Cpu,
-  Gauge,
-  KeyRound,
-  MousePointerClick,
+  CheckCircle2,
   CirclePlay,
+  Cpu,
+  Flame,
+  Gauge,
+  GraduationCap,
+  HelpCircle,
+  KeyRound,
+  Layers,
+  MousePointerClick,
   Repeat,
   ScanEye,
   ShieldCheck,
   Sparkles,
+  Trophy,
   WandSparkles,
+  X,
 } from "lucide-react";
 import { SceneLoader3D } from "@/components/three/SceneLoader3D";
-import { Magnetic, Marquee } from "@/components/motion/Interactive";
+import { Marquee } from "@/components/motion/Interactive";
 import { Reveal } from "@/components/motion/Reveal";
 import { AnimatedNumber, SplitHeading } from "@/components/motion/SplitHeading";
 import { SetupCallout } from "@/components/site/AiKeyBadge";
-import { useCopy } from "@/i18n/provider";
+import { useCopy, useLang } from "@/i18n/provider";
+import { useTutorial } from "@/components/tutorial/TutorialContext";
 
 const COPY = {
   en: {
-    homeChipLocal: "Runs on your machine",
-    homeTitle: "AI lessons you can scrub second by second",
+    homeChipLocal: "Smart Interactive Learning",
+    homeTitle: "Interactive AI lessons you can scrub second by second",
     homeLead:
-      "A lesson becomes a timeline you can scrub forward and back, loop over a passage until it sticks, with narration and subtitles that follow every word. Everything runs on your machine, with no account and no database.",
-    homeCtaPlayer: "Open the player and try scrubbing",
-    homeCtaKey: "Add an API key",
-    homeCtaStudio: "Generate a new lesson",
-    homeStatFpsSuffix: " fps",
-    homeStatFpsLabel: "of smooth scrubbing",
-    homeStatSamplesLabel: "sample lessons ready",
-    homeStatBytesSuffix: " bytes",
-    homeStatBytesLabel: "data leaving your machine",
+      "Transform any study topic into an interactive multimedia lesson: scrub forward and back with precision, loop difficult concepts, listen to expressive voice narration with karaoke subtitles, and get answers from your 1-on-1 AI tutor anytime.",
+    homeCtaPlayer: "Open Lesson Player",
+    homeCtaKey: "AI Setup",
+    homeCtaStudio: "Create New Lesson",
+    homeStatFpsSuffix: "%",
+    homeStatFpsLabel: "interactive multimedia lessons",
+    homeStatSamplesLabel: "1-on-1 AI tutor ready 24/7",
+    homeStatBytesSuffix: " free",
+    homeStatBytesLabel: "100% free on your device",
     homeDragChip: "drag to scrub",
     homeDemoArrows: "◀◀ back · ▶▶ forward",
     homeDemoChapter1: "chapter 1",
@@ -45,58 +57,63 @@ const COPY = {
     homeDemoNote:
       "The timeline lives right in the browser, so you can scrub back and forth freely before presenting, and review a moment without rendering anything in advance.",
     homeRobotLabel: "Your AI tutor, on every slide",
-    homeFeaturesChip: "what is different",
-    homeFeaturesTitle: "The three things you asked for, carried all the way through",
-    homeFeatureSeekTitle: "Scrubbing both ways, no drift",
+    homeFeaturesChip: "interactive learning",
+    homeFeaturesTitle: "Designed for active learning, deep understanding, and long retention",
+    homeFeatureSeekTitle: "Video Lessons & Precision Scrubbing",
     homeFeatureSeekBody:
-      "Every scene has its own timings, so seeking forward or back lands on the same frame — including when you scrub backwards halfway through.",
-    homeFeatureLayersTitle: "Layers of motion",
+      "Turn any study topic into an interactive video lesson. Scrub second-by-second and loop difficult moments (A→B) until you truly master the concept.",
+    homeFeatureLayersTitle: "24/7 1-on-1 AI Tutor",
     homeFeatureLayersBody:
-      "The interface motion and the lesson content are separate layers. Each one is isolated and can be switched off on a slow machine.",
-    homeFeatureKeyTitle: "Add the API key from the browser",
+      "Confused by a formula or concept? Chat with your AI tutor directly alongside the lesson. Get clear explanations, visual examples, and step-by-step guidance at your own pace.",
+    homeFeatureKeyTitle: "Smart In-Lesson Quizzes",
     homeFeatureKeyBody:
-      "Open /setup on localhost, paste the key, press check and you are done. The key stays in .env on your machine and goes nowhere else.",
-    homeStackChip: "architecture",
-    homeStackTitle: "Read the code and the whole flow is there",
-    homeStackPaletteTitle: "No off-palette hues",
+      "Reinforce your knowledge immediately after each topic with interactive quizzes, instant scoring, and detailed explanations for every answer.",
+    homeStackChip: "study habits & motivation",
+    homeStackTitle: "Build daily study habits and level up your knowledge",
+    homeStackPaletteTitle: "Study Streak & Level Progression",
     homeStackPaletteBody:
-      "The whole palette is teal, gold and ink. A check:palette script blocks the build the moment a colour from outside it turns up in the source, whether as a class or a hex code.",
-    homeStackWayfindingTitle: "You always know where you are",
+      "Earn XP with every completed lesson, keep your daily study streak glowing, and build lasting study habits to reach your personal learning goals.",
+    homeStackWayfindingTitle: "3D Interactive Flashcards",
     homeStackWayfindingBody:
-      "Hover the timeline and the timestamp appears under the cursor. Chapters you have read fade back, the one you are studying light up.",
-    homeStackLocalTitle: "Everything runs on your machine",
+      "Flip through 3D flashcards covering core formulas, keywords, and definitions. Quick-fire reviews make exam preparation effortless and fast.",
+    homeStackLocalTitle: "Create Custom Lessons (AI Studio)",
     homeStackLocalBody:
-      "A server route keeps the API key out of the browser, while the lesson, the timeline and the timestamps all run on your machine.",
+      "Enter any topic, syllabus, or paste your study notes — AI Studio generates a full multimedia lesson complete with slides and quizzes in seconds.",
     homeTopicNewton: "Newton's second law",
-    homeTopicOverfitting: "Overfitting",
+    homeTopicOverfitting: "Overfitting in Machine Learning",
     homeTopicDerivative: "Derivative by definition",
-    homeTopicForLoop: "For loop",
-    homeTopicPresentPerfect: "Present perfect",
+    homeTopicForLoop: "For loop & Algorithms",
+    homeTopicPresentPerfect: "Present perfect tense",
     homeTopicEquilibrium: "Chemical equilibrium",
-    homeTopicQuadratic: "Quadratic function",
+    homeTopicQuadratic: "Quadratic function & Graphs",
     homeTopicPhotosynthesis: "Photosynthesis in plants",
-    homeCtaTitle: "Start in two steps",
-    homeCtaStep1Lead: "Open",
-    homeCtaStep1Tail: "and paste your API key. The page checks the key before it saves it.",
-    homeCtaStep2Lead: "Open",
-    homeCtaStep2Tail: "to generate a lesson, then open it in the",
-    homeCtaPlayerLink: "player",
-    homeCtaStep2End: "and try scrubbing.",
-    homeCtaButton: "Try scrubbing a lesson",
+    homeCtaTitle: "Ready to level up your learning?",
+    homeCtaStep1Lead: "Explore",
+    homeCtaStep1Tail: "dozens of interactive lessons ready in the Lesson Library.",
+    homeCtaStep2Lead: "Or open",
+    homeCtaStep2Tail: "to generate a custom interactive lesson on any subject you want to master.",
+    homeCtaPlayerLink: "AI Studio (/studio)",
+    homeCtaStep2End: "",
+    homeCtaButton: "Explore Lesson Library",
+    welcomeTitle: "Welcome to EdusGPT",
+    welcomeLead: "The next-generation interactive AI lesson studio. Video slides, 24/7 AI tutor, and interactive quizzes ready on your device.",
+    welcomeDontShow: "Do not show Overview next time (Go straight to Library on startup)",
+    welcomeGoLibrary: "Open Lesson Library",
+    welcomeExplore: "Explore Overview",
   },
   vi: {
-    homeChipLocal: "Chạy trên máy bạn",
-    homeTitle: "Bài giảng AI tua được từng giây",
+    homeChipLocal: "Học tập tương tác thông minh",
+    homeTitle: "Bài giảng AI tương tác & Học tập chủ động",
     homeLead:
-      "Bài giảng thành timeline có thể tua tới, tua lui, lặp một đoạn để học kỹ, kèm giọng đọc và phụ đề chạy theo từng chữ. Mọi thứ chạy trên máy bạn, không cần tài khoản hay database.",
-    homeCtaPlayer: "Mở trình phát & thử tua",
-    homeCtaKey: "Cài API key",
-    homeCtaStudio: "Sinh bài giảng mới",
-    homeStatFpsSuffix: " khung",
-    homeStatFpsLabel: "mỗi giây tua mượt",
-    homeStatSamplesLabel: "bài mẫu sẵn sàng",
-    homeStatBytesSuffix: " byte",
-    homeStatBytesLabel: "dữ liệu rời khỏi máy",
+      "Biến mọi chủ đề học tập thành bài giảng video sinh động: tua tới lui mượt mà từng giây, lặp đoạn khó hiểu, kèm giọng đọc truyền cảm, phụ đề karaoke chạy theo từng chữ và trợ giảng AI đồng hành giải đáp 24/7.",
+    homeCtaPlayer: "Mở trình phát bài giảng",
+    homeCtaKey: "Cài đặt AI",
+    homeCtaStudio: "Tạo bài giảng mới",
+    homeStatFpsSuffix: "%",
+    homeStatFpsLabel: "bài học trực quan & tương tác",
+    homeStatSamplesLabel: "trợ giảng AI sẵn sàng 24/7",
+    homeStatBytesSuffix: "đ",
+    homeStatBytesLabel: "hoàn toàn miễn phí trên máy bạn",
     homeDragChip: "kéo để tua",
     homeDemoArrows: "◀◀ tua lui · ▶▶ tua tới",
     homeDemoChapter1: "chương 1",
@@ -106,88 +123,93 @@ const COPY = {
     homeDemoNote:
       "Timeline sống ngay trong trình duyệt nên bạn tua tới lui thoải mái trước khi trình chiếu, xem lại ngay mà không cần render trước.",
     homeRobotLabel: "Trợ giảng AI, có mặt mọi slide",
-    homeFeaturesChip: "khác biệt",
-    homeFeaturesTitle: "Ba thứ bạn yêu cầu, làm tới nơi tới chốn",
-    homeFeatureSeekTitle: "Tua hai chiều, không trôi hình",
+    homeFeaturesChip: "trải nghiệm học tập",
+    homeFeaturesTitle: "Học tập chủ động, hiểu sâu bản chất và ghi nhớ lâu hơn",
+    homeFeatureSeekTitle: "Bài giảng Video & Tua mượt từng giây",
     homeFeatureSeekBody:
-      "Mỗi cảnh có mốc thời gian riêng nên tua tới hay tua lui đều ra đúng khung, kể cả khi tua ngược lại giữa chừng.",
-    homeFeatureLayersTitle: "Các lớp chuyển động",
+      "Biến mọi chủ đề hay tài liệu thành bài giảng video sinh động. Tua mượt từng giây, lặp đoạn khó hiểu (A→B) để nắm trọn kiến thức mà không sợ bỏ sót.",
+    homeFeatureLayersTitle: "Trợ giảng AI 1-1 đồng hành 24/7",
     homeFeatureLayersBody:
-      "Chuyển động giao diện và nội dung bài giảng là hai lớp riêng. Mỗi lớp tách bạch, tắt được khi máy yếu.",
-    homeFeatureKeyTitle: "Cài API key ngay trên web",
+      "Chưa hiểu một công thức hay khái niệm trên slide? Nhắn hỏi ngay bên cạnh bài giảng, gia sư AI sẽ giải thích cặn kẽ, đưa ví dụ sinh động và hướng dẫn từng bước.",
+    homeFeatureKeyTitle: "Trắc nghiệm Quiz củng cố tức thì",
     homeFeatureKeyBody:
-      "Mở /setup trên localhost, dán key, bấm kiểm tra là xong. Key nằm trong .env trên máy bạn, không đi đâu khác.",
-    homeStackChip: "kiến trúc",
-    homeStackTitle: "Đọc code là thấy hết luồng chạy",
-    homeStackPaletteTitle: "Không gradient tím",
+      "Kiểm tra mức độ hiểu bài ngay sau mỗi phần học với các câu trắc nghiệm thông minh, có chấm điểm tự động và lời giải thích chi tiết cho từng phương án.",
+    homeStackChip: "động lực & tự học",
+    homeStackTitle: "Duy trì thói quen học và bứt phá thành tích",
+    homeStackPaletteTitle: "Chuỗi học tập (Streak) & Thăng cấp",
     homeStackPaletteBody:
-      "Toàn bộ hệ màu là teal, gold và ink. Có script check:palette chặn ngay nếu source lỡ xuất hiện màu tím hay xanh tím, dù là class hay mã hex.",
-    homeStackWayfindingTitle: "Biết mình đang ở đâu",
+      "Tích lũy điểm kinh nghiệm (XP) sau mỗi bài học, thắp sáng ngọn lửa Streak mỗi ngày để xây dựng thói quen tự giác và bứt phá mục tiêu cá nhân.",
+    homeStackWayfindingTitle: "Thẻ ghi nhớ Flashcard 3D lật mở",
     homeStackWayfindingBody:
-      "Rê chuột lên timeline là biết mốc thời gian ngay tại chỗ. Chương đã đọc thì mờ đi, chương đang học thì sáng lên.",
-    homeStackLocalTitle: "Mọi thứ chạy ngay trên máy bạn",
+      "Lật mở các thẻ công thức, thuật ngữ và định nghĩa trọng tâm theo hiệu ứng 3D trực quan. Ôn tập phản xạ nhanh, nhớ sâu hơn trước mỗi kỳ thi.",
+    homeStackLocalTitle: "Tự tạo bài học theo ý muốn (AI Studio)",
     homeStackLocalBody:
-      "Server route giữ cho API key không lộ ra trình duyệt, còn bài giảng, timeline và phần mốc thời gian thì chạy ngay trên máy bạn.",
+      "Nhập bất kỳ chủ đề, đề cương môn học hay dán tài liệu ôn thi — AI Studio sẽ tự động tạo bài giảng đa phương tiện hoàn chỉnh kèm trắc nghiệm chỉ sau vài giây.",
     homeTopicNewton: "Định luật II Newton",
-    homeTopicOverfitting: "Overfitting",
+    homeTopicOverfitting: "Hiện tượng Overfitting (ML)",
     homeTopicDerivative: "Đạo hàm theo định nghĩa",
-    homeTopicForLoop: "Vòng lặp for",
+    homeTopicForLoop: "Vòng lặp for & Thuật toán",
     homeTopicPresentPerfect: "Thì hiện tại hoàn thành",
     homeTopicEquilibrium: "Cân bằng phản ứng hoá học",
-    homeTopicQuadratic: "Hàm số bậc hai",
+    homeTopicQuadratic: "Hàm số bậc hai & Đồ thị",
     homeTopicPhotosynthesis: "Quang hợp ở thực vật",
-    homeCtaTitle: "Bắt đầu trong hai bước",
-    homeCtaStep1Lead: "Mở",
-    homeCtaStep1Tail: "và dán API key của bạn. Trang tự kiểm tra key trước khi lưu.",
-    homeCtaStep2Lead: "Vào",
-    homeCtaStep2Tail: "sinh bài giảng, rồi mở trong",
-    homeCtaPlayerLink: "trình phát",
-    homeCtaStep2End: "để tua thử.",
-    homeCtaButton: "Thử tua một bài giảng",
+    homeCtaTitle: "Sẵn sàng bứt phá việc học của bạn?",
+    homeCtaStep1Lead: "Khám phá",
+    homeCtaStep1Tail: "hàng chục bài giảng sinh động có sẵn trong Thư viện bài giảng.",
+    homeCtaStep2Lead: "Hoặc vào",
+    homeCtaStep2Tail: "để tự tạo bài giảng riêng cho bất kỳ chủ đề nào bạn muốn chinh phục.",
+    homeCtaPlayerLink: "Soạn bài AI (/studio)",
+    homeCtaStep2End: "",
+    homeCtaButton: "Vào Thư viện học ngay",
+    welcomeTitle: "Chào mừng bạn đến với EdusGPT",
+    welcomeLead: "Nền tảng bài giảng AI tương tác thông minh với Trợ giảng AI 24/7 và hệ thống trình phát timeline mượt mà.",
+    welcomeDontShow: "Không xuất hiện lần sau (Mặc định vào thẳng Thư viện bài giảng)",
+    welcomeGoLibrary: "Vào Thư viện bài giảng",
+    welcomeExplore: "Xem trang Tổng quan",
   },
 };
 
-/** The three cards of the "what is different" row; wording lives in COPY above. */
+/** The three cards of the "interactive learning" row; wording lives in COPY above. */
 const FEATURES = [
   {
-    icon: Repeat,
+    icon: CirclePlay,
     titleKey: "homeFeatureSeekTitle",
     bodyKey: "homeFeatureSeekBody",
     tone: "brand",
   },
   {
-    icon: Boxes,
+    icon: Bot,
     titleKey: "homeFeatureLayersTitle",
     bodyKey: "homeFeatureLayersBody",
     tone: "gold",
   },
   {
-    icon: KeyRound,
+    icon: CheckCircle2,
     titleKey: "homeFeatureKeyTitle",
     bodyKey: "homeFeatureKeyBody",
     tone: "ember",
   },
 ] as const;
 
-/** The architecture row. */
+/** The study habits & motivation row. */
 const STACK = [
   {
-    icon: Gauge,
+    icon: Flame,
     titleKey: "homeStackPaletteTitle",
     bodyKey: "homeStackPaletteBody",
+    tint: "from-amber-500/15",
+  },
+  {
+    icon: Layers,
+    titleKey: "homeStackWayfindingTitle",
+    bodyKey: "homeStackWayfindingBody",
     tint: "from-brand-500/15",
   },
   {
-    icon: ScanEye,
-    titleKey: "homeStackWayfindingTitle",
-    bodyKey: "homeStackWayfindingBody",
-    tint: "from-gold-500/15",
-  },
-  {
-    icon: Cpu,
+    icon: GraduationCap,
     titleKey: "homeStackLocalTitle",
     bodyKey: "homeStackLocalBody",
-    tint: "from-ember-500/15",
+    tint: "from-emerald-500/15",
   },
 ] as const;
 
@@ -218,6 +240,57 @@ const DEMO_CHAPTER_KEYS = [
  */
 export default function HomeClient() {
   const t = useCopy(COPY);
+  const lang = useLang();
+  const { startTour } = useTutorial();
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const forceShow = searchParams.get("show") === "1" || searchParams.get("overview") === "true";
+  const [showPopup, setShowPopup] = useState(false);
+  const [dontShowAgain, setDontShowAgain] = useState(true);
+
+  useEffect(() => {
+    if (searchParams.get("popup") === "1") {
+      setShowPopup(true);
+      return;
+    }
+    if (forceShow) return;
+    const hidePref = localStorage.getItem("edusgpt_hide_overview");
+    if (hidePref === "true") {
+      router.replace("/library");
+      return;
+    }
+    void (async () => {
+      try {
+        const res = await fetch("/api/courses?limit=1", { cache: "no-store" });
+        const data = await res.json();
+        const hasCourses =
+          (data.courses && data.courses.length > 0) || (data.total && data.total > 0);
+        const hasVisited = localStorage.getItem("edusgpt_has_visited");
+        if (hasCourses && hasVisited) {
+          router.replace("/library");
+        } else {
+          localStorage.setItem("edusgpt_has_visited", "true");
+          setShowPopup(true);
+        }
+      } catch {
+        setShowPopup(true);
+      }
+    })();
+  }, [forceShow, router]);
+
+  const handleGoLibrary = () => {
+    if (dontShowAgain) {
+      localStorage.setItem("edusgpt_hide_overview", "true");
+    }
+    router.push("/library");
+  };
+
+  const handleClosePopup = () => {
+    if (dontShowAgain) {
+      localStorage.setItem("edusgpt_hide_overview", "true");
+    }
+    setShowPopup(false);
+  };
 
   const features = FEATURES.map((card) => ({
     ...card,
@@ -232,8 +305,8 @@ export default function HomeClient() {
   const topics = TOPIC_KEYS.map((key) => t[key]);
   const demoChapters = DEMO_CHAPTER_KEYS.map((key) => t[key]);
   const stats = [
-    { value: 25, suffix: t.homeStatFpsSuffix, label: t.homeStatFpsLabel },
-    { value: 36, suffix: "s", label: t.homeStatSamplesLabel },
+    { value: 100, suffix: t.homeStatFpsSuffix, label: t.homeStatFpsLabel },
+    { value: 24, suffix: "/7", label: t.homeStatSamplesLabel },
     { value: 0, suffix: t.homeStatBytesSuffix, label: t.homeStatBytesLabel },
   ];
 
@@ -263,11 +336,9 @@ export default function HomeClient() {
             </p>
 
             <div className="mt-7 flex flex-wrap items-center gap-3">
-              <Magnetic>
-                <Link href="/lesson" className="btn-primary px-5 py-3">
-                  <CirclePlay className="h-4 w-4" /> {t.homeCtaPlayer}
-                </Link>
-              </Magnetic>
+              <Link href="/lesson" className="btn-primary px-5 py-3">
+                <CirclePlay className="h-4 w-4" /> {t.homeCtaPlayer}
+              </Link>
               <Link href="/setup" className="btn-ghost px-5 py-3">
                 <KeyRound className="h-4 w-4" /> {t.homeCtaKey}
               </Link>
@@ -278,6 +349,16 @@ export default function HomeClient() {
                 <WandSparkles className="h-4 w-4" /> {t.homeCtaStudio}
                 <ArrowRight className="h-4 w-4" />
               </Link>
+              <button
+                type="button"
+                data-tour="tutorial-btn"
+                onClick={() => startTour()}
+                className="inline-flex items-center gap-2 rounded-xl border border-amber-500/40 bg-amber-500/10 px-4 py-3 text-sm font-semibold text-amber-600 dark:text-amber-300 shadow-sm transition-all hover:bg-amber-500/20 hover:border-amber-400 active:scale-95"
+                title={lang === "vi" ? "Xem hướng dẫn sử dụng tương tác (1 phút)" : "Watch Interactive Tutorial (1 min)"}
+              >
+                <HelpCircle className="h-4 w-4 text-amber-400" />
+                <span>{lang === "vi" ? "Hướng dẫn 1p" : "Tutorial"}</span>
+              </button>
             </div>
 
             <dl className="mt-10 grid max-w-xl grid-cols-3 gap-4">
@@ -412,7 +493,7 @@ export default function HomeClient() {
       <section id="stack" className="pb-20">
         <Reveal>
           <span className="chip">
-            <Boxes className="h-3.5 w-3.5 text-gold-300" /> {t.homeStackChip}
+            <Flame className="h-3.5 w-3.5 text-amber-400" /> {t.homeStackChip}
           </span>
           <SplitHeading
             key={t.homeStackTitle}
@@ -458,37 +539,113 @@ export default function HomeClient() {
               <h2 className="text-2xl font-bold tracking-tight text-mist-50 sm:text-3xl">
                 {t.homeCtaTitle}
               </h2>
-              <ol className="mt-4 space-y-2 text-sm text-mist-300">
-                <li>
-                  <span className="font-mono text-brand-200">1.</span>{" "}
-                  {t.homeCtaStep1Lead}{" "}
-                  <Link href="/setup" className="text-gold-200 underline">
-                    /setup
-                  </Link>{" "}
-                  {t.homeCtaStep1Tail}
+              <ol className="mt-4 space-y-2.5 text-sm text-mist-300">
+                <li className="flex items-start gap-2.5">
+                  <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-brand-500/20 font-mono text-xs font-bold text-brand-300">1</span>
+                  <span>
+                    {t.homeCtaStep1Lead}{" "}
+                    <Link href="/library" className="font-semibold text-brand-300 hover:underline">
+                      {lang === "vi" ? "Thư viện bài giảng" : "Lesson Library"}
+                    </Link>{" "}
+                    {t.homeCtaStep1Tail}
+                  </span>
                 </li>
-                <li>
-                  <span className="font-mono text-brand-200">2.</span>{" "}
-                  {t.homeCtaStep2Lead}{" "}
-                  <Link href="/studio" className="text-gold-200 underline">
-                    /studio
-                  </Link>{" "}
-                  {t.homeCtaStep2Tail}{" "}
-                  <Link href="/lesson" className="text-gold-200 underline">
-                    {t.homeCtaPlayerLink}
-                  </Link>{" "}
-                  {t.homeCtaStep2End}
+                <li className="flex items-start gap-2.5">
+                  <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-gold-500/20 font-mono text-xs font-bold text-gold-300">2</span>
+                  <span>
+                    {t.homeCtaStep2Lead}{" "}
+                    <Link href="/studio" className="font-semibold text-gold-300 hover:underline">
+                      {t.homeCtaPlayerLink}
+                    </Link>{" "}
+                    {t.homeCtaStep2Tail}
+                  </span>
                 </li>
               </ol>
             </div>
-            <Magnetic className="shrink-0">
-              <Link href="/lesson" className="btn-gold px-6 py-3.5 text-base">
+            <div className="shrink-0">
+              <Link href="/library" className="btn-gold px-6 py-3.5 text-base shadow-lg shadow-gold-500/10">
                 {t.homeCtaButton} <ArrowRight className="h-4 w-4" />
               </Link>
-            </Magnetic>
+            </div>
           </div>
         </Reveal>
       </section>
+
+      {/* Welcome / Overview Popup Modal */}
+      {showPopup ? (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/65 backdrop-blur-xs">
+          <div className="panel relative w-full max-w-md p-6 shadow-2xl border border-ink-700 bg-ink-950 text-mist-50 animate-in fade-in zoom-in-95 duration-200">
+            <button
+              type="button"
+              onClick={handleClosePopup}
+              className="btn-icon absolute right-4 top-4"
+              aria-label="Đóng"
+            >
+              <X className="h-4 w-4" />
+            </button>
+
+            <div className="flex items-center gap-3.5 mb-4">
+              <img
+                src="/logo.png"
+                alt="EdusGPT Logo"
+                width={48}
+                height={48}
+                className="h-12 w-12 shrink-0 rounded-2xl object-cover shadow-lg border border-ink-700/60"
+              />
+              <div>
+                <h3 className="text-lg font-bold tracking-tight text-mist-50">
+                  {t.welcomeTitle}
+                </h3>
+                <p className="text-xs text-mist-400">EdusGPT · AI Lesson Studio</p>
+              </div>
+            </div>
+
+            <p className="text-sm leading-relaxed text-mist-200 mb-5">
+              {t.welcomeLead}
+            </p>
+
+            <label className="flex items-start gap-3 rounded-xl border border-ink-800 bg-ink-900/60 p-3 text-xs text-mist-300 cursor-pointer hover:bg-ink-900 transition-colors mb-6">
+              <input
+                type="checkbox"
+                checked={dontShowAgain}
+                onChange={(e) => setDontShowAgain(e.target.checked)}
+                className="mt-0.5 h-4 w-4 rounded border-ink-600 text-brand-500 focus:ring-brand-500/30"
+              />
+              <span className="leading-snug">{t.welcomeDontShow}</span>
+            </label>
+
+            <button
+              type="button"
+              onClick={() => {
+                handleClosePopup();
+                startTour();
+              }}
+              className="w-full inline-flex items-center justify-center gap-2 rounded-xl border border-amber-500/40 bg-amber-500/10 px-4 py-2.5 text-xs font-bold text-amber-500 dark:text-amber-300 hover:bg-amber-500/20 active:scale-95 transition-all mb-3"
+            >
+              <HelpCircle className="h-4 w-4 text-amber-400" />
+              <span>{lang === "vi" ? "Xem hướng dẫn cơ bản (1 phút)" : "Watch Quick Tutorial (1 min)"}</span>
+            </button>
+
+            <div className="flex flex-col-reverse sm:flex-row gap-2.5">
+              <button
+                type="button"
+                onClick={handleClosePopup}
+                className="btn-ghost flex-1 py-2.5 text-xs font-semibold justify-center"
+              >
+                {t.welcomeExplore}
+              </button>
+              <button
+                type="button"
+                onClick={handleGoLibrary}
+                className="flex-1 inline-flex items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-amber-500 via-orange-500 to-ember-500 px-4 py-2.5 text-xs font-bold text-white shadow-md shadow-orange-500/20 hover:brightness-110 active:scale-95 transition-all"
+              >
+                <BookOpen className="h-4 w-4" />
+                {t.welcomeGoLibrary}
+              </button>
+            </div>
+          </div>
+        </div>
+      ) : null}
     </div>
   );
 }

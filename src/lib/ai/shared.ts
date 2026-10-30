@@ -46,7 +46,7 @@ export function isModelUnavailable(message: string): boolean {
  * model, then fail with the real reason instead of burning six attempts.
  */
 export function isQuotaExhausted(message: string): boolean {
-  return /quota|exceeded your current quota|resource_exhausted|insufficient_quota|billing/i.test(
+  return /quota|exceeded your current quota|resource_exhausted|insufficient_quota|billing|tokens per day|\btpd\b|per day|daily limit/i.test(
     message,
   );
 }

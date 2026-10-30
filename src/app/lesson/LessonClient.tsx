@@ -1,13 +1,13 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { ChevronDown, LoaderCircle } from "lucide-react";
+import { ChevronDown, Info, LoaderCircle } from "lucide-react";
 import type { Lesson } from "@/lib/lesson/types";
 import type { RunLogEntry } from "@/lib/lesson/run-log";
 import { RunLog } from "@/components/studio/GenerationTimeline";
 import { LessonPlayer } from "@/components/player/LessonPlayer";
 import { SAMPLE_LESSON, SAMPLE_LESSONS } from "@/lib/lesson/sample-lesson";
-import { loadStoredLessons } from "@/lib/lesson/storage";
+import { getActiveLessonId, loadStoredLessons, setActiveLessonId } from "@/lib/lesson/storage";
 import { useCopy } from "@/i18n/provider";
 
 const COPY = {
@@ -66,7 +66,8 @@ export default function LessonClient({ courseId, initialMode }: LessonClientProp
   const [logOpen, setLogOpen] = useState(false);
 
   useEffect(() => {
-    if (!courseId) {
+    const targetId = courseId || getActiveLessonId();
+    if (!targetId) {
       setLesson(SAMPLE_LESSON);
       setLoading(false);
       return;
@@ -77,27 +78,29 @@ export default function LessonClient({ courseId, initialMode }: LessonClientProp
 
     void (async () => {
       try {
-        const response = await fetch(`/api/courses?id=${encodeURIComponent(courseId)}`, {
+        const response = await fetch(`/api/courses?id=${encodeURIComponent(targetId)}`, {
           cache: "no-store",
         });
         if (cancelled) return;
         if (response.status === 404) {
-          // Not on the server yet — it may still be in this browser, for
-          // instance a lesson generated moments ago whose save has not landed.
-          // Falling straight through to the sample used to show Newton's law in
-          // place of the Python lesson the teacher had just created.
-          const local = loadStoredLessons().find((item) => item.id === courseId);
+          const local = loadStoredLessons().find((item) => item.id === targetId);
           if (local) {
             setLesson(local);
+            setActiveLessonId(local.id);
             setLoadError("lessonLocalOnly");
             return;
           }
-          setLoadError("lessonMissing");
+          if (courseId) {
+            setLoadError("lessonMissing");
+          }
           setLesson(SAMPLE_LESSON);
           return;
         }
         const payload = (await response.json()) as { lesson?: Lesson; log?: RunLogEntry[] };
-        if (!cancelled && payload.lesson) setLesson(payload.lesson);
+        if (!cancelled && payload.lesson) {
+          setLesson(payload.lesson);
+          setActiveLessonId(payload.lesson.id);
+        }
         if (!cancelled && Array.isArray(payload.log)) setRunLog(payload.log);
       } catch {
         if (!cancelled) setLoadError("lessonLoadFailed");
@@ -124,9 +127,12 @@ export default function LessonClient({ courseId, initialMode }: LessonClientProp
     // log below it can be capped rather than pushing the stage off the screen.
     <div className="flex min-h-0 flex-1 flex-col">
       {loadError ? (
-        <p className="mb-4 rounded-xl border border-gold-500/40 bg-gold-500/[0.08] px-3.5 py-2.5 text-sm text-mist-100">
-          {t[loadError]} {t.lessonSampleNotice}
-        </p>
+        <div className="mb-3 flex items-center gap-2.5 rounded-xl border border-amber-500/30 bg-amber-500/10 px-3.5 py-2 text-xs font-medium text-amber-900 dark:text-amber-200 shadow-xs">
+          <Info className="h-4 w-4 shrink-0 text-amber-600 dark:text-amber-400" />
+          <span>
+            {t[loadError]} {t.lessonSampleNotice}
+          </span>
+        </div>
       ) : null}
       <LessonPlayer
         initialLesson={lesson}

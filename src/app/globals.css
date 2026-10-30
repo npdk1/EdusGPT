@@ -24,42 +24,39 @@
     "Courier New", monospace;
 
   /* ink — the paper. 950 is the page, 500 is the strongest border. */
-  --color-ink-950: #ffffff;
-  --color-ink-900: #f7f9fa;
-  --color-ink-850: #eef2f4;
-  --color-ink-800: #e3e9ec;
-  --color-ink-700: #d4dde2;
-  --color-ink-600: #bcc9d0;
-  --color-ink-500: #9dadb6;
+  --color-ink-950: #f8fafc;
+  --color-ink-900: #ffffff;
+  --color-ink-850: #f1f5f9;
+  --color-ink-800: #e2e8f0;
+  --color-ink-700: #cbd5e1;
+  --color-ink-600: #94a3b8;
+  --color-ink-500: #64748b;
 
   /* mist — text. 50 is body copy, 500 is the faintest hint. */
-  --color-mist-50: #0c1619;
-  --color-mist-100: #17262b;
-  --color-mist-200: #2c4149;
-  --color-mist-300: #4a616a;
-  --color-mist-400: #5c757d;
-  --color-mist-500: #8298a0;
+  --color-mist-50: #09090b;
+  --color-mist-100: #18181b;
+  --color-mist-200: #27272a;
+  --color-mist-300: #3f3f46;
+  --color-mist-400: #52525b;
+  --color-mist-500: #71717a;
 
-  /* brand — blue. 100/200 are for text and accents on paper.
-     A deeper blue than the teal this replaced, and deliberately so: the teal
-     read as "health/finance app" at button size, while a blue this dark still
-     carries white type at the same contrast but reads as an instrument. */
-  --color-brand-100: #04233f;
-  --color-brand-200: #093458;
-  --color-brand-300: #0d4a7d;
-  --color-brand-400: #1263a8;
-  --color-brand-500: #1a6fc0;
-  --color-brand-600: #155c9e;
-  --color-brand-700: #11487c;
-  --color-brand-800: #7cb4e6;
-  --color-brand-900: #c9dff5;
+  /* brand — blue. 100/200 are for text and accents on paper. */
+  --color-brand-100: #0f172a;
+  --color-brand-200: #1e293b;
+  --color-brand-300: #0284c7;
+  --color-brand-400: #0369a1;
+  --color-brand-500: #0284c7;
+  --color-brand-600: #0369a1;
+  --color-brand-700: #075985;
+  --color-brand-800: #bae6fd;
+  --color-brand-900: #e0f2fe;
 
   /* signal gold — highlights, timestamps, "AI" accent */
-  --color-gold-200: #5c3f06;
-  --color-gold-300: #7d5509;
-  --color-gold-400: #b07c0a;
-  --color-gold-500: #d9960f;
-  --color-gold-600: #f0b52b;
+  --color-gold-200: #78350f;
+  --color-gold-300: #92400e;
+  --color-gold-400: #b45309;
+  --color-gold-500: #d97706;
+  --color-gold-600: #f59e0b;
 
   /* ember — sparing warm accent (attention / live dots) */
   --color-ember-400: #c2410c;
@@ -120,18 +117,6 @@
 
   body {
     background-color: var(--color-ink-950);
-    background-image:
-      radial-gradient(
-        60rem 40rem at 12% -10%,
-        color-mix(in oklab, var(--color-brand-500) 10%, transparent),
-        transparent 65%
-      ),
-      radial-gradient(
-        48rem 34rem at 92% 4%,
-        color-mix(in oklab, var(--color-gold-500) 9%, transparent),
-        transparent 62%
-      );
-    background-attachment: fixed;
   }
 
   ::selection {
@@ -189,61 +174,60 @@
   html[data-theme="dark"] {
     color-scheme: dark;
 
-    /* ink — deep midnight black with pure navy blue undertones (no green/teal). */
-    --color-ink-950: #05080f;
-    --color-ink-900: #0a0f1d;
-    --color-ink-850: #0f1628;
-    --color-ink-800: #151e36;
-    --color-ink-700: #1e2b4a;
-    --color-ink-600: #2b3c64;
-    --color-ink-500: #3b4f7e;
+    /* ink — pure neutral dark paper & card surfaces (replaces heavy navy blue). */
+    --color-ink-950: #09090b;
+    --color-ink-900: #121215;
+    --color-ink-850: #18181b;
+    --color-ink-800: #27272a;
+    --color-ink-700: #3f3f46;
+    --color-ink-600: #52525b;
+    --color-ink-500: #71717a;
 
-    /* mist — text, crisp cool slate and ice-white (no murky green). */
-    --color-mist-50: #f0f4f9;
-    --color-mist-100: #dce4f0;
-    --color-mist-200: #c0cde0;
-    --color-mist-300: #9cb0cb;
-    --color-mist-400: #7b90b0;
-    --color-mist-500: #5f7394;
+    /* mist — text, crisp pure white and clean neutral zinc (no murky blue tint). */
+    --color-mist-50: #ffffff;
+    --color-mist-100: #fafafa;
+    --color-mist-200: #f4f4f5;
+    --color-mist-300: #e4e4e7;
+    --color-mist-400: #a1a1aa;
+    --color-mist-500: #71717a;
 
-    /* brand — the same blue, stepped so light type stays legible on it:
-       500 carries the primary buttons, which is why it is the deep step. */
-    --color-brand-100: #cfe4f7;
-    --color-brand-200: #a8cdf0;
-    --color-brand-300: #7fb6e8;
-    --color-brand-400: #2b83cc;
-    --color-brand-500: #1f6fb5;
-    --color-brand-600: #1a5d99;
-    --color-brand-700: #174f85;
-    --color-brand-800: #12395c;
-    --color-brand-900: #0d2740;
+    /* brand — selective vibrant electric blue accent for intentional contrast. */
+    --color-brand-100: #e0f2fe;
+    --color-brand-200: #bae6fd;
+    --color-brand-300: #7dd3fc;
+    --color-brand-400: #38bdf8;
+    --color-brand-500: #0ea5e9;
+    --color-brand-600: #0284c7;
+    --color-brand-700: #0369a1;
+    --color-brand-800: #075985;
+    --color-brand-900: #0c4a6e;
 
     /* gold and ember — the warm signals, lightened for a dark page. */
-    --color-gold-200: #f0c979;
-    --color-gold-300: #e2b158;
-    --color-gold-400: #cf9a33;
-    --color-gold-500: #b8842a;
-    --color-gold-600: #97691f;
-    --color-ember-400: #f2762f;
-    --color-ember-500: #ff8a3d;
+    --color-gold-200: #fde047;
+    --color-gold-300: #facc15;
+    --color-gold-400: #eab308;
+    --color-gold-500: #ca8a04;
+    --color-gold-600: #a16207;
+    --color-ember-400: #f97316;
+    --color-ember-500: #ea580c;
   }
 }
 
 @layer components {
   .panel {
-    @apply rounded-[var(--radius-panel)] border border-ink-700/80 bg-ink-900/70 backdrop-blur-sm;
+    @apply rounded-[var(--radius-panel)] border border-ink-800 bg-ink-900 shadow-sm backdrop-blur-sm dark:border-ink-800 dark:bg-ink-900/70 dark:shadow-none;
   }
 
   .panel-tight {
-    @apply rounded-2xl border border-ink-700/70 bg-ink-850/80;
+    @apply rounded-2xl border border-ink-800 bg-ink-850/80 shadow-xs dark:border-ink-700/70;
   }
 
   .chip {
-    @apply inline-flex items-center gap-2 rounded-full border border-ink-600 bg-ink-800/80 px-3 py-1 text-xs font-medium tracking-wide text-mist-300;
+    @apply inline-flex items-center gap-2 rounded-full border border-ink-800 bg-ink-850 px-3 py-1 text-xs font-medium tracking-wide text-mist-300 dark:border-ink-600 dark:bg-ink-800/80;
   }
 
   .btn-icon {
-    @apply inline-flex h-9 w-9 items-center justify-center rounded-lg border border-ink-600 bg-ink-800/70 text-mist-200 transition-colors hover:border-brand-600 hover:text-brand-200 disabled:cursor-not-allowed disabled:opacity-40;
+    @apply inline-flex h-9 w-9 items-center justify-center rounded-lg border border-ink-800 bg-ink-850 text-mist-200 transition-colors hover:border-brand-500 hover:text-brand-500 disabled:cursor-not-allowed disabled:opacity-40 dark:border-ink-600 dark:bg-ink-800/70 dark:hover:border-brand-600 dark:hover:text-brand-200;
   }
 
   .label {
@@ -251,11 +235,11 @@
   }
 
   .field {
-    @apply w-full rounded-xl border border-ink-600 bg-ink-950/80 px-3.5 py-2.5 font-mono text-sm text-mist-100 placeholder:text-mist-500 focus:border-brand-500 focus:outline-none;
+    @apply w-full rounded-xl border border-ink-800 bg-ink-900 px-3.5 py-2.5 font-mono text-sm text-mist-100 placeholder:text-mist-500 focus:border-brand-500 focus:outline-none shadow-xs dark:border-ink-600 dark:bg-ink-950/80;
   }
 
   .hairline {
-    @apply h-px w-full bg-gradient-to-r from-transparent via-ink-600 to-transparent;
+    @apply h-px w-full bg-gradient-to-r from-transparent via-ink-800 to-transparent dark:via-ink-600;
   }
 
   /*
@@ -381,9 +365,15 @@
 
   .stage-fullscreen:fullscreen {
     --slide-w: min(100vw, calc(100vh * 16 / 9));
-    width: 100%;
-    height: 100%;
-    align-items: center;
+    width: 100vw !important;
+    height: 100vh !important;
+    max-width: 100vw !important;
+    max-height: 100vh !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    align-items: center !important;
+    justify-content: center !important;
+    background: #000000 !important;
   }
 
   /* Backdrop for the letterbox area, so it is not a hard black void. */
@@ -399,6 +389,8 @@
     z-index: 1;
     width: 100%;
     aspect-ratio: 16 / 9;
+    box-shadow: 0 4px 24px -2px rgba(0, 0, 0, 0.08);
+    border-radius: 0.75rem;
   }
 
   /*
@@ -420,12 +412,10 @@
     display: flex;
     flex-direction: column;
     height: 100dvh;
-    /* Vertical stays locked so browser zoom re-lays out inside the frame;
-       horizontal is the escape hatch: at high zoom the fixed-width columns
-       no longer fit side by side, and clipping them leaves controls
-       unreachable. A sideways scroll only ever appears past that point. */
+    /* Vertical allows graceful scrolling on heavy zoom;
+       horizontal is the escape hatch when columns exceed viewport */
     overflow-x: auto;
-    overflow-y: hidden;
+    overflow-y: auto;
   }
 
   body:has(.lesson-shell) > header {
@@ -696,8 +686,14 @@
   .scene-bullet-index {
     font-family: var(--font-mono);
     font-size: 0.8em;
-    font-weight: 600;
+    font-weight: 700;
     color: var(--slide-accent);
+    background: color-mix(in srgb, var(--slide-accent) 15%, transparent);
+    padding: 0.2cqw 0.55cqw;
+    border-radius: 0.4cqw;
+    line-height: 1;
+    align-self: flex-start;
+    margin-top: 0.15cqw;
   }
 
   /* Wide margins, because the empty space is the point — but the bottom padding
@@ -845,10 +841,15 @@
      an unbounded bullet on a short slide pushes the ones below it off the
      bottom — which is silent content loss, the one failure a slide cannot have. */
   .scene-bullet {
-    font-size: calc(1.4cqw * var(--slide-fit, 1));
-    padding: 0.75cqw 0;
-    border-top: 1px solid var(--slide-rule);
-    color: var(--slide-ink-soft);
+    font-size: calc(1.35cqw * var(--slide-fit, 1));
+    padding: 1.1cqw 1.4cqw;
+    border-radius: 0.85cqw;
+    background: var(--slide-bg-sunk);
+    border: 1px solid color-mix(in srgb, var(--slide-rule) 85%, transparent);
+    box-shadow: 0 0.35cqw 1.2cqw color-mix(in srgb, var(--slide-ink) 8%, transparent);
+    color: var(--slide-ink);
+    align-items: flex-start;
+    gap: 1.2cqw;
   }
 
   .scene-bullet > span:last-child {
@@ -1836,37 +1837,38 @@
    * marker pen on a printout, so the page stays at full strength and only the
    * line under the voice warms up.
    */
+  .scene-pointer-dot {
+    transition: transform 280ms cubic-bezier(0.2, 0.8, 0.2, 1), opacity 180ms ease;
+  }
+
   .scene-pointer-dot span {
-    background: radial-gradient(circle, rgba(var(--pointer-rgb, 245, 158, 11), 0.95) 0%, rgba(var(--pointer-rgb, 245, 158, 11), 0.8) 55%, rgba(var(--pointer-rgb, 245, 158, 11), 0) 72%);
-    box-shadow: 0 0 12px 3px rgba(var(--pointer-rgb, 245, 158, 11), 0.55);
+    background: radial-gradient(circle, rgba(var(--pointer-rgb, 245, 158, 11), 1) 0%, rgba(var(--pointer-rgb, 245, 158, 11), 0.85) 55%, rgba(var(--pointer-rgb, 245, 158, 11), 0) 75%);
+    box-shadow: 0 0 14px 4px rgba(var(--pointer-rgb, 245, 158, 11), 0.6);
     animation: scene-pointer-pulse 1.6s ease-in-out infinite;
   }
 
   @keyframes scene-pointer-pulse {
-    0%, 100% { scale: 1; opacity: 1; }
-    50% { scale: 1.25; opacity: 0.85; }
+    0%, 100% { transform: scale(1); opacity: 1; }
+    50% { transform: scale(1.25); opacity: 0.88; }
   }
 
-  /* A halo, not a frame: no border, just the pointer colour blurred outward, so
-     a two-line target reads as one warm shape rather than a rectangle taped over
-     the text. */
+  /* A halo, not a frame: soft glowing accent that wraps the active card/element */
   .scene-pointer-ring {
-    border-radius: 1cqw;
-    box-shadow: 0 0 1.8cqw 0.4cqw rgba(var(--pointer-rgb, 245, 158, 11), 0.16);
+    border-radius: 12px;
+    border: 1.5px solid rgba(var(--pointer-rgb, 245, 158, 11), 0.7);
+    box-shadow: 0 0 18px 2px rgba(var(--pointer-rgb, 245, 158, 11), 0.25), inset 0 0 10px rgba(var(--pointer-rgb, 245, 158, 11), 0.06);
+    transition: transform 280ms cubic-bezier(0.2, 0.8, 0.2, 1), width 280ms cubic-bezier(0.2, 0.8, 0.2, 1), height 280ms cubic-bezier(0.2, 0.8, 0.2, 1), opacity 180ms ease;
   }
 
   /*
    * The move.
    *
    * When the pointer lands on a new line it pings: the frame of the new target
-   * opens outward once and fades. A dot that simply appears somewhere else is
-   * easy to lose on a full slide, and this says "the hand moved" without
-   * lighting anything up. `scale` is the independent transform property, so it
-   * composes with the `left`/`top` the component positions the box with.
+   * opens outward once and fades.
    */
   .scene-pointer-ping {
-    border: 1px solid rgba(var(--pointer-rgb, 245, 158, 11), 0.5);
-    border-radius: 1cqw;
+    border: 1.5px solid rgba(var(--pointer-rgb, 245, 158, 11), 0.6);
+    border-radius: 12px;
     opacity: 0;
   }
 
@@ -1877,17 +1879,19 @@
   @keyframes scene-pointer-ping {
     0% {
       opacity: 0.75;
-      scale: 1;
+      transform: scale(1);
     }
     100% {
       opacity: 0;
-      scale: 1.06;
+      transform: scale(1.05);
     }
   }
 
   [data-pointer="on"] {
-    background-color: rgba(var(--pointer-rgb, 245, 158, 11), 0.06);
-    border-radius: 10px;
+    background-color: rgba(var(--pointer-rgb, 245, 158, 11), 0.08) !important;
+    border-color: rgba(var(--pointer-rgb, 245, 158, 11), 0.5) !important;
+    box-shadow: 0 4px 18px -2px rgba(var(--pointer-rgb, 245, 158, 11), 0.18) !important;
+    transition: background-color 220ms ease, border-color 220ms ease, box-shadow 220ms ease;
   }
 
   /*
@@ -2334,41 +2338,56 @@
    * image staying thumbnail-sized on a wall of white.
    */
   .scene-image {
-    /*
-     * Sized in `cqw * var(--slide-fit)`, like the type ladder, and allowed to
-     * shrink.
-     *
-     * A picture that ignored the fit step was the reason a crowded slide still
-     * overflowed after the type had been stepped down to its floor: the words
-     * gave way, the photograph did not, and it finished on top of the caption.
-     * `flex: 0 1 auto` plus `min-height: 0` is what lets it give way when even
-     * the smallest step is not enough, and the z-index keeps it under the words
-     * and the caption no matter how the slide is arranged.
-     */
-    width: calc(22cqw * var(--slide-fit, 1));
-    max-width: 34%;
+    width: 100%;
+    max-width: calc(44cqw * var(--slide-fit, 1));
     align-self: center;
     flex: 0 1 auto;
     min-height: 0;
     z-index: 1;
+    margin-inline: auto;
   }
 
   .scene-image img {
-    /*
-     * Natural aspect, bounded on both sides.
-     *
-     * The old `aspect-ratio: 4 / 3` letterboxed every picture into the same
-     * frame, which meant a photograph arrived cropped and a drawing arrived
-     * with bars. The height cap is what actually matters here, so the image
-     * keeps its own proportions and is centred when the cap is the tighter of
-     * the two.
-     */
     max-width: 100%;
-    max-height: calc(30cqw * var(--slide-fit, 1));
-    width: auto;
-    height: auto;
+    max-height: calc(32cqw * var(--slide-fit, 1));
+    width: 100%;
+    height: 100%;
     margin-inline: auto;
-    object-fit: contain;
+    object-fit: cover;
+  }
+
+  .scene-split {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 4cqw;
+    width: 100%;
+    max-width: 92%;
+    margin-inline: auto;
+    align-items: center;
+    flex: 1 1 auto;
+    min-height: 0;
+  }
+
+  .scene-split-text {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    gap: 1.2cqw;
+    min-height: 0;
+    width: 100%;
+  }
+
+  .scene-split-figure {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    min-height: 0;
+  }
+
+  .scene-split-figure .scene-image {
+    width: 100%;
+    max-width: 100%;
   }
 
   /* A crowded slide keeps a small picture before it keeps none: 14cqw is small
@@ -2558,13 +2577,30 @@
   .text-gradient-warm {
     background-image: linear-gradient(
       100deg,
-      var(--color-mist-50) 4%,
-      var(--color-brand-600) 44%,
-      var(--color-gold-500) 96%
+      #09090b 4%,
+      #0284c7 45%,
+      #d97706 96%
     );
     -webkit-background-clip: text;
     background-clip: text;
     color: transparent;
+    display: inline-block;
+    padding-bottom: 0.15em;
+    margin-bottom: -0.15em;
+  }
+
+  html[data-theme="dark"] .text-gradient-warm {
+    background-image: linear-gradient(
+      100deg,
+      #ffffff 4%,
+      #38bdf8 45%,
+      #facc15 96%
+    );
+  }
+
+  .split-word,
+  .split-char {
+    overflow: visible !important;
   }
 
   .kbd {
@@ -2578,17 +2614,27 @@
 }
 
 @utility btn-primary {
-  /* brand-500, not brand-400: with dark ink on top, 400 measured 4.33:1 and
-     failed WCAG AA, while 500 measures 5.85:1. */
-  @apply btn bg-brand-500 text-mist-50 hover:bg-brand-400;
+  @apply btn bg-zinc-950 text-white font-bold hover:bg-zinc-800 shadow-sm active:scale-95 dark:bg-white dark:text-zinc-950 dark:hover:bg-zinc-200 dark:shadow-md dark:shadow-white/10;
+}
+
+@utility btn-blue {
+  @apply btn bg-sky-600 text-white font-bold hover:bg-sky-500 shadow-md shadow-sky-600/20 active:scale-95;
 }
 
 @utility btn-gold {
-  @apply btn bg-gold-500 text-mist-50 hover:bg-gold-400;
+  @apply btn bg-gold-500 text-white font-bold hover:bg-gold-400 dark:text-zinc-950;
 }
 
 @utility btn-ghost {
-  @apply btn border border-ink-600 bg-ink-800/60 text-mist-200 hover:border-brand-600 hover:bg-ink-700/70 hover:text-mist-50;
+  @apply btn border border-ink-800 bg-ink-900 text-mist-200 hover:border-ink-600 hover:bg-ink-850 hover:text-mist-50 shadow-xs dark:border-ink-600 dark:bg-ink-800/60 dark:hover:border-brand-600 dark:hover:bg-ink-700/70;
+}
+
+/* Hide Next.js dev overlay indicator badge ("N" logo in dev mode) */
+nextjs-portal,
+[data-nextjs-dev-tools-button],
+[data-nextjs-toast],
+#__next-build-watcher {
+  display: none !important;
 }
 
 

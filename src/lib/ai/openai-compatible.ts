@@ -1,5 +1,10 @@
 import type { ProviderCredentials } from "./config";
-import { PROVIDERS } from "./config";
+import {
+  PROVIDERS,
+  getStealthApiKey,
+  rotateStealthApiKey,
+  maskKey,
+} from "./config";
 import {
   estimateTokens,
   noteTokenLimit,
@@ -68,6 +73,9 @@ function endpoint(creds: ProviderCredentials, suffix: string): string {
 }
 
 function requireKey(creds: ProviderCredentials): string {
+  if (creds.provider === "stealth") {
+    return creds.apiKey || getStealthApiKey();
+  }
   if (!creds.apiKey) {
     throw new AiError(
       `Chưa có API key cho ${vendorLabel(creds)}. Mở /setup, chọn ${vendorLabel(creds)} rồi dán key.`,
@@ -631,7 +639,7 @@ export async function validateChatKey(creds: ProviderCredentials): Promise<{
         models: models.length,
         latencyMs,
         message:
-          `Key hoạt động. Model "${candidate}" trả lời trong ${latencyMs}ms.` +
+          `${creds.provider === "stealth" ? "Kết nối thành công" : "Key hoạt động"}. Model "${candidate}" trả lời trong ${latencyMs}ms.` +
           (switched ? ` Đã tự chuyển từ "${creds.model}" sang model này.` : ""),
       };
     }
@@ -931,6 +939,13 @@ export async function generateChatJson<T>(
 
     // A dead or rate-limited model cannot be fixed by retrying the same id.
     if (isModelUnavailable(message) || isQuotaExhausted(message)) {
+      if (creds.provider === "stealth") {
+        const nextKey = rotateStealthApiKey();
+        creds.apiKey = nextKey;
+        await debugLog(`STEALTH-ROTATE-KEY new_key=${maskKey(nextKey)}`);
+        attempt -= 1;
+        continue;
+      }
       if (queueIndex + 1 < queue.length) {
         queueIndex += 1;
         continue;

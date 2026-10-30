@@ -5,6 +5,7 @@ import { coerceLesson } from "../lesson/validate.ts";
 import { sanitizeRunLog, type RunLogEntry } from "../lesson/run-log.ts";
 import { decryptText, encryptText } from "./crypto-vault.ts";
 import { deleteTtsCacheForLesson } from "./tts-cache.ts";
+import { pollinationsImageUrl } from "../lesson/pollinations.ts";
 
 /**
  * Server-side course library with Latin-Chinese AES-256-GCM encryption.
@@ -38,6 +39,18 @@ export interface CourseSummary {
   theme?: Lesson["theme"];
   /** Carried so the player opens in the voice that was chosen. */
   voice?: Lesson["voice"];
+  /** Carried for visual slide thumbnail previews. */
+  firstScene?: {
+    id: string;
+    title: string;
+    subtitle?: string;
+    bullets?: string[];
+    kind?: string;
+    imageUrl?: string;
+    layout?: string;
+    accent?: string;
+    icon?: string;
+  };
 }
 
 export interface GenerationDraft {
@@ -70,6 +83,25 @@ function fileFor(id: string): string {
 }
 
 function toSummary(lesson: Lesson, updatedAt: string): CourseSummary {
+  const first = lesson.scenes[0];
+  let imageUrl: string | undefined = first?.image?.url;
+  if (!imageUrl && first?.imagePrompt) {
+    imageUrl = pollinationsImageUrl(lesson.id, first.id, first.imagePrompt, { width: 512, height: 288, model: "turbo" });
+  }
+  if (!imageUrl) {
+    const sceneWithImage = lesson.scenes.find((s) => s.image?.url || s.imagePrompt);
+    if (sceneWithImage?.image?.url) {
+      imageUrl = sceneWithImage.image.url;
+    } else if (sceneWithImage?.imagePrompt) {
+      imageUrl = pollinationsImageUrl(lesson.id, sceneWithImage.id, sceneWithImage.imagePrompt, { width: 512, height: 288, model: "turbo" });
+    }
+  }
+  if (!imageUrl) {
+    // Generate an aesthetic educational cover illustration based on the lesson title
+    const prompt = `${lesson.title}, ${lesson.subject}, educational slide illustration, clean aesthetic, no text`;
+    imageUrl = pollinationsImageUrl(lesson.id, "cover", prompt, { width: 512, height: 288, model: "turbo" });
+  }
+
   return {
     id: lesson.id,
     title: lesson.title,
@@ -83,6 +115,19 @@ function toSummary(lesson: Lesson, updatedAt: string): CourseSummary {
     model: lesson.model,
     theme: lesson.theme,
     voice: lesson.voice,
+    firstScene: first
+      ? {
+          id: first.id,
+          title: first.title,
+          subtitle: first.subtitle,
+          bullets: Array.isArray(first.bullets) ? first.bullets.slice(0, 3) : [],
+          kind: first.kind,
+          imageUrl,
+          layout: first.layout,
+          accent: first.accent,
+          icon: first.icon,
+        }
+      : undefined,
   };
 }
 
@@ -108,7 +153,7 @@ export async function listCourses(): Promise<CourseSummary[]> {
       try {
         const stats = await fs.stat(filePath);
         const cached = summaryCache.get(name);
-        if (cached && cached.mtimeMs === stats.mtimeMs) {
+        if (cached && cached.mtimeMs === stats.mtimeMs && cached.summary.firstScene) {
           return cached.summary;
         }
 
@@ -222,6 +267,145 @@ export async function softDeleteCourse(id: string): Promise<{ ok: boolean; path:
     return { ok: true, path: targetPath };
   } catch {
     return { ok: false, path: "" };
+  }
+}
+
+export interface TrashCourseItem {
+  id: string;
+  originalId: string;
+  fileName: string;
+  title: string;
+  subject: string;
+  grade?: string;
+  sceneCount: number;
+  duration: number;
+  fileSizeBytes: number;
+  deletedAt: string;
+}
+
+/** List all courses currently sitting in `data/temp_delete/` (trash). */
+export async function listTrashCourses(): Promise<TrashCourseItem[]> {
+  await ensureTempDeleteDir();
+  try {
+    const files = (await fs.readdir(TEMP_DELETE_DIR)).filter((f) => f.endsWith(".json"));
+    const items: TrashCourseItem[] = [];
+
+    for (const fileName of files) {
+      try {
+        const fullPath = path.join(TEMP_DELETE_DIR, fileName);
+        const raw = await fs.readFile(fullPath, "utf8");
+        const decrypted = decryptText(raw);
+        const parsed = JSON.parse(decrypted) as { lesson: unknown };
+        const lesson = coerceLesson(parsed.lesson);
+        if (!lesson) continue;
+
+        const prefixMatch = fileName.match(/^(\d+)_(.+)\.json$/);
+        const timestamp = prefixMatch ? parseInt(prefixMatch[1], 10) : Date.now();
+        const originalId = prefixMatch ? prefixMatch[2] : lesson.id;
+
+        const stat = await fs.stat(fullPath);
+        items.push({
+          id: originalId,
+          originalId,
+          fileName,
+          title: lesson.title || "Bài giảng chưa đặt tên",
+          subject: lesson.subject || "Chung",
+          grade: lesson.grade,
+          sceneCount: lesson.scenes?.length || 0,
+          duration: lesson.duration || 0,
+          fileSizeBytes: stat.size,
+          deletedAt: new Date(timestamp).toISOString(),
+        });
+      } catch {
+        continue;
+      }
+    }
+
+    return items.sort((a, b) => b.deletedAt.localeCompare(a.deletedAt));
+  } catch {
+    return [];
+  }
+}
+
+/** Read full decrypted lesson from trash (for downloading backup or inspect). */
+export async function readTrashCourse(fileNameOrId: string): Promise<Lesson | null> {
+  await ensureTempDeleteDir();
+  try {
+    const files = (await fs.readdir(TEMP_DELETE_DIR)).filter((f) => f.endsWith(".json"));
+    const targetFile = files.find(
+      (f) => f === fileNameOrId || f.endsWith(`_${fileNameOrId}.json`),
+    );
+    if (!targetFile) return null;
+
+    const trashPath = path.join(TEMP_DELETE_DIR, targetFile);
+    const raw = await fs.readFile(trashPath, "utf8");
+    const decrypted = decryptText(raw);
+    const parsed = JSON.parse(decrypted) as { lesson: unknown };
+    return coerceLesson(parsed.lesson);
+  } catch {
+    return null;
+  }
+}
+
+/** Restore course from trash back into active courses directory. */
+export async function restoreCourseFromTrash(fileNameOrId: string): Promise<Lesson | null> {
+  await ensureTempDeleteDir();
+  await ensureDir();
+  try {
+    const files = (await fs.readdir(TEMP_DELETE_DIR)).filter((f) => f.endsWith(".json"));
+    const targetFile = files.find(
+      (f) => f === fileNameOrId || f.endsWith(`_${fileNameOrId}.json`),
+    );
+    if (!targetFile) return null;
+
+    const trashPath = path.join(TEMP_DELETE_DIR, targetFile);
+    const raw = await fs.readFile(trashPath, "utf8");
+    const decrypted = decryptText(raw);
+    const parsed = JSON.parse(decrypted) as { lesson: unknown };
+    const lesson = coerceLesson(parsed.lesson);
+    if (!lesson) return null;
+
+    const destPath = fileFor(lesson.id);
+    await fs.rename(trashPath, destPath);
+    summaryCache.delete(`${lesson.id}.json`);
+    return lesson;
+  } catch {
+    return null;
+  }
+}
+
+/** Permanently purge one item from trash. */
+export async function deleteTrashItemPermanently(fileNameOrId: string): Promise<boolean> {
+  await ensureTempDeleteDir();
+  try {
+    const files = (await fs.readdir(TEMP_DELETE_DIR)).filter((f) => f.endsWith(".json"));
+    const targetFile = files.find(
+      (f) => f === fileNameOrId || f.endsWith(`_${fileNameOrId}.json`),
+    );
+    if (!targetFile) return false;
+
+    await fs.unlink(path.join(TEMP_DELETE_DIR, targetFile));
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+/** Permanently purge all items from trash. */
+export async function emptyTrash(): Promise<number> {
+  await ensureTempDeleteDir();
+  try {
+    const files = (await fs.readdir(TEMP_DELETE_DIR)).filter((f) => f.endsWith(".json"));
+    let count = 0;
+    for (const f of files) {
+      try {
+        await fs.unlink(path.join(TEMP_DELETE_DIR, f));
+        count++;
+      } catch {}
+    }
+    return count;
+  } catch {
+    return 0;
   }
 }
 
@@ -397,5 +581,20 @@ export async function renameCourse(id: string, title: string): Promise<Lesson | 
   const lesson = await readCourse(id);
   if (!lesson) return null;
   const next = { ...lesson, title: title.trim().slice(0, 200) || lesson.title };
+  return saveCourse(next);
+}
+
+export async function updateCourseMeta(
+  id: string,
+  updates: { title?: string; subject?: string; grade?: string },
+): Promise<Lesson | null> {
+  const lesson = await readCourse(id);
+  if (!lesson) return null;
+  const next = {
+    ...lesson,
+    title: updates.title !== undefined ? (updates.title.trim().slice(0, 200) || lesson.title) : lesson.title,
+    subject: updates.subject !== undefined ? (updates.subject.trim().slice(0, 100) || lesson.subject) : lesson.subject,
+    grade: updates.grade !== undefined ? (updates.grade.trim().slice(0, 50) || lesson.grade) : lesson.grade,
+  };
   return saveCourse(next);
 }

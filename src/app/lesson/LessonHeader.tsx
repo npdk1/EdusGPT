@@ -32,19 +32,11 @@ export function LessonHeader() {
 
   return (
     <header className="mb-6 flex flex-col gap-4 lg:mb-1 lg:flex-row lg:items-center lg:justify-between">
-      <div className="flex min-w-0 items-baseline gap-4">
-        {/* items-center, not baseline: a baseline-aligned icon sits on the text's
-            baseline and reads as a typo rather than a mark. */}
-        <h1 className="flex shrink-0 items-center gap-2.5 text-3xl font-bold tracking-tight text-mist-50 lg:text-lg">
-          <IconPlayerPlay className="h-7 w-7 shrink-0 text-brand-300 lg:h-5 lg:w-5" />
+      <div className="flex min-w-0 items-center gap-4">
+        <h1 className="flex shrink-0 items-center gap-2.5 text-2xl font-bold tracking-tight text-mist-50 sm:text-3xl lg:text-xl">
+          <IconPlayerPlay className="h-6 w-6 shrink-0 text-brand-300 sm:h-7 sm:w-7 lg:h-5 lg:w-5" />
           {t.lessonTitle}
         </h1>
-        {/* The lead is three lines of explanation, which is welcome on a phone and
-            pure height on a player that wants the whole window. One line, and cut
-            off at the end, keeps it available without costing the stage a row. */}
-        <p className="hidden truncate text-sm text-mist-400 lg:inline-block">
-          {t.lessonLead}
-        </p>
       </div>
       <div className="flex flex-wrap gap-2">
         <Link href="/setup" className="btn-ghost">

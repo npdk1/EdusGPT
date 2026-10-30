@@ -13,6 +13,7 @@ import {
   saveCourse,
   softDeleteCourse,
   trimCourseContent,
+  updateCourseMeta,
 } from "@/lib/server/course-store";
 import { coerceLesson } from "@/lib/lesson/validate";
 import { sanitizeRunLog } from "@/lib/lesson/run-log";
@@ -154,7 +155,7 @@ export async function POST(request: NextRequest) {
   return NextResponse.json({ ok: true, id: lesson.id, lesson });
 }
 
-/** Rename or trim course without resending the whole lesson. */
+/** Rename, update tags/subject, or trim course without resending the whole lesson. */
 export async function PATCH(request: NextRequest) {
   const denied = guard(request);
   if (denied) return denied;
@@ -162,6 +163,8 @@ export async function PATCH(request: NextRequest) {
   let body: {
     id?: string;
     title?: string;
+    subject?: string;
+    grade?: string;
     action?: string;
     keepQuiz?: boolean;
     keepFlashcards?: boolean;
@@ -187,15 +190,19 @@ export async function PATCH(request: NextRequest) {
     return NextResponse.json({ ok: true, action: "trim", lesson: trimmed });
   }
 
-  if (!body.title) {
-    return NextResponse.json({ error: "Thiếu title." }, { status: 400 });
+  if (body.subject !== undefined || body.grade !== undefined || body.title !== undefined) {
+    const lesson = await updateCourseMeta(body.id, {
+      title: body.title,
+      subject: body.subject,
+      grade: body.grade,
+    });
+    if (!lesson) {
+      return NextResponse.json({ error: "Không tìm thấy bài." }, { status: 404 });
+    }
+    return NextResponse.json({ ok: true, lesson });
   }
 
-  const lesson = await renameCourse(body.id, body.title);
-  if (!lesson) {
-    return NextResponse.json({ error: "Không tìm thấy bài." }, { status: 404 });
-  }
-  return NextResponse.json({ ok: true, lesson });
+  return NextResponse.json({ error: "Không có thay đổi nào được gửi." }, { status: 400 });
 }
 
 export async function DELETE(request: NextRequest) {

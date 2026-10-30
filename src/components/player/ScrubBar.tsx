@@ -147,7 +147,10 @@ export function ScrubBar({ lesson, timebase, loop }: ScrubBarProps) {
       if (host) {
         host.style.transform = `translateX(${offset}px)`;
         host.dataset.visible = "true";
-        host.textContent = formatClock(time, true, lesson.fps);
+        const chapterAtHover = lesson.chapters.find((c) => time >= c.start && time <= c.end);
+        host.textContent = chapterAtHover
+          ? `${formatClock(time, true, lesson.fps)} • ${chapterAtHover.title}`
+          : formatClock(time, true, lesson.fps);
       }
     }
 
@@ -165,7 +168,7 @@ export function ScrubBar({ lesson, timebase, loop }: ScrubBarProps) {
   };
 
   return (
-    <div className="space-y-2">
+    <div data-tour="player-scrubbar" className="space-y-2">
       <div className="relative pt-7">
         <div
           ref={hoverRef}
@@ -225,10 +228,10 @@ export function ScrubBar({ lesson, timebase, loop }: ScrubBarProps) {
           </div>
 
           {/* rail */}
-          <div className="absolute inset-x-0 bottom-3 h-2.5 overflow-hidden rounded-full bg-ink-800 ring-1 ring-ink-700">
+          <div className="absolute inset-x-0 bottom-3 h-1.5 overflow-hidden rounded-full bg-ink-700/60 ring-1 ring-ink-600/30 transition-all duration-150 group-hover:h-2.5">
             <div
               ref={progressRef}
-              className="absolute inset-y-0 left-0 w-0 bg-gradient-to-r from-brand-500 to-brand-300"
+              className="absolute inset-y-0 left-0 w-0 bg-gradient-to-r from-brand-500 via-blue-500 to-amber-400 transition-[height]"
             />
           </div>
 
@@ -249,22 +252,22 @@ export function ScrubBar({ lesson, timebase, loop }: ScrubBarProps) {
             />
           ) : null}
 
-          {/* scene boundaries */}
+          {/* scene boundaries (chapter segment notches like YouTube) */}
           {lesson.scenes.slice(1).map((scene) => (
             <span
               key={scene.id}
               aria-hidden="true"
               style={{ left: `${clamp((scene.start / duration) * 100, 0, 100)}%` }}
-              className="absolute bottom-3 h-2.5 w-px bg-ink-950/90"
+              className="absolute bottom-2.5 h-3.5 w-[2px] bg-ink-950 z-10"
             />
           ))}
 
-          {/* handle */}
+          {/* handle - blue/amber dot appearing on hover/drag */}
           <div
             ref={handleRef}
             style={{ left: "0%" }}
-            className={`absolute bottom-1.5 h-5 w-5 -translate-x-1/2 rounded-full border-2 border-ink-950 bg-brand-300 shadow-lg transition-transform ${
-              dragging ? "scale-125" : "group-hover:scale-110"
+            className={`absolute bottom-2 h-4 w-4 -translate-x-1/2 rounded-full border-2 border-white dark:border-ink-950 bg-gradient-to-tr from-brand-500 to-amber-400 shadow-lg shadow-brand-500/40 transition-transform duration-100 ${
+              dragging ? "scale-125" : "scale-0 group-hover:scale-100"
             }`}
           >
             <span className="sr-only">{t.scrubHandle}</span>

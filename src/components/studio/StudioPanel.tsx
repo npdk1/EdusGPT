@@ -31,7 +31,17 @@ import {
   Image as ImageIcon,
   MousePointerClick,
   Presentation,
+  Check,
+  Search,
+  Globe,
+  HelpCircle,
 } from "lucide-react";
+import {
+  type QuizSettings,
+  DEFAULT_QUIZ_SETTINGS,
+  calculateOptimalQuizPlan,
+} from "@/lib/lesson/quiz";
+import { QuizSettingsModal } from "./QuizSettingsModal";
 import type { PublicAiStatus } from "@/lib/ai/config";
 import {
   sceneKindLabel,
@@ -117,6 +127,21 @@ const COPY = {
     copied: "Copied",
     downloadJson: "Download JSON",
     discardResult: "Discard this result",
+    settingsAutoSaved: "Preferences remembered",
+    resetSettings: "Reset to default",
+    quizSettingsTitle: "Quiz & Checkpoint questions",
+    quizSettingsButton: "Configure Quiz",
+    advancedSettingsTitle: "Advanced Settings",
+    advancedSettingsSubtitle:
+      "Quiz questions, slide themes & patterns, entrance animations, and presentation pointer",
+    advancedSettingsCollapse: "Hide advanced",
+    advancedSettingsExpand: "Show advanced",
+    advancedSectionQuiz: "Quiz & Checkpoints",
+    advancedSectionAppearance: "Slide theme & pattern",
+    advancedSectionMotion: "Entrance animation",
+    advancedSectionAids: "Illustrations & pointer",
+    advancedSettingsQuizAuto: "Auto",
+    advancedSettingsQuizOff: "Off",
     libraryTitle: "On-device library",
     libraryStorage: "stored in localStorage",
     libraryEmpty: "No AI lessons yet. Two sample lessons are ready in the player.",
@@ -136,6 +161,12 @@ const COPY = {
     voiceShowMore: "Show {count} more voices",
     voiceShowLess: "Show fewer voices",
     voiceLocalSetup: "Install the machine voice",
+    voiceSearch: "Search voices (name, gender, engine)…",
+    voiceNoMatches: "No voices match that search.",
+    voiceGroupLocal: "VieNeu-TTS (On-device AI)",
+    voiceGroupCloud: "Microsoft Edge (Cloud Neural)",
+    voiceGroupPiper: "Piper TTS (Offline)",
+    voiceSelect: "Choose narration voice",
     imageLegend: "Illustrations",
     imageOn: "AI draws an illustration for each slide",
     imageOff: "Text only, no images",
@@ -249,6 +280,21 @@ const COPY = {
     copied: "Đã copy",
     downloadJson: "Tải JSON",
     discardResult: "Bỏ kết quả này",
+    settingsAutoSaved: "Đã nhớ các thiết lập của bạn",
+    resetSettings: "Khôi phục mặc định",
+    quizSettingsTitle: "Trắc nghiệm & Câu hỏi kiểm tra",
+    quizSettingsButton: "Cài đặt Quiz",
+    advancedSettingsTitle: "Tùy chọn nâng cao",
+    advancedSettingsSubtitle:
+      "Cài đặt câu hỏi Quiz, hình nền & họa tiết slide, hiệu ứng chuyển động và con trỏ giảng",
+    advancedSettingsCollapse: "Thu gọn",
+    advancedSettingsExpand: "Mở rộng",
+    advancedSectionQuiz: "Trắc nghiệm & Kiểm tra",
+    advancedSectionAppearance: "Giao diện & Nền slide",
+    advancedSectionMotion: "Hiệu ứng chuyển động",
+    advancedSectionAids: "Ảnh minh hoạ & Con trỏ",
+    advancedSettingsQuizAuto: "Tự động",
+    advancedSettingsQuizOff: "Tắt",
     libraryTitle: "Thư viện trên máy",
     libraryStorage: "lưu trong localStorage",
     libraryEmpty: "Chưa có bài giảng nào do AI tạo. Hai bài mẫu đã có sẵn trong trang trình phát.",
@@ -267,6 +313,12 @@ const COPY = {
     voiceShowMore: "Xem thêm {count} giọng",
     voiceShowLess: "Thu gọn danh sách",
     voiceLocalSetup: "Cài giọng cho máy",
+    voiceSearch: "Tìm giọng đọc (tên, vùng miền, nam/nữ)…",
+    voiceNoMatches: "Không tìm thấy giọng đọc nào khớp.",
+    voiceGroupLocal: "VieNeu-TTS (AI đọc trên máy)",
+    voiceGroupCloud: "Microsoft Edge (Giọng Neural trực tuyến)",
+    voiceGroupPiper: "Piper TTS (Offline)",
+    voiceSelect: "Chọn giọng đọc",
     imageLegend: "Ảnh minh hoạ",
     imageOn: "AI vẽ ảnh minh hoạ cho mỗi slide",
     imageOff: "Chỉ chữ, không dùng ảnh",
@@ -551,6 +603,9 @@ export function StudioPanel() {
   // the default; the swatches below only offer colours that stay legible on
   // both paper and midnight slides.
   const [pointerColor, setPointerColor] = useState("#f59e0b");
+  const [quizSettings, setQuizSettings] = useState<QuizSettings>(DEFAULT_QUIZ_SETTINGS);
+  const [quizModalOpen, setQuizModalOpen] = useState(false);
+  const [showAdvanced, setShowAdvanced] = useState(false);
   // Which kind of deck this is. First because it decides the two settings
   // below it: a deck that is minimal, heavily illustrated and textbook-dense at
   // once is not a deck, it is three people arguing.
@@ -570,6 +625,154 @@ export function StudioPanel() {
     setTheme(style.theme);
     setUseImages(style.images);
   }, []);
+
+  const defaultImages = useMemo(
+    () => PRESENTATION_STYLES.find((item) => item.id === DEFAULT_PRESENTATION_STYLE)?.images ?? true,
+    [],
+  );
+
+  const settingsLoadedRef = useRef(false);
+
+  // Restore settings from localStorage on initial client mount
+  useEffect(() => {
+    try {
+      const raw = localStorage.getItem("edusgpt.studio-settings.v1");
+      if (raw) {
+        const parsed = JSON.parse(raw) as {
+          styleId?: string;
+          lessonLength?: LessonLengthId;
+          theme?: SlideTheme;
+          pattern?: string;
+          motion?: string;
+          voice?: string;
+          useImages?: boolean;
+          language?: string;
+          showPointer?: boolean;
+          pointerColor?: string;
+          quizSettings?: QuizSettings;
+        };
+        if (parsed.styleId && PRESENTATION_STYLES.some((s) => s.id === parsed.styleId)) {
+          setStyleId(parsed.styleId);
+        }
+        if (
+          parsed.lessonLength === "short" ||
+          parsed.lessonLength === "medium" ||
+          parsed.lessonLength === "long"
+        ) {
+          setLessonLength(parsed.lessonLength);
+        }
+        if (parsed.theme && typeof parsed.theme === "string") {
+          setTheme(parsed.theme);
+        }
+        if (parsed.pattern && typeof parsed.pattern === "string") {
+          setPattern(parsed.pattern);
+        }
+        if (parsed.motion && typeof parsed.motion === "string") {
+          setMotion(parsed.motion);
+        }
+        if (parsed.voice && typeof parsed.voice === "string") {
+          setVoice(parsed.voice);
+        }
+        if (typeof parsed.useImages === "boolean") {
+          setUseImages(parsed.useImages);
+        }
+        if (parsed.language && typeof parsed.language === "string") {
+          setLanguage(parsed.language);
+        }
+        if (typeof parsed.showPointer === "boolean") {
+          setShowPointer(parsed.showPointer);
+        }
+        if (parsed.pointerColor && typeof parsed.pointerColor === "string") {
+          setPointerColor(parsed.pointerColor);
+        }
+        if (parsed.quizSettings && typeof parsed.quizSettings === "object") {
+          setQuizSettings({
+            enabled: parsed.quizSettings.enabled ?? DEFAULT_QUIZ_SETTINGS.enabled,
+            mode: parsed.quizSettings.mode ?? DEFAULT_QUIZ_SETTINGS.mode,
+            minQuestions: parsed.quizSettings.minQuestions ?? DEFAULT_QUIZ_SETTINGS.minQuestions,
+            maxQuestions: parsed.quizSettings.maxQuestions ?? DEFAULT_QUIZ_SETTINGS.maxQuestions,
+            checkpointSize: parsed.quizSettings.checkpointSize ?? DEFAULT_QUIZ_SETTINGS.checkpointSize,
+          });
+        }
+      } else {
+        const legacyVoice = localStorage.getItem("edusgpt.classroom-voice.v1");
+        if (legacyVoice) setVoice(legacyVoice);
+      }
+    } catch {
+      /* ignore storage or parse error */
+    } finally {
+      settingsLoadedRef.current = true;
+    }
+  }, []);
+
+  // Save settings to localStorage whenever any setting changes (after initial mount)
+  useEffect(() => {
+    if (!settingsLoadedRef.current) return;
+    try {
+      const payload = {
+        styleId,
+        lessonLength,
+        theme,
+        pattern,
+        motion,
+        voice,
+        useImages,
+        language,
+        showPointer,
+        pointerColor,
+        quizSettings,
+      };
+      localStorage.setItem("edusgpt.studio-settings.v1", JSON.stringify(payload));
+      if (voice) {
+        localStorage.setItem("edusgpt.classroom-voice.v1", voice);
+      }
+    } catch {
+      /* ignore quota or privacy errors */
+    }
+  }, [
+    styleId,
+    lessonLength,
+    theme,
+    pattern,
+    motion,
+    voice,
+    useImages,
+    language,
+    showPointer,
+    pointerColor,
+    quizSettings,
+  ]);
+
+  const hasCustomSettings =
+    styleId !== DEFAULT_PRESENTATION_STYLE ||
+    lessonLength !== DEFAULT_LESSON_LENGTH ||
+    theme !== DEFAULT_SLIDE_THEME ||
+    pattern !== DEFAULT_SLIDE_PATTERN ||
+    motion !== DEFAULT_SLIDE_MOTION ||
+    useImages !== defaultImages ||
+    language !== AUTO_LANGUAGE ||
+    !showPointer ||
+    pointerColor !== "#f59e0b" ||
+    JSON.stringify(quizSettings) !== JSON.stringify(DEFAULT_QUIZ_SETTINGS) ||
+    (Boolean(voice) && voice !== "hoaimy");
+
+  const resetToDefaults = useCallback(() => {
+    setStyleId(DEFAULT_PRESENTATION_STYLE);
+    setLessonLength(DEFAULT_LESSON_LENGTH);
+    setTheme(DEFAULT_SLIDE_THEME);
+    setPattern(DEFAULT_SLIDE_PATTERN);
+    setMotion(DEFAULT_SLIDE_MOTION);
+    setUseImages(defaultImages);
+    setLanguage(AUTO_LANGUAGE);
+    setShowPointer(true);
+    setPointerColor("#f59e0b");
+    setQuizSettings(DEFAULT_QUIZ_SETTINGS);
+    try {
+      localStorage.removeItem("edusgpt.studio-settings.v1");
+    } catch {
+      /* ignore */
+    }
+  }, [defaultImages]);
   const [dragging, setDragging] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [lesson, setLesson] = useState<Lesson | null>(null);
@@ -667,8 +870,9 @@ export function StudioPanel() {
       pointerColor,
       style: styleId,
       lessonLength,
+      quizSettings,
     });
-  }, [language, lessonLength, minutes, motion, pattern, pointerColor, referenceText, sceneCount, showPointer, stream, styleId, theme, topic, useImages, voice]);
+  }, [language, lessonLength, minutes, motion, pattern, pointerColor, quizSettings, referenceText, sceneCount, showPointer, stream, styleId, theme, topic, useImages, voice]);
 
   /** Saves to the server library (survives a browser wipe) and mirrors to local. */
   const save = useCallback(async () => {
@@ -867,10 +1071,10 @@ export function StudioPanel() {
         away: a newcomer facing seven controls before typing a word never gets
         to their first lesson.
       */}
-      <section className="panel space-y-4 p-5">
+      <section data-tour="studio-topic" className="panel space-y-5 p-5 sm:p-6">
         <div>
-          <label className="label flex items-center gap-1.5" htmlFor="topic">
-            <TextCursorInput className="h-3.5 w-3.5 text-mist-400" />
+          <label className="label flex items-center gap-2 text-sm font-bold text-mist-200" htmlFor="topic">
+            <TextCursorInput className="h-4 w-4 text-brand-300" />
             {t.topicLabel}
           </label>
           <textarea
@@ -884,96 +1088,47 @@ export function StudioPanel() {
               }
             }}
             rows={3}
-            className="field resize-y font-sans text-base"
+            className="field resize-y font-sans text-base sm:text-lg"
             placeholder={t.topicPlaceholder}
           />
-          <div className="mt-2 flex flex-wrap gap-1.5">
-            {presets.map((preset) => (
-              <button
-                key={preset}
-                type="button"
-                onClick={() => setTopic(preset)}
-                className={`chip transition-colors ${
-                  topic === preset
-                    ? "border-brand-500 bg-brand-500/15 text-brand-100"
-                    : "hover:border-brand-700 hover:text-mist-100"
-                }`}
-              >
-                {preset}
-              </button>
-            ))}
-          </div>
         </div>
 
-        <StylePicker value={styleId} onChange={chooseStyle} />
-
-        <LengthPicker value={lessonLength} onChange={setLessonLength} />
-
-        <ThemePicker value={theme} onChange={setTheme} open={themeOpen} setOpen={setThemeOpen} />
+        <div className="flex items-center justify-between text-xs text-mist-400">
+          <span className="inline-flex items-center gap-1.5 text-mist-400">
+            <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
+            {t.settingsAutoSaved}
+          </span>
+          {hasCustomSettings ? (
+            <button
+              type="button"
+              onClick={resetToDefaults}
+              className="text-xs text-mist-400 hover:text-mist-200 underline underline-offset-2 transition-colors"
+            >
+              {t.resetSettings}
+            </button>
+          ) : null}
+        </div>
 
         <div>
-          <p className="label flex items-center gap-1.5">
-            <Sparkles className="h-3.5 w-3.5 text-mist-400" />
-            {t.patternLabel}
-          </p>
-          <div className="flex flex-wrap gap-1.5">
-            {SLIDE_PATTERNS.map((id) => {
-              const labels: Record<string, string> = {
-                none: t.patternNone,
-                dots: t.patternDots,
-                grid: t.patternGrid,
-                bands: t.patternBands,
-                rings: t.patternRings,
-                waves: t.patternWaves,
-              };
-              const active = pattern === id;
-              return (
-                <button
-                  key={id}
-                  type="button"
-                  onClick={() => setPattern(id)}
-                  aria-pressed={active}
-                  className={`min-w-[4.5rem] flex-1 rounded-xl border p-1.5 transition-colors ${
-                    active
-                      ? "border-brand-500 bg-brand-500/15 text-brand-100"
-                      : "border-ink-700 hover:border-brand-700 hover:text-mist-100"
-                  }`}
-                >
-                  {/* Live miniature: the same gradients the slide paints, drawn
-                      with this paper's own accent so the preview never lies. */}
-                  <span
-                    aria-hidden="true"
-                    className="block h-9 w-full rounded-lg border border-ink-700/60"
-                    style={patternSwatch(id, resolveSlideTheme(theme).palette)}
-                  />
-                  <span className="mt-1 block text-center text-[11px] font-medium">
-                    {labels[id] ?? id}
-                  </span>
-                </button>
-              );
-            })}
+          <StylePicker value={styleId} onChange={chooseStyle} />
+        </div>
+
+        <div className="pt-3 sm:pt-4">
+          <LengthPicker value={lessonLength} onChange={setLessonLength} />
+        </div>
+
+        <div className="grid gap-4 sm:grid-cols-2">
+          <div>
+            <label className="label mb-1 flex items-center gap-1.5">
+              <Globe className="h-3.5 w-3.5 text-mist-400" />
+              {t.studioLessonLanguage}
+            </label>
+            <LanguagePicker value={language} onChange={setLanguage} />
+          </div>
+          <div>
+            <VoiceChooser value={voice} onChange={setVoice} topic={topic} />
           </div>
         </div>
-
-        <MotionPicker value={motion} onChange={setMotion} />
-
-        <ImageModeToggle value={useImages} onChange={setUseImages} />
-
-        <div>
-          <p className="mb-1 text-xs font-medium text-mist-300">
-            {t.studioLessonLanguage}
-          </p>
-          <LanguagePicker value={language} onChange={setLanguage} />
-        </div>
-
-        <PointerModeToggle
-          visible={showPointer}
-          onToggle={setShowPointer}
-          color={pointerColor}
-          onColor={setPointerColor}
-        />
-
-        <VoiceChooser value={voice} onChange={setVoice} topic={topic} />
 
         {/* Context: the part a teacher actually reaches for. */}
         <div
@@ -1039,21 +1194,227 @@ export function StudioPanel() {
           )}
         </div>
 
-        <div className="flex flex-wrap items-center gap-3">
+        {/* Advanced Settings (Cài đặt nâng cao) */}
+        <div data-tour="advanced-settings" className="rounded-2xl border border-ink-700/80 bg-ink-900/50 backdrop-blur-sm overflow-hidden transition-all">
           <button
             type="button"
+            onClick={() => setShowAdvanced((prev) => !prev)}
+            className="w-full flex items-center justify-between p-4 text-left hover:bg-ink-800/40 transition-colors"
+            aria-expanded={showAdvanced}
+          >
+            <div className="flex items-center gap-3 min-w-0">
+              <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-brand-500/10 text-brand-400 border border-brand-500/20">
+                <SlidersHorizontal className="h-4 w-4" />
+              </span>
+              <div className="min-w-0">
+                <div className="flex flex-wrap items-center gap-2">
+                  <span className="text-sm font-bold text-mist-100">
+                    {t.advancedSettingsTitle}
+                  </span>
+                  <div className="flex flex-wrap items-center gap-1.5">
+                    <span className="inline-flex items-center gap-1 rounded-md border border-ink-700/80 bg-ink-800/60 px-2 py-0.5 text-[11px] font-medium text-mist-300">
+                      <HelpCircle className="h-3 w-3 text-brand-400" />
+                      {quizSettings.enabled
+                        ? quizSettings.mode === "auto"
+                          ? `${t.advancedSectionQuiz}: ${t.advancedSettingsQuizAuto}`
+                          : `Quiz: ${quizSettings.minQuestions}-${quizSettings.maxQuestions}`
+                        : `${t.advancedSectionQuiz}: ${t.advancedSettingsQuizOff}`}
+                    </span>
+                    <span className="inline-flex items-center gap-1 rounded-md border border-ink-700/80 bg-ink-800/60 px-2 py-0.5 text-[11px] font-medium text-mist-300">
+                      <Palette className="h-3 w-3 text-amber-400" />
+                      {resolveSlideTheme(theme).label}
+                    </span>
+                    <span className="inline-flex items-center gap-1 rounded-md border border-ink-700/80 bg-ink-800/60 px-2 py-0.5 text-[11px] font-medium text-mist-300">
+                      <Sparkles className="h-3 w-3 text-emerald-400" />
+                      {motion === "none" ? (lang === "vi" ? "Tĩnh" : "Static") : motion}
+                    </span>
+                  </div>
+                </div>
+                <p className="text-xs text-mist-400 mt-0.5 truncate">
+                  {t.advancedSettingsSubtitle}
+                </p>
+              </div>
+            </div>
+            <div className="flex items-center gap-1.5 text-xs font-semibold text-brand-300 shrink-0 ml-3">
+              <span>{showAdvanced ? t.advancedSettingsCollapse : t.advancedSettingsExpand}</span>
+              {showAdvanced ? (
+                <ChevronUp className="h-4 w-4" />
+              ) : (
+                <ChevronDown className="h-4 w-4" />
+              )}
+            </div>
+          </button>
+
+          {showAdvanced && (
+            <div className="p-4 sm:p-5 pt-3 space-y-5 border-t border-ink-800/80">
+              {/* 1. Quiz Settings */}
+              <div>
+                <p className="label mb-2 flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider text-mist-300">
+                  <HelpCircle className="h-3.5 w-3.5 text-brand-400" />
+                  {t.advancedSectionQuiz}
+                </p>
+                <div className="rounded-xl border border-ink-700/80 bg-ink-850/60 p-3.5">
+                  <div className="flex flex-wrap items-center justify-between gap-3">
+                    <div className="flex items-center gap-3">
+                      <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-brand-500/15 text-brand-400 border border-brand-500/20">
+                        <HelpCircle className="h-5 w-5" />
+                      </span>
+                      <div>
+                        <div className="flex items-center gap-2">
+                          <span className="text-sm font-semibold text-mist-100">
+                            {t.quizSettingsTitle}
+                          </span>
+                          <span
+                            className={`inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold tracking-wide ${
+                              quizSettings.enabled
+                                ? "bg-emerald-500/15 text-emerald-400 border border-emerald-500/25"
+                                : "bg-ink-700/60 text-mist-400"
+                            }`}
+                          >
+                            {quizSettings.enabled
+                              ? lang === "vi"
+                                ? "Đang bật"
+                                : "Enabled"
+                              : lang === "vi"
+                                ? "Đã tắt"
+                                : "Disabled"}
+                          </span>
+                        </div>
+                        <p className="text-xs text-mist-400 mt-0.5">
+                          {quizSettings.enabled
+                            ? quizSettings.mode === "auto"
+                              ? lang === "vi"
+                                ? `Tự động tối ưu (~${calculateOptimalQuizPlan(sceneCount, quizSettings).totalQuestions} câu hỏi theo ${sceneCount} slide)`
+                                : `Auto-optimal (~${calculateOptimalQuizPlan(sceneCount, quizSettings).totalQuestions} questions for ${sceneCount} slides)`
+                              : lang === "vi"
+                                ? `Tùy chỉnh: ${quizSettings.minQuestions} - ${quizSettings.maxQuestions} câu (${quizSettings.checkpointSize} câu/chặng)`
+                                : `Custom: ${quizSettings.minQuestions} - ${quizSettings.maxQuestions} questions (${quizSettings.checkpointSize} /checkpoint)`
+                            : lang === "vi"
+                              ? "Không tạo câu hỏi trắc nghiệm trong bài giảng"
+                              : "No quiz generated for this lesson"}
+                        </p>
+                      </div>
+                    </div>
+
+                    <button
+                      type="button"
+                      onClick={() => setQuizModalOpen(true)}
+                      className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-ink-700 bg-ink-800 hover:bg-ink-750 text-xs font-semibold text-mist-200 hover:text-white transition-all shadow-sm"
+                    >
+                      <SlidersHorizontal className="h-3.5 w-3.5 text-brand-400" />
+                      <span>{t.quizSettingsButton}</span>
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              {/* 2. Theme & Pattern */}
+              <div>
+                <p className="label mb-2 flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider text-mist-300">
+                  <Palette className="h-3.5 w-3.5 text-amber-400" />
+                  {t.advancedSectionAppearance}
+                </p>
+                <div className="grid gap-4 sm:grid-cols-2">
+                  <div>
+                    <ThemePicker value={theme} onChange={setTheme} open={themeOpen} setOpen={setThemeOpen} />
+                  </div>
+                  <div>
+                    <p className="label flex items-center gap-1.5">
+                      <Sparkles className="h-3.5 w-3.5 text-mist-400" />
+                      {t.patternLabel}
+                    </p>
+                    <div className="flex flex-wrap gap-1.5">
+                      {SLIDE_PATTERNS.map((id) => {
+                        const labels: Record<string, string> = {
+                          none: t.patternNone,
+                          dots: t.patternDots,
+                          grid: t.patternGrid,
+                          bands: t.patternBands,
+                          rings: t.patternRings,
+                          waves: t.patternWaves,
+                        };
+                        const active = pattern === id;
+                        return (
+                          <button
+                            key={id}
+                            type="button"
+                            onClick={() => setPattern(id)}
+                            aria-pressed={active}
+                            className={`min-w-[4rem] flex-1 rounded-xl border p-1.5 transition-colors ${
+                              active
+                                ? "border-brand-500 bg-brand-500/15 text-brand-100"
+                                : "border-ink-700 hover:border-brand-700 hover:text-mist-100"
+                            }`}
+                          >
+                            <span
+                              aria-hidden="true"
+                              className="block h-8 w-full rounded-lg border border-ink-700/60"
+                              style={patternSwatch(id, resolveSlideTheme(theme).palette)}
+                            />
+                            <span className="mt-1 block text-center text-[10px] font-medium">
+                              {labels[id] ?? id}
+                            </span>
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* 3. Entrance Motion */}
+              <div>
+                <p className="label mb-2 flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider text-mist-300">
+                  <Sparkles className="h-3.5 w-3.5 text-emerald-400" />
+                  {t.advancedSectionMotion}
+                </p>
+                <MotionPicker value={motion} onChange={setMotion} />
+              </div>
+
+              {/* 4. Presentation & Teaching Aids */}
+              <div>
+                <p className="label mb-2 flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider text-mist-300">
+                  <MousePointerClick className="h-3.5 w-3.5 text-brand-400" />
+                  {t.advancedSectionAids}
+                </p>
+                <div className="grid gap-4 sm:grid-cols-2">
+                  <ImageModeToggle value={useImages} onChange={setUseImages} />
+                  <PointerModeToggle
+                    visible={showPointer}
+                    onToggle={setShowPointer}
+                    color={pointerColor}
+                    onColor={setPointerColor}
+                  />
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
+
+        <QuizSettingsModal
+          isOpen={quizModalOpen}
+          onClose={() => setQuizModalOpen(false)}
+          settings={quizSettings}
+          onSave={setQuizSettings}
+          sceneCount={sceneCount}
+        />
+
+        <div className="flex flex-wrap items-center gap-4 pt-2">
+          <button
+            type="button"
+            data-tour="studio-submit"
             onClick={() => void generate()}
-            className="btn-primary px-5 py-2.5 text-base"
+            className="inline-flex select-none items-center justify-center gap-2.5 rounded-xl bg-gradient-to-r from-amber-500 via-orange-500 to-ember-500 hover:from-amber-400 hover:to-orange-400 text-white font-bold px-7 py-3 text-base shadow-xl shadow-orange-500/25 active:scale-95 transition-all duration-150 disabled:cursor-not-allowed disabled:opacity-45"
             disabled={busy || !status?.configured}
           >
             {busy ? (
-              <LoaderCircle className="h-4 w-4 animate-spin" />
+              <LoaderCircle className="h-5 w-5 animate-spin" />
             ) : (
-              <WandSparkles className="h-4 w-4" />
+              <WandSparkles className="h-5 w-5" />
             )}
             {busy ? t.creating : t.createLesson}
           </button>
-          <span className="text-xs text-mist-500">{t.createHint}</span>
+          <span className="text-sm font-medium text-mist-400">{t.createHint}</span>
         </div>
 
         {busy || stream.progress.steps.length > 0 || streamError ? (
@@ -1278,23 +1639,13 @@ function VoiceChooser({
 }) {
   const t = useCopy(COPY);
   const [voices, setVoices] = useState<{ id: string; label: string; provider?: string; note?: string }[]>([]);
-  /**
-   * Thirty-odd local voices plus the hosted ones is a wall of chips. The first
-   * handful stays on screen and the rest opens under a single line, because a
-   * picker nobody can see the end of is a picker nobody reads.
-   */
-  const [expanded, setExpanded] = useState(false);
+  const [open, setOpen] = useState(false);
+  const [query, setQuery] = useState("");
   const [playing, setPlaying] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
-  /**
-   * Which engine the server will actually use, and whether it is ready.
-   *
-   * In local mode the list of names stops meaning what it says — there is one
-   * installed voice, and a name is a request for a tempo — so the chooser has to
-   * say so rather than let the teacher wonder why "Hoài My" sounds like the one
-   * voice installed.
-   */
   const [engine, setEngine] = useState<{ engine: string; localReady: boolean } | null>(null);
+  const rootRef = useRef<HTMLDivElement | null>(null);
+  const searchInputRef = useRef<HTMLInputElement | null>(null);
   const audioRef = useRef<HTMLAudioElement | null>(null);
 
   useEffect(() => {
@@ -1308,21 +1659,36 @@ function VoiceChooser({
           engine: typeof data.engine === "string" ? data.engine : "cloud",
           localReady: Boolean(data.local?.ready),
         });
-        // The server's own default wins over "" so the choice shown is the one
-        // that will actually be used.
         if (!value && typeof data.default === "string") onChange(data.default);
       })
       .catch(() => setError(t.voiceLoadFailed));
     return () => {
       cancelled = true;
+      audioRef.current?.pause();
     };
-    // `onChange` is setState from the parent and is stable for this component's
-    // life; re-running on it would reset the selection on every parent render.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // One sample at a time. Stopping the previous clip is what makes pressing a
-  // second voice a change of mind rather than an overlap.
+  // Click outside to close dropdown
+  useEffect(() => {
+    if (!open) return;
+    const onPointer = (event: MouseEvent) => {
+      if (!rootRef.current?.contains(event.target as Node)) {
+        setOpen(false);
+      }
+    };
+    const onKey = (event: KeyboardEvent) => {
+      if (event.key === "Escape") setOpen(false);
+    };
+    document.addEventListener("mousedown", onPointer);
+    document.addEventListener("keydown", onKey);
+    return () => {
+      document.removeEventListener("mousedown", onPointer);
+      document.removeEventListener("keydown", onKey);
+    };
+  }, [open]);
+
+  // One sample at a time.
   const preview = async (id: string) => {
     audioRef.current?.pause();
     setError(null);
@@ -1356,90 +1722,201 @@ function VoiceChooser({
     }
   };
 
-  // Grouped by engine, in the order a teacher thinks in: VieNeu-TTS first,
-  // then the Edge cloud voices, then Piper. The old order put every local
-  // voice first, which stranded the single Piper voice at the head of the
-  // list and let a cloud voice leak into the top 10 — the chips no longer
-  // matched the engine they belong to. Stable within each group, so the API
-  // order (Nano before Turbo, Vietnamese before English) is kept.
-  const providerRank = (voice: { provider?: string }): number =>
-    voice.provider === "vieneu" ? 0 : !voice.provider ? 1 : 2;
-  const ordered = [...voices].sort(
-    (a, b) => providerRank(a) - providerRank(b),
-  );
-  const visible = expanded
-    ? ordered
-    : [...ordered.slice(0, TOP_VOICES), ...ordered.slice(TOP_VOICES).filter((v) => v.id === value)];
-  const hidden = Math.max(0, ordered.length - TOP_VOICES);
+  const selectedVoice = voices.find((v) => v.id === value);
+  const isPlayingCurrent = playing === value;
+
+  // Filter voices by search query
+  const needle = query.trim().toLowerCase();
+  const filtered = useMemo(() => {
+    if (!needle) return voices;
+    return voices.filter(
+      (v) =>
+        v.label.toLowerCase().includes(needle) ||
+        v.id.toLowerCase().includes(needle) ||
+        (v.provider && v.provider.toLowerCase().includes(needle)) ||
+        (v.note && v.note.toLowerCase().includes(needle)),
+    );
+  }, [voices, needle]);
+
+  // Group filtered voices by provider/category
+  const groups = useMemo(() => {
+    const localAi = filtered.filter((v) => v.provider === "vieneu");
+    const cloud = filtered.filter((v) => !v.provider || v.provider === "edge");
+    const piper = filtered.filter(
+      (v) => v.provider === "piper" || (v.provider && v.provider !== "vieneu" && v.provider !== "edge"),
+    );
+
+    return [
+      { id: "vieneu", label: t.voiceGroupLocal, items: localAi },
+      { id: "cloud", label: t.voiceGroupCloud, items: cloud },
+      { id: "piper", label: t.voiceGroupPiper, items: piper },
+    ].filter((g) => g.items.length > 0);
+  }, [filtered, t]);
 
   return (
-    <fieldset className="mt-3">
-      <legend className="label flex items-center gap-1.5">
-        <AudioLines className="h-3.5 w-3.5 text-mist-400" />
-        {t.voiceLabel}
-      </legend>
-      <div className="flex flex-wrap gap-2">
-        {visible.map((option) => {
-          const selected = value === option.id;
-          const isPlaying = playing === option.id;
-          return (
-            <div
-              key={option.id}
-              className={`flex items-center gap-1 rounded-xl border px-2 py-1.5 transition-colors ${
-                selected ? "border-brand-500 bg-brand-500/10" : "border-ink-700"
-              }`}
-            >
-              <button
-                type="button"
-                onClick={() => onChange(option.id)}
-                aria-pressed={selected}
-                className={`px-1 text-xs font-semibold ${
-                  selected ? "text-mist-50" : "text-mist-300 hover:text-mist-100"
-                }`}
-              >
-                {option.label}
-              </button>
-              <button
-                type="button"
-                onClick={() => void preview(option.id)}
-                title={`${t.voicePreview} ${option.label}`}
-                aria-label={`${t.voicePreview} ${option.label}`}
-                className="flex h-7 w-7 items-center justify-center rounded-lg text-mist-400 transition-colors hover:bg-ink-700 hover:text-mist-100"
-              >
-                {isPlaying ? (
-                  <Pause className="h-3.5 w-3.5" />
-                ) : (
-                  <Volume2 className="h-3.5 w-3.5" />
-                )}
-              </button>
-            </div>
-          );
-        })}
-        {voices.length === 0 && !error ? (
-          <span className="text-xs text-mist-500">{t.voiceLoading}</span>
+    <div ref={rootRef} className="relative">
+      <div className="flex items-center justify-between pb-1">
+        <label className="label mb-0 flex items-center gap-1.5" htmlFor="voice-select">
+          <AudioLines className="h-3.5 w-3.5 text-mist-400" />
+          {t.voiceLabel}
+        </label>
+        {selectedVoice ? (
+          <button
+            type="button"
+            onClick={() => void preview(selectedVoice.id)}
+            title={`${t.voicePreview} ${selectedVoice.label}`}
+            className="inline-flex items-center gap-1 text-xs text-brand-300 transition-colors hover:text-brand-200"
+          >
+            {isPlayingCurrent ? (
+              <Pause className="h-3.5 w-3.5 animate-pulse text-amber-400" />
+            ) : (
+              <Volume2 className="h-3.5 w-3.5" />
+            )}
+            <span>{isPlayingCurrent ? `${t.voicePreview}…` : t.voicePreview}</span>
+          </button>
         ) : null}
       </div>
-      {hidden > 0 || expanded ? (
+
+      <div className="relative">
         <button
+          id="voice-select"
           type="button"
-          onClick={() => setExpanded((open) => !open)}
-          aria-expanded={expanded}
-          className="mt-2 flex items-center gap-1 text-xs text-brand-300 transition-colors hover:text-brand-200"
+          onClick={() => {
+            setOpen((prev) => !prev);
+            setTimeout(() => searchInputRef.current?.focus(), 50);
+          }}
+          aria-expanded={open}
+          aria-haspopup="listbox"
+          aria-label={t.voiceSelect}
+          className="flex w-full items-center justify-between gap-2 rounded-xl border border-ink-700 bg-ink-900/60 px-3 py-2.5 text-left text-sm text-mist-100 transition-all hover:border-brand-500 hover:bg-ink-850 focus:outline-none focus:ring-1 focus:ring-brand-500"
         >
-          {expanded ? t.voiceShowLess : t.voiceShowMore.replace("{count}", String(hidden))}
-          {expanded ? <ChevronUp className="h-3.5 w-3.5" /> : <ChevronDown className="h-3.5 w-3.5" />}
+          <div className="flex min-w-0 flex-1 items-center gap-2">
+            <Volume2 className="h-4 w-4 shrink-0 text-mist-400" />
+            <span className="truncate font-medium text-mist-100">
+              {selectedVoice ? selectedVoice.label : (voices.length === 0 ? t.voiceLoading : value)}
+            </span>
+            {selectedVoice?.provider === "vieneu" ? (
+              <span className="shrink-0 rounded-full border border-emerald-500/30 bg-emerald-500/10 px-2 py-0.5 text-[10px] font-semibold text-emerald-300">
+                AI Local
+              </span>
+            ) : null}
+            {!selectedVoice?.provider ? (
+              <span className="shrink-0 rounded-full border border-sky-500/30 bg-sky-500/10 px-2 py-0.5 text-[10px] font-semibold text-sky-300">
+                Cloud
+              </span>
+            ) : null}
+            {selectedVoice?.provider === "piper" ? (
+              <span className="shrink-0 rounded-full border border-amber-500/30 bg-amber-500/10 px-2 py-0.5 text-[10px] font-semibold text-amber-700 dark:text-amber-300">
+                Offline
+              </span>
+            ) : null}
+          </div>
+          <ChevronDown
+            className={`h-4 w-4 shrink-0 text-mist-400 transition-transform ${open ? "rotate-180" : ""}`}
+          />
         </button>
-      ) : null}
+
+        {open ? (
+          <div className="absolute left-0 z-40 mt-1.5 w-full min-w-[280px] overflow-hidden rounded-xl border border-ink-700 bg-ink-900 shadow-2xl backdrop-blur-md">
+            <div className="flex items-center gap-2 border-b border-ink-800 bg-ink-950/80 px-3 py-2">
+              <Search className="h-4 w-4 shrink-0 text-mist-500" />
+              <input
+                ref={searchInputRef}
+                type="text"
+                value={query}
+                onChange={(e) => setQuery(e.target.value)}
+                placeholder={t.voiceSearch}
+                aria-label={t.voiceSearch}
+                className="min-w-0 flex-1 bg-transparent text-sm text-mist-100 placeholder:text-mist-500 focus:outline-none"
+              />
+              {query ? (
+                <button
+                  type="button"
+                  onClick={() => setQuery("")}
+                  className="text-xs text-mist-400 hover:text-mist-200"
+                >
+                  ✕
+                </button>
+              ) : null}
+            </div>
+
+            <ul role="listbox" className="max-h-64 overflow-y-auto py-1">
+              {groups.length === 0 ? (
+                <li className="px-3 py-4 text-center text-xs text-mist-500">
+                  {t.voiceNoMatches}
+                </li>
+              ) : (
+                groups.map((group) => (
+                  <li key={group.id} className="py-1">
+                    <div className="px-3 py-1 text-[10px] font-bold uppercase tracking-wider text-mist-500">
+                      {group.label} ({group.items.length})
+                    </div>
+                    {group.items.map((option) => {
+                      const isSelected = value === option.id;
+                      const isOptionPlaying = playing === option.id;
+                      return (
+                        <div
+                          key={option.id}
+                          onClick={() => {
+                            onChange(option.id);
+                            setOpen(false);
+                          }}
+                          className={`group flex cursor-pointer items-center justify-between gap-2 px-3 py-2 text-xs transition-colors ${
+                            isSelected
+                              ? "bg-brand-500/15 font-medium text-mist-50"
+                              : "text-mist-300 hover:bg-ink-800/80 hover:text-mist-100"
+                          }`}
+                        >
+                          <div className="flex min-w-0 flex-1 items-center gap-2">
+                            <Check
+                              className={`h-3.5 w-3.5 shrink-0 ${
+                                isSelected ? "text-brand-400" : "text-transparent"
+                              }`}
+                            />
+                            <span className="truncate">{option.label}</span>
+                          </div>
+
+                          <button
+                            type="button"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              void preview(option.id);
+                            }}
+                            title={`${t.voicePreview} ${option.label}`}
+                            aria-label={`${t.voicePreview} ${option.label}`}
+                            className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-lg transition-colors ${
+                              isOptionPlaying
+                                ? "bg-brand-500/30 text-brand-300"
+                                : "text-mist-400 hover:bg-ink-700 hover:text-mist-100"
+                            }`}
+                          >
+                            {isOptionPlaying ? (
+                              <Pause className="h-3 w-3 animate-pulse text-amber-400" />
+                            ) : (
+                              <Volume2 className="h-3 w-3" />
+                            )}
+                          </button>
+                        </div>
+                      );
+                    })}
+                  </li>
+                ))
+              )}
+            </ul>
+          </div>
+        ) : null}
+      </div>
+
       {engine?.engine === "local" ? (
-        <p className="mt-2 text-[11px] leading-relaxed text-mist-500">
+        <p className="mt-1.5 text-[11px] leading-relaxed text-mist-500">
           {engine.localReady ? t.voiceLocalTempo : t.voiceLocalMissing}{" "}
           <Link href="/setup" className="text-brand-300 underline underline-offset-2">
             {t.voiceLocalSetup}
           </Link>
         </p>
       ) : null}
-      {error ? <p className="mt-1.5 text-xs text-ember-300">{error}</p> : null}
-    </fieldset>
+      {error ? <p className="mt-1 text-xs text-ember-300">{error}</p> : null}
+    </div>
   );
 }
 
@@ -1619,11 +2096,11 @@ function LengthPicker({
   const lang = useLang();
   return (
     <div>
-      <p className="label flex items-center gap-1.5">
-        <Timer className="h-3.5 w-3.5 text-mist-400" />
+      <p className="label flex items-center gap-2 text-xs sm:text-sm font-bold uppercase tracking-[0.14em] text-mist-300">
+        <Timer className="h-4 w-4 text-brand-300" />
         {t.lengthLabel}
       </p>
-      <div className="grid grid-cols-1 gap-2 sm:grid-cols-3">
+      <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
         {LESSON_LENGTHS.map((preset) => {
           const active = preset.id === value;
           return (
@@ -1632,24 +2109,26 @@ function LengthPicker({
               type="button"
               onClick={() => onChange(preset.id)}
               aria-pressed={active}
-              className={`rounded-xl border px-3 py-2.5 text-left transition-colors ${
+              className={`rounded-xl border p-3.5 text-left transition-all ${
                 active
-                  ? "border-brand-500 bg-brand-500/15"
-                  : "border-ink-700 hover:border-ink-500 hover:bg-ink-800/60"
+                  ? "border-brand-500 bg-brand-500/18 shadow-sm ring-1 ring-brand-500/40"
+                  : "border-ink-700 hover:border-ink-500 hover:bg-ink-800/70"
               }`}
             >
               <span
-                className={`block text-sm font-semibold ${active ? "text-brand-100" : "text-mist-100"}`}
+                className={`block text-base sm:text-lg font-bold ${active ? "text-brand-100" : "text-mist-100"}`}
               >
                 {lang === "vi" ? preset.label : preset.labelEn}
-                <span className="ml-1.5 font-normal text-mist-400">{lang === "vi" ? preset.caption : preset.captionEn}</span>
+                <span className="ml-2 font-semibold text-xs sm:text-sm text-mist-300">
+                  {lang === "vi" ? preset.caption : preset.captionEn}
+                </span>
               </span>
-              <span className="mt-0.5 block text-xs text-mist-400">
+              <span className="mt-1 block text-xs sm:text-sm font-medium text-mist-300">
                 {preset.scenes[0]}–{preset.scenes[1]} {t.slideUnit} ·{" "}
                 {preset.wordsPerScene[0]}–{preset.wordsPerScene[1]} {t.wordsPerSlide}
               </span>
               {preset.id === "long" ? (
-                <span className="mt-1 block text-[11px] leading-snug text-amber-300/80">
+                <span className="mt-2 block text-xs leading-relaxed text-amber-700 dark:text-amber-300 font-medium">
                   {t.lengthLongNote}
                 </span>
               ) : null}
@@ -1760,12 +2239,12 @@ function StylePicker({
   const t = useCopy(COPY);
   const lang = useLang();
   return (
-    <fieldset className="rounded-xl border border-ink-700 bg-ink-900/60 p-3">
-      <legend className="flex items-center gap-1.5 px-1 text-[10px] font-semibold uppercase tracking-[0.14em] text-mist-500">
-        <Presentation className="h-3 w-3" />
+    <fieldset className="rounded-xl border border-ink-700 bg-ink-900/60 p-4">
+      <legend className="flex items-center gap-2 px-1 text-xs font-bold uppercase tracking-[0.14em] text-mist-300">
+        <Presentation className="h-4 w-4 text-brand-300" />
         {t.styleLegend}
       </legend>
-      <div className="mt-1.5 grid gap-1.5 sm:grid-cols-2">
+      <div className="mt-2 grid gap-2.5 sm:grid-cols-2">
         {PRESENTATION_STYLES.map((style) => {
           const selected = style.id === value;
           const preset = resolveSlideTheme(style.theme);
@@ -1775,22 +2254,22 @@ function StylePicker({
               type="button"
               onClick={() => onChange(style)}
               aria-pressed={selected}
-              className={`rounded-lg border p-2 text-left transition-colors ${
+              className={`rounded-xl border p-3 text-left transition-all ${
                 selected
-                  ? "border-brand-500 bg-brand-500/12"
-                  : "border-ink-700 hover:border-ink-600"
+                  ? "border-brand-500 bg-brand-500/18 shadow-sm ring-1 ring-brand-500/40"
+                  : "border-ink-700 hover:border-ink-500 hover:bg-ink-800/60"
               }`}
             >
               <span className="block">
                 <StyleLayoutPreview styleId={style.id} palette={preset.palette} />
-                <span className="mt-1.5 block truncate text-xs font-semibold text-mist-100">
+                <span className="mt-2 block truncate text-sm font-bold text-mist-100">
                   {style.label}
                 </span>
               </span>
-              <span className="mt-1.5 block text-[11px] leading-snug text-mist-400">
+              <span className="mt-1.5 block text-xs leading-relaxed text-mist-300">
                 {lang === "vi" ? style.hint : style.hintEn}
               </span>
-              <span className="mt-1 block text-[10px] text-mist-500">
+              <span className="mt-1.5 block text-xs font-medium text-mist-400">
                 {style.images ? t.styleWithImages : t.styleTextOnly} ·{" "}
                 {style.theme === "midnight" ? t.paperDark : t.paperLight}
               </span>
@@ -1828,6 +2307,26 @@ function ThemePicker({
 }) {
   const t = useCopy(COPY);
   const current = resolveSlideTheme(value);
+  const rootRef = useRef<HTMLDivElement | null>(null);
+
+  // Click outside to close
+  useEffect(() => {
+    if (!open) return;
+    const onPointer = (event: MouseEvent) => {
+      if (!rootRef.current?.contains(event.target as Node)) {
+        setOpen(false);
+      }
+    };
+    const onKey = (event: KeyboardEvent) => {
+      if (event.key === "Escape") setOpen(false);
+    };
+    document.addEventListener("mousedown", onPointer);
+    document.addEventListener("keydown", onKey);
+    return () => {
+      document.removeEventListener("mousedown", onPointer);
+      document.removeEventListener("keydown", onKey);
+    };
+  }, [open, setOpen]);
 
   const groups: { id: SlideThemePreset["group"]; label: string }[] = [
     { id: "paper", label: t.groupLight },
@@ -1836,17 +2335,17 @@ function ThemePicker({
   ];
 
   return (
-    <fieldset className="mt-3">
-      <legend className="label flex items-center gap-1.5">
+    <div ref={rootRef} className="relative">
+      <label className="label mb-1 flex items-center gap-1.5">
         <Palette className="h-3.5 w-3.5 text-mist-400" />
         {t.themeLegend}
-      </legend>
+      </label>
 
       <button
         type="button"
         onClick={() => setOpen(!open)}
         aria-expanded={open}
-        className="flex w-full items-center gap-2.5 rounded-xl border border-ink-700 bg-ink-900/60 px-3 py-2 text-left transition-colors hover:border-ink-600"
+        className="flex w-full items-center gap-2.5 rounded-xl border border-ink-700 bg-ink-900/60 px-3 py-2 text-left transition-colors hover:border-brand-500 hover:bg-ink-850"
       >
         <span
           aria-hidden="true"
@@ -1891,7 +2390,7 @@ function ThemePicker({
       </button>
 
       {open ? (
-        <div className="mt-2 max-h-72 space-y-3 overflow-y-auto rounded-xl border border-ink-700 bg-ink-950/60 p-3">
+        <div className="absolute left-0 z-40 mt-1.5 w-full max-h-80 space-y-3 overflow-y-auto rounded-xl border border-ink-700 bg-ink-900 p-3 shadow-2xl backdrop-blur-md">
           {groups.map((group) => {
             const presets = SLIDE_PRESETS.filter((preset) => preset.group === group.id);
             if (presets.length === 0) return null;
@@ -1900,7 +2399,7 @@ function ThemePicker({
                 <p className="mb-1.5 text-[10px] font-semibold uppercase tracking-[0.14em] text-mist-500">
                   {group.label}
                 </p>
-                <div className="grid grid-cols-3 gap-1.5 sm:grid-cols-4">
+                <div className="grid grid-cols-2 gap-1.5 sm:grid-cols-3">
                   {presets.map((preset) => {
                     const selected = value === preset.id;
                     return (
@@ -1918,14 +2417,6 @@ function ThemePicker({
                         }`}
                         style={{ borderColor: preset.palette.rule, background: preset.palette.bg }}
                       >
-                        {/* A miniature of the slide, drawn with real words.
-                            Bars of colour told a user what the palette *was* but
-                            not what it was *for* — and the two things they need
-                            to check before picking a paper are whether the title
-                            is readable on it and whether the subtitle stays
-                            distinct from the body. Only text answers those, so
-                            the swatch sets a title, a subtitle and a body line in
-                            the palette's own inks. */}
                         <span className="block space-y-[3px] px-2 py-2">
                           <span
                             className="block truncate text-[9px] font-bold uppercase tracking-[0.12em]"
@@ -1971,7 +2462,7 @@ function ThemePicker({
           })}
         </div>
       ) : null}
-    </fieldset>
+    </div>
   );
 }
 
