@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState, type ReactNode } from "react";
-import { Bot, ChevronDown, ChevronUp, Send, User, Sparkles, LoaderCircle, Maximize2, Minimize2 } from "lucide-react";
+import { Bot, ChevronDown, ChevronUp, Send, User, Sparkles, LoaderCircle, Maximize2, Minimize2, X } from "lucide-react";
 import katex from "katex";
 import { cleanLatex } from "@/lib/lesson/inline";
 import type { LessonScene } from "@/lib/lesson/types";
@@ -118,9 +118,20 @@ function renderRich(content: string): ReactNode[] {
 interface ClassroomAgentChatProps {
   currentScene?: LessonScene;
   lessonTitle: string;
+  open?: boolean;
+  onClose?: () => void;
+  outlineExpanded?: boolean;
+  onToggleOutlineExpand?: () => void;
 }
 
-export function ClassroomAgentChat({ currentScene, lessonTitle }: ClassroomAgentChatProps) {
+export function ClassroomAgentChat({
+  currentScene,
+  lessonTitle,
+  open = true,
+  onClose,
+  outlineExpanded = false,
+  onToggleOutlineExpand,
+}: ClassroomAgentChatProps) {
   const t = useCopy(COPY);
   const [messages, setMessages] = useState<Message[]>([
     {
@@ -155,7 +166,7 @@ export function ClassroomAgentChat({ currentScene, lessonTitle }: ClassroomAgent
    * competing panels. Opening is one click, and nothing unmounts — the
    * thread and the input survive every fold.
    */
-  const [collapsed, setCollapsed] = useState(true);
+  const [collapsed, setCollapsed] = useState(false);
   const panelRef = useRef<HTMLDivElement>(null);
   /**
    * Opening the panel scrolls it into view. The rail is one scroller and the
@@ -231,15 +242,20 @@ export function ClassroomAgentChat({ currentScene, lessonTitle }: ClassroomAgent
     }
   };
 
-  // Folded: a title bar that opens the panel. Deliberately not a floating
-  // bubble — it sits in the same column the open panel occupies, so opening
-  // it never covers the outline the teacher is following.
-  if (collapsed && !expanded) {
+  if (!open) {
+    return null;
+  }
+
+  // Folded: a title bar that opens the panel, or when outline is expanded
+  if ((collapsed || outlineExpanded) && !expanded) {
     return (
       <button
         type="button"
-        onClick={() => setCollapsed(false)}
-        className="panel flex w-full items-center gap-2.5 px-4 py-2.5 text-left transition-colors hover:border-brand-600/70"
+        onClick={() => {
+          setCollapsed(false);
+          onToggleOutlineExpand?.();
+        }}
+        className="panel flex shrink-0 w-full items-center gap-2.5 px-4 py-2.5 text-left transition-colors hover:border-brand-500/70"
         aria-label={t.agentOpen}
         aria-expanded={false}
       >
@@ -250,9 +266,27 @@ export function ClassroomAgentChat({ currentScene, lessonTitle }: ClassroomAgent
           <span className="block text-xs font-bold uppercase tracking-wider text-mist-100">
             {t.agentTitle}
           </span>
-          <span className="block truncate text-[10px] text-mist-400">{t.agentSubtitle}</span>
+          <span className="block truncate text-[10px] text-amber-700 dark:text-amber-400 font-medium">
+            {outlineExpanded ? (t.agentOpen || "Nhấn để mở trợ giảng AI hỏi bài") : t.agentSubtitle}
+          </span>
         </span>
-        <ChevronDown className="h-4 w-4 shrink-0 text-mist-400" />
+        <div className="flex items-center gap-1">
+          <ChevronDown className="h-4 w-4 shrink-0 text-mist-400" />
+          {onClose && (
+            <span
+              role="button"
+              tabIndex={0}
+              onClick={(e) => {
+                e.stopPropagation();
+                onClose();
+              }}
+              className="p-1 text-mist-400 hover:text-mist-200"
+              title={t.agentHide}
+            >
+              <X className="h-3.5 w-3.5" />
+            </span>
+          )}
+        </div>
       </button>
     );
   }
@@ -263,12 +297,7 @@ export function ClassroomAgentChat({ currentScene, lessonTitle }: ClassroomAgent
       className={
         expanded
           ? "panel fixed inset-y-3 right-3 z-[70] flex w-[min(36rem,94vw)] flex-col overflow-hidden shadow-2xl"
-          : // `lg:min-h-[24rem]` rather than `lg:min-h-0`: the outline above is a
-            // natural-height sibling in the same rail, so a `flex-1` tutor with no
-            // floor got squeezed to a 2px strip the moment the outline grew past
-            // the rail. The floor makes the rail (its normal overflow) scroll it
-            // into view instead of clipping it to nothing.
-            "panel flex h-[480px] flex-col overflow-hidden lg:h-auto lg:min-h-[24rem] lg:flex-1"
+          : "panel flex flex-col overflow-hidden flex-1 min-h-[16rem] lg:min-h-0"
       }
     >
       <div className="flex items-center justify-between border-b border-ink-700/70 bg-ink-950/70 px-4 py-3">
@@ -287,14 +316,18 @@ export function ClassroomAgentChat({ currentScene, lessonTitle }: ClassroomAgent
           <button
             type="button"
             onClick={() => {
-              setCollapsed(true);
-              setExpanded(false);
+              if (onClose) {
+                onClose();
+              } else {
+                setCollapsed(true);
+                setExpanded(false);
+              }
             }}
             className="btn-icon"
             title={t.agentHide}
             aria-label={t.agentHide}
           >
-            <ChevronUp className="h-4 w-4" />
+            <X className="h-4 w-4" />
           </button>
           <button
             type="button"

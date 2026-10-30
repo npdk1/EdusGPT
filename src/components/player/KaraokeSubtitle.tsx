@@ -9,6 +9,7 @@ import {
   type KaraokeTrack,
   type NarrationChannel,
 } from "@/lib/karaoke";
+import { InlineText } from "./InlineText";
 
 /**
  * The narration for one slide, shown one sentence at a time.
@@ -242,9 +243,9 @@ export function KaraokeSubtitle({
 
   if (floatingCard) {
     return (
-      <div className="scene-caption-stack flex max-w-[88%] flex-col items-center gap-[0.6cqw] text-center">
-        <div className="floating-subtitle-card">
-          <p className="scene-narration pointer-events-auto overflow-hidden text-center">
+      <div className="scene-caption-stack pointer-events-none flex max-w-[88%] flex-col items-center gap-[0.6cqw] text-center">
+        <div className="floating-subtitle-card pointer-events-none">
+          <p className="scene-narration pointer-events-none overflow-hidden text-center">
             {(current?.tokens ?? []).map((token, index) => token.text.trim().length === 0 ? token.text : (
               <span
                 key={index}
@@ -254,7 +255,7 @@ export function KaraokeSubtitle({
                 data-state="idle"
                 className="px-[1px]"
               >
-                {token.text}
+                <InlineText text={token.text} />
               </span>
             ))}
           </p>
@@ -264,8 +265,8 @@ export function KaraokeSubtitle({
   }
 
   return (
-    <div className="scene-caption-stack flex max-w-[84%] flex-col items-center gap-[0.6cqw] text-center">
-      <p className="scene-narration pointer-events-auto overflow-hidden text-center">
+    <div className="scene-caption-stack pointer-events-none flex max-w-[84%] flex-col items-center gap-[0.6cqw] text-center">
+      <p className="scene-narration pointer-events-none overflow-hidden text-center">
         {/* No newlines between the spans. JSX collapses the indentation between
             expressions into real space text nodes, and since each token already
             carries its own trailing space, every word was separated by two. */}
@@ -280,7 +281,7 @@ export function KaraokeSubtitle({
             data-state="idle"
             className="px-[1px]"
           >
-            {token.text}
+            <InlineText text={token.text} />
           </span>
         ))}
       </p>
@@ -296,7 +297,7 @@ export function KaraokeSubtitle({
         className="scene-narration-next pointer-events-none overflow-hidden text-center"
         style={{ visibility: next ? "visible" : "hidden" }}
       >
-        {next?.text ?? ""}
+        <InlineText text={next?.text ?? ""} />
       </p>
     </div>
   );

@@ -1,14 +1,20 @@
 /**
- * Pure word-matching behind the teacher's pointer (see
- * `components/player/ScenePointer.tsx`). Kept DOM-free so the scoring can be
- * unit-tested against real narrations without a browser.
+ * Pure word-matching and semantic scoring behind the teacher's pointer (see
+ * `components/player/ScenePointer.tsx`).
  *
- * Vietnamese lessons spell numbers and units out in the narration ("hai
- * mươi ki-lô-gam") while the slide shows digits and symbols ("20 kg"), so
- * raw word overlap finds nothing on data sentences and the pointer falls back
- * to the title on generic words ("ví dụ", "xe"). Both sides are therefore
- * normalised before comparing: unit phrases fold to their symbol, and number
- * phrases fold to digits.
+ * Vietnamese lessons spell numbers, decimals, and units out in the narration
+ * ("hai mươi ki-lô-gam", "một phẩy năm đơn vị") while the slide shows digits
+ * and symbols ("20 kg", "1,5 đơn vị").
+ *
+ * This algorithm normalises:
+ * 1. Unit phrases ("ki-lô-gam" -> "kg", "mét trên giây" -> "ms").
+ * 2. Decimal numbers ("một phẩy năm" -> "15", "hai phẩy ba" -> "23").
+ * 3. Spoken numbers ("mười lăm", "một trăm hai mươi").
+ * 4. Compound terms and domain bigrams ("sao mộc", "trái đất", "sao hỏa", "mặt trời",
+ *    "bán kính", "đồng tâm", "xa nhất", "chu kỳ", "bước một").
+ * 5. Discriminative candidate scoring (IDF): tokens unique to a single candidate
+ *    carry much higher weight than topic-wide common words.
+ * 6. AI cue synchronization & temporal continuity priors.
  */
 
 export interface PointerCandidate {
@@ -29,33 +35,44 @@ export function foldWord(word: string): string {
 }
 
 /**
+ * Splits a full narration text into grammatical sentences using terminal punctuation
+ * (. ! ? … or newlines). This reflects the teacher's logical idea boundaries,
+ * unlike caption fragmentation which splits at arbitrary commas for screen width.
+ */
+export function splitGrammaticalSentences(text: string): string[] {
+  const clean = text.replace(/\s+/g, " ").trim();
+  if (!clean) return [];
+  const parts = clean.split(/(?<=[.!?…])\s+/);
+  return parts.map((part) => part.trim()).filter((part) => part.length > 0);
+}
+
+/**
  * Function words that carry no pointing information. A sentence shares "và",
  * "của", "những" with every bullet on the slide, so counting them would point
  * at whichever part is longest rather than whichever is being read.
  */
 export const STOPWORDS = new Set(
-  "la va cua cac nhung mot cai da dang se voi cho tu trong tren duoi nay kia do day ma thi co khong duoc ve nhu hay hoac neu khi de cung rat hon nhat chi con lai vi nen nhung gi nao sao the vay ca moi ay oi nhe nha thua theo giua ngoai sau truoc tai boi den toi qua cung luon van tung phai chung ta ban minh toi em anh no ho cai giu doc".split(
+  "la va cua cac nhung mot cai da dang se voi cho tu trong tren duoi nay kia do day ma thi co khong duoc ve nhu hay hoac neu khi de cung rat hon nhat chi con lai vi nen nhung gi nao sao the vay ca moi ay oi nhe nha thua theo giua ngoai sau truoc tai boi den toi qua cung luon van tung phai chung ta ban minh toi em anh no ho cai giu doc vao".split(
     " ",
   ),
 );
 
 /**
  * Spoken unit phrases, longest first, folded to the symbol the slide shows.
- * "newton" folds in too: the person and the unit share the physics, and both
- * sides normalise the same way, so no side gains a spurious edge.
  */
 const VI_UNIT_PHRASES: Array<{ tokens: string[]; symbol: string }> = [
   { tokens: ["met", "tren", "giay", "binh", "phuong"], symbol: "ms" },
   { tokens: ["met", "tren", "giay"], symbol: "ms" },
+  { tokens: ["ki", "lo", "met"], symbol: "km" },
+  { tokens: ["kilo", "met"], symbol: "km" },
   { tokens: ["ki", "lo", "gam"], symbol: "kg" },
   { tokens: ["kilo", "gam"], symbol: "kg" },
   { tokens: ["kilogam"], symbol: "kg" },
   { tokens: ["niu", "ton"], symbol: "n" },
   { tokens: ["niuton"], symbol: "n" },
   { tokens: ["newton"], symbol: "n" },
+  { tokens: ["phan", "tram"], symbol: "pt" },
   { tokens: ["met"], symbol: "m" },
-  // "giây" (second) and "giấy" (paper) fold together; lessons time physics
-  // far more often than they stationery it, and slides write "s".
   { tokens: ["giay"], symbol: "s" },
 ];
 
@@ -89,6 +106,7 @@ function applyUnits(tokens: string[]): string[] {
 }
 
 const VI_ONES: Record<string, number> = {
+  khong: 0,
   mot: 1,
   hai: 2,
   ba: 3,
@@ -100,15 +118,43 @@ const VI_ONES: Record<string, number> = {
   chin: 9,
 };
 
+/**
+ * Folds spoken decimals like "một phẩy năm", "1 phẩy 5", "2 chấm 3" into compact
+ * digit tokens "15", "23" so they match written "1,5", "2.3" (which foldWord reduces to "15", "23").
+ */
+function foldDecimals(tokens: string[]): string[] {
+  const out: string[] = [];
+  let i = 0;
+  while (i < tokens.length) {
+    const t = tokens[i];
+    const next = tokens[i + 1];
+    const after = tokens[i + 2];
+    if ((next === "phay" || next === "cham") && after !== undefined) {
+      const d1 = /^\d+$/.test(t)
+        ? t
+        : VI_ONES[t] !== undefined
+          ? String(VI_ONES[t])
+          : null;
+      const d2 = /^\d+$/.test(after)
+        ? after
+        : VI_ONES[after] !== undefined
+          ? String(VI_ONES[after])
+          : null;
+      if (d1 !== null && d2 !== null) {
+        out.push(`${d1}${d2}`);
+        i += 3;
+        continue;
+      }
+    }
+    out.push(t);
+    i += 1;
+  }
+  return out;
+}
+
 /** Tokens that only ever appear inside a spoken number (never start one). */
 const VI_FILLER = new Set(["linh", "le", "lam"]);
 
-/**
- * "sau" is "after" far more often than "six", and "nam" is "year" far more
- * often than "five" — they only count as numbers inside a clear number
- * neighbourhood (next to mươi/trăm/một đơn vị…), otherwise they keep their
- * old behaviour (stopword / plain word).
- */
 const VI_NUMBER_NEIGHBOURS = new Set([
   "muoi",
   "tram",
@@ -129,6 +175,7 @@ const VI_NUMBER_NEIGHBOURS = new Set([
   "kg",
   "m",
   "ms",
+  "km",
   "n",
   "s",
   "0",
@@ -144,7 +191,7 @@ const VI_NUMBER_NEIGHBOURS = new Set([
 ]);
 
 function isRunStart(token: string, next: string | undefined): boolean {
-  if (/^\d+$/.test(token)) return false; // digits already match the slide
+  if (/^\d+$/.test(token)) return false;
   if (token === "muoi" || token === "tram" || token === "nghin" || token === "ngan") {
     return true;
   }
@@ -174,7 +221,6 @@ function isRunPart(token: string, prev: string | undefined, next: string | undef
   );
 }
 
-/** Value of a tens group: [X] mươi [Y], "mươi" alone is ten, "lăm" is five. */
 function parseTens(tokens: string[]): number | null {
   const clean = tokens.filter((token) => !VI_FILLER.has(token) || token === "lam");
   if (clean.length === 0) return null;
@@ -221,12 +267,6 @@ function parseViRun(tokens: string[]): number | null {
   return parseSubThousand(tokens);
 }
 
-/**
- * Folded number phrases ("hai mươi", "một trăm hai mươi") become one digit
- * token ("20", "120") so they meet the slide's digits. Runs without a
- * structure word (mươi/trăm/nghìn) map word by word; anything unparseable
- * passes through untouched rather than guessing.
- */
 function applyNumbers(tokens: string[]): string[] {
   const out: string[] = [];
   let i = 0;
@@ -262,53 +302,157 @@ function applyNumbers(tokens: string[]): string[] {
 }
 
 /** Roman numerals lessons actually use ("Định luật II" read as "định luật hai"). */
-const VI_ROMAN: Record<string, string> = { ii: "2", iii: "3", iv: "4" };
+const VI_ROMAN: Record<string, string> = { i: "1", ii: "2", iii: "3", iv: "4", v: "5" };
 
-/** Content words of a text: folded, units and numbers normalised, minus stopwords. */
+/** Ordinal and step normalizations */
+const VI_ORDINALS: Record<string, string> = {
+  dau: "1",
+  nhat: "1",
+  hai: "2",
+  ba: "3",
+  tu: "4",
+  nam: "5",
+  sau: "6",
+  bay: "7",
+  tam: "8",
+  chin: "9",
+};
+
+/** Content words of a text: folded, decimals, units, and numbers normalised, minus stopwords. */
 export function contentTokens(text: string): string[] {
   const folded = text
     .split(/\s+/)
     .map(foldWord)
     .filter((token) => token.length > 0)
     .map((token) => VI_ROMAN[token] ?? token);
-  return applyNumbers(applyUnits(folded)).filter((token) => !STOPWORDS.has(token));
+  const withDecimals = foldDecimals(folded);
+  return applyNumbers(applyUnits(withDecimals)).filter((token) => !STOPWORDS.has(token));
 }
 
 /**
- * The key of the slide part the sentence is actually about: whichever
- * candidate shares the most content words with it. Needs at least two shared
- * words — one is usually a coincidence (a lone "z", a lone "miền"), and below
- * that the AI cue and the hold-position fallbacks take over in the player.
+ * Extracts 2-word domain bigrams from text (e.g. "sao_moc", "trai_dat", "ban_kinh", "xa_nhat").
+ */
+export function extractBigrams(text: string): string[] {
+  const words = text
+    .split(/\s+/)
+    .map(foldWord)
+    .filter((w) => w.length > 0);
+  const bigrams: string[] = [];
+  for (let i = 0; i < words.length - 1; i += 1) {
+    const w1 = words[i];
+    const w2 = words[i + 1];
+    // Keep bigram if at least one word is not a stopword
+    if (!STOPWORDS.has(w1) || !STOPWORDS.has(w2)) {
+      bigrams.push(`${w1}_${w2}`);
+    }
+  }
+  return bigrams;
+}
+
+export interface ScoreOptions {
+  /** Target suggested by the AI-generated pointer cue for this sentence. */
+  cueTarget?: string | null;
+  /** Previously held target in this scene, used for smooth temporal continuity. */
+  previousTarget?: string | null;
+}
+
+/**
+ * The key of the slide part the sentence is actually about.
+ *
+ * Employs a multi-signal discriminative scoring model:
+ * 1. Inverse Document Frequency (IDF): Tokens that appear in only 1 candidate
+ *    are unique discriminators and carry ~3.5x higher weight than words that
+ *    appear across many bullets.
+ * 2. Domain Bigrams: Matching full compound phrases ("sao mộc", "trái đất", "bán kính")
+ *    grants a decisive bonus (+3.0).
+ * 3. AI Cue Alignment: If the lesson's generated cue points to a candidate, it acts
+ *    as a semantic prior (+2.5).
+ * 4. Temporal Continuity: Light bias (+0.6) towards holding the current point or progressing
+ *    forward rather than jumping backwards erratically.
  */
 export function scoreCandidates(
   candidates: PointerCandidate[],
   sentenceText: string,
+  options?: ScoreOptions,
 ): string | null {
-  const words = contentTokens(sentenceText);
-  if (words.length === 0) return null;
-  const spoken = new Set(words);
+  if (candidates.length === 0) return null;
+
+  const spokenTokens = contentTokens(sentenceText);
+  if (spokenTokens.length === 0 && !options?.cueTarget) return null;
+
+  const spokenTokenSet = new Set(spokenTokens);
+  const spokenBigramSet = new Set(extractBigrams(sentenceText));
+
+  // Compute Document Frequency (DF) across candidates
+  const candidateTokenSets = candidates.map((c) => new Set(contentTokens(c.text)));
+  const docFreq = new Map<string, number>();
+  for (const tokenSet of candidateTokenSets) {
+    for (const t of tokenSet) {
+      docFreq.set(t, (docFreq.get(t) ?? 0) + 1);
+    }
+  }
 
   let best: PointerCandidate | null = null;
   let bestScore = 0;
-  for (const candidate of candidates) {
-    const tokens = contentTokens(candidate.text);
-    if (tokens.length === 0) continue;
-    let shared = 0;
+
+  for (let idx = 0; idx < candidates.length; idx += 1) {
+    const candidate = candidates[idx];
+    const cTokens = contentTokens(candidate.text);
+    const cBigrams = extractBigrams(candidate.text);
+
+    let score = 0;
+
+    // 1) Weighted Unigram Matches (IDF weighting)
     const seen = new Set<string>();
-    for (const token of tokens) {
-      if (!seen.has(token) && spoken.has(token)) {
-        seen.add(token);
-        shared += 1;
+    for (const t of cTokens) {
+      if (!seen.has(t) && spokenTokenSet.has(t)) {
+        seen.add(t);
+        const df = docFreq.get(t) ?? 1;
+        // High weight for distinct words, low weight for ubiquitous words
+        const idfWeight = df === 1 ? 3.5 : df === 2 ? 1.6 : 0.6;
+        score += idfWeight;
       }
     }
-    if (
-      shared > bestScore ||
-      (best && shared === bestScore && shared >= 2 && candidate.rank > best.rank)
-    ) {
+
+    // 2) Bigram Matches (compound noun phrases)
+    const seenBigrams = new Set<string>();
+    for (const bg of cBigrams) {
+      if (!seenBigrams.has(bg) && spokenBigramSet.has(bg)) {
+        seenBigrams.add(bg);
+        score += 3.0;
+      }
+    }
+
+    // 3) AI Cue Reinforcement: if author/AI intended this target
+    if (options?.cueTarget && candidate.key === options.cueTarget) {
+      score += 2.5;
+    }
+
+    // 4) Temporal Continuity Prior: slight preference for holding current or progressing
+    if (options?.previousTarget && candidate.key === options.previousTarget) {
+      score += 0.6;
+    }
+
+    // 5) Rank priority: specific slide elements outrank generic title
+    if (candidate.rank > 0 && score > 1.0) {
+      score += candidate.rank * 0.3;
+    }
+
+    if (score > bestScore) {
+      bestScore = score;
       best = candidate;
-      bestScore = shared;
     }
   }
-  if (!best || bestScore < 2) return null;
+
+  // Threshold: must have meaningful match evidence (score >= 1.8)
+  if (!best || bestScore < 1.8) {
+    // If AI cue target is valid and present in candidates, fallback to cue
+    if (options?.cueTarget) {
+      const cueMatch = candidates.find((c) => c.key === options.cueTarget);
+      if (cueMatch) return cueMatch.key;
+    }
+    return null;
+  }
+
   return best.key;
 }

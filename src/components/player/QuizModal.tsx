@@ -12,6 +12,7 @@ import {
   ChevronLeft,
 } from "lucide-react";
 import type { Lesson, LessonScene } from "@/lib/lesson/types";
+import { cleanQuizExplanation } from "@/lib/lesson/quiz";
 import { useCopy } from "@/i18n/provider";
 import { InlineText } from "./InlineText";
 
@@ -381,7 +382,13 @@ export function QuizModal({ open, lesson, onClose }: QuizModalProps) {
                   </p>
                   {correctOpt?.explanation ? (
                     <p className="mt-1.5 text-mist-200">
-                      <InlineText text={correctOpt.explanation} />
+                      <InlineText
+                        text={cleanQuizExplanation(
+                          correctOpt.explanation,
+                          chosenOpt?.isCorrect,
+                          correctOpt.text,
+                        )}
+                      />
                     </p>
                   ) : null}
                 </div>

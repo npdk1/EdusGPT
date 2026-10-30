@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { CircleCheck, CircleX, CircleHelp } from "lucide-react";
 import type { QuizOption, QuizQuestion } from "@/lib/lesson/types";
-import { quizPraiseTier, quizQuestionsOf, quizReadSeconds } from "@/lib/lesson/quiz";
+import { cleanQuizExplanation, quizPraiseTier, quizQuestionsOf, quizReadSeconds } from "@/lib/lesson/quiz";
 import { InlineText } from "./InlineText";
 import { useCopy } from "@/i18n/provider";
 
@@ -102,7 +102,7 @@ export function InteractiveQuiz({ sceneId, question, options, questions, autoNex
   const isLast = qIndex >= bank.length - 1;
   const current = bank[Math.min(qIndex, bank.length - 1)];
   const currentOption = current.options.find((opt) => opt.id === selected);
-  const correctOption = current.options.find((opt) => opt.isCorrect);
+  const correctOption = current.options.find((opt) => opt.isCorrect) || current.options[0];
   const score = results.filter(Boolean).length;
   const tier = quizPraiseTier(score, bank.length);
 
@@ -119,7 +119,8 @@ export function InteractiveQuiz({ sceneId, question, options, questions, autoNex
     if (!isLast) return;
     // The explanation shown is the right answer's, whichever option was picked:
     // a wrong choice is answered by being told why, not by repeating itself.
-    const explanation = correctOption?.explanation;
+    const rawExplanation = correctOption?.explanation;
+    const explanation = cleanQuizExplanation(rawExplanation, isCorrect, correctOption?.text);
     const seconds = quizReadSeconds(explanation);
     setReadSeconds(seconds);
     // The wait travels with the answer so the stage times the same number the
@@ -166,7 +167,7 @@ export function InteractiveQuiz({ sceneId, question, options, questions, autoNex
         </div>
       ) : null}
 
-      <p className="scene-quiz-question text-balance">
+      <p className="scene-quiz-question">
         <InlineText text={current.question} />
       </p>
 
@@ -211,9 +212,15 @@ export function InteractiveQuiz({ sceneId, question, options, questions, autoNex
           data-state={currentOption?.isCorrect ? "correct" : "wrong"}
         >
           <b>{currentOption?.isCorrect ? t.quizCorrect : t.quizWrong}</b>{" "}
-          {correctOption.explanation ? (
-            <InlineText text={correctOption.explanation} />
-          ) : null}
+          {(() => {
+            const rawExp = currentOption?.explanation || correctOption.explanation;
+            const exp = cleanQuizExplanation(
+              rawExp,
+              currentOption?.isCorrect,
+              correctOption.text,
+            );
+            return exp ? <InlineText text={exp} /> : null;
+          })()}
         </p>
       ) : null}
 

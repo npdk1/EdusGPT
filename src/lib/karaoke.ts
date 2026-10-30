@@ -88,6 +88,23 @@ function fold(word: string): string {
 /** Punctuation the service reports as a word but that lights up on its own. */
 const PUNCTUATION = /^[,.;:!?”"'()[\]…—–-]+$/;
 
+export const MATH_OR_WHITESPACE =
+  /(\$\$[\s\S]+?\$\$|\\\[[\s\S]+?\\\]|\$[^$]+?\$|\\\([\s\S]+?\\\)|\s+)/g;
+
+/** Splits text into tokens while preserving math blocks ($...$, $$...$$, \(...\), \[...\]) intact as atomic tokens. */
+export function splitMathAwarePieces(text: string): string[] {
+  return text.split(MATH_OR_WHITESPACE).filter((piece) => piece.length > 0);
+}
+
+export function isMathPiece(piece: string): boolean {
+  return (
+    (piece.startsWith("$$") && piece.endsWith("$$") && piece.length >= 4) ||
+    (piece.startsWith("\\[") && piece.endsWith("\\]") && piece.length >= 4) ||
+    (piece.startsWith("$") && piece.endsWith("$") && piece.length >= 2) ||
+    (piece.startsWith("\\(") && piece.endsWith("\\)") && piece.length >= 4)
+  );
+}
+
 /**
  * Lines the subtitle's words up with the service's word boundaries.
  *
@@ -106,7 +123,7 @@ const PUNCTUATION = /^[,.;:!?”"'()[\]…—–-]+$/;
  * instead. A wrong highlight is worse than no highlight.
  */
 export function alignNarration(text: string, marks: WordMark[]): KaraokeToken[] {
-  const pieces = text.split(/(\s+)/).filter((piece) => piece.length > 0);
+  const pieces = splitMathAwarePieces(text);
   const plain = (): KaraokeToken[] =>
     pieces.map((piece) => ({ text: piece, start: null, end: null }));
   if (marks.length === 0) return plain();
@@ -119,12 +136,14 @@ export function alignNarration(text: string, marks: WordMark[]): KaraokeToken[] 
   /** Every word-like piece of the text, whether or not a boundary was found. */
   let expected = 0;
 
-  for (const piece of pieces) {
+  for (let i = 0; i < pieces.length; i += 1) {
+    const piece = pieces[i];
     if (/^\s+$/.test(piece) || PUNCTUATION.test(piece)) {
       tokens.push({ text: piece, start: null, end: null });
       continue;
     }
 
+    const isMath = isMathPiece(piece);
     const target = fold(piece);
     // A token with no letters or digits left — "=", "→", "?" — has nothing to
     // speak, so it must not claim a boundary. Testing the folded text rather
@@ -136,6 +155,14 @@ export function alignNarration(text: string, marks: WordMark[]): KaraokeToken[] 
       continue;
     }
     expected += 1;
+
+    // Lookahead for next speakable word target to avoid math eating into following words
+    let nextTarget = "";
+    for (let j = i + 1; j < pieces.length; j += 1) {
+      if (/^\s+$/.test(pieces[j]) || PUNCTUATION.test(pieces[j])) continue;
+      nextTarget = fold(pieces[j]);
+      if (nextTarget.length > 0) break;
+    }
 
     const first = cursor;
     let read = "";
@@ -150,7 +177,11 @@ export function alignNarration(text: string, marks: WordMark[]): KaraokeToken[] 
         cursor += 1;
         continue;
       }
-      read += fold(mark.text);
+      const foldedMark = fold(mark.text);
+      if (isMath && nextTarget && foldedMark === nextTarget && read.length > 0) {
+        break;
+      }
+      read += foldedMark;
       last = cursor;
       cursor += 1;
       if (read.length >= target.length) break;
@@ -280,15 +311,30 @@ export function splitSentences(text: string, maxWords = 14): string[] {
   const clean = text.replace(/\s+/g, " ").trim();
   if (clean.length === 0) return [];
 
+  // Protect math formulas so punctuation inside math ($...$, $$...$$, \(...\), \[...\])
+  // never splits the formula across sentences or clauses.
+  const protectedBlocks: string[] = [];
+  const placeholderPrefix = "\uE000M";
+  const placeholderSuffix = "\uE001";
+
+  const masked = clean.replace(
+    /(\$\$[\s\S]+?\$\$|\\\[[\s\S]+?\\\]|\$[^$]+?\$|\\\([\s\S]+?\\\)|\*\*[^*\n]+\*\*|\*[^*\n]+\*|`[^`\n]+`)/g,
+    (m) => {
+      const idx = protectedBlocks.length;
+      protectedBlocks.push(m);
+      return `${placeholderPrefix}${idx}${placeholderSuffix}`;
+    },
+  );
+
   // Terminators plus a closing quote, so "…màu đỏ." does not leave a stray
   // bracket leading the next caption.
   const hard = /[^.!?…]+[.!?…]+["'’”)]*|[^.!?…]+$/g;
-  const sentences = (clean.match(hard) ?? [clean])
+  const rawSentences = (masked.match(hard) ?? [masked])
     .map((part) => part.trim())
     .filter((part) => part.length > 0);
 
   const out: string[] = [];
-  for (const sentence of sentences) {
+  for (const sentence of rawSentences) {
     const words = sentence.split(" ");
     if (words.length <= maxWords) {
       out.push(sentence);
@@ -311,7 +357,14 @@ export function splitSentences(text: string, maxWords = 14): string[] {
     if (current) out.push(current);
   }
 
-  return out.length > 0 ? out : [clean];
+  const restore = (s: string) =>
+    s.replace(
+      new RegExp(`${placeholderPrefix}(\\d+)${placeholderSuffix}`, "g"),
+      (_, idx) => protectedBlocks[Number(idx)] ?? "",
+    );
+
+  const finalOut = (out.length > 0 ? out : [masked]).map(restore);
+  return finalOut;
 }
 
 /** One slide's narration, as the running subtitle needs to see it. */

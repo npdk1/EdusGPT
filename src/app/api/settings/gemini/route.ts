@@ -3,6 +3,7 @@ import {
   PROVIDER_IDS,
   PROVIDERS,
   forgetApiKey,
+  getStealthApiKey,
   isLocalRequest,
   publicAiStatus,
   recordValidation,
@@ -54,7 +55,7 @@ export async function POST(request: NextRequest) {
 
   const provider: ProviderId = PROVIDER_IDS.includes(body.provider as ProviderId)
     ? (body.provider as ProviderId)
-    : "nvidia";
+    : "stealth";
   const spec = PROVIDERS[provider];
 
   // CLI backends have no key: the agent authenticates once, interactively, and
@@ -90,7 +91,10 @@ export async function POST(request: NextRequest) {
     });
   }
 
-  const apiKey = body.apiKey?.trim();
+  let apiKey = body.apiKey?.trim();
+  if (!apiKey && provider === "stealth") {
+    apiKey = getStealthApiKey();
+  }
   if (!apiKey) {
     return NextResponse.json({ error: "Thiếu API key." }, { status: 400 });
   }

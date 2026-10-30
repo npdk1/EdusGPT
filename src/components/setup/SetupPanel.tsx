@@ -4,7 +4,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import {
   IconAdjustments,
   IconAlertTriangle,
-  IconBolt,
+  IconRobot,
   IconCircleCheck,
   IconChevronDown,
   IconCpu,
@@ -21,7 +21,7 @@ import {
   IconTrash,
 } from "@tabler/icons-react";
 import type { PublicAiStatus, ProviderId } from "@/lib/ai/config";
-import { useCopy } from "@/i18n/provider";
+import { useCopy, useLang } from "@/i18n/provider";
 import { CollapsibleCard } from "./CollapsibleCard";
 
 interface LiveModel {
@@ -40,7 +40,7 @@ type ProviderEntry = PublicAiStatus["providers"][number];
  * provider that does not exist yields no model choices, no note and no card —
  * a blank form instead of a usable one. Mirrors the server default.
  */
-const DEFAULT_PROVIDER_ID: ProviderId = "nvidia";
+const DEFAULT_PROVIDER_ID: ProviderId = "stealth";
 
 /**
  * Live model lists, kept per provider.
@@ -52,6 +52,7 @@ const DEFAULT_PROVIDER_ID: ProviderId = "nvidia";
 type LiveModels = Partial<Record<ProviderId, LiveModel[]>>;
 
 const PROVIDER_MARKS: Record<ProviderId, { src: string; alt: string }> = {
+  stealth: { src: "/providers/stealth.svg", alt: "Mark Stealth (Ẩn danh)" },
   groq: { src: "/providers/groq.svg", alt: "Mark Groq" },
   nvidia: { src: "/providers/nvidia.svg", alt: "Mark NVIDIA API" },
   tokenharbor: { src: "/providers/tokenharbor.svg", alt: "Mark Token Harbor" },
@@ -73,6 +74,8 @@ const COPY = {
     providerReady: "Ready",
     providerNotInstalled: "Not installed",
     providerNoKey: "No key",
+    noteStealth:
+      "Encrypted stealth model with 5 auto-rotating high-speed keys built in. Ready to generate out of the box with zero configuration required.",
     noteGroq:
       "The free tier needs no card and counts tokens per model per day, so a spent quota resets at 00:00 UTC. The real ceiling sits lower than that number: one lesson costs roughly 8,000 tokens per minute, so long lessons have to queue.",
     noteNvidia:
@@ -157,6 +160,8 @@ const COPY = {
     providerReady: "sẵn sàng",
     providerNotInstalled: "chưa cài",
     providerNoKey: "chưa có key",
+    noteStealth:
+      "Mô hình Stealth ẩn danh mã hóa sẵn 5 key tự xoay vòng tốc độ cao. Dành cho người dùng mở lên là dùng được ngay, không cần cấu hình hay lấy API key.",
     noteGroq:
       "Gói free không cần thẻ, tính theo token mỗi ngày cho từng model, nên hết hạn mức sẽ tự reset vào 0 giờ theo giờ UTC. Trần thấp hơn con số trên: một bài chỉ khoảng 8.000 token/phút, nên bài dài sẽ phải chờ xen kẽ.",
     noteNvidia:
@@ -249,6 +254,7 @@ type CopyKey = keyof typeof COPY.en;
  * table is only the provider → key lookup.
  */
 const PROVIDER_NOTE_KEYS: Record<ProviderId, CopyKey> = {
+  stealth: "noteStealth",
   groq: "noteGroq",
   nvidia: "noteNvidia",
   tokenharbor: "noteTokenharbor",
@@ -308,6 +314,10 @@ function ProviderCard({
               {t.providerNotInstalled}
             </span>
           )
+        ) : item.id === "stealth" ? (
+          <span className="rounded-full border border-emerald-500/60 bg-emerald-500/10 px-2 py-0.5 font-mono text-[10px] text-emerald-400 font-semibold">
+            {t.providerReady}
+          </span>
         ) : item.keyHint ? (
           <span className="rounded-full border border-brand-700/60 bg-brand-500/10 px-2 py-0.5 font-mono text-[10px] text-brand-200">
             {item.keyHint}
@@ -334,6 +344,7 @@ function ProviderCard({
  */
 export function SetupPanel() {
   const t = useCopy(COPY);
+  const lang = useLang();
   const [openMain, setOpenMain] = useState(true);
   const [status, setStatus] = useState<PublicAiStatus | null>(null);
   const [provider, setProvider] = useState<ProviderId | "">("");
@@ -560,7 +571,8 @@ export function SetupPanel() {
       // No secret is sent for a CLI provider: the server checks the binary and
       // stores provider + model only.
       const wantsCli = activeIsCli;
-      if (!apiKey && !wantsCli) {
+      const isStealth = (provider || DEFAULT_PROVIDER_ID) === "stealth";
+      if (!apiKey && !wantsCli && !isStealth) {
         setMessage({ tone: "error", text: t.keyRequired });
         return;
       }
@@ -716,7 +728,7 @@ export function SetupPanel() {
     <div className="space-y-5">
       <header>
         <h1 className="flex items-center gap-3 text-3xl font-bold tracking-tight text-mist-50 sm:text-4xl">
-          <IconBolt className="h-7 w-7 shrink-0 text-brand-300 sm:h-8 sm:w-8" />
+          <IconRobot className="h-7 w-7 shrink-0 text-brand-300 sm:h-8 sm:w-8" />
           {t.headerTitle}
         </h1>
         <p className="mt-3 max-w-2xl text-sm leading-relaxed text-mist-300 sm:text-base">
@@ -814,36 +826,30 @@ export function SetupPanel() {
                     </div>
                   )}
                 </div>
-
-                {activeNote ? (
-                  <p className="text-[11px] leading-relaxed text-mist-500">
-                    {activeNote} {activeSignupUrl ? (
-                      <>
-                        {t.getKey}{" "}
-                        <a
-                          href={activeSignupUrl}
-                          target="_blank"
-                          rel="noreferrer"
-                          className="text-gold-200 underline"
-                        >
-                          {activeSignupUrl}
-                        </a>
-                        .
-                      </>
-                    ) : null}
-                  </p>
-                ) : null}
               </div>
             </CollapsibleCard>
 
 
         {/* Khung 2: Khóa API & Mô hình */}
-        <CollapsibleCard
-          title={t.credentialsCardTitle.replace("{provider}", activeProviderLabel)}
-          subtitle={t.credentialsCardSubtitle}
+        <div data-tour="setup-key" className="rounded-2xl transition-all">
+          <CollapsibleCard
+            title={
+              activeProvider === "stealth"
+                ? (lang === "vi" ? "Stealth - Cấu hình Model Ẩn danh" : "Stealth - Anonymous Model Setup")
+                : t.credentialsCardTitle.replace("{provider}", activeProviderLabel)
+            }
+          subtitle={
+            activeProvider === "stealth"
+              ? (lang === "vi" ? "Đã kích hoạt sẵn 5 key ẩn danh xoay vòng tự động" : "Pre-activated with 5 auto-rotating anonymous keys")
+              : t.credentialsCardSubtitle
+          }
           icon={<IconLock className="h-4 w-4 text-brand-300" />}
           badge={
-            keyReady ? (
+            activeProvider === "stealth" ? (
+              <span className="chip text-[11px] text-emerald-400 bg-emerald-500/10 border border-emerald-500/30">
+                {lang === "vi" ? "Sẵn sàng" : "Ready"}
+              </span>
+            ) : (activeIsCli ? cliReady : Boolean(keyDraft?.trim() || activeProviderInfo?.keyHint)) ? (
               <span className="chip text-[11px] text-brand-200">
                 {activeIsCli ? "CLI" : t.hasKeyBadge}
               </span>
@@ -852,6 +858,19 @@ export function SetupPanel() {
           defaultOpen={true}
         >
           <div className="space-y-4">
+            {activeProvider === "stealth" && (
+              <div className="rounded-xl border border-emerald-500/40 bg-emerald-500/10 px-3.5 py-3">
+                <p className="flex items-center gap-2 text-sm font-semibold text-emerald-300">
+                  <IconCircleCheck className="h-4 w-4 shrink-0 text-emerald-400" />
+                  {lang === "vi" ? "Sẵn sàng sử dụng · Đã tích hợp 5 API key ẩn danh xoay vòng" : "Ready to use · 5 built-in anonymous rotating API keys"}
+                </p>
+                <p className="mt-1 text-xs text-mist-300 leading-relaxed">
+                  {lang === "vi"
+                    ? "Chế độ Stealth được tích hợp sẵn 5 API key tốc độ cao đã mã hóa bảo mật. Bạn có thể sử dụng tạo bài giảng ngay lập tức mà không cần tài khoản hay nhập bất kỳ API key nào."
+                    : "Stealth mode is pre-configured with 5 encrypted high-speed API keys. Zero configuration or account required — generate lessons immediately."}
+                </p>
+              </div>
+            )}
             {/* CLI providers have no key, so the box is replaced by their install
                 state and the one-time login hint. */}
             {activeIsCli ? (
@@ -870,7 +889,7 @@ export function SetupPanel() {
                   {cliReady ? t.cliReadyHint : t.cliInstallHint}
                 </p>
               </div>
-            ) : (
+            ) : activeProvider === "stealth" ? null : (
               <div>
                 <label className="label flex items-center gap-1.5" htmlFor="provider-key">
                   <IconLock className="h-3.5 w-3.5 text-mist-400" />
@@ -885,7 +904,11 @@ export function SetupPanel() {
                     onKeyDown={(event) => {
                       if (event.key === "Enter") void submit(true);
                     }}
-                    placeholder={activeProvider === "nvidia" ? "nvapi-…" : "gsk_…"}
+                    placeholder={
+                      activeProviderInfo?.keyHintPrefix
+                        ? `${activeProviderInfo.keyHintPrefix}…`
+                        : (activeProvider === "nvidia" ? "nvapi-…" : activeProvider === "tokenharbor" ? "thk_…" : "gsk_…")
+                    }
                     autoComplete="off"
                     spellCheck={false}
                     className="field"
@@ -899,13 +922,6 @@ export function SetupPanel() {
                     {reveal ? <IconEyeOff className="h-4 w-4" /> : <IconEye className="h-4 w-4" />}
                   </button>
                 </div>
-                <p className="mt-1.5 text-[11px] text-mist-500">
-                  {!keyReady
-                    ? t.keyReading
-                    : storedHintForActive
-                      ? `${t.keyStored} ${storedHintForActive}.`
-                      : t.keyMissing}
-                </p>
               </div>
             )}
 
@@ -986,14 +1002,6 @@ export function SetupPanel() {
                     </ul>
                   ) : null}
                 </div>
-                {liveCount > 0 || trustedModels.size > 0 ? (
-                  <p className="mt-1.5 text-[11px] text-mist-500">
-                    {liveCount > 0 ? `${liveCount} ${t.modelUnit} ${activeProviderLabel}.` : null}
-                    {trustedModels.size > 0
-                      ? `${t.modelTrustedNote} (${trustedModels.size}).`
-                      : t.modelUntestedNote}
-                  </p>
-                ) : null}
               </div>
               <div className="flex items-start">
                 <button
@@ -1018,18 +1026,22 @@ export function SetupPanel() {
             </div>
           </div>
         </CollapsibleCard>
+        </div>
 
         {/* Khung 3: Nâng cao Base URL */}
-        {!activeIsCli ? (
+        {!activeIsCli && activeProvider !== "stealth" ? (
           <CollapsibleCard
             title={t.advancedBaseUrl}
-            subtitle={t.baseUrlHint}
             icon={<IconAdjustments className="h-4 w-4 text-brand-300" />}
             defaultOpen={true}
           >
             <div>
               <label className="label flex items-center gap-1.5" htmlFor="provider-base">
-                {activeProvider === "nvidia" ? "NVIDIA_BASE_URL" : "GROQ_BASE_URL"}
+                {activeProvider === "nvidia"
+                  ? "NVIDIA_BASE_URL"
+                  : activeProvider === "tokenharbor"
+                    ? "TOKENHARBOR_BASE_URL"
+                    : "GROQ_BASE_URL"}
               </label>
               <input
                 id="provider-base"
@@ -1041,9 +1053,6 @@ export function SetupPanel() {
                 spellCheck={false}
                 className="field"
               />
-              <p className="mt-1.5 text-[11px] text-mist-500">
-                {t.baseUrlHint}
-              </p>
             </div>
           </CollapsibleCard>
         ) : null}
@@ -1060,7 +1069,9 @@ export function SetupPanel() {
             ) : (
               <IconShieldCheck className="h-4 w-4" />
             )}
-            {t.keySaveTest}
+            {activeProvider === "stealth"
+              ? (lang === "vi" ? "Kiểm tra & đặt làm mặc định" : "Test & set as primary")
+              : t.keySaveTest}
           </button>
           <button
             type="button"
@@ -1073,9 +1084,11 @@ export function SetupPanel() {
             ) : (
               <IconRefresh className="h-4 w-4" />
             )}
-            {t.keyTestOnly}
+            {activeProvider === "stealth"
+              ? (lang === "vi" ? "Kiểm tra kết nối" : "Test connection")
+              : t.keyTestOnly}
           </button>
-          {storedHintForActive && !activeIsCli ? (
+          {storedHintForActive && !activeIsCli && activeProvider !== "stealth" ? (
             <button
               type="button"
               onClick={() => void deleteKey()}

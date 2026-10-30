@@ -19,6 +19,7 @@ import {
 import "katex/dist/katex.min.css";
 import type { Lesson, LessonScene } from "@/lib/lesson/types";
 import { SAMPLE_LESSON } from "@/lib/lesson/sample-lesson";
+import { cleanQuizExplanation } from "@/lib/lesson/quiz";
 import { useCopy } from "@/i18n/provider";
 import { InlineText } from "@/components/player/InlineText";
 
@@ -545,7 +546,13 @@ export function QuizClient({ courseId }: QuizClientProps) {
                       {correctOpt?.explanation ? (
                         <div className="mt-2 text-mist-200">
                           <p className="font-semibold text-mist-100 mb-0.5">{t.explanationTitle}:</p>
-                          <InlineText text={correctOpt.explanation} />
+                          <InlineText
+                            text={cleanQuizExplanation(
+                              correctOpt.explanation,
+                              isUserCorrect,
+                              correctOpt.text,
+                            )}
+                          />
                         </div>
                       ) : null}
                     </div>

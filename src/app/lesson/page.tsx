@@ -16,7 +16,7 @@ interface LessonPageProps {
 export default async function LessonPage({ searchParams }: LessonPageProps) {
   // Resolved here, on the server, so the player keeps rendering server-side.
   const sp = await searchParams;
-  const raw = sp.c;
+  const raw = sp.c || sp.id;
   const modeRaw = sp.mode;
   const courseId = typeof raw === "string" && raw ? raw : null;
   const initialMode =
@@ -25,17 +25,9 @@ export default async function LessonPage({ searchParams }: LessonPageProps) {
       : null;
 
   return (
-    <div className="lesson-shell px-4 py-6 sm:px-6 lg:flex lg:h-full lg:flex-col lg:gap-2 lg:overflow-hidden lg:py-3">
+    <div className="lesson-shell px-4 py-3 sm:px-6 lg:flex lg:h-full lg:flex-col lg:gap-2 lg:py-2">
       <LessonHeader />
 
-      {/*
-        On a desktop the page is the player, so it is sized to the window rather
-        than to its content: `h-dvh` plus `overflow-hidden` means the stage, the
-        transport and the AI panel fill the screen and the page itself never
-        scrolls — zooming the browser re-lays it out inside the same frame
-        instead of pushing the controls off the bottom. Below `lg` the document
-        keeps its normal flow, because a phone has no room to spare.
-      */}
       <div className="flex min-h-0 flex-1 flex-col">
         <LessonClient courseId={courseId} initialMode={initialMode} />
       </div>

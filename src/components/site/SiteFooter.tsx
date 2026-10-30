@@ -72,7 +72,7 @@ export function SiteFooter() {
                 <li key={link.href}>
                   <Link
                     href={link.href}
-                    className="text-sm text-mist-300 transition-colors hover:text-brand-200"
+                    className="text-sm text-mist-300 transition-colors hover:text-mist-50"
                   >
                     {t[link.label]}
                   </Link>

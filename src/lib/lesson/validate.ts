@@ -23,6 +23,7 @@ import { DEFAULT_SLIDE_PATTERN, DEFAULT_SLIDE_THEME, isSlidePattern } from "./th
 import { DEFAULT_SLIDE_MOTION, isSlideMotion } from "./motion.ts";
 import { SLIDE_ICON_NAMES } from "./types.ts";
 import { MAX_LESSON_SCENES } from "./presentation-styles.ts";
+import { cleanQuizExplanation } from "./quiz.ts";
 
 /** Defensive validation for anything that arrives over HTTP or from localStorage. */
 
@@ -226,14 +227,23 @@ export function sanitizeBlocks(raw: unknown): SlideBlock[] | undefined {
  * Every answer list — a single question's or one entry of a bank — goes
  * through this one function, so both shapes always coerce identically.
  */
-function coerceQuizOptions(value: unknown): QuizOption[] {
+function coerceQuizOptions(value: unknown, keepCjk = false): QuizOption[] {
   return Array.isArray(value)
-    ? value.map((opt: Record<string, unknown>, optIdx: number) => ({
-        id: asString(opt.id) || `opt-${optIdx + 1}`,
-        text: asString(opt.text, `Lựa chọn ${optIdx + 1}`),
-        isCorrect: Boolean(opt.isCorrect),
-        explanation: asString(opt.explanation) || undefined,
-      }))
+    ? value.map((opt: Record<string, unknown>, optIdx: number) => {
+        const text = asString(opt.text, `Lựa chọn ${optIdx + 1}`);
+        const isCorrect = Boolean(opt.isCorrect);
+        const rawExplanation = asString(opt.explanation) || undefined;
+        const explanation =
+          keepCjk || !rawExplanation
+            ? rawExplanation
+            : cleanQuizExplanation(rawExplanation, isCorrect, text);
+        return {
+          id: asString(opt.id) || `opt-${optIdx + 1}`,
+          text,
+          isCorrect,
+          explanation,
+        };
+      })
     : [];
 }
 
@@ -241,6 +251,7 @@ function coerceQuizOptions(value: unknown): QuizOption[] {
 const CJK_CHAR = /[\p{Script=Han}\p{Script=Hiragana}\p{Script=Katakana}\p{Script=Hangul}]/u;
 const CJK_RUN =
   "[\\p{Script=Han}\\p{Script=Hiragana}\\p{Script=Katakana}\\p{Script=Hangul}]+";
+
 /**
  * Removes Han/Kana/Hangul characters glued onto a Latin letter or digit —
  * "số原子" becomes "số".
@@ -281,6 +292,9 @@ export function coerceLesson(input: unknown): Lesson | null {
   const rawScenes = Array.isArray(raw.scenes) ? raw.scenes : [];
   if (rawScenes.length === 0) return null;
 
+  const rawLanguage = asString(raw.language, "vi").slice(0, 12);
+  const keepCjk = rawLanguage === "zh-CN" || rawLanguage === "ja" || rawLanguage === "ko";
+
   const scenes: LessonScene[] = rawScenes.slice(0, MAX_LESSON_SCENES).map((item, index) => {
     const scene = (item ?? {}) as Record<string, unknown>;
     const kind = SCENE_KINDS.includes(scene.kind as SceneKind)
@@ -302,7 +316,7 @@ export function coerceLesson(input: unknown): Lesson | null {
           )
           .map((entry) => ({
             question: asString(entry.question).trim(),
-            options: coerceQuizOptions(entry.options),
+            options: coerceQuizOptions(entry.options, keepCjk),
           }))
           .filter((entry) => entry.question.length > 0 && entry.options.length >= 2)
           .slice(0, 30)
@@ -312,7 +326,7 @@ export function coerceLesson(input: unknown): Lesson | null {
     // rewound to it forever. A bank-only slide survives — its questions
     // carry their own options.
     const quizOptions =
-      quizRaw && typeof quizRaw === "object" ? coerceQuizOptions(quizRaw.options) : [];
+      quizRaw && typeof quizRaw === "object" ? coerceQuizOptions(quizRaw.options, keepCjk) : [];
     const quiz = quizRaw && typeof quizRaw === "object" && (quizOptions.length >= 2 || questions.length > 0) ? {
       question: asString(quizRaw.question, "Câu hỏi kiểm tra kiến thức:"),
       options: quizOptions,
@@ -461,9 +475,8 @@ export function coerceLesson(input: unknown): Lesson | null {
 
   // The leaked-script pass over everything a lesson prints: scene text, quiz
   // banks, mindmaps and the lesson's own title. CJK-script lessons keep their
-  // characters untouched (see stripGluedCjk for why only glued runs go).
-  const language = asString(raw.language, "vi").slice(0, 12);
-  const keepCjk = language === "zh-CN" || language === "ja" || language === "ko";
+  // characters untouched (see sanitizeNonCjkText).
+  const language = rawLanguage;
   const cleanStrings = <T,>(value: T): T =>
     keepCjk ? value : mapStrings(value, stripGluedCjk);
 

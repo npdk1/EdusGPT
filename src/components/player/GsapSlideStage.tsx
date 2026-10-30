@@ -560,22 +560,22 @@ export function GsapSlideStage({
 
   return (
     <div className="panel overflow-hidden">
-      <div className="stage-bar flex flex-wrap items-center justify-between gap-3 border-b border-ink-700/70 px-4 py-2.5">
+      <div className="stage-bar flex flex-wrap items-center justify-between gap-3 border-b border-ink-800 bg-ink-850/70 px-4 py-2.5">
         <div className="flex items-center gap-2.5">
           <span className="flex items-center gap-1.5">
             <span
-              className={`h-2 w-2 rounded-full ${timebase.playing ? "bg-ember-400" : "bg-mist-500"}`}
+              className={`h-2 w-2 rounded-full ${timebase.playing ? "bg-ember-500 animate-pulse" : "bg-mist-400"}`}
             />
-            <span className="text-xs font-semibold text-mist-200">{t.stageTimeline}</span>
+            <span className="text-xs font-semibold text-mist-100">{t.stageTimeline}</span>
           </span>
-          <span className="text-xs text-mist-500">
+          <span className="text-xs text-mist-400">
             {t.stageScene} {activeScene + 1}/{lesson.scenes.length} ·{" "}
             {sceneKindLabel(lesson.scenes[activeScene]?.kind ?? "concept", lang)}
           </span>
         </div>
         <div className="flex items-center gap-3 font-mono text-xs text-mist-400">
           <span ref={directionRef}>⏸ {t.stagePaused}</span>
-          <span ref={clockRef} className="tabular-nums text-brand-200">
+          <span ref={clockRef} className="tabular-nums text-brand-600 dark:text-brand-300 font-semibold">
             00:00.0 / 00:00.0
           </span>
         </div>
@@ -600,99 +600,76 @@ export function GsapSlideStage({
       >
         {lesson.scenes.map((scene, index) => {
           const KickerIcon = slideIcon(scene.icon);
-          // The named layout, same rule as the classroom surface: an explicit
-          // choice wins, otherwise the scene's own content decides. The three
-          // structural ones need markup this stage does not build (split
-          // columns, full-bleed figure), so they fall back to the readable
-          // default instead of a class with nothing behind it.
+
+          const hasFigure = Boolean(
+            scene.formula ||
+              scene.table ||
+              scene.data?.length ||
+              scene.graph ||
+              scene.mindmap ||
+              scene.simulation3d ||
+              (scene.kind === "quiz" && scene.quiz) ||
+              (scene.imagePrompt ?? "").trim() ||
+              (scene.imageQuery ?? "").trim(),
+          );
+
           const requested: SlideLayout =
             scene.layout && typeof scene.layout === "string"
               ? (scene.layout as SlideLayout)
               : defaultSlideLayout(scene);
-          const layout: SlideLayout =
-            requested === "image-left" ||
-            requested === "image-right" ||
-            requested === "full-figure"
-              ? "statement"
-              : requested;
-          return (
-          <article
-            key={scene.id}
-            data-scene={index}
-            className="absolute inset-0 opacity-0"
-            aria-hidden={index !== activeScene}
-          >
-            {/* No `justify-center` here on purpose: `.scene-card` centres the
-                column in CSS with `safe center`, so a slide that outgrows the
-                card falls back to the top instead of having its title clipped
-                off. A Tailwind utility here would win the cascade and undo it. */}
-            <div className="scene-card relative flex h-full flex-col overflow-hidden">
-              {/* The pattern wash, only when the deck asks for one: the main
-                  player otherwise draws no tint, and adding one unasked would
-                  change every existing deck. */}
-              {lesson.pattern && lesson.pattern !== "none" ? (
-                <div aria-hidden="true" className="scene-wash" />
+
+          const hasPicture = Boolean(
+            (scene.imagePrompt ?? "").trim() || (scene.imageQuery ?? "").trim()
+          );
+
+          // If a slide has a picture or figure AND has bullets: split layout gives balanced, beautiful two-column presentation
+          const shouldSplit =
+            (requested === "image-left" ||
+              requested === "image-right" ||
+              ((requested === "cards" || requested === "statement" || requested === "two-col") &&
+                hasPicture &&
+                scene.bullets.length >= 2)) &&
+            hasFigure;
+
+          const layout: SlideLayout = shouldSplit
+            ? requested === "image-left"
+              ? "image-left"
+              : "image-right"
+            : requested === "full-figure"
+            ? "full-figure"
+            : requested;
+          const isSplit = layout === "image-left" || layout === "image-right";
+
+          const text = (
+            <div className="scene-content-text w-full space-y-3">
+              {scene.bullets.length > 0 ? (
+                <ul
+                  className={`scene-body relative z-10 grid w-full gap-2.5 sm:gap-3 ${
+                    isSplit || scene.bullets.length <= 2
+                      ? "grid-cols-1 max-w-full"
+                      : "sm:grid-cols-2 max-w-[92%]"
+                  }`}
+                >
+                  {scene.bullets.map((bullet, bulletIndex) => (
+                    <li
+                      key={bullet}
+                      className="scene-bullet flex items-baseline gap-[1.5cqw] leading-relaxed"
+                    >
+                      <span className="scene-bullet-index tabular-nums">
+                        {String(bulletIndex + 1).padStart(2, "0")}
+                      </span>
+                      <InlineText text={bullet} />
+                    </li>
+                  ))}
+                </ul>
               ) : null}
-              {/* Everything a viewer reads goes inside this one box, so the fit
-                  pass below has a single element to measure and scale. The page
-                  number stays outside it: it is chrome pinned to the corner, and
-                  scaling it with the content would move it. */}
-              <div
-                className={`scene-fit scene-layout-${layout}${
-                  scene.simulation3d || scene.kind === "simulation3d" || scene.quiz
-                    ? " scene-has-interactive"
-                    : ""
-                }`}
-              >
-              {/* Measured against the slide's own width (container queries), not
-                  a fixed cap: a fullscreen slide is twice the width of the
-                  embedded one and must use the space, not sit in the corner. */}
-              <header className="scene-head relative z-10 w-full">
-                {/* The kicker. In this style the scene kind is a small caps label
-                    above the title, not a coloured pill — it should read as
-                    metadata, not as a button. The icon leads it: one glyph that
-                    names the subject, so a slide reads as a topic at a glance
-                    from across a room before anyone reads a word of it. */}
-                <span className="scene-kicker">
-                  {KickerIcon ? (
-                    <KickerIcon className="scene-kicker-icon" aria-hidden="true" />
-                  ) : null}
-                  {sceneKindLabel(scene.kind, lang)}
-                </span>
-                <h3 className="scene-title mt-[2.5%] text-balance font-bold tracking-tight">
-                  <InlineText text={scene.title} />
-                </h3>
-                {scene.subtitle ? (
-                  <p className="scene-sub mt-[2%]">
-                    <InlineText text={scene.subtitle} />
-                  </p>
-                ) : null}
-                <hr className="scene-rule mt-[3%]" />
-              </header>
 
-              {/* The body. `min-h-0` plus a shrinkable ul is what makes an
-                  over-full slide compress instead of clipping: a scene with a
-                  formula *and* four bullets genuinely does not fit a 16:9 card,
-                  and the honest response is to tighten the gaps rather than lose
-                  the last line off the bottom edge. */}
-              <ul className="scene-body relative z-10 grid w-full gap-x-[6%] sm:grid-cols-2">
-                {scene.bullets.map((bullet, bulletIndex) => (
-                  <li
-                    key={bullet}
-                    className="scene-bullet flex items-baseline gap-[1.5cqw] leading-relaxed"
-                  >
-                    <span className="scene-bullet-index tabular-nums">
-                      {String(bulletIndex + 1).padStart(2, "0")}
-                    </span>
-                    <InlineText text={bullet} />
-                  </li>
-                ))}
-              </ul>
-
-              {/* Board solution: numbered steps under the bullets, shown only
-                  on scenes that carry a working (example scenes). */}
               {scene.steps && scene.steps.length > 0 ? (
-                <ol className="scene-steps relative z-10 grid w-full max-w-[86%] gap-x-[6%] sm:grid-cols-2">
+                <ol
+                  className={`scene-steps relative z-10 grid w-full gap-2.5 sm:gap-3 ${
+                    isSplit ? "grid-cols-1 max-w-full" : "sm:grid-cols-2 max-w-[92%]"
+                  }`}
+                >
                   {scene.steps.map((step, stepIndex) => (
                     <li
                       key={`step-${stepIndex}`}
@@ -706,15 +683,17 @@ export function GsapSlideStage({
                   ))}
                 </ol>
               ) : null}
+            </div>
+          );
 
+          const figure = (
+            <div className="scene-figure-container w-full flex items-center justify-center min-h-0">
               {scene.kind === "simulation3d" || scene.simulation3d ? (
-                <div className="scene-interactive-panel relative z-10 my-2">
+                <div className="scene-interactive-panel relative z-10 my-2 w-full">
                   <InteractiveSimulation config={scene.simulation3d} />
                 </div>
-              ) : null}
-
-              {scene.kind === "quiz" && scene.quiz ? (
-                <div className="scene-interactive-panel scene-interactive-quiz relative z-10 my-2">
+              ) : scene.kind === "quiz" && scene.quiz ? (
+                <div className="scene-interactive-panel scene-interactive-quiz relative z-10 my-2 w-full">
                   <InteractiveQuiz
                     sceneId={scene.id}
                     question={scene.quiz.question}
@@ -724,38 +703,108 @@ export function GsapSlideStage({
                     onAnswer={handleQuizAnswer}
                   />
                 </div>
-              ) : null}
-
-              {scene.formula ? (
+              ) : scene.formula ? (
                 <FigureZoom label={t.zoomFormula}>
                   <SceneFormula formula={scene.formula} />
                 </FigureZoom>
-              ) : null}
-
-              {scene.table ? <SceneTable table={scene.table} /> : null}
-
-              {scene.data && scene.data.length > 0 ? (
+              ) : scene.table ? (
+                <SceneTable table={scene.table} />
+              ) : scene.data && scene.data.length > 0 ? (
                 <SceneDataChart data={scene.data} title={t.stageDataTitle} />
-              ) : null}
-
-              {scene.graph ? (
+              ) : scene.graph ? (
                 <FigureZoom label={`${t.zoom} ${scene.graph.title ?? t.zoomGraph}`}>
                   <FunctionGraph graph={scene.graph} />
                 </FigureZoom>
-              ) : null}
-
-              {scene.mindmap ? (
+              ) : scene.mindmap ? (
                 <FigureZoom label={`${t.zoom} ${t.zoomMindmap}`}>
-                  <MindMap branches={scene.mindmap.branches} freshFrom={mindmapFreshFrom(lesson, scene.id)} />
+                  <MindMap
+                    branches={scene.mindmap.branches}
+                    freshFrom={mindmapFreshFrom(lesson, scene.id)}
+                  />
                 </FigureZoom>
-              ) : null}
+              ) : (
+                <SlideImageView lessonId={lesson.id} scene={scene} />
+              )}
+            </div>
+          );
 
-              <SlideImageView lessonId={lesson.id} scene={scene} />
+          return (
+          <article
+            key={scene.id}
+            data-scene={index}
+            className="absolute inset-0 opacity-0"
+            aria-hidden={index !== activeScene}
+          >
+            <div className="scene-card relative flex h-full flex-col overflow-hidden">
+              {lesson.pattern && lesson.pattern !== "none" ? (
+                <div aria-hidden="true" className="scene-wash" />
+              ) : null}
+              <div
+                className={`scene-fit scene-layout-${layout}${
+                  scene.simulation3d || scene.kind === "simulation3d" || scene.quiz
+                    ? " scene-has-interactive"
+                    : ""
+                }`}
+              >
+              <header className="scene-head relative z-10 w-full">
+                <span className="scene-kicker">
+                  {KickerIcon ? (
+                    <KickerIcon className="scene-kicker-icon" aria-hidden="true" />
+                  ) : null}
+                  {sceneKindLabel(scene.kind, lang)}
+                </span>
+                <h3 className="scene-title mt-[2%] text-balance font-bold tracking-tight">
+                  <InlineText text={scene.title} />
+                </h3>
+                {scene.subtitle ? (
+                  <p className="scene-sub mt-[1.5%]">
+                    <InlineText text={scene.subtitle} />
+                  </p>
+                ) : null}
+                <hr className="scene-rule mt-[2.5%]" />
+              </header>
+
+              {isSplit ? (
+                <div className="scene-split relative z-10 grid w-full max-w-[92%] items-center gap-x-[5%] sm:grid-cols-2 flex-1 min-h-0 my-auto">
+                  {layout === "image-left" ? (
+                    <>
+                      <div className="scene-split-figure flex items-center justify-center min-h-0 w-full">
+                        {figure}
+                      </div>
+                      <div className="scene-split-text flex flex-col justify-center min-h-0 w-full">
+                        {text}
+                      </div>
+                    </>
+                  ) : (
+                    <>
+                      <div className="scene-split-text flex flex-col justify-center min-h-0 w-full">
+                        {text}
+                      </div>
+                      <div className="scene-split-figure flex items-center justify-center min-h-0 w-full">
+                        {figure}
+                      </div>
+                    </>
+                  )}
+                </div>
+              ) : scene.kind === "quiz" && scene.quiz ? (
+                <div className="scene-quiz-stage flex flex-col justify-center flex-1 min-h-0 w-full my-auto px-[2%]">
+                  {figure}
+                </div>
+              ) : layout === "full-figure" ? (
+                <div className="scene-full-figure relative z-10 flex flex-col items-center justify-center flex-1 min-h-0 w-full max-w-[92%] mx-auto my-auto space-y-2">
+                  <div className="w-full flex justify-center min-h-0">{figure}</div>
+                  {scene.bullets.length > 0 && scene.bullets.length <= 2 ? (
+                    <div className="w-full opacity-90">{text}</div>
+                  ) : null}
+                </div>
+              ) : (
+                <div className="scene-standard-body relative z-10 flex flex-col justify-center flex-1 min-h-0 w-full space-y-3">
+                  {text}
+                  {hasFigure && figure}
+                </div>
+              )}
               </div>
 
-              {/* The page number. A plain baseline mark in the corner, no
-                  watermark: at 11cqw the old "01" was a second headline
-                  competing with the title for attention. */}
               <span
                 aria-hidden="true"
                 className="scene-watermark pointer-events-none absolute bottom-[4%] right-[6%] font-mono tabular-nums"

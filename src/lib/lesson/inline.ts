@@ -191,14 +191,41 @@ export function isBareFormula(str: string): boolean {
 }
 
 /**
+ * Repairs common malformed LaTeX delimiter mistakes emitted by AI models or user input:
+ * - Unpaired trailing `$` on single options / math chunks (e.g. `= 5\text{ m/s}^2$`)
+ * - Math chunks with trailing `$` but missing opening `$` in running text
+ * - Prevents false `$...$` matches that cross plain Vietnamese sentences
+ */
+export function sanitizeMalformedMath(text: string): string {
+  if (!text) return text;
+  const trimmed = text.trim();
+
+  // Case 1: Standalone expression ending with single $ but missing opening $ (e.g. 'a = 5\text{ m/s}^2$')
+  if (trimmed.endsWith("$") && !trimmed.startsWith("$") && (trimmed.match(/\$/g) || []).length === 1) {
+    const withoutDollar = trimmed.slice(0, -1).trim();
+    return `$${withoutDollar}$`;
+  }
+
+  // Case 2: Standalone expression starting with single $ but missing closing $ (e.g. '$a = 5\text{ m/s}^2')
+  if (trimmed.startsWith("$") && !trimmed.endsWith("$") && (trimmed.match(/\$/g) || []).length === 1) {
+    const withoutDollar = trimmed.slice(1).trim();
+    return `$${withoutDollar}$`;
+  }
+
+  return text;
+}
+
+/**
  * Automatically wraps bare math expressions in $ without breaking existing markup or Vietnamese text.
  */
 export function autoWrapMath(text: string): string {
   if (!text) return text;
 
+  const sanitized = sanitizeMalformedMath(text);
+
   // If the whole string is a bare formula, wrap it completely
-  if (isBareFormula(text)) {
-    return `$${cleanLatex(text)}$`;
+  if (isBareFormula(sanitized)) {
+    return `$${cleanLatex(sanitized)}$`;
   }
 
   // Step 1: Protect already delimited blocks with unique placeholder tokens (using Private Use unicode to avoid math regex collision)
@@ -212,9 +239,18 @@ export function autoWrapMath(text: string): string {
     return `${placeholderPrefix}${idx}${placeholderSuffix}`;
   };
 
-  let working = text.replace(
+  let working = sanitized.replace(
     /(\$\$[\s\S]+?\$\$|\\\[[\s\S]+?\\\]|\$[^$]+?\$|\\\([\s\S]+?\\\)|\*\*[^*\n]+\*\*|\*[^*\n]+\*|`[^`\n]+`)/g,
-    (match) => addProtected(match),
+    (match) => {
+      if (match.startsWith("$") && match.endsWith("$") && !match.startsWith("$$")) {
+        const inner = match.slice(1, -1);
+        const withoutText = inner.replace(/\\(text|mathrm|mathbf|mathit)\{[^}]*\}/g, "");
+        if (VIETNAMESE_ACCENTS.test(withoutText)) {
+          return match;
+        }
+      }
+      return addProtected(match);
+    },
   );
 
   // Helper to safely wrap matched math chunk into a protected block
@@ -276,9 +312,9 @@ export function autoWrapMath(text: string): string {
   );
 
   // 5. Algebraic equations & polynomial functions:
-  // e.g. y = x^2 - 4x + 3, f(x) = x^3 - 3x + 1, f'(x) = 2x - 1, 2x - y + 5 = 0, y = 4x - 2
+  // e.g. y = x^2 - 4x + 3, f(x) = x^3 - 3x + 1, f'(x) = 2x - 1, 2x - y + 5 = 0, y = 4x - 2, E = mc^2
   working = working.replace(
-    /(^|[\s,.:;?!([])([a-zA-Z]'?(\([a-zA-Z0-9+\-*/, ]+\))?\s*(=|<|>|<=|>=|\\le|\\ge|\\neq|≤|≥|≠)\s*[-+0-9a-zA-Z^/()_.,]+(\s*[-+*/]\s*[-+0-9a-zA-Z^/()_.,]+)+)(?=[,.:;?!\]\s]|$)/g,
+    /(^|[\s,.:;?!([])([a-zA-Z]'?(?:\([a-zA-Z0-9+\-*/, ]+\))?\s*(=|<|>|<=|>=|\\le|\\ge|\\neq|≤|≥|≠)\s*[-+0-9a-zA-Z^/()_.,\\]*(?:(?:\^|_)[\{0-9a-zA-Z]+|\s*[-+*/]\s*[-+0-9a-zA-Z^/()_.,]+)[-+0-9a-zA-Z^/()_.,\\]*)(?=[,.:;?!\]\s]|$)/g,
     (match, prefix, expr) => {
       const strippedOfText = expr.replace(/\\(text|mathrm|mathbf|mathit)\{[^}]*\}/g, "");
       if (VIETNAMESE_ACCENTS.test(strippedOfText)) return match;
@@ -287,9 +323,9 @@ export function autoWrapMath(text: string): string {
     }
   );
 
-  // 6. Limits: lim_{x -> 0} f(x)
+  // 6. Limits & arrow convergence: lim_{x -> 0} f(x), R→∞, x \to 0, n \to \infty
   working = working.replace(
-    /(^|[\s,.:;?!([])(lim_\{[^}]+\}[^\s,.:;?!]*(\s*[-+*/=]\s*[^\s,.:;?!]+)*)/g,
+    /(^|[\s,.:;?!([])((?:lim_\{[^}]+\}[^\s,.:;?!]*(?:\s*[-+*/=]\s*[^\s,.:;?!]+)*)|(?:[a-zA-Z0-9Δ∆παβγθ]\s*(?:→|->|\\to|\\rightarrow)\s*[-+0-9a-zA-Z\\infty∞]+))(?=[,.:;?!\]\s]|$)/g,
     (match, prefix, expr) => wrapMath(prefix, expr),
   );
 
@@ -299,9 +335,9 @@ export function autoWrapMath(text: string): string {
     (match, prefix, expr) => wrapMath(prefix, expr),
   );
 
-  // 8. Subscripts / Superscripts / Trig periods: x_1, x_2, y_{CD}, x^2, e^x, k2\pi
+  // 8. Subscripts / Superscripts / Trig periods: x_1, x_2, y_{CD}, x^2, e^x, c^4, k2\pi
   working = working.replace(
-    /(^|[\s,.:;?!([])([a-zA-Z0-9Δ∆παβγθ]\^(\{[^}]+\}|\d+)|[a-zA-Z0-9Δ∆παβγθ]_(\{[^}]+\}|[a-zA-Z0-9]+)|[kmn]?\d*\\pi)(?=[,.:;?!\]\s]|$)/g,
+    /(^|[\s,.:;?!([])([a-zA-Z0-9Δ∆παβγθ]\^(\{[^}]+\}|[0-9a-zA-Z]+)|[a-zA-Z0-9Δ∆παβγθ]_(\{[^}]+\}|[a-zA-Z0-9]+)|[kmn]?\d*\\pi)(?=[,.:;?!\]\s]|$)/g,
     (match, prefix, expr) => wrapMath(prefix, expr),
   );
 
@@ -334,9 +370,21 @@ export function inlineParts(text: string): InlinePart[] {
     } else if (chunk.length >= 4 && chunk.startsWith("\\[") && chunk.endsWith("\\]")) {
       parts.push({ text: cleanLatex(chunk.slice(2, -2)), mark: "math-display" });
     } else if (chunk.length >= 2 && chunk.startsWith("$") && chunk.endsWith("$")) {
-      parts.push({ text: cleanLatex(chunk.slice(1, -1)), mark: "math" });
+      const inner = chunk.slice(1, -1);
+      const withoutText = inner.replace(/\\(text|mathrm|mathbf|mathit)\{[^}]*\}/g, "");
+      if (VIETNAMESE_ACCENTS.test(withoutText)) {
+        parts.push({ text: chunk, mark: "plain" });
+      } else {
+        parts.push({ text: cleanLatex(inner), mark: "math" });
+      }
     } else if (chunk.length >= 4 && chunk.startsWith("\\(") && chunk.endsWith("\\)")) {
-      parts.push({ text: cleanLatex(chunk.slice(2, -2)), mark: "math" });
+      const inner = chunk.slice(2, -2);
+      const withoutText = inner.replace(/\\(text|mathrm|mathbf|mathit)\{[^}]*\}/g, "");
+      if (VIETNAMESE_ACCENTS.test(withoutText)) {
+        parts.push({ text: chunk, mark: "plain" });
+      } else {
+        parts.push({ text: cleanLatex(inner), mark: "math" });
+      }
     } else if (chunk.length > 4 && chunk.startsWith("**") && chunk.endsWith("**")) {
       parts.push({ text: chunk.slice(2, -2), mark: "bold" });
     } else if (chunk.length > 2 && chunk.startsWith("*") && chunk.endsWith("*")) {

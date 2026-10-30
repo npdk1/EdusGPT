@@ -6,6 +6,7 @@ const projectRoot = path.dirname(fileURLToPath(import.meta.url));
 
 const nextConfig: NextConfig = {
   reactStrictMode: true,
+  devIndicators: false,
   // Pins the Turbopack workspace root to this folder (a stray lockfile in a
   // parent directory otherwise makes Next.js pick the user home directory).
   turbopack: { root: projectRoot },

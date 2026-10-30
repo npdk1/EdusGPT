@@ -5,7 +5,7 @@ import { AiError, generateJson } from "@/lib/ai/llm";
 import { isQuotaExhausted } from "@/lib/ai/shared";
 import { recordModelTrust } from "@/lib/ai/model-trust";
 import { noteCompactModel, readCompactModel } from "@/lib/server/token-limit";
-import { SCENE_ACCENTS, SCENE_KINDS, SLIDE_BLOCK_KINDS, SLIDE_LAYOUTS, POINTER_TARGETS, iconSetFor, newLessonId, type QuizQuestion, type SlideTheme } from "@/lib/lesson/types";
+import { SCENE_ACCENTS, SCENE_KINDS, SLIDE_BLOCK_KINDS, SLIDE_LAYOUTS, POINTER_TARGETS, iconSetFor, newLessonId, type QuizOption, type QuizQuestion, type SlideTheme } from "@/lib/lesson/types";
 import { DEFAULT_SLIDE_PATTERN, DEFAULT_SLIDE_THEME, isSlidePattern } from "@/lib/lesson/themes";
 import { DEFAULT_SLIDE_MOTION, isSlideMotion } from "@/lib/lesson/motion";
 import {
@@ -15,7 +15,14 @@ import {
 } from "@/lib/lesson/presentation-styles";
 import { resolveLessonLanguage } from "@/lib/lesson/lesson-languages";
 import { coerceLesson } from "@/lib/lesson/validate";
-import { quizQuestionTarget, splitBankQuestions, spreadCorrectAnswers } from "@/lib/lesson/quiz";
+import {
+  calculateOptimalQuizPlan,
+  cleanQuizExplanation,
+  quizQuestionTarget,
+  splitBankQuestions,
+  spreadCorrectAnswers,
+  type QuizAllocationPlan,
+} from "@/lib/lesson/quiz";
 import { mindmapSnapshot, type MindmapBranch } from "@/lib/lesson/mindmap";
 import {
   sceneNeedsExcerpt,
@@ -96,7 +103,10 @@ const quizSchema: Record<string, unknown> = {
           id: { type: "string" },
           text: { type: "string" },
           isCorrect: { type: "boolean" },
-          explanation: { type: "string" },
+          explanation: {
+            type: "string",
+            description: "Lời giải thích bằng tiếng Việt hoàn chỉnh, TUYỆT ĐỐI KHÔNG dùng tiếng Trung hay chữ Hán.",
+          },
         },
         required: ["id", "text", "isCorrect"],
       },
@@ -518,28 +528,42 @@ không người học sẽ rơi ngay ở chỗ đó.
  * definition: each one repeats the earlier branches and adds what just came,
  * so the last one is the full map.
  */
-function learningPlanRules(sceneCount: number): string {
+function learningPlanRules(sceneCount: number, quizPlan?: QuizAllocationPlan): string {
+  if (quizPlan && !quizPlan.enabled) {
+    return [
+      "",
+      "# Kế hoạch bài học (Không tạo trắc nghiệm theo cài đặt)",
+      "- BÀI HỌC NÀY KHÔNG CÓ CẢNH QUIZ. Tuyệt đối không tạo cảnh kind: \"quiz\".",
+      "- 1 cảnh \"diagram\" cuối (goal \"vẽ sơ đồ tóm tắt toàn bài\") ngay trước cảnh kết thúc.",
+      "- Toàn bộ các cảnh tập trung giải thích lý thuyết, hình ảnh minh hoạ trực quan và ví dụ ứng dụng.",
+    ].join("\n");
+  }
+
+  const checkpointCount = quizPlan ? quizPlan.checkpointCount : (sceneCount > 15 ? 2 : sceneCount >= 6 ? 1 : 0);
+  const checkpointSize = quizPlan ? quizPlan.questionsPerCheckpoint : 3;
+  const finalTarget = quizPlan ? quizPlan.finalTarget : quizQuestionTarget(sceneCount);
+
   const lines = [
     "",
     "# Kế hoạch luyện + sơ đồ (bắt buộc)",
     "- Các cảnh quiz và sơ đồ NẰM TRONG số cảnh yêu cầu ở trên, không cộng thêm.",
   ];
-  if (sceneCount > 15) {
+  if (checkpointCount >= 2) {
     lines.push(
-      '- HAI cảnh "quiz" chặng ngắn (3 câu), chia đều bài — khoảng một phần ba và hai phần ba.',
+      `- HAI cảnh "quiz" chặng ngắn (${checkpointSize} câu), chia đều bài — khoảng một phần ba và hai phần ba.`,
       '- Ngay SAU mỗi quiz chặng là 1 cảnh "diagram" với goal bắt đầu bằng "vẽ sơ đồ tóm tắt phần đã học".',
       '- 1 cảnh "diagram" cuối (goal "vẽ sơ đồ tóm tắt toàn bài") ngay trước quiz tổng kết.',
-      '- 1 cảnh "quiz" tổng kết (20 câu) ngay trước cảnh cuối cùng.',
+      `- 1 cảnh "quiz" tổng kết (${finalTarget} câu) ngay trước cảnh cuối cùng.`,
     );
-  } else if (sceneCount >= 6) {
+  } else if (checkpointCount === 1) {
     lines.push(
-      '- Một cảnh "quiz" chặng ngắn (3 câu) ngay sau cụm lý thuyết đầu tiên, hỏi đúng phần vừa học.',
+      `- Một cảnh "quiz" chặng ngắn (${checkpointSize} câu) ngay sau cụm lý thuyết đầu tiên, hỏi đúng phần vừa học.`,
       '- Ngay SAU quiz chặng là 1 cảnh "diagram" với goal bắt đầu bằng "vẽ sơ đồ tóm tắt phần đã học".',
       '- 1 cảnh "diagram" cuối (goal "vẽ sơ đồ tóm tắt toàn bài") ngay trước quiz tổng kết.',
-      '- 1 cảnh "quiz" tổng kết (15 câu) ngay trước cảnh cuối cùng.',
+      `- 1 cảnh "quiz" tổng kết (${finalTarget} câu) ngay trước cảnh cuối cùng.`,
     );
   } else {
-    lines.push('- Đúng 1 cảnh "quiz" tổng kết (10 câu) ngay trước cảnh cuối cùng.');
+    lines.push(`- Đúng 1 cảnh "quiz" tổng kết (${finalTarget} câu) ngay trước cảnh cuối cùng.`);
     if (sceneCount >= 5) {
       lines.push('- 1 cảnh "diagram" (goal "vẽ sơ đồ tóm tắt toàn bài") ngay trước quiz tổng kết.');
     }
@@ -568,8 +592,9 @@ Bạn nhận được bối cảnh bài học và danh sách cảnh theo đúng 
 3. Giải thích ngắn (1-2 câu) vì sao đáp án đúng hoặc sai, giọng thân thiện như đang chữa bài.
 4. Câu hỏi kiểm tra HIỂU, không hỏi vẹt số liệu hay chi tiết vụn.
 5. Trả về MỘT danh sách phẳng: câu quiz chặng trước (mỗi chặng đúng số câu được yêu cầu, liền nhau), rồi đến câu tổng kết.
-6. TUYỆT ĐỐI không để ký tự Hán/Nhật/Hàn lọt vào câu chữ (ví dụ sai: "số原子" — đúng: "số nguyên tử").
-7. CÔNG THỨC TOÁN, LÝ, HÓA, BIỂU THỨC: BẮT BUỘC định dạng chuẩn LaTeX và LUÔN bao quanh bằng ký hiệu $ (inline) hoặc $$ (display) trong cả câu hỏi, các phương án lựa chọn và phần giải thích.
+6. NGÔN NGỮ: BẮT BUỘC 100% TIẾNG VIỆT (hoặc ngôn ngữ bài giảng được yêu cầu). Câu hỏi, tất cả phương án lựa chọn và ĐẶC BIỆT LÀ LỜI GIẢI THÍCH (explanation) PHẢI VIẾT HOÀN TOÀN BẰNG TIẾNG VIỆT. TUYỆT ĐỐI CẤM dùng tiếng Trung/chữ Hán (như 正确, 错误, 因为, 答案, 解释... hay bất kỳ chữ Hán nào) trong trường explanation!
+7. TUYỆT ĐỐI không để ký tự Hán/Nhật/Hàn lọt vào câu chữ (ví dụ sai: "số原子" — đúng: "số nguyên tử").
+8. CÔNG THỨC TOÁN, LÝ, HÓA, BIỂU THỨC: BẮT BUỘC định dạng chuẩn LaTeX và LUÔN bao quanh bằng ký hiệu $ (inline) hoặc $$ (display) trong cả câu hỏi, các phương án lựa chọn và phần giải thích.
    - Ví dụ chuẩn: "$f(x) = x^2$", "$f'(a)$", "$\\lim_{h \\to 0} \\frac{(a+h)^2 - a^2}{h}$", "$\\sqrt{x}$", "$e^{a}$", "$x = 3$", "$\\frac{1}{4}$".
    - Tuyệt đối KHÔNG viết công thức cẩu thả dạng "lim_{h→0} ( (a+h)^2 - a^2 ) / h" hay "x^2" trần trụi không có dấu $.
 
@@ -594,7 +619,10 @@ const bankSchema: Record<string, unknown> = {
               properties: {
                 text: { type: "string" },
                 isCorrect: { type: "boolean" },
-                explanation: { type: "string" },
+                explanation: {
+                  type: "string",
+                  description: "Lời giải thích bằng tiếng Việt hoàn chỉnh, TUYỆT ĐỐI KHÔNG dùng tiếng Trung hay chữ Hán.",
+                },
               },
               required: ["text", "isCorrect"],
             },
@@ -624,6 +652,7 @@ function bankPrompt(
   scenes: Array<Record<string, unknown>>,
   checkpointCount: number,
   finalTarget: number,
+  checkpointSize: number = 3,
 ): string {
   const outline = scenes
     .map((scene, index) => {
@@ -635,7 +664,7 @@ function bankPrompt(
     .join("\n");
   const checkpointRules =
     checkpointCount > 0
-      ? `- ${checkpointCount * 3} câu đầu là câu quiz chặng: mỗi chặng 3 câu liền nhau, hỏi đúng phần đã học tính đến cảnh quiz đó${
+      ? `- ${checkpointCount * checkpointSize} câu đầu là câu quiz chặng: mỗi chặng ${checkpointSize} câu liền nhau, hỏi đúng phần đã học tính đến cảnh quiz đó${
           checkpointCount > 1 ? " (chặng 1 đầu bài, chặng 2 giữa bài)" : ""
         }.\n`
       : "";
@@ -668,13 +697,14 @@ const IMAGE_MODE_RULES = `
 Slide này được dựng thành bài giảng, nên hình ảnh là phần quan trọng nhất bên cạnh chữ.
 Ảnh do AI vẽ trực tiếp từ mô tả của cảnh (pollinations.ai, không cần key), KHÔNG
 phải ảnh tìm trên mạng — nên mô tả càng cụ thể, ảnh càng đúng ý.
-- "imagePrompt" là BẮT BUỘC với mọi cảnh trừ: cảnh "cover" (mở đầu), cảnh "quiz",
-  và cảnh "summary" (tóm tắt). Tức là HẦU NHƯ MỌI cảnh đều phải có.
-- Viết bằng TIẾNG ANH, một câu mô tả đầy đủ: đối tượng + hành động/bối cảnh +
-  phong cách vẽ. Thêm "no text, no words, no letters" để ảnh không dính chữ sai.
-  Đúng: "watercolor cross-section diagram of a human heart pumping blood, no text",
-        "cartoon delivery truck pushing a heavy crate uphill, flat style, no text",
-        "solar system planets orbiting the sun, educational poster style, no text".
+- "imagePrompt" là BẮT BUỘC với mọi cảnh trừ: cảnh "quiz" và cảnh "summary" (tóm tắt).
+  Đặc biệt: cảnh "cover" (mở đầu) NÊN có "imagePrompt" minh hoạ thật ấn tượng để làm ảnh bìa thumbnail cho toàn bộ bài giảng.
+- Viết bằng TIẾNG ANH, một câu mô tả chi tiết và thẩm mỹ: đối tượng cụ thể + hành động/bối cảnh +
+  phong cách vẽ (minh hoạ khoa học, sơ đồ 3D hoặc vector sắc nét) + ánh sáng sạch, màu sắc hài hoà.
+  Thêm "no text, no words, no letters" để ảnh không dính chữ sai.
+  Đúng: "detailed scientific cross-section illustration of a human heart with arteries and ventricles, soft studio lighting, clean background, no text, 8k resolution",
+        "3d render of solar system planets orbiting the sun with luminous asteroid belt, deep space background, highly detailed, no text",
+        "minimalist vector diagram of a car accelerating with force vectors, modern educational textbook style, no text".
   Sai: "sinh học lớp 10", "bài 5", "human heart" (quá chung, ảnh ra tuỳ hứng).
 - Với môn KHÔNG có hình thật (lập trình, toán giải tích, thuật toán), mô tả SƠ ĐỒ
   của khái niệm: "flowchart diagram of a for loop with arrows, minimal flat
@@ -732,7 +762,7 @@ mà không có slide trước thì vẫn hiểu trọn vẹn.
   + Không markdown, không LaTeX, không đọc ký hiệu vụn. TUYỆT ĐỐI không lặp lại cụm từ.
   + Nếu "duration" dài hơn 12 giây, giảng giải kỹ càng, chi tiết — đừng nói vắn tắt cho xong.
 - Nếu loại cảnh là "quiz": BẮT BUỘC trả "quiz" gồm câu hỏi kiểm tra độ hiểu sâu + đúng 4 phương án,
-  mỗi phương án có isCorrect và explanation chi tiết như lời thầy giải thích. Mọi công thức toán/lý/hóa trong câu hỏi, đáp án và giải thích phải định dạng chuẩn LaTeX kẹp trong $...$ (ví dụ: "$f'(x)=2x$", "$\\frac{a}{b}$", "$\\lim_{h \\to 0}$").
+  mỗi phương án có isCorrect và explanation chi tiết bằng tiếng Việt như lời thầy giải thích. BẮT BUỘC toàn bộ câu hỏi, các phương án và explanation PHẢI 100% BẰNG TIẾNG VIỆT, TUYỆT ĐỐI CẤM dùng tiếng Trung hay chữ Hán (như 正确, 错误, 因为...) trong lời giải thích! Mọi công thức toán/lý/hóa trong câu hỏi, đáp án và giải thích phải định dạng chuẩn LaTeX kẹp trong $...$ (ví dụ: "$f'(x)=2x$", "$\\frac{a}{b}$", "$\\lim_{h \\to 0}$").
 - Nếu loại cảnh là "simulation3d": BẮT BUỘC trả "simulation3d" với "type" hợp lệ.
 
 # Cách dùng hình thức trình bày
@@ -896,7 +926,7 @@ const IMAGE_OPTIONAL = new Set(["cover", "quiz", "summary"]);
  */
 function pictureFromTitle(title: string): string {
   const subject = title.replace(/\s+/g, " ").trim().slice(0, 120);
-  return `clear educational illustration of ${subject}, flat vector style, soft light, no text, no words, no letters`;
+  return `detailed clear educational illustration of ${subject}, vibrant colors, clean lighting, 8k resolution, no text, no words, no letters`;
 }
 
 /** The system prompt for one scene, with the picture mode folded in. */
@@ -1114,6 +1144,16 @@ export async function POST(request: NextRequest) {
      * teacher switch provider by hand each time. Left out, nothing changes.
      */
     model?: string;
+    /**
+     * Quiz generation settings: enabled, mode, minQuestions, maxQuestions.
+     */
+    quizSettings?: {
+      enabled?: boolean;
+      mode?: "auto" | "custom";
+      minQuestions?: number;
+      maxQuestions?: number;
+      checkpointSize?: number;
+    };
   } = {};
   try {
     body = await request.json();
@@ -1169,6 +1209,7 @@ export async function POST(request: NextRequest) {
     length.scenes[1],
     Math.max(length.scenes[0], Math.round(body.sceneCount ?? length.scenes[1])),
   );
+  const quizPlan = calculateOptimalQuizPlan(sceneCount, body.quizSettings);
   // Clamped into the preset's own range, not into a global 0.5–60. A client that
   // sends a fixed 8 (which is what the studio does — it has no minutes control of
   // its own) would otherwise silently shrink a 60–95 scene lesson to eight
@@ -1384,7 +1425,7 @@ export async function POST(request: NextRequest) {
           generateJson<Outline>(creds, {
             model: modelOverride,
             system: OUTLINE_SYSTEM,
-            prompt: `${outlineContext(isCompact)}\nSố cảnh: ${sceneCount}. Tổng thời lượng: ${totalSeconds}s.${length.rules}\nĐây là bài DÀNH, đã tách nhỏ từng phần để học sinh tự học được.\n\nBẮT BUỘC liệt kê ĐÚNG ${sceneCount} mục trong "scenes", đánh số từ 1 đến ${sceneCount}. Hãy đếm lại trước khi trả lời — thiếu mục nào cũng tính là sai, và câu trả lời sẽ bị làm lại.\n\nCách lấy đủ ${sceneCount} mục khi chủ đề nghe như chỉ có vài ý:\n- Tách MỖI ý lớn thành nhiều mục nhỏ hơn (định nghĩa một mục, ý nghĩa một mục, ví dụ một mục).\n- Mỗi ví dụ trong bài là một mục riêng, đừng gộp ba ví dụ vào một mục.\n- Thêm các mục "vì sao cần", "cạm bẫy thường gặp", "khi nào không dùng được", "bài tập tự làm", "tóm tắt".\n- ĐỪNG tách nhỏ đến mức vô nghĩa: một dãy phép tính cùng loại (cả bảng nhân) thì gộp\n  thành MỘT mục, vì tách từng dòng ra sẽ thành 9 slide giống hệt nhau.\n- KHÔNG được lặp lại cùng một ý để lấp số. Mỗi mục phải dạy một điều khác đi.\n\n${learningPlanRules(sceneCount)}
+            prompt: `${outlineContext(isCompact)}\nSố cảnh: ${sceneCount}. Tổng thời lượng: ${totalSeconds}s.${length.rules}\nĐây là bài DÀNH, đã tách nhỏ từng phần để học sinh tự học được.\n\nBẮT BUỘC liệt kê ĐÚNG ${sceneCount} mục trong "scenes", đánh số từ 1 đến ${sceneCount}. Hãy đếm lại trước khi trả lời — thiếu mục nào cũng tính là sai, và câu trả lời sẽ bị làm lại.\n\nCách lấy đủ ${sceneCount} mục khi chủ đề nghe như chỉ có vài ý:\n- Tách MỖI ý lớn thành nhiều mục nhỏ hơn (định nghĩa một mục, ý nghĩa một mục, ví dụ một mục).\n- Mỗi ví dụ trong bài là một mục riêng, đừng gộp ba ví dụ vào một mục.\n- Thêm các mục "vì sao cần", "cạm bẫy thường gặp", "khi nào không dùng được", "bài tập tự làm", "tóm tắt".\n- ĐỪNG tách nhỏ đến mức vô nghĩa: một dãy phép tính cùng loại (cả bảng nhân) thì gộp\n  thành MỘT mục, vì tách từng dòng ra sẽ thành 9 slide giống hệt nhau.\n- KHÔNG được lặp lại cùng một ý để lấp số. Mỗi mục phải dạy một điều khác đi.\n\n${learningPlanRules(sceneCount, quizPlan)}
 
 Chỉ trả về tiêu đề và mục tiêu từng cảnh, chưa viết nội dung chi tiết.`,
             schema: OUTLINE_SCHEMA,
@@ -1898,34 +1939,50 @@ Chỉ trả về tiêu đề và mục tiêu từng cảnh, chưa viết nội d
         // onto the closing quiz.
         const quizScenes = scenes.filter((scene) => scene.kind === "quiz" && scene.quiz && typeof scene.quiz === "object");
         const checkpointCount = Math.max(0, quizScenes.length - 1);
-        const finalTarget = quizQuestionTarget(planned.length);
-        const questionTotal = checkpointCount * 3 + finalTarget;
+        const finalTarget = quizPlan.enabled ? quizPlan.finalTarget : 0;
+        const checkpointSize = quizPlan.questionsPerCheckpoint;
+        const questionTotal = checkpointCount * checkpointSize + finalTarget;
         let bankPlan: { questions: QuizQuestion[]; branches: MindmapBranch[] } | null = null;
-        send({
-          type: "stage",
-          stage: "quiz",
-          message: `Đang viết ${questionTotal} câu hỏi kiểm tra và sơ đồ tóm tắt…`,
-          progress: 95,
-        });
-        try {
-          const bank = await generateJson<{
-            questions: QuizQuestion[];
-            branches: MindmapBranch[];
-          }>(creds, {
-            model: modelOverride,
-            system: BANK_SYSTEM,
-            prompt: bankPrompt(shortContext, scenes, checkpointCount, finalTarget),
-            schema: bankSchema,
-            temperature: 0.5,
-            maxOutputTokens: Math.min(12_288, 2048 + questionTotal * 200),
-            totalTimeoutMs: Math.min(300_000, 60_000 + questionTotal * 6_000),
+        if (quizScenes.length > 0 && quizPlan.enabled) {
+          send({
+            type: "stage",
+            stage: "quiz",
+            message: `Đang viết ${questionTotal} câu hỏi kiểm tra và sơ đồ tóm tắt…`,
+            progress: 95,
           });
-          bankPlan = {
-            questions: Array.isArray(bank.data.questions) ? bank.data.questions : [],
-            branches: Array.isArray(bank.data.branches) ? bank.data.branches : [],
-          };
-        } catch {
-          bankPlan = null;
+          try {
+            const bank = await generateJson<{
+              questions: QuizQuestion[];
+              branches: MindmapBranch[];
+            }>(creds, {
+              model: modelOverride,
+              system: BANK_SYSTEM,
+              prompt: bankPrompt(shortContext, scenes, checkpointCount, finalTarget, checkpointSize),
+              schema: bankSchema,
+              temperature: 0.5,
+              maxOutputTokens: Math.min(16_384, 2048 + questionTotal * 220),
+              totalTimeoutMs: Math.min(300_000, 60_000 + questionTotal * 6_000),
+            });
+            bankPlan = {
+              questions: Array.isArray(bank.data.questions) ? bank.data.questions : [],
+              branches: Array.isArray(bank.data.branches) ? bank.data.branches : [],
+            };
+          } catch {
+            bankPlan = null;
+          }
+        }
+
+        // Sanitize any standalone quiz options generated during Stage 2
+        for (const scene of scenes) {
+          if (scene.kind === "quiz" && scene.quiz) {
+            const quizObj = scene.quiz as { options?: QuizOption[] };
+            if (Array.isArray(quizObj.options)) {
+              quizObj.options = quizObj.options.map((opt) => ({
+                ...opt,
+                explanation: cleanQuizExplanation(opt.explanation, opt.isCorrect, opt.text),
+              }));
+            }
+          }
         }
 
         // ---------- graft the banks and the recap onto the deck ----------
@@ -1935,14 +1992,22 @@ Chỉ trả về tiêu đề và mục tiêu từng cảnh, chưa viết nội d
         // so the recap grows as the lesson walks. `plan` is a const so the
         // narrowing survives into the callbacks.
         const plan = bankPlan;
-        if (plan) {
+        if (plan && quizPlan.enabled) {
           const checkpointSlots = quizScenes.slice(0, -1);
+          // Sanitize every question's options so no Chinese/Han script leaks into explanations
+          const sanitizedQuestions = plan.questions.map((q) => ({
+            ...q,
+            options: q.options.map((opt) => ({
+              ...opt,
+              explanation: cleanQuizExplanation(opt.explanation, opt.isCorrect, opt.text),
+            })),
+          }));
           // The model put every correct answer first in a real run (18/18) —
           // a bank anyone beats by always pressing A. Rotate before the split;
           // the rotation index follows the flat list's order.
           const { checkpoints, final } = splitBankQuestions(
-            spreadCorrectAnswers(plan.questions),
-            checkpointSlots.map(() => 3),
+            spreadCorrectAnswers(sanitizedQuestions),
+            checkpointSlots.map(() => checkpointSize),
             finalTarget,
           );
           checkpointSlots.forEach((scene, index) => {

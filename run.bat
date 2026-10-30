@@ -55,6 +55,8 @@ echo.
 
 if not exist "%RUNTIME%" mkdir "%RUNTIME%" >nul 2>&1
 if not exist "%DL%" mkdir "%DL%" >nul 2>&1
+rem Don dep cac thu muc rac tam thoi cua pip neu co
+for /d %%p in ("pip-build-tracker-*" "pip-ephem-wheel-cache-*" "pip-install-*") do rmdir /s /q "%%p" >nul 2>&1
 
 rem ---------------------------------------------------------------- 1. Node.js
 echo  !C_CYAN![!C_GREEN!###!C_GRAY!-----------------!C_CYAN!]!C_BOLD!!C_WHITE!  14%%!C_RESET! !C_CYAN![1/7]!C_RESET! !C_WHITE!Kiem tra Node.js...!C_RESET!
@@ -229,16 +231,26 @@ if not defined VENV_PY goto :voice_step
 if not errorlevel 1 (
   echo       !C_GREEN![OK]!C_RESET! piper-tts da co trong venv
 ) else (
-  echo       !C_YELLOW![..]!C_RESET! Dang cai piper-tts trong venv ^(vui long doi^)...
-  "%VENV_PY%" -m pip install --disable-pip-version-check --no-input --quiet piper-tts
-  if errorlevel 1 (
+  echo       !C_YELLOW![?]!C_RESET! Cai piper-tts ^(giong doc offline tren may, ~100 MB^)?
+  echo            !C_GRAY!^(Nhan [S] de bo qua dung Cloud TTS nhanh hon, tu dong cai sau 5s: [Y]^)!C_RESET!
+  choice /C YS /N /T 5 /D Y /M "       Chon [Y] de cai, [S] de bo qua: "
+  if errorlevel 2 (
+    echo       !C_YELLOW![..]!C_RESET! Da bo qua piper-tts - app se dung Cloud TTS mac dinh.
     set "VENV_PY="
-    call :warn "cai piper-tts that bai."
-    echo       !C_RED![!!]!C_RESET! Cai piper-tts that bai
   ) else (
-    echo       !C_GREEN![OK]!C_RESET! Da cai piper-tts
+    echo       !C_YELLOW![..]!C_RESET! Dang cai piper-tts trong venv ^(vui long doi, co tien trinh ben duoi^)...
+    "%VENV_PY%" -m pip install --disable-pip-version-check --no-input piper-tts
+    if errorlevel 1 (
+      set "VENV_PY="
+      call :warn "cai piper-tts that bai - se dung Cloud TTS mac dinh."
+      echo       !C_YELLOW![--]!C_RESET! Bo qua piper-tts, van chay tot voi Cloud TTS san co.
+    ) else (
+      echo       !C_GREEN![OK]!C_RESET! Da cai piper-tts
+    )
   )
 )
+rem Don dep thu muc tam pip sau khi cai
+for /d %%p in ("pip-build-tracker-*" "pip-ephem-wheel-cache-*" "pip-install-*") do rmdir /s /q "%%p" >nul 2>&1
 echo.
 
 rem ------------------------------------------------------------ 6. giong Viet

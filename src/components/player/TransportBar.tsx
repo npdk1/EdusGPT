@@ -14,6 +14,7 @@ import {
   Rewind,
   SkipBack,
   SkipForward,
+  Sparkles,
   Volume1,
   Volume2,
   VolumeX,
@@ -21,6 +22,7 @@ import {
 import type { LoopRange, Timebase } from "@/hooks/useTimebase";
 import { formatClock } from "@/lib/format";
 import { useCopy } from "@/i18n/provider";
+import { InlineText } from "./InlineText";
 
 interface TransportBarProps {
   timebase: Timebase;
@@ -32,6 +34,10 @@ interface TransportBarProps {
   onToggleMute: () => void;
   onFullscreen: () => void;
   onToggleHelp: () => void;
+  onToggleAi?: () => void;
+  aiOpen?: boolean;
+  onNextScene?: () => void;
+  currentSceneTitle?: string;
 }
 
 const RATES = [0.5, 0.75, 1, 1.25, 1.5, 2];
@@ -54,6 +60,10 @@ const COPY = {
     transportForward10Title: "Forward 10 seconds (L)",
     transportToEnd: "Go to end",
     transportToEndTitle: "Go to end (End)",
+    transportNextScene: "Next scene",
+    transportNextSceneTitle: "Next scene (N)",
+    transportAiTutor: "AI Tutor",
+    transportAiTutorTitle: "Toggle AI classroom tutor",
     transportLoopTitle: "Turn the A→B loop on/off (\\)",
     transportMarkATitle: "Set marker A at the current position ([)",
     transportMarkBTitle: "Set marker B at the current position (])",
@@ -86,6 +96,10 @@ const COPY = {
     transportForward10Title: "Tua tới 10 giây (L)",
     transportToEnd: "Tới cuối",
     transportToEndTitle: "Tới cuối (End)",
+    transportNextScene: "Cảnh tiếp theo",
+    transportNextSceneTitle: "Cảnh tiếp theo (N)",
+    transportAiTutor: "Trợ giảng AI",
+    transportAiTutorTitle: "Bật/tắt Trợ giảng AI trực tuyến",
     transportLoopTitle: "Bật/tắt lặp trong khoảng A→B (\\)",
     transportMarkATitle: "Đặt mốc A tại vị trí hiện tại ([)",
     transportMarkBTitle: "Đặt mốc B tại vị trí hiện tại (])",
@@ -114,6 +128,10 @@ export function TransportBar({
   onToggleMute,
   onFullscreen,
   onToggleHelp,
+  onToggleAi,
+  aiOpen,
+  onNextScene,
+  currentSceneTitle,
 }: TransportBarProps) {
   const t = useCopy(COPY);
   const clockRef = useRef<HTMLSpanElement>(null);
@@ -132,182 +150,70 @@ export function TransportBar({
   }, [subscribeClock]);
 
   return (
-    // One row on a desktop for the same reason as the toolbar above: a wrapped
-    // transport bar cost the slide half its height. Sideways scroll, not taller.
-    <div className="flex flex-wrap items-center gap-2 lg:flex-nowrap lg:overflow-x-auto lg:[&>*]:shrink-0">
-      <button
-        type="button"
-        onClick={() => timebase.seek(0)}
-        className="btn-icon"
-        title={t.transportToStartTitle}
-        aria-label={t.transportToStart}
-      >
-        <SkipBack className="h-4 w-4" />
-      </button>
-      <button
-        type="button"
-        onClick={() => timebase.seekBy(-10)}
-        className="btn-icon"
-        title={t.transportBack10Title}
-        aria-label={t.transportBack10}
-      >
-        <Rewind className="h-4 w-4" />
-      </button>
-      <button
-        type="button"
-        onClick={() => timebase.stepFrames(-1)}
-        className="btn-icon"
-        title={t.transportStepBackTitle}
-        aria-label={t.transportStepBack}
-      >
-        <ChevronLeft className="h-4 w-4" />
-      </button>
-
-      <button
-        type="button"
-        onClick={timebase.toggle}
-        className="inline-flex h-11 w-11 items-center justify-center rounded-xl bg-brand-400 text-ink-950 transition-colors hover:bg-brand-300"
-        title={timebase.playing ? t.transportPauseTitle : t.transportPlayTitle}
-        aria-label={timebase.playing ? t.transportPause : t.transportPlay}
-      >
-        {timebase.playing ? (
-          <Pause className="h-5 w-5" />
-        ) : (
-          <Play className="h-5 w-5 translate-x-[1px]" />
-        )}
-      </button>
-
-      <button
-        type="button"
-        onClick={() => timebase.stepFrames(1)}
-        className="btn-icon"
-        title={t.transportStepForwardTitle}
-        aria-label={t.transportStepForward}
-      >
-        <ChevronRight className="h-4 w-4" />
-      </button>
-      <button
-        type="button"
-        onClick={() => timebase.seekBy(10)}
-        className="btn-icon"
-        title={t.transportForward10Title}
-        aria-label={t.transportForward10}
-      >
-        <FastForward className="h-4 w-4" />
-      </button>
-      <button
-        type="button"
-        onClick={() => timebase.seek(timebase.duration)}
-        className="btn-icon"
-        title={t.transportToEndTitle}
-        aria-label={t.transportToEnd}
-      >
-        <SkipForward className="h-4 w-4" />
-      </button>
-
-      <span
-        ref={clockRef}
-        className="ml-1 rounded-lg border border-ink-700 bg-ink-900/80 px-2.5 py-1.5 font-mono text-xs tabular-nums text-brand-200"
-      >
-        00:00:00.00 / 00:00:00.00
-      </span>
-
-      <div className="mx-1 h-8 w-px bg-ink-700" aria-hidden="true" />
-
-      {/* A→B loop — the "tua đi tua lại" region */}
-      <div className="flex items-center gap-1.5 rounded-xl border border-ink-700 bg-ink-900/70 p-1">
+    <div className="flex flex-wrap items-center justify-between gap-2 lg:flex-nowrap">
+      {/* Left controls: Play/Pause, Next Scene, Rewind/Forward, Volume, Time, Scene title */}
+      <div className="flex items-center gap-1 sm:gap-1.5">
         <button
           type="button"
-          onClick={onToggleLoop}
-          className={`inline-flex h-7 items-center gap-1.5 rounded-lg px-2 text-xs font-semibold transition-colors ${
-            loop.enabled
-              ? "bg-gold-400 text-ink-950"
-              : "text-mist-300 hover:bg-ink-800 hover:text-mist-100"
-          }`}
-          title={t.transportLoopTitle}
-          aria-pressed={loop.enabled}
+          onClick={timebase.toggle}
+          className="inline-flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-brand-500 via-blue-600 to-amber-500 text-white shadow-md shadow-brand-500/25 transition-all hover:from-brand-400 hover:to-amber-400 hover:scale-105 active:scale-95 border border-amber-400/30"
+          title={timebase.playing ? t.transportPauseTitle : t.transportPlayTitle}
+          aria-label={timebase.playing ? t.transportPause : t.transportPlay}
         >
-          <Repeat className="h-3.5 w-3.5" /> A→B
+          {timebase.playing ? (
+            <Pause className="h-5 w-5" />
+          ) : (
+            <Play className="h-5 w-5 translate-x-[1px]" />
+          )}
         </button>
-        {/* The markers only earn their space once a region exists: toggling on
-            with no range mints one around the playhead, so the three buttons
-            appear exactly when they have something to point at. `b > a` is the
-            whole test — clear resets both to 0, and a paused loop keeps its
-            range so the markers stay editable. */}
-        {loop.b > loop.a && (
-          <>
-            <button
-              type="button"
-              onClick={() => onSetPoint("a")}
-              className="inline-flex h-7 items-center rounded-lg px-2 font-mono text-xs text-mist-200 hover:bg-ink-800"
-              title={t.transportMarkATitle}
-            >
-              A {formatClock(loop.a, false)}
-            </button>
-            <button
-              type="button"
-              onClick={() => onSetPoint("b")}
-              className="inline-flex h-7 items-center rounded-lg px-2 font-mono text-xs text-mist-200 hover:bg-ink-800"
-              title={t.transportMarkBTitle}
-            >
-              B {formatClock(loop.b, false)}
-            </button>
-            <button
-              type="button"
-              onClick={onClearLoop}
-              className="inline-flex h-7 items-center rounded-lg px-2 text-xs text-mist-400 hover:bg-ink-800 hover:text-ember-400"
-              title={t.transportClearLoopTitle}
-            >
-              {t.transportClearLoop}
-            </button>
-          </>
-        )}
-      </div>
 
-      {/* Playback speed slider: matches volume slider CSS, no clunky dropdown */}
-      <div className="flex items-center gap-1.5" title={`${t.transportSpeedTitle} (${timebase.rate.toFixed(1)}×)`}>
+        {onNextScene && (
+          <button
+            type="button"
+            onClick={onNextScene}
+            className="btn-icon"
+            title={t.transportNextSceneTitle}
+            aria-label={t.transportNextScene}
+          >
+            <SkipForward className="h-4 w-4" />
+          </button>
+        )}
+
         <button
           type="button"
-          onClick={() => timebase.setRate(1)}
-          className="flex items-center gap-1 rounded-md px-1.5 py-0.5 font-mono text-xs font-semibold text-mist-300 transition-colors hover:bg-ink-800 hover:text-mist-100"
-          title="Nhấn để đặt lại 1× / Click to reset 1×"
+          onClick={() => timebase.seekBy(-10)}
+          className="btn-icon"
+          title={t.transportBack10Title}
+          aria-label={t.transportBack10}
         >
-          <Gauge className="h-3.5 w-3.5 text-mist-400" />
-          <span className="w-7 text-left">{timebase.rate === 1 ? "1×" : `${timebase.rate.toFixed(1)}×`}</span>
+          <Rewind className="h-4 w-4" />
         </button>
-        <input
-          type="range"
-          min={0.5}
-          max={2.0}
-          step={0.1}
-          value={timebase.rate}
-          onChange={(event) => timebase.setRate(Number(event.target.value))}
-          aria-label={t.transportSpeed}
-          title={`${t.transportSpeedTitle} (${timebase.rate.toFixed(1)}×)`}
-          className="player-range w-16"
-        />
-      </div>
 
-      <div className="ml-auto flex items-center gap-2">
-        {/* A mute toggle on its own was the only loudness control, which is not a
-            control: it says nothing about how loud the deck is and gives a
-            presenter no way to turn the narration up. The slider sits beside it
-            and both write to the same timebase value, so the deck and the
-            synthesised voice follow together. */}
-        <div className="flex items-center gap-1.5">
+        <button
+          type="button"
+          onClick={() => timebase.seekBy(10)}
+          className="btn-icon"
+          title={t.transportForward10Title}
+          aria-label={t.transportForward10}
+        >
+          <FastForward className="h-4 w-4" />
+        </button>
+
+        {/* Volume slider */}
+        <div className="flex items-center gap-1 rounded-lg px-1 py-0.5 hover:bg-ink-800/60 transition-colors">
           <button
             type="button"
             onClick={onToggleMute}
-            className="btn-icon"
+            className="btn-icon border-0 bg-transparent h-8 w-8"
             title={t.transportMuteTitle}
             aria-label={t.transportMute}
           >
             {timebase.muted ? (
-              <VolumeX className="h-4 w-4" />
+              <VolumeX className="h-4 w-4 text-mist-400" />
             ) : timebase.volume < 0.5 ? (
-              <Volume1 className="h-4 w-4" />
+              <Volume1 className="h-4 w-4 text-mist-200" />
             ) : (
-              <Volume2 className="h-4 w-4" />
+              <Volume2 className="h-4 w-4 text-mist-200" />
             )}
           </button>
           <input
@@ -319,9 +225,111 @@ export function TransportBar({
             onChange={(event) => timebase.setVolume(Number(event.target.value))}
             aria-label={t.transportVolume}
             title={`${t.transportVolume} ${Math.round(timebase.volume * 100)}%`}
-            className="player-range w-20"
+            className="player-range w-14 sm:w-20"
           />
         </div>
+
+        {/* Timestamp clock */}
+        <span
+          ref={clockRef}
+          className="font-mono text-xs tabular-nums text-mist-200 ml-1"
+        >
+          00:00:00.00 / 00:00:00.00
+        </span>
+
+        {/* Current scene name */}
+        {currentSceneTitle && (
+          <span className="hidden xl:inline-block max-w-[200px] truncate text-xs text-mist-400 pl-2 border-l border-ink-700">
+            <InlineText text={currentSceneTitle} />
+          </span>
+        )}
+      </div>
+
+      {/* Right controls: A→B Loop, Speed, AI Assistant toggle, Shortcuts, Fullscreen */}
+      <div className="flex items-center gap-2">
+        {/* A→B Loop */}
+        <div className="flex items-center gap-1 rounded-xl border border-ink-700/80 bg-ink-900/70 p-1">
+          <button
+            type="button"
+            onClick={onToggleLoop}
+            className={`inline-flex h-7 items-center gap-1.5 rounded-lg px-2 text-xs font-semibold transition-colors ${
+              loop.enabled
+                ? "bg-gold-400 text-ink-950"
+                : "text-mist-300 hover:bg-ink-800 hover:text-mist-100"
+            }`}
+            title={t.transportLoopTitle}
+            aria-pressed={loop.enabled}
+          >
+            <Repeat className="h-3 w-3" /> A→B
+          </button>
+          {loop.b > loop.a && (
+            <>
+              <button
+                type="button"
+                onClick={() => onSetPoint("a")}
+                className="inline-flex h-7 items-center rounded-lg px-1.5 font-mono text-[11px] text-mist-200 hover:bg-ink-800"
+                title={t.transportMarkATitle}
+              >
+                A {formatClock(loop.a, false)}
+              </button>
+              <button
+                type="button"
+                onClick={() => onSetPoint("b")}
+                className="inline-flex h-7 items-center rounded-lg px-1.5 font-mono text-[11px] text-mist-200 hover:bg-ink-800"
+                title={t.transportMarkBTitle}
+              >
+                B {formatClock(loop.b, false)}
+              </button>
+              <button
+                type="button"
+                onClick={onClearLoop}
+                className="inline-flex h-7 items-center rounded-lg px-1.5 text-[11px] text-mist-400 hover:bg-ink-800 hover:text-ember-400"
+                title={t.transportClearLoopTitle}
+              >
+                {t.transportClearLoop}
+              </button>
+            </>
+          )}
+        </div>
+
+        {/* Speed */}
+        <div className="flex items-center gap-1" title={`${t.transportSpeedTitle} (${timebase.rate.toFixed(1)}×)`}>
+          <button
+            type="button"
+            onClick={() => {
+              const curIdx = RATES.indexOf(timebase.rate);
+              const nextRate = RATES[(curIdx + 1) % RATES.length];
+              timebase.setRate(nextRate);
+            }}
+            className="flex items-center gap-1 rounded-lg border border-ink-700/80 bg-ink-900/70 px-2.5 py-1.5 font-mono text-xs font-semibold text-mist-200 transition-colors hover:bg-ink-800 hover:text-mist-50"
+            title={t.transportSpeedTitle}
+          >
+            <Gauge className="h-3.5 w-3.5 text-mist-400" />
+            <span>{timebase.rate === 1 ? "1×" : `${timebase.rate}×`}</span>
+          </button>
+        </div>
+
+        {/* ✨ Trợ giảng AI button */}
+        {onToggleAi && (
+          <button
+            type="button"
+            onClick={onToggleAi}
+            className={`inline-flex items-center gap-1.5 rounded-xl border px-3 py-1.5 text-xs font-semibold transition-all ${
+              aiOpen
+                ? "border-gold-400/80 bg-gold-400/20 text-gold-200 shadow-sm"
+                : "border-ink-700 bg-ink-900/80 text-mist-200 hover:border-gold-500/50 hover:text-gold-300"
+            }`}
+            title={t.transportAiTutorTitle}
+            aria-pressed={aiOpen}
+          >
+            <Sparkles className="h-3.5 w-3.5 text-gold-400" />
+            <span className="hidden sm:inline">{t.transportAiTutor}</span>
+            {aiOpen ? (
+              <span className="h-1.5 w-1.5 rounded-full bg-gold-400 animate-pulse" />
+            ) : null}
+          </button>
+        )}
+
         <button
           type="button"
           onClick={onToggleHelp}
@@ -331,10 +339,11 @@ export function TransportBar({
         >
           <Keyboard className="h-4 w-4" />
         </button>
+
         <button
           type="button"
           onClick={onFullscreen}
-          className="btn-icon"
+          className="btn-icon text-mist-100 hover:text-brand-300"
           title={t.transportFullscreenTitle}
           aria-label={t.transportFullscreen}
         >

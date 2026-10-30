@@ -95,16 +95,18 @@ export function LanguagePicker({
         aria-haspopup="listbox"
         aria-label={t.open}
         title={t.open}
-        className="flex w-full items-center justify-between gap-2 rounded-xl border border-ink-600 bg-ink-950 px-3 py-2 text-left text-sm text-mist-100 hover:border-brand-500"
+        className="flex w-full items-center justify-between gap-2 rounded-xl border border-ink-700 bg-ink-900/60 px-3 py-2.5 text-left text-sm text-mist-100 transition-all hover:border-brand-500 hover:bg-ink-850 focus:outline-none focus:ring-1 focus:ring-brand-500"
       >
-        <span className="min-w-0 flex-1 truncate">{chosen}</span>
-        <ChevronDown className="h-4 w-4 shrink-0 text-mist-400" />
+        <span className="min-w-0 flex-1 truncate font-medium">{chosen}</span>
+        <ChevronDown
+          className={`h-4 w-4 shrink-0 text-mist-400 transition-transform ${open ? "rotate-180" : ""}`}
+        />
       </button>
 
       {open ? (
-        <div className="absolute z-40 mt-1.5 w-full min-w-56 overflow-hidden rounded-xl border border-ink-600 bg-ink-950 shadow-xl">
-          <div className="flex items-center gap-2 border-b border-ink-700 px-3 py-2">
-            <Search className="h-3.5 w-3.5 shrink-0 text-mist-500" />
+        <div className="absolute left-0 z-40 mt-1.5 w-full min-w-56 overflow-hidden rounded-xl border border-ink-700 bg-ink-900 shadow-2xl backdrop-blur-md">
+          <div className="flex items-center gap-2 border-b border-ink-800 bg-ink-950/80 px-3 py-2">
+            <Search className="h-4 w-4 shrink-0 text-mist-500" />
             <input
               ref={searchRef}
               value={query}
@@ -113,6 +115,15 @@ export function LanguagePicker({
               aria-label={t.search}
               className="min-w-0 flex-1 bg-transparent text-sm text-mist-100 outline-none placeholder:text-mist-500"
             />
+            {query ? (
+              <button
+                type="button"
+                onClick={() => setQuery("")}
+                className="text-xs text-mist-400 hover:text-mist-200"
+              >
+                ✕
+              </button>
+            ) : null}
           </div>
           <ul id={listId} role="listbox" className="max-h-64 overflow-y-auto py-1">
             <li role="option" aria-selected={value === AUTO_LANGUAGE}>
@@ -122,7 +133,11 @@ export function LanguagePicker({
                   onChange(AUTO_LANGUAGE);
                   setOpen(false);
                 }}
-                className="flex w-full items-center gap-2 px-3 py-1.5 text-left text-sm text-mist-200 hover:bg-brand-500/10"
+                className={`flex w-full items-center gap-2 px-3 py-2 text-left text-xs transition-colors ${
+                  value === AUTO_LANGUAGE
+                    ? "bg-brand-500/15 text-mist-50 font-medium"
+                    : "text-mist-300 hover:bg-ink-800/80 hover:text-mist-100"
+                }`}
               >
                 <Check
                   className={`h-3.5 w-3.5 shrink-0 ${value === AUTO_LANGUAGE ? "text-brand-400" : "text-transparent"}`}
@@ -138,7 +153,11 @@ export function LanguagePicker({
                     onChange(language.id);
                     setOpen(false);
                   }}
-                  className="flex w-full items-center gap-2 px-3 py-1.5 text-left text-sm text-mist-200 hover:bg-brand-500/10"
+                  className={`flex w-full items-center gap-2 px-3 py-2 text-left text-xs transition-colors ${
+                    value === language.id
+                      ? "bg-brand-500/15 text-mist-50 font-medium"
+                      : "text-mist-300 hover:bg-ink-800/80 hover:text-mist-100"
+                  }`}
                 >
                   <Check
                     className={`h-3.5 w-3.5 shrink-0 ${value === language.id ? "text-brand-400" : "text-transparent"}`}

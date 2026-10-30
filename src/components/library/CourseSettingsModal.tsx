@@ -2,15 +2,16 @@
 
 import { useState } from "react";
 import {
-  AlertTriangle,
   Archive,
+  Download,
+  AlertTriangle,
   CheckCircle2,
-  HelpCircle,
+  FileText,
   LoaderCircle,
-  Settings,
-  Sparkles,
   Trash2,
+  VolumeX,
   X,
+  Layers,
 } from "lucide-react";
 import { useCopy } from "@/i18n/provider";
 
@@ -35,68 +36,58 @@ interface CourseSettingsModalProps {
 
 const MODAL_COPY = {
   en: {
-    title: "Lesson Settings & Optimization",
-    subtitle: "Manage content, optimize disk usage, or delete this lesson.",
-    storageSection: "Storage Optimization (Trim Content)",
-    storageDesc:
-      "Finished studying this lesson? You can remove the presentation slides and speech audio to free up disk space, keeping only the quizzes and flashcards for quick revision.",
-    keepQuizLabel: "Keep Interactive Quizzes (Quiz)",
-    keepQuizHint: "Retain interactive multiple-choice questions for practice.",
-    keepFlashcardsLabel: "Keep Revision Flashcards & Concepts",
-    keepFlashcardsHint: "Retain key bullet points, formulas, and mindmaps as study cards.",
-    storageNote:
-      "All slide narration scripts and cached TTS audio files will be permanently purged to maximize storage savings.",
-    applyTrim: "Optimize Storage Now",
-    trimming: "Optimizing...",
-    trimSuccess: "Lesson storage optimized successfully! Slides and TTS audio have been pruned.",
-    keepAtLeastOne: "Please keep at least Quiz or Flashcards.",
-    deleteSection: "Deletion Options",
-    deleteDesc:
-      "Choose whether to temporarily move this lesson to the trash or delete it permanently from disk.",
-    softDeleteTitle: "Move to Trash (data/temp_delete/)",
-    softDeleteDesc:
-      "The lesson is encrypted and moved to the temporary trash folder. It disappears from the active library but can be recovered if needed.",
-    softDeleteBtn: "Move to Trash",
-    permanentDeleteTitle: "Delete Permanently",
-    permanentDeleteDesc:
-      "Completely wipes the encrypted lesson file and purges all associated audio files from disk. Cannot be undone.",
-    permanentDeleteBtn: "Delete Permanently",
-    confirmPermanent: "Are you sure you want to permanently delete \"{title}\"? This action cannot be undone.",
-    deleting: "Deleting...",
-    cancel: "Close",
+    title: "Lesson Options & Deletion",
+    subtitle: "Backup, clean up cache, or delete this lesson with safety.",
+    lessonInfo: "Lesson Details",
     scenes: "scenes",
+    downloadBackup: "Download Backup (.json)",
+    downloading: "Preparing download...",
+    deleteSectionTitle: "Choose Deletion Type",
+    softDeleteTitle: "1. Temporary Delete (Move to Trash)",
+    softDeleteDesc:
+      "Safely moves this lesson into data/temp_delete/. It hides from your active library, but you can restore or retrieve it anytime from Trash.",
+    softDeleteBtn: "Move to Trash",
+    permanentDeleteTitle: "2. Permanent Delete (Wipe from Disk)",
+    permanentDeleteDesc:
+      "Completely deletes the lesson file and purges all generated voice audio from disk. This action cannot be undone.",
+    permanentDeleteBtn: "Delete Permanently",
+    confirmPermanent:
+      "Are you sure you want to PERMANENTLY delete \"{title}\"? All files will be wiped and cannot be recovered.",
+    deleting: "Processing...",
+    optionalCleanup: "Optional: Free Up Storage (Keep Lesson)",
+    cleanupAudioTitle: "Clear Audio Voice Cache",
+    cleanupAudioDesc: "Deletes cached TTS voice clips for this lesson to free disk space. Speech will re-generate seamlessly when played.",
+    cleanupAudioBtn: "Clear Voice Audio",
+    cleanupSuccess: "Voice cache cleared successfully!",
+    cleaning: "Cleaning...",
+    cancel: "Close",
   },
   vi: {
-    title: "Cấu hình & Tối ưu bài học",
-    subtitle: "Quản lý thành phần, tối ưu dung lượng hoặc xóa bài giảng này.",
-    storageSection: "Tối ưu dung lượng (Gọt bớt nội dung)",
-    storageDesc:
-      "Đã học xong bài này? Bạn có thể xóa slide thuyết minh & audio giọng đọc để tiết kiệm bộ nhớ, chỉ giữ lại phần Trắc nghiệm và Thẻ ghi nhớ Flashcard để ôn tập nhanh.",
-    keepQuizLabel: "Giữ lại Trắc nghiệm tương tác (Quiz)",
-    keepQuizHint: "Giữ nguyên bộ câu hỏi trắc nghiệm để luyện tập sau này.",
-    keepFlashcardsLabel: "Giữ lại Thẻ ghi nhớ Flashcard & Ý chính",
-    keepFlashcardsHint: "Giữ lại các ý cốt lõi, công thức và sơ đồ tư duy làm thẻ ôn tập.",
-    storageNote:
-      "Lời thuyết minh của slide và toàn bộ file audio TTS trong cache sẽ được gỡ bỏ triệt để nhằm tối ưu dung lượng ổ cứng.",
-    applyTrim: "Thực hiện tối ưu dung lượng",
-    trimming: "Đang tối ưu...",
-    trimSuccess: "Đã tối ưu dung lượng thành công! Slide thuyết minh và audio TTS đã được dọn sạch.",
-    keepAtLeastOne: "Vui lòng chọn giữ lại ít nhất Trắc nghiệm hoặc Thẻ ghi nhớ.",
-    deleteSection: "Tùy chọn xóa bài học",
-    deleteDesc:
-      "Chọn xóa tạm vào thùng rác để có thể phục hồi, hoặc xóa vĩnh viễn khỏi máy tính.",
-    softDeleteTitle: "Xóa thường (Bỏ vào Thùng rác data/temp_delete/)",
-    softDeleteDesc:
-      "Bài giảng được chuyển sang thư mục data/temp_delete/ và vẫn được mã hóa bảo mật. Bài học biến mất khỏi thư viện nhưng có thể phục hồi khi cần.",
-    softDeleteBtn: "Chuyển vào Thùng rác",
-    permanentDeleteTitle: "Xóa vĩnh viễn khỏi đĩa",
-    permanentDeleteDesc:
-      "Xóa triệt để file bài giảng đã mã hóa và toàn bộ file âm thanh TTS liên quan khỏi ổ cứng. Không thể khôi phục.",
-    permanentDeleteBtn: "Xóa vĩnh viễn",
-    confirmPermanent: "Bạn có chắc chắn muốn xóa vĩnh viễn bài \"{title}\"? Thao tác này không thể hoàn tác.",
-    deleting: "Đang xóa...",
-    cancel: "Đóng",
+    title: "Tùy chọn & Quản lý bài học",
+    subtitle: "Sao lưu, dọn dẹp hoặc xóa bài giảng này một cách an toàn.",
+    lessonInfo: "Thông tin bài học",
     scenes: "cảnh",
+    downloadBackup: "Tải bản sao lưu (.json)",
+    downloading: "Đang tải xuống...",
+    deleteSectionTitle: "Chọn hình thức xóa bài giảng",
+    softDeleteTitle: "1. Xóa tạm thời (Chuyển vào Thùng rác)",
+    softDeleteDesc:
+      "Bài giảng được chuyển sang thư mục tạm data/temp_delete/ và ẩn khỏi Thư viện. Bạn có thể khôi phục lại bất kỳ lúc nào mà không sợ mất dữ liệu.",
+    softDeleteBtn: "Chuyển vào Thùng rác",
+    permanentDeleteTitle: "2. Xóa vĩnh viễn khỏi thiết bị",
+    permanentDeleteDesc:
+      "Xóa hoàn toàn file bài giảng và dọn sạch toàn bộ file âm thanh giọng đọc TTS khỏi ổ cứng. Thao tác này không thể hoàn tác.",
+    permanentDeleteBtn: "Xóa vĩnh viễn",
+    confirmPermanent:
+      "Bạn có chắc chắn muốn XÓA VĨNH VIỄN bài \"{title}\"? Toàn bộ dữ liệu sẽ bị xóa triệt để và không thể khôi phục.",
+    deleting: "Đang xử lý...",
+    optionalCleanup: "Tùy chọn: Giải phóng dung lượng (Vẫn giữ bài học)",
+    cleanupAudioTitle: "Dọn dẹp cache giọng đọc (Audio)",
+    cleanupAudioDesc: "Gỡ bỏ các file audio đã đọc của bài này để tiết kiệm bộ nhớ. Khi mở lại bài giảng, hệ thống sẽ tự phát giọng đọc bình thường.",
+    cleanupAudioBtn: "Dọn cache giọng đọc",
+    cleanupSuccess: "Đã dọn sạch cache giọng đọc thành công!",
+    cleaning: "Đang dọn dẹp...",
+    cancel: "Đóng",
   },
 };
 
@@ -108,47 +99,57 @@ export function CourseSettingsModal({
 }: CourseSettingsModalProps) {
   const t = useCopy(MODAL_COPY);
 
-  const [keepQuiz, setKeepQuiz] = useState(true);
-  const [keepFlashcards, setKeepFlashcards] = useState(true);
-  const [trimming, setTrimming] = useState(false);
-  const [trimDone, setTrimDone] = useState(false);
   const [deleting, setDeleting] = useState<"trash" | "permanent" | null>(null);
+  const [cleaningAudio, setCleaningAudio] = useState(false);
+  const [cleanAudioSuccess, setCleanAudioSuccess] = useState(false);
+  const [downloading, setDownloading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   if (!isOpen || !course) return null;
 
-  const handleTrim = async () => {
-    if (!keepQuiz && !keepFlashcards) {
-      setError(t.keepAtLeastOne);
-      return;
-    }
-
-    setTrimming(true);
+  const handleDownloadBackup = async () => {
+    setDownloading(true);
     setError(null);
-    setTrimDone(false);
-
     try {
-      const response = await fetch("/api/courses/trim", {
+      const res = await fetch(`/api/export/json?id=${encodeURIComponent(course.id)}`);
+      if (!res.ok) throw new Error("Không thể tải file bài giảng.");
+      const blob = await res.blob();
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `${course.title.replace(/[/\\?%*:|"<>]/g, "_")}.json`;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      URL.revokeObjectURL(url);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Lỗi khi tải file sao lưu");
+    } finally {
+      setDownloading(false);
+    }
+  };
+
+  const handleClearAudio = async () => {
+    setCleaningAudio(true);
+    setError(null);
+    setCleanAudioSuccess(false);
+    try {
+      // Call trim with keepQuiz: true, keepFlashcards: true (purges audio TTS from disk)
+      const res = await fetch("/api/courses/trim", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          id: course.id,
-          keepQuiz,
-          keepFlashcards,
-        }),
+        body: JSON.stringify({ id: course.id, keepQuiz: true, keepFlashcards: true }),
       });
-
-      const payload = (await response.json()) as { ok?: boolean; error?: string };
-      if (!response.ok || !payload.ok) {
-        throw new Error(payload.error || "Failed to trim course");
+      const data = (await res.json()) as { ok?: boolean; error?: string };
+      if (!res.ok || !data.ok) {
+        throw new Error(data.error || "Không thể dọn dẹp audio");
       }
-
-      setTrimDone(true);
+      setCleanAudioSuccess(true);
       onRefresh();
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Error trimming course");
+      setError(err instanceof Error ? err.message : "Lỗi dọn dẹp audio");
     } finally {
-      setTrimming(false);
+      setCleaningAudio(false);
     }
   };
 
@@ -171,13 +172,13 @@ export function CourseSettingsModal({
 
       const payload = (await response.json()) as { ok?: boolean; error?: string };
       if (!response.ok || !payload.ok) {
-        throw new Error(payload.error || "Failed to delete course");
+        throw new Error(payload.error || "Không thể xóa bài giảng");
       }
 
       onRefresh();
       onClose();
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Error deleting course");
+      setError(err instanceof Error ? err.message : "Lỗi khi xóa bài học");
     } finally {
       setDeleting(null);
     }
@@ -189,170 +190,186 @@ export function CourseSettingsModal({
       aria-modal="true"
       className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-ink-950/80 backdrop-blur-sm animate-in fade-in duration-200"
     >
-      <div className="relative w-full max-w-xl max-h-[90vh] overflow-y-auto rounded-2xl border border-ink-700 bg-ink-900 shadow-2xl p-6 text-mist-100 flex flex-col gap-6">
+      <div className="relative w-full max-w-xl max-h-[92vh] overflow-y-auto rounded-3xl border border-ink-800 bg-ink-900 shadow-2xl p-6 sm:p-7 text-mist-100 flex flex-col gap-6">
         {/* Header */}
-        <div className="flex items-start justify-between gap-4 border-b border-ink-800 pb-4">
+        <div className="flex items-start justify-between gap-4 border-b border-ink-800/80 pb-4">
           <div className="flex items-center gap-3">
-            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-brand-500/10 text-brand-300 border border-brand-500/20">
-              <Settings className="h-5 w-5" />
+            <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-brand-500/10 text-brand-400 border border-brand-500/20 shadow-xs">
+              <FileText className="h-5 w-5" />
             </div>
             <div>
-              <h2 className="text-base sm:text-lg font-bold text-mist-50 line-clamp-1">
-                {course.title}
+              <h2 className="text-base sm:text-lg font-bold text-mist-50">
+                {t.title}
               </h2>
               <p className="text-xs text-mist-400">
-                {course.subject}
-                {course.grade ? ` · ${course.grade}` : ""} · {course.sceneCount} {t.scenes}
+                {t.subtitle}
               </p>
             </div>
           </div>
           <button
             type="button"
             onClick={onClose}
-            className="flex h-8 w-8 items-center justify-center rounded-lg text-mist-400 hover:bg-ink-800 hover:text-mist-100 transition-colors"
+            className="flex h-8 w-8 items-center justify-center rounded-xl text-mist-400 hover:bg-ink-800 hover:text-mist-100 transition-colors"
+            aria-label="Đóng"
           >
             <X className="h-5 w-5" />
           </button>
         </div>
 
         {error ? (
-          <div className="flex items-center gap-2 rounded-xl border border-ember-500/50 bg-ember-500/10 px-3.5 py-2.5 text-xs sm:text-sm text-mist-100">
+          <div className="flex items-center gap-2.5 rounded-2xl border border-ember-500/40 bg-ember-500/10 p-3 text-xs sm:text-sm text-mist-100">
             <AlertTriangle className="h-4 w-4 shrink-0 text-ember-400" />
             <span>{error}</span>
           </div>
         ) : null}
 
-        {/* Section 1: Storage Optimization */}
-        <div className="flex flex-col gap-3 rounded-xl border border-brand-500/30 bg-brand-500/[0.04] p-4">
-          <div className="flex items-center gap-2 text-sm font-semibold text-brand-300">
-            <Sparkles className="h-4 w-4" />
-            <span>{t.storageSection}</span>
-          </div>
-          <p className="text-xs text-mist-300 leading-relaxed">{t.storageDesc}</p>
-
-          <div className="mt-1 flex flex-col gap-2.5 bg-ink-950/40 rounded-xl p-3 border border-ink-800">
-            <label className="flex items-start gap-2.5 cursor-pointer">
-              <input
-                type="checkbox"
-                checked={keepQuiz}
-                onChange={(e) => setKeepQuiz(e.target.checked)}
-                className="mt-0.5 h-4 w-4 rounded border-ink-600 bg-ink-800 text-brand-500 focus:ring-brand-400 focus:ring-offset-ink-900"
-              />
-              <div className="flex flex-col">
-                <span className="text-xs font-semibold text-mist-100 flex items-center gap-1.5">
-                  <HelpCircle className="h-3.5 w-3.5 text-gold-400" />
-                  {t.keepQuizLabel}
+        {/* Card thông tin bài giảng & Nút sao lưu tải về */}
+        <div className="rounded-2xl border border-ink-800 bg-ink-950/50 p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3.5">
+          <div className="min-w-0">
+            <div className="flex items-center gap-2 mb-1">
+              <span className="rounded-md border border-brand-500/30 bg-brand-500/10 px-2 py-0.5 text-[11px] font-bold text-brand-300">
+                {course.subject}
+              </span>
+              {course.grade ? (
+                <span className="rounded-md border border-ink-700 bg-ink-850 px-2 py-0.5 text-[11px] font-medium text-mist-300">
+                  {course.grade}
                 </span>
-                <span className="text-[11px] text-mist-400">{t.keepQuizHint}</span>
-              </div>
-            </label>
-
-            <label className="flex items-start gap-2.5 cursor-pointer">
-              <input
-                type="checkbox"
-                checked={keepFlashcards}
-                onChange={(e) => setKeepFlashcards(e.target.checked)}
-                className="mt-0.5 h-4 w-4 rounded border-ink-600 bg-ink-800 text-brand-500 focus:ring-brand-400 focus:ring-offset-ink-900"
-              />
-              <div className="flex flex-col">
-                <span className="text-xs font-semibold text-mist-100 flex items-center gap-1.5">
-                  <Sparkles className="h-3.5 w-3.5 text-brand-300" />
-                  {t.keepFlashcardsLabel}
-                </span>
-                <span className="text-[11px] text-mist-400">{t.keepFlashcardsHint}</span>
-              </div>
-            </label>
-          </div>
-
-          <p className="text-[11px] text-mist-400 italic bg-ink-900/50 p-2 rounded-lg border border-ink-800/80">
-            * {t.storageNote}
-          </p>
-
-          {trimDone ? (
-            <div className="flex items-center gap-2 text-xs font-medium text-emerald-400 bg-emerald-500/10 p-2.5 rounded-xl border border-emerald-500/20">
-              <CheckCircle2 className="h-4 w-4 shrink-0" />
-              <span>{t.trimSuccess}</span>
+              ) : null}
             </div>
-          ) : (
-            <button
-              type="button"
-              onClick={handleTrim}
-              disabled={trimming || (!keepQuiz && !keepFlashcards)}
-              className="mt-1 btn-primary justify-center text-xs py-2"
-            >
-              {trimming ? (
-                <>
-                  <LoaderCircle className="h-4 w-4 animate-spin" /> {t.trimming}
-                </>
-              ) : (
-                <>
-                  <Sparkles className="h-4 w-4" /> {t.applyTrim}
-                </>
-              )}
-            </button>
-          )}
+            <h3 className="text-sm font-bold text-mist-50 truncate" title={course.title}>
+              {course.title}
+            </h3>
+            <p className="text-xs text-mist-400 mt-0.5 flex items-center gap-2">
+              <span className="inline-flex items-center gap-1">
+                <Layers className="h-3.5 w-3.5 text-mist-400" />
+                {course.sceneCount} {t.scenes}
+              </span>
+              <span>•</span>
+              <span>{Math.round(course.duration || 0)}s</span>
+            </p>
+          </div>
+
+          <button
+            type="button"
+            onClick={handleDownloadBackup}
+            disabled={downloading}
+            className="btn-ghost shrink-0 border border-ink-700 hover:border-brand-500/50 hover:bg-brand-500/10 text-xs px-3.5 py-2 font-semibold text-mist-200 hover:text-brand-300 inline-flex items-center gap-1.5"
+            title="Tải bản sao lưu đề phòng cần dùng lại"
+          >
+            {downloading ? (
+              <LoaderCircle className="h-3.5 w-3.5 animate-spin" />
+            ) : (
+              <Download className="h-3.5 w-3.5 text-brand-400" />
+            )}
+            <span>{t.downloadBackup}</span>
+          </button>
         </div>
 
-        {/* Section 2: Deletion Options */}
-        <div className="flex flex-col gap-3 rounded-xl border border-ink-700 bg-ink-950/40 p-4">
-          <div className="flex items-center gap-2 text-sm font-semibold text-mist-200">
-            <Trash2 className="h-4 w-4 text-mist-400" />
-            <span>{t.deleteSection}</span>
-          </div>
-          <p className="text-xs text-mist-400">{t.deleteDesc}</p>
+        {/* Khu vực Xóa: 2 lựa chọn rõ ràng */}
+        <div className="space-y-3">
+          <h4 className="text-xs font-bold uppercase tracking-wider text-mist-300">
+            {t.deleteSectionTitle}
+          </h4>
 
-          <div className="grid gap-3 sm:grid-cols-2 pt-1">
-            {/* Soft Delete */}
-            <div className="flex flex-col justify-between gap-3 rounded-xl border border-gold-500/30 bg-gold-500/[0.05] p-3">
+          <div className="grid gap-3.5 sm:grid-cols-2">
+            {/* 1. Xóa tạm thời (Thùng rác) */}
+            <div className="flex flex-col justify-between rounded-2xl border border-gold-500/35 bg-gold-500/[0.04] p-4.5 gap-4 hover:border-gold-500/50 transition-all">
               <div>
-                <p className="text-xs font-semibold text-gold-300 flex items-center gap-1.5">
-                  <Archive className="h-3.5 w-3.5" />
-                  {t.softDeleteTitle}
-                </p>
-                <p className="mt-1 text-[11px] text-mist-400 leading-relaxed">
+                <div className="flex items-center gap-2 text-gold-300 font-bold text-xs sm:text-sm">
+                  <Archive className="h-4 w-4 shrink-0 text-gold-400" />
+                  <span>{t.softDeleteTitle}</span>
+                </div>
+                <p className="mt-2 text-xs text-mist-300 leading-relaxed">
                   {t.softDeleteDesc}
                 </p>
               </div>
+
               <button
                 type="button"
                 onClick={() => handleDelete("trash")}
                 disabled={deleting !== null}
-                className="w-full inline-flex items-center justify-center gap-1.5 rounded-xl border border-gold-500/40 bg-gold-500/15 py-2 text-xs font-semibold text-gold-200 hover:bg-gold-500/25 transition-colors disabled:opacity-50"
+                className="w-full inline-flex items-center justify-center gap-2 rounded-xl border border-gold-500/50 bg-gold-500/20 py-2.5 px-4 text-xs font-bold text-gold-200 hover:bg-gold-500/30 active:scale-98 transition-all disabled:opacity-50"
               >
                 {deleting === "trash" ? (
-                  <LoaderCircle className="h-3.5 w-3.5 animate-spin" />
+                  <>
+                    <LoaderCircle className="h-4 w-4 animate-spin" />
+                    <span>{t.deleting}</span>
+                  </>
                 ) : (
-                  <Archive className="h-3.5 w-3.5" />
+                  <>
+                    <Archive className="h-4 w-4 text-gold-300" />
+                    <span>{t.softDeleteBtn}</span>
+                  </>
                 )}
-                <span>{t.softDeleteBtn}</span>
               </button>
             </div>
 
-            {/* Permanent Delete */}
-            <div className="flex flex-col justify-between gap-3 rounded-xl border border-ember-500/30 bg-ember-500/[0.05] p-3">
+            {/* 2. Xóa vĩnh viễn */}
+            <div className="flex flex-col justify-between rounded-2xl border border-red-500/35 bg-red-500/[0.04] p-4.5 gap-4 hover:border-red-500/50 transition-all">
               <div>
-                <p className="text-xs font-semibold text-ember-300 flex items-center gap-1.5">
-                  <Trash2 className="h-3.5 w-3.5" />
-                  {t.permanentDeleteTitle}
-                </p>
-                <p className="mt-1 text-[11px] text-mist-400 leading-relaxed">
+                <div className="flex items-center gap-2 text-red-400 font-bold text-xs sm:text-sm">
+                  <Trash2 className="h-4 w-4 shrink-0 text-red-400" />
+                  <span>{t.permanentDeleteTitle}</span>
+                </div>
+                <p className="mt-2 text-xs text-mist-300 leading-relaxed">
                   {t.permanentDeleteDesc}
                 </p>
               </div>
+
               <button
                 type="button"
                 onClick={() => handleDelete("permanent")}
                 disabled={deleting !== null}
-                className="w-full inline-flex items-center justify-center gap-1.5 rounded-xl border border-ember-500/40 bg-ember-500/20 py-2 text-xs font-semibold text-ember-200 hover:bg-ember-500/30 transition-colors disabled:opacity-50"
+                className="w-full inline-flex items-center justify-center gap-2 rounded-xl border border-red-500/50 bg-red-500/20 py-2.5 px-4 text-xs font-bold text-red-300 hover:bg-red-500/30 active:scale-98 transition-all disabled:opacity-50"
               >
                 {deleting === "permanent" ? (
-                  <LoaderCircle className="h-3.5 w-3.5 animate-spin" />
+                  <>
+                    <LoaderCircle className="h-4 w-4 animate-spin" />
+                    <span>{t.deleting}</span>
+                  </>
                 ) : (
-                  <Trash2 className="h-3.5 w-3.5" />
+                  <>
+                    <Trash2 className="h-4 w-4 text-red-400" />
+                    <span>{t.permanentDeleteBtn}</span>
+                  </>
                 )}
-                <span>{t.permanentDeleteBtn}</span>
               </button>
             </div>
+          </div>
+        </div>
+
+        {/* Tùy chọn giải phóng dung lượng audio nhẹ nhàng (Giữ nguyên bài) */}
+        <div className="rounded-2xl border border-ink-800 bg-ink-950/40 p-4">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+            <div>
+              <p className="text-xs font-bold text-mist-200 flex items-center gap-1.5">
+                <VolumeX className="h-3.5 w-3.5 text-brand-400" />
+                {t.cleanupAudioTitle}
+              </p>
+              <p className="text-[11px] text-mist-400 mt-0.5 leading-relaxed">
+                {t.cleanupAudioDesc}
+              </p>
+            </div>
+
+            {cleanAudioSuccess ? (
+              <span className="inline-flex items-center gap-1 text-xs font-bold text-emerald-400 shrink-0">
+                <CheckCircle2 className="h-4 w-4" />
+                {t.cleanupSuccess}
+              </span>
+            ) : (
+              <button
+                type="button"
+                onClick={handleClearAudio}
+                disabled={cleaningAudio}
+                className="btn-ghost shrink-0 border border-ink-700 hover:border-brand-500/40 hover:bg-ink-800 text-xs px-3.5 py-1.5 font-medium text-mist-300"
+              >
+                {cleaningAudio ? (
+                  <LoaderCircle className="h-3.5 w-3.5 animate-spin" />
+                ) : (
+                  t.cleanupAudioBtn
+                )}
+              </button>
+            )}
           </div>
         </div>
 
@@ -361,7 +378,7 @@ export function CourseSettingsModal({
           <button
             type="button"
             onClick={onClose}
-            className="btn-ghost px-4 py-2 text-xs font-semibold"
+            className="btn-ghost px-5 py-2 text-xs font-semibold"
           >
             {t.cancel}
           </button>

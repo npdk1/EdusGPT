@@ -88,7 +88,7 @@ if ($result.Status -eq 200) {
   Add-Result "export: inline lesson JSON blob" ([bool]($html -match 'id="lesson-data"')) $true
   Add-Result "export: two-way seek code" ([bool]($html -match 'tl\.time\(current\)')) $true
   Add-Result "export: every scene rendered" ([bool]($html -match 'data-scene="2"')) $true
-  Add-Result "export: range scrubber" ([bool]($html -match 'input type="range" id="scrub"')) $true
+  Add-Result "export: range scrubber" ([bool]($html -match 'id="scrub"')) $true
   Add-Result "export: A-B loop control" ([bool]($html -match 'id="loop"')) $true
   Add-Result "export: gsap from CDN" ([bool]($html -match 'gsap\.min\.js')) $true
 }

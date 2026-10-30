@@ -54,7 +54,7 @@ export function InlineText({
                 className={
                   isDisplay
                     ? "scene-inline-math-block my-2 block overflow-x-auto text-center [&_.katex]:!text-inherit"
-                    : "scene-inline-math inline-block align-baseline [&_.katex]:!text-inherit"
+                    : "scene-inline-math inline align-baseline [&_.katex]:!text-inherit"
                 }
                 dangerouslySetInnerHTML={{ __html: html }}
               />

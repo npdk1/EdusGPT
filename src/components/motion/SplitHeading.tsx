@@ -50,7 +50,6 @@ export function SplitHeading({
     const ctx = gsap.context(() => {
       split = new SplitText(element, {
         type: by === "chars" ? "chars,words" : "words",
-        mask: "lines",
         wordsClass: "split-word",
         charsClass: "split-char",
       });
@@ -124,9 +123,10 @@ export function SplitHeading({
         // wider than the image would show a bare sliver.
         const right = Math.max(...placed.map((p) => p.at.x + p.word.offsetWidth));
         const bottom = Math.max(...placed.map((p) => p.at.y + p.word.offsetHeight));
-        const width = Math.ceil(right - left);
-        const height = Math.ceil(bottom - top);
-        if (width === 0 || height === 0) return;
+        // Add safety padding for font descenders (g, y, p, q) so letters are never clipped:
+        const width = Math.ceil(right - left) + 24;
+        const height = Math.ceil(bottom - top) + 40;
+        if (width <= 0 || height <= 0) return;
 
         const { backgroundImage } = getComputedStyle(gradient);
         for (const { word, at } of placed) {
@@ -137,6 +137,9 @@ export function SplitHeading({
           word.style.webkitBackgroundClip = "text";
           word.style.backgroundClip = "text";
           word.style.color = "transparent";
+          word.style.paddingBottom = "0.15em";
+          word.style.marginBottom = "-0.15em";
+          word.style.overflow = "visible";
         }
       };
       repaint = paintGradient;
@@ -145,14 +148,14 @@ export function SplitHeading({
       const targets = by === "chars" ? split.chars : split.words;
       gsap.fromTo(
         targets,
-        { yPercent: 120, opacity: 0, rotate: by === "chars" ? 4 : 0 },
+        { y: 32, opacity: 0, rotate: by === "chars" ? 4 : 0 },
         {
-          yPercent: 0,
+          y: 0,
           opacity: 1,
           rotate: 0,
           duration,
           delay,
-          ease: "power4.out",
+          ease: "power3.out",
           stagger: stagger ?? (by === "chars" ? 0.02 : 0.05),
           ...(immediate
             ? {}
@@ -174,12 +177,18 @@ export function SplitHeading({
     const fonts = document.fonts;
     const observer = new ResizeObserver(onResize);
     observer.observe(element);
+    const themeObserver = new MutationObserver(() => repaint?.());
+    themeObserver.observe(document.documentElement, {
+      attributes: true,
+      attributeFilter: ["data-theme"],
+    });
     fonts?.ready.then(() => repaint?.()).catch(() => {
       /* no FontFaceSet, or it never settled; the first paint still stands */
     });
 
     return () => {
       observer.disconnect();
+      themeObserver.disconnect();
       repaint = null;
       // `ctx.revert()` also drops the plugin instances; guard so a second
       // revert can never throw during fast navigation.

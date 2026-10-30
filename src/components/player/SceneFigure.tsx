@@ -27,6 +27,7 @@ const COPY = {
     imageGraphHint: "Move the pointer along the curve to read its value",
     imageAxisX: "x-axis",
     imageAxisY: "y-axis",
+    imageAiRendering: "Generating AI image (Pollinations)...",
   },
   vi: {
     imageCreditAi: "Ảnh AI · pollinations.ai",
@@ -42,6 +43,7 @@ const COPY = {
     imageGraphHint: "Di chuột dọc đường cong để đọc giá trị",
     imageAxisX: "trục x",
     imageAxisY: "trục y",
+    imageAiRendering: "Đang dựng ảnh AI (Pollinations)...",
   },
 };
 
@@ -112,6 +114,7 @@ export function SlideImageView({
   const [image, setImage] = useState<SlideImageType | null>(null);
   const [failed, setFailed] = useState(false);
   const [hidden, setHidden] = useState(false);
+  const [loaded, setLoaded] = useState(false);
   // Anonymous pollinations.ai throttles parallel renders with 402, so a
   // generated picture gets exactly one delayed retry before giving up. The
   // `r` parameter only busts the failed response out of the browser cache;
@@ -157,6 +160,7 @@ export function SlideImageView({
   useEffect(() => {
     setRetry(0);
     setStage("generated");
+    setLoaded(false);
   }, [key]);
 
   useEffect(() => {
@@ -240,43 +244,53 @@ export function SlideImageView({
   if (hidden || (!generatedUrl && query.length < 3)) return null;
 
   return (
-    // No `shrink-0`: a slide with a title, a subtitle and four bullets leaves
-    // very little height, and a figure that refuses to shrink simply pushed
-    // itself off the bottom of the card. The image gives way instead, which is
-    // the right thing to lose — the bullets are the teaching content.
-    <figure className="scene-image min-h-0 self-center">
+    // Sized with guaranteed 16:9 aspect ratio and min-height so it never squishes flat
+    <figure className="scene-image flex flex-col items-center justify-center min-h-0 w-full mx-auto my-auto self-center">
       {image ? (
         <>
           {image.drawn ? (
             <ConceptPlate seed={`${lessonId} ${scene.id}`} label={image.title} />
           ) : (
-            /* Remote, externally-sourced image: next/image cannot optimise it. */
-            /* eslint-disable-next-line @next/next/no-img-element */
-            <img
-              key={generatedUrl ? `${key}:r${retry}` : key}
-              src={
-                generatedUrl && retry > 0 ? `${generatedUrl}&r=${retry}` : image.url
-              }
-              alt={image.title}
-              loading="lazy"
-              referrerPolicy="no-referrer"
-              className="h-full w-full rounded-xl border border-ink-700 bg-ink-900 object-cover"
-              onError={() => {
-                if (generatedUrl && stage === "generated" && retry < 1) {
-                  window.setTimeout(() => {
-                    setRetry((current) => (current < 1 ? current + 1 : current));
-                  }, 2500);
-                } else if (stage === "generated") {
-                  // The AI render is dead: the effect drops to the archive.
-                  setStage("archive");
-                } else if (stage === "archive") {
-                  // The archive has nothing: the effect drops to the plate.
-                  setStage("drawn");
-                } else {
-                  setFailed(true);
+            <div className="relative w-full aspect-video min-h-[14cqw] max-h-[28cqw] overflow-hidden rounded-xl border border-ink-700/80 bg-ink-900 shadow-md">
+              {!loaded && (
+                <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 bg-ink-900/90 text-mist-400">
+                  <div className="h-5 w-5 animate-spin rounded-full border-2 border-brand-500 border-t-transparent" />
+                  <span className="text-[11px] font-medium tracking-wide text-mist-400">
+                    {t.imageAiRendering}
+                  </span>
+                </div>
+              )}
+              {/* Remote, externally-sourced image: next/image cannot optimise it. */}
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                key={generatedUrl ? `${key}:r${retry}` : key}
+                src={
+                  generatedUrl && retry > 0 ? `${generatedUrl}&r=${retry}` : image.url
                 }
-              }}
-            />
+                alt={image.title}
+                loading="lazy"
+                referrerPolicy="no-referrer"
+                onLoad={() => setLoaded(true)}
+                className={`h-full w-full object-cover transition-opacity duration-300 ${
+                  loaded ? "opacity-100" : "opacity-0"
+                }`}
+                onError={() => {
+                  if (generatedUrl && stage === "generated" && retry < 1) {
+                    window.setTimeout(() => {
+                      setRetry((current) => (current < 1 ? current + 1 : current));
+                    }, 2500);
+                  } else if (stage === "generated") {
+                    // The AI render is dead: the effect drops to the archive.
+                    setStage("archive");
+                  } else if (stage === "archive") {
+                    // The archive has nothing: the effect drops to the plate.
+                    setStage("drawn");
+                  } else {
+                    setFailed(true);
+                  }
+                }}
+              />
+            </div>
           )}
           <figcaption className="mt-1 flex items-center gap-1.5 text-[10px] text-mist-400">
             <span className="truncate">{image.credit}</span>
